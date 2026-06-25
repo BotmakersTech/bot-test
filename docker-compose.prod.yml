@@ -1,0 +1,81 @@
+services:
+
+  # ── PostgreSQL ────────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: botleague_db
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB}
+      POSTGRES_USER:     ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks: [app_net]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Spring Boot backend ───────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./botleague-backend
+      dockerfile: Dockerfile
+    container_name: botleague_backend
+    environment:
+      # Database
+      SPRING_DATASOURCE_URL:      jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      # JWT
+      SECURITY_JWT_SECRET:        ${JWT_SECRET}
+      # Mail
+      SPRING_MAIL_USERNAME:       ${MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD:       ${MAIL_PASSWORD}
+      # App
+      APP_FRONTEND_URL:           ${FRONTEND_URL}
+      APP_COOKIE_SECURE:          "true"
+      # Cloudflare R2
+      R2_ACCOUNT_ID:              ${R2_ACCOUNT_ID}
+      R2_ACCESS_KEY:              ${R2_ACCESS_KEY}
+      R2_SECRET_KEY:              ${R2_SECRET_KEY}
+      R2_BUCKET:                  ${R2_BUCKET}
+      R2_PUBLIC_URL:              ${R2_PUBLIC_URL}
+    # Bind to loopback only — Nginx proxies from outside
+    ports:
+      - "127.0.0.1:8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [app_net]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ── React frontend (built into Nginx) ─────────────────────────────────────────
+  frontend:
+    build:
+      context: ./Botleague-Frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+    container_name: botleague_frontend
+    # Bind to loopback only — Nginx proxies from outside
+    ports:
+      - "127.0.0.1:3000:80"
+    networks: [app_net]
+    restart: unless-stopped
+
+networks:
+  app_net:
+    driver: bridge
+
+volumes:
+  pg_data:
+    driver: local
