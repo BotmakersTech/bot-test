@@ -1,0 +1,666 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap');
+
+/* =========================================================
+   CreateNewAccount.css
+   BotLeague — Create Account Page
+   Dark theme · Consistent design tokens
+   ========================================================= */
+
+/* ── Tokens ──────────────────────────────────────────────── */
+:root {
+  --cna-bg:            #2b2b2b;
+  --cna-surface:       rgba(255, 255, 255, 0.05);
+  --cna-surface-hover: rgba(255, 255, 255, 0.09);
+  --cna-border:        #4a4a4a;
+  --cna-border-input:  #555555;
+
+  --cna-text-primary:  #ffffff;
+  --cna-text-secondary:#aaaaaa;
+  --cna-text-muted:    #888888;
+  --cna-text-dark:     #2b2b2b;
+  --cna-text-link:    #36A3F0;
+
+  --cna-accent:        #D1EEF9;
+  --cna-accent-hover:  #b8e1f5;
+  --cna-accent-link:   #60b8d4;
+
+  --cna-success:       #4ade80;
+  --cna-error:         #e74c3c;
+  --cna-verified:      #4ade80;
+
+  --cna-radius-sm:     6px;
+  --cna-radius:        12px;
+  --cna-radius-lg:     80px;
+
+  --cna-transition:    0.18s ease;
+
+  --cna-font:          'Inter', 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ── Reset ───────────────────────────────────────────────── */
+.cna-root *,
+.cna-root *::before,
+.cna-root *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+.login{
+  padding: 0.6rem 1.2rem !important;
+}
+.login {
+ font-size: 1rem;
+}
+.login:hover{
+  background: #e74c3c !important;
+  color: var(--cna-text-dark) !important;
+}
+
+/* ── Root ────────────────────────────────────────────────── */
+.cna-root {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
+  background-color: var(--cna-bg);
+  font-family: var(--cna-font);
+}
+
+/* ── Background images ───────────────────────────────────── */
+.cna-bg {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+
+.cna-bg--top-right {
+  top: 0;
+  right: 0;
+  width: 611px;
+  opacity: 0.9;
+}
+
+.cna-bg--bottom-left {
+  bottom: 0;
+  left: 0;
+  opacity: 0.9;
+}
+
+/* ── Card wrapper (just a flex row with gap — no bg, no border) ── */
+.cna-card {
+  position: relative;
+  padding: 32px;
+  z-index: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 88px;
+  min-height: 560px;
+  border-radius: var(--cna-radius);
+  background: rgba(97, 91, 91, 0.4);
+  backdrop-filter: blur(3px);
+}
+
+/* ── Panels shared ───────────────────────────────────────── */
+.cna-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  
+  
+}
+
+/* ── Left panel ──────────────────────────────────────────── */
+.cna-panel--left {
+  width: 484px;
+  flex-shrink: 0;
+  padding: 40px 24px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--cna-border);
+  border-radius: 0 var(--cna-radius-lg) 0   var(--cna-radius-lg) ;
+  gap: 36px;
+}
+
+.cna-logo {
+  width: 320px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.cna-mascot-wrapper {
+  width: 245px;
+  height: 370px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cna-mascot {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* ── Right panel ─────────────────────────────────────────── */
+.cna-panel--right {
+  width: 560px;
+  flex-shrink: 0;
+  padding: 44px 48px;
+
+
+  justify-content: center;
+  overflow-y: auto;
+}
+
+/* ── Form header ─────────────────────────────────────────── */
+.cna-form-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.cna-title {
+    font-family: 'Orbitron', sans-serif;
+  color: var(--cna-text-primary);
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.cna-subtitle {
+  color: var(--cna-text-secondary);
+  font-family: 'Inter', sans-serif;
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+/* ── Form ────────────────────────────────────────────────── */
+.cna-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+/* ── Shared row ──────────────────────────────────────────── */
+.cna-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+/* ── Inputs ──────────────────────────────────────────────── */
+.cna-input {
+  width: 100%;
+  padding: 11px 16px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--cna-border-input);
+  border-radius: var(--cna-radius);
+  color: var(--cna-text-primary);
+  font-size: 14px;
+  font-family: var(--cna-font);
+  outline: none;
+  transition: border-color var(--cna-transition), background var(--cna-transition);
+}
+
+.cna-input::placeholder {
+  color: var(--cna-text-muted);
+}
+
+.cna-input:focus {
+  border-color: var(--cna-accent-link);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.cna-input--flex {
+  flex: 1;
+}
+
+.cna-input--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.cna-input--error {
+  border-color: var(--cna-error) !important;
+}
+
+.cna-input--success {
+  border-color: var(--cna-success) !important;
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.cna-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: var(--cna-radius);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--cna-font);
+  cursor: pointer;
+  transition: background var(--cna-transition), opacity var(--cna-transition), transform var(--cna-transition);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.cna-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.cna-btn--light {
+  background: var(--cna-accent);
+  color: var(--cna-text-dark);
+  padding: 11px 18px;
+}
+
+.cna-btn--light:hover:not(:disabled) {
+  background: var(--cna-accent-hover);
+}
+
+.cna-btn--light:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cna-btn--full {
+  width: 100%;
+  padding: 13px;
+  font-size: 15px;
+  margin-top: 2px;
+}
+
+.cna-btn--verified {
+  background: #d4f7e4;
+  color: #1a6e3c;
+  cursor: default;
+}
+
+.cna-btn--loading {
+  pointer-events: none;
+}
+
+/* ── Spinner ─────────────────────────────────────────────── */
+.cna-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(43, 43, 43, 0.3);
+  border-top-color: var(--cna-text-dark);
+  border-radius: 50%;
+  animation: cna-spin 0.7s linear infinite;
+}
+
+@keyframes cna-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── OTP group ───────────────────────────────────────────── */
+.cna-otp-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 25px;
+}
+.cna-otp-label {
+  font-size: 18px;
+  text-align: center;
+  color: var(--cna-text-secondary);
+  padding-left: 2px;
+}
+
+
+.cna-otp-boxes {
+  display: flex;
+  gap: 36px;
+  align-items: center;
+}
+.cna-field-success {
+  font-size: 0.85rem;
+  color: #4CAF50; /* clean green */
+  margin-top: 4px;
+}
+
+.cna-otp-box {
+  width: 56px;
+  height: 44px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--cna-border-input);
+  border-radius: var(--cna-radius);
+  color: var(--cna-text-primary);
+  font-size: 18px;
+  font-weight: 600;
+  font-family: var(--cna-font);
+  outline: none;
+  transition: border-color var(--cna-transition), background var(--cna-transition);
+  caret-color: var(--cna-accent-link);
+}
+
+.cna-otp-box:focus {
+  border-color: var(--cna-accent-link);
+  background: rgba(255, 255, 255, 0.11);
+}
+
+.cna-otp-box--verified {
+  border-color: var(--cna-verified);
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.cna-otp-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cna-resend-timer {
+  color: var(--cna-text-muted);
+  font-size: 13px;
+  min-height: 20px;           /* prevent layout shift */
+}
+
+/* ── Password group ──────────────────────────────────────── */
+.cna-password-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cna-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cna-field-error {
+  color: var(--cna-error);
+  font-size: 12px;
+  padding-left: 2px;
+}
+
+.cna-hint {
+  color: var(--cna-text-muted);
+  font-size: 12px;
+  padding-left: 2px;
+}
+
+/* ── Terms ───────────────────────────────────────────────── */
+.cna-terms {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--cna-text-secondary);
+}
+
+.cna-checkbox {
+  margin-top: 2px;
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  accent-color: var(--cna-accent-link);
+  cursor: pointer;
+}
+
+.cna-terms-text {
+  line-height: 1.5;
+}
+
+/* ── Links ───────────────────────────────────────────────── */
+.cna-link {
+  color: var(--cna-accent-link);
+  text-decoration: none;
+  transition: color var(--cna-transition);
+}
+
+.cna-link:hover {
+  color: #89d0e8;
+  text-decoration: underline;
+}
+
+.cna-link--bold {
+  font-weight: 600;
+}
+
+/* ── Login prompt ────────────────────────────────────────── */
+.cna-login-prompt {
+  text-align: center;
+  color: var(--cna-text-secondary);
+  font-size: 13px;
+}
+
+/* ── Divider ─────────────────────────────────────────────── */
+.cna-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--cna-text-muted);
+  font-size: 13px;
+}
+
+.cna-divider-line {
+  flex: 1;
+  height: 1px;
+  background: #444;
+}
+
+.cna-divider-text {
+  flex-shrink: 0;
+}
+
+/* ── Social buttons ──────────────────────────────────────── */
+.cna-social {
+  display: flex;
+  gap: 12px;
+}
+
+.cna-social-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--cna-border-input);
+  border-radius: var(--cna-radius);
+  padding: 10px;
+  color: #dddddd;
+  font-size: 14px;
+  font-family: var(--cna-font);
+  cursor: pointer;
+  transition: background var(--cna-transition), border-color var(--cna-transition);
+}
+
+.cna-social-btn:hover {
+  background: var(--cna-surface-hover);
+  border-color: #777;
+}
+
+.cna-social-btn svg {
+  flex-shrink: 0;
+}
+
+/* ── Scrollbar inside right panel ────────────────────────── */
+.cna-panel--right::-webkit-scrollbar {
+  width: 4px;
+}
+
+.cna-panel--right::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cna-panel--right::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .cna-panel--left {
+    width: 360px;
+  }
+
+  .cna-logo {
+    width: 240px;
+  }
+
+  .cna-mascot-wrapper {
+    width: 180px;
+    height: 280px;
+  }
+
+  .cna-panel--right {
+    width: 400px;
+    padding: 36px 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .cna-card {
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    max-width: 420px;
+    width: calc(100vw - 32px);
+    min-height: unset;
+  }
+
+  .cna-panel--left {
+    width: 100%;
+    border-radius: var(--cna-radius-lg);
+    padding: 28px 24px;
+    gap: 20px;
+  }
+
+  .cna-mascot-wrapper {
+    width: 130px;
+    height: 160px;
+  }
+
+  .cna-logo {
+    width: 200px;
+  }
+
+  .cna-panel--right {
+    width: 100%;
+    border-radius: var(--cna-radius-lg);
+    padding: 28px 20px;
+  }
+
+  .cna-otp-box {
+    width: 38px;
+    height: 38px;
+    font-size: 16px;
+  }
+
+  .cna-bg--top-right {
+    width: 300px;
+    opacity: 0.5;
+  }
+
+  .cna-bg--bottom-left {
+    width: 250px;
+    opacity: 0.5;
+  }
+
+}
+
+/* ── Inline field messages (replaces alert())  ────────────── */
+/* Add these rules to your existing login.css               */
+
+.cna-field-msg {
+  font-size: 14px;
+  font-family: var(--cna-font);
+  padding: 7px 12px;
+  border-radius: var(--cna-radius-sm);
+  line-height: 1.45;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: cna-msg-in 0.18s ease;
+}
+
+@keyframes cna-msg-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Error ── */
+.cna-field-msg--error {
+  background: transperent;
+  border: 1px solid rgba(231, 76, 60, 0.35);
+  color: rgba(255, 76, 76, 1);
+}
+
+.cna-field-msg--error::before {
+  content: "✕";
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(231, 76, 60, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-align: center;
+}
+
+/* ── Success ── */
+.cna-field-msg--success {
+  background: rgba(74, 222, 128, 0.10);
+  border: 1px solid rgba(74, 222, 128, 0.30);
+  color: #4ade80;
+}
+
+.cna-field-msg--success::before {
+  content: "✔";
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(74, 222, 128, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-align: center;
+}
+
+/* ── Info ── */
+.cna-field-msg--info {
+  background: rgba(96, 184, 212, 0.10);
+  border: 1px solid rgba(96, 184, 212, 0.30);
+  color: #60b8d4;
+}
+
+.cna-field-msg--info::before {
+  content: "i";
+  font-size: 10px;
+  font-weight: 700;
+  font-style: italic;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(96, 184, 212, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-align: center;
+}

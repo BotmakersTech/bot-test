@@ -1,1 +1,32 @@
+# ── JVM crash dumps ───────────────────────────────────────────────────────────
+hs_err_pid*.log
+replay_pid*.log
+
+# ── Claude Code internal ──────────────────────────────────────────────────────
+.claude/
+.agents/
+
+# ── IDE / OS ──────────────────────────────────────────────────────────────────
 .metadata/
+.vscode/
+.idea/
+
+# ── Secrets / local env ───────────────────────────────────────────────────────
+.env
+.env.*
+*.local
+
+# ── Backend build artefacts ───────────────────────────────────────────────────
+botleague-backend/target/
+botleague-backend/.mvn/wrapper/maven-wrapper.jar
+botleague-backend/build/
+
+# ── Frontend build artefacts ──────────────────────────────────────────────────
+Botleague-Frontend/node_modules/
+Botleague-Frontend/dist/
+Botleague-Frontend/dist-ssr/
+
+# ── Database seed / scratch files ────────────────────────────────────────────
+seed_data.sql
+seed_extended.sql
+docs/

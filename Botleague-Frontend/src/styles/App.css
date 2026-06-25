@@ -1,0 +1,136 @@
+:root {
+  /* =========================
+     🎨 COLOR SYSTEM (RAW PALETTE)
+  ========================= */
+
+  /* Primary (Red - Action / Highlight) */
+  --red-500: #FF4C4C;
+  --red-600: #e04343;
+  --red-700: #c93a3a;
+
+  /* Blue (Secondary / Info) */
+  --blue-500: #36A3F0;
+  --blue-600: #2c8cd1;
+  --blue-700: #2477b3;
+
+  /* Green (Success) */
+  --green-500: #32D583;
+  --green-600: #28b76a;
+
+  /* Orange (Warning) */
+  --orange-500: #F79009;
+  --orange-600: #d97706;
+
+  /* Neutral (Dark Theme) */
+  --gray-900: #121212;
+  --gray-800: #1e1e1e;
+  --gray-700: #2a2a2a;
+  --gray-600: #3a3a3a;
+  --gray-500: #6b7280;
+  --gray-400: #9ca3af;
+  --gray-300: #d1d5db;
+  --gray-200: #e5e7eb;
+  --gray-100: #f3f4f6;
+
+  --white: #ffffff;
+  --black: #000000;
+
+
+  /* =========================
+     🎯 SEMANTIC COLORS (USE THESE IN UI)
+  ========================= */
+
+  --color-primary: var(--red-500);
+  --color-primary-hover: var(--red-600);
+
+  --color-secondary: var(--blue-500);
+
+  --color-success: var(--green-500);
+  --color-warning: var(--orange-500);
+  --color-error: var(--red-500);
+
+  --color-background: var(--gray-900);
+  --color-surface: var(--gray-800);
+  --color-border: var(--gray-700);
+
+  --color-text-primary: var(--white);
+  --color-text-secondary: var(--gray-400);
+  --color-text-muted: var(--gray-500);
+
+
+  /* =========================
+     🔤 TYPOGRAPHY SYSTEM
+  ========================= */
+
+  /* Font Families */
+
+  --font-body: "Inter", sans-serif;
+  --font-display: "Exo 2", sans-serif;
+
+  /* Font Sizes */
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-md: 16px;
+  --text-lg: 20px;
+  --text-xl: 24px;
+  --text-2xl: 28px;
+  --text-3xl: 36px;
+  --text-4xl: 48px;
+  --text-5xl: 68px;
+
+  /* Font Weights */
+  --font-regular: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+
+  /* =========================
+     📏 SPACING SYSTEM
+  ========================= */
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 48px;
+
+
+  /* =========================
+     🔲 BORDER RADIUS
+  ========================= */
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+
+  /* =========================
+     🌫 SHADOWS
+  ========================= */
+
+  --shadow-sm: 0 2px 6px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
+
+
+  /* =========================
+     ⚡ TRANSITIONS
+  ========================= */
+
+  --transition-fast: 0.2s ease-in-out;
+  --transition-medium: 0.3s ease;
+  --transition-slow: 0.5s ease;
+
+
+  /* =========================
+     📦 Z-INDEX SCALE
+  ========================= */
+
+  --z-dropdown: 1000;
+  --z-modal: 1100;
+  --z-toast: 1200;
+}

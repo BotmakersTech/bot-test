@@ -1,0 +1,79 @@
+
+spring.application.name=botleague-backend
+server.port=8081
+
+# Disable devtools restart classloader â it prevents spring-websocket JARs
+# from being visible during ASM component scanning at startup.
+spring.devtools.restart.enabled=false
+
+
+server.tomcat.threads.max=80
+server.tomcat.threads.min-spare=10
+server.tomcat.accept-count=100
+server.tomcat.max-connections=8192
+
+
+spring.datasource.url=jdbc:postgresql://localhost:5432/BotLeague_Test
+spring.datasource.username=postgres
+spring.datasource.password=admin123
+
+spring.datasource.hikari.maximum-pool-size=5
+spring.datasource.hikari.minimum-idle=2
+spring.datasource.hikari.connection-timeout=3000
+spring.datasource.hikari.max-lifetime=1800000
+spring.datasource.hikari.idle-timeout=600000
+spring.datasource.hikari.pool-name=botleague-pool
+
+
+spring.jpa.open-in-view=false
+
+
+server.cookie.secure=false
+
+spring.jpa.hibernate.ddl-auto=update
+
+
+spring.jpa.show-sql=false
+spring.jpa.properties.hibernate.jdbc.batch_size=25
+spring.jpa.properties.hibernate.order_inserts=true
+
+
+security.jwt.secret=this-is-a-super-long-secret-key-that-is-at-least-32-chars-long
+
+
+security.jwt.access-ttl-seconds=900
+
+
+security.refresh.ttl-days=30
+
+
+security.bcrypt.strength=11
+
+
+security.bcrypt.max-concurrent-hashes=2
+
+
+rate-limit.login-per-minute=5
+rate-limit.forgot-password-per-minute=3
+rate-limit.otp-per-minute=3
+rate-limit.register-per-minute=5
+
+# ==============================================================
+#  MAIL (Gmail SMTP)
+# ==============================================================
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=developers.botmakers@gmail.com
+spring.mail.password=wcrf sgjd llsd wrwk
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+
+app.frontend.url=https://test.botleague.in
+
+
+r2.account-id: e548ad6ce96db160dff65e499fd833fe
+r2.access-key: 20028918be9d59a02c861e33f9083846
+r2.secret-key: c504464ada59771fdefa5335e1e9ab745d5baca22cfde78fcbc390f6ee5e07f0
+r2.bucket: botleague-assets
+r2.public-url: https://media.botleague.in
