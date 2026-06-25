@@ -185,7 +185,9 @@ public class EventSports {
     @PreUpdate
     public void onUpdate() {
         this.updatedAt = LocalDateTime.now();
-        validate();
+        // Full validate() is called by the service on create/edit.
+        // On every update (e.g. status toggle) we skip heavy validation
+        // so a simple toggle doesn't fail on unrelated date fields.
     }
 
     // =========================
