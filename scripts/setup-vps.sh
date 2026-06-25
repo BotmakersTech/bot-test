@@ -7,7 +7,8 @@
 set -euo pipefail
 
 DEPLOY_DIR=/opt/botleague
-DEPLOY_USER=${SUDO_USER:-ubuntu}    # the non-root user who will own the app
+# Detect actual user: prefer SUDO_USER, fall back to current user, then root
+DEPLOY_USER=${SUDO_USER:-$(logname 2>/dev/null || echo root)}
 REPO_URL="https://github.com/BotmakersTech/BotLeague_v1.git"
 
 echo ""
@@ -25,7 +26,10 @@ echo "[2/8] Installing Docker..."
 if ! command -v docker &>/dev/null; then
   curl -fsSL https://get.docker.com | sh
 fi
-usermod -aG docker "$DEPLOY_USER"
+# Add deploy user to docker group (skip if running as root — root already has access)
+if [ "$DEPLOY_USER" != "root" ]; then
+  usermod -aG docker "$DEPLOY_USER"
+fi
 
 # Docker Compose plugin (v2)
 COMPOSE_VERSION="v2.27.0"
@@ -53,14 +57,14 @@ ufw --force enable
 # ── 5. Create deploy directory ────────────────────────────────────────────────
 echo "[5/8] Setting up /opt/botleague..."
 mkdir -p "$DEPLOY_DIR"
-chown "$DEPLOY_USER:$DEPLOY_USER" "$DEPLOY_DIR"
+[ "$DEPLOY_USER" != "root" ] && chown "$DEPLOY_USER:$DEPLOY_USER" "$DEPLOY_DIR"
 
 # ── 6. Clone repo ─────────────────────────────────────────────────────────────
 echo "[6/8] Cloning repository..."
 if [ ! -d "$DEPLOY_DIR/.git" ]; then
-  su - "$DEPLOY_USER" -c "git clone $REPO_URL $DEPLOY_DIR"
+  git clone "$REPO_URL" "$DEPLOY_DIR"
 else
-  su - "$DEPLOY_USER" -c "cd $DEPLOY_DIR && git pull origin main"
+  git -C "$DEPLOY_DIR" pull origin main
 fi
 
 # ── 7. Nginx config ───────────────────────────────────────────────────────────
@@ -76,7 +80,7 @@ nginx -t && systemctl reload nginx
 echo "[8/8] Environment file..."
 if [ ! -f "$DEPLOY_DIR/.env" ]; then
   cp "$DEPLOY_DIR/.env.example" "$DEPLOY_DIR/.env"
-  chown "$DEPLOY_USER:$DEPLOY_USER" "$DEPLOY_DIR/.env"
+  [ "$DEPLOY_USER" != "root" ] && chown "$DEPLOY_USER:$DEPLOY_USER" "$DEPLOY_DIR/.env"
   chmod 600 "$DEPLOY_DIR/.env"
   echo ""
   echo "⚠️  Created .env from template — EDIT IT BEFORE STARTING:"
