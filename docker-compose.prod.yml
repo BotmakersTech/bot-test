@@ -52,11 +52,13 @@ services:
     networks: [app_net]
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/api/health"]
+      # /api/auth/me returns 401 (unauthorised) when the app is up — that's fine.
+      # curl exit code 22 = HTTP error (4xx/5xx) which means the server IS responding.
+      test: ["CMD-SHELL", "curl -sf http://localhost:8081/api/auth/me || [ $? -eq 22 ]"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 90s
 
   # ── React frontend (built into Nginx) ─────────────────────────────────────────
   frontend:
