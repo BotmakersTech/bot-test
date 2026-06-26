@@ -77,7 +77,7 @@ public class TeamMembershipService {
         }
     }
 
-    // ================= ASSIGN ROLE (CAPTAIN ONLY) =================
+    // ================= ASSIGN ROLE (CAPTAIN + VICE_CAPTAIN) =================
 
     public void assignRole(
             UUID targetUserId,
@@ -90,8 +90,15 @@ public class TeamMembershipService {
                 .findByUserIdAndStatus(currentUserId, TeamMembershipStatus.ACTIVE)
                 .orElseThrow(() -> ApiException.notFound("No active team"));
 
-        if (captain.getRoleInTeam() != TeamRole.CAPTAIN) {
-            throw ApiException.forbidden("Only captain can assign role");
+        TeamRole callerRole = captain.getRoleInTeam();
+
+        if (callerRole != TeamRole.CAPTAIN && callerRole != TeamRole.VICE_CAPTAIN) {
+            throw ApiException.forbidden("Only captain or vice captain can assign roles");
+        }
+
+        // VICE_CAPTAIN can only assign MEMBER or MENTOR — not promote to their own level or above
+        if (callerRole == TeamRole.VICE_CAPTAIN && role == TeamRole.VICE_CAPTAIN) {
+            throw ApiException.forbidden("Vice captain cannot assign vice captain role");
         }
 
         TeamMembership target = getActiveMembership(captain.getTeamId(), targetUserId);
@@ -230,7 +237,7 @@ public class TeamMembershipService {
         chatService.removeMemberFromTeamChat(teamId, currentUserId, "left the team.");
     }
 
-    // ================= REMOVE MEMBER (CAPTAIN ONLY) =================
+    // ================= REMOVE MEMBER (CAPTAIN + VICE_CAPTAIN) =================
 
     public void removeMember(
             UUID targetUserId,
@@ -238,35 +245,42 @@ public class TeamMembershipService {
 
         UUID currentUserId = extractUserId(authentication);
 
-        TeamMembership captain = teamMembershipRepository
+        TeamMembership caller = teamMembershipRepository
                 .findByUserIdAndStatus(currentUserId, TeamMembershipStatus.ACTIVE)
                 .orElseThrow(() -> ApiException.notFound("No active team"));
 
-        if (captain.getRoleInTeam() != TeamRole.CAPTAIN) {
-            throw ApiException.forbidden("Only captain can remove");
+        TeamRole callerRole = caller.getRoleInTeam();
+
+        if (callerRole != TeamRole.CAPTAIN && callerRole != TeamRole.VICE_CAPTAIN) {
+            throw ApiException.forbidden("Only captain or vice captain can remove members");
         }
 
         TeamMembership target = teamMembershipRepository
                 .findByUserIdAndStatus(targetUserId, TeamMembershipStatus.ACTIVE)
                 .orElseThrow(() -> ApiException.notFound("Target not found"));
 
-        if (!captain.getTeamId().equals(target.getTeamId())) {
+        if (!caller.getTeamId().equals(target.getTeamId())) {
             throw ApiException.forbidden("Different team");
         }
 
         if (currentUserId.equals(targetUserId)) {
-            throw ApiException.badRequest("Captain cannot remove self");
+            throw ApiException.badRequest("Cannot remove yourself");
         }
 
         if (target.getRoleInTeam() == TeamRole.CAPTAIN) {
-            throw ApiException.badRequest("Cannot remove captain");
+            throw ApiException.badRequest("Cannot remove the team captain");
+        }
+
+        // VICE_CAPTAIN cannot remove another VICE_CAPTAIN — only CAPTAIN can
+        if (callerRole == TeamRole.VICE_CAPTAIN && target.getRoleInTeam() == TeamRole.VICE_CAPTAIN) {
+            throw ApiException.forbidden("Vice captain cannot remove another vice captain");
         }
 
         User targetUser = userRepository.findById(targetUserId)
                 .orElseThrow(() -> ApiException.notFound("User not found"));
         String displayName = targetUser.getFirstName() != null
                 ? targetUser.getFirstName() : targetUser.getUsername();
-        UUID teamId = captain.getTeamId();
+        UUID teamId = caller.getTeamId();
 
         target.setStatus(TeamMembershipStatus.REMOVED);
         target.setLeftAt(LocalDateTime.now());
@@ -307,8 +321,9 @@ public class TeamMembershipService {
                 .findByUserIdAndStatus(currentUserId, TeamMembershipStatus.ACTIVE)
                 .orElseThrow(() -> ApiException.notFound("No active team"));
 
-        if (membership.getRoleInTeam() != TeamRole.CAPTAIN) {
-            throw ApiException.forbidden("Only captain can view invites");
+        if (membership.getRoleInTeam() != TeamRole.CAPTAIN
+                && membership.getRoleInTeam() != TeamRole.VICE_CAPTAIN) {
+            throw ApiException.forbidden("Only captain or vice captain can view invites");
         }
 
         List<TeamMembership> invited = teamMembershipRepository

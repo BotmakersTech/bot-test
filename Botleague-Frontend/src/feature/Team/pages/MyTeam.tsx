@@ -139,39 +139,55 @@ function parseApiError(err: unknown): string {
 }
 
 // ─── Role constants ───────────────────────────────────────────────────────────
-const ROLE = { CAPTAIN: "CAPTAIN", MEMBER: "MEMBER" };
-const CAPTAIN_ROLES = new Set(["CAPTAIN", "LEADER", "CO_CAPTAIN", "ADMIN"]);
 const ALL_ROLES: TeamRole[] = ["CAPTAIN", "VICE_CAPTAIN", "MEMBER", "MENTOR"];
+
+// Roles that can manage the team (invite, remove members, edit info, manage robots)
+const ADMIN_ROLES  = new Set(["CAPTAIN", "VICE_CAPTAIN"]);
+// Only captain can do privileged ops (transfer, assign vice-captain, delete team)
+const CAPTAIN_ONLY = new Set(["CAPTAIN"]);
 
 // ─── useTeamRole hook ─────────────────────────────────────────────────────────
 function useTeamRole(team: Team | null, teamMemberships: TeamMember[], currentUser: CurrentUser | null) {
-  const [role, setRole] = useState<string | null>(null);
+  const [myRole, setMyRole]             = useState<string>("MEMBER");
   const [myMembership, setMyMembership] = useState<TeamMember | null>(null);
 
   useEffect(() => {
-    if (!team) { setRole(ROLE.MEMBER); setMyMembership(null); return; }
-    if (!currentUser) return;
+    if (!team || !currentUser) { setMyRole("MEMBER"); setMyMembership(null); return; }
 
-    const uid = currentUser.userId || currentUser.id || currentUser._id || "";
-    const isOwner = team.createdBy === uid || team.ownerId === uid || team.captain === uid || team.captainId === uid;
-    const members = teamMemberships ?? [];
-    const mine = members.find(
+    const uid     = currentUser.userId || currentUser.id || currentUser._id || "";
+    const isOwner = team.createdBy === uid || team.ownerId === uid ||
+                    team.captain   === uid || team.captainId === uid;
+    const mine    = (teamMemberships ?? []).find(
       (m) => (uid && m.userId === uid) ||
-        (currentUser.username && m.username === currentUser.username) ||
-        (currentUser.botleagueId && m.botleagueId === currentUser.botleagueId)
+             (currentUser.username   && m.username   === currentUser.username) ||
+             (currentUser.botleagueId && m.botleagueId === currentUser.botleagueId)
     );
 
     setMyMembership(mine || null);
 
-    if (isOwner) { setRole(ROLE.CAPTAIN); return; }
-    if (mine && CAPTAIN_ROLES.has(mine.teamRole?.toUpperCase() ?? "")) {
-      setRole(ROLE.CAPTAIN);
-    } else {
-      setRole(ROLE.MEMBER);
-    }
+    if (isOwner) { setMyRole("CAPTAIN"); return; }
+
+    const backendRole = mine?.teamRole?.toUpperCase() ?? "MEMBER";
+    // Normalise legacy aliases from older frontend versions
+    const normalized =
+      backendRole === "LEADER" || backendRole === "CO_CAPTAIN" || backendRole === "ADMIN"
+        ? "CAPTAIN"
+        : backendRole === "VICE_CAPTAIN"
+        ? "VICE_CAPTAIN"
+        : "MEMBER";
+
+    setMyRole(normalized);
   }, [team, teamMemberships, currentUser]);
 
-  return { role, myMembership, isCaptain: role === ROLE.CAPTAIN };
+  return {
+    myRole,
+    myMembership,
+    /** Can do everything: invite, remove members, edit team, manage robots */
+    isTeamAdmin:    ADMIN_ROLES.has(myRole),
+    /** Strict captain only: transfer captaincy, assign vice-captain */
+    isCaptain:      CAPTAIN_ONLY.has(myRole),
+    isViceCaptain:  myRole === "VICE_CAPTAIN",
+  };
 }
 
 // ─── Error Alert ──────────────────────────────────────────────────────────────
@@ -195,15 +211,18 @@ function Spinner({ size = 20 }: { size?: number }) {
 }
 
 // ─── RoleBadge ────────────────────────────────────────────────────────────────
-function RoleBadge({ isCaptain }: { isCaptain: boolean }) {
+function RoleBadge({ myRole }: { myRole: string }) {
+  const cfg =
+    myRole === "CAPTAIN"
+      ? { cls: "bg-amber-500/14 border-amber-500/30 text-amber-400", icon: <Crown size={11} />, label: "CAPTAIN" }
+      : myRole === "VICE_CAPTAIN"
+      ? { cls: "bg-purple-500/14 border-purple-500/30 text-purple-400", icon: <Shield size={11} />, label: "VICE CAPTAIN" }
+      : myRole === "MENTOR"
+      ? { cls: "bg-blue-500/14 border-blue-500/30 text-blue-400", icon: <Eye size={11} />, label: "MENTOR" }
+      : { cls: "bg-[#fa4715]/12 border-[#fa4715]/28 text-[#fa4715]", icon: <Eye size={11} />, label: "MEMBER" };
   return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wider border ${
-      isCaptain
-        ? "bg-amber-500/14 border-amber-500/30 text-amber-400"
-        : "bg-[#fa4715]/12 border-[#fa4715]/28 text-[#fa4715]"
-    }`}>
-      {isCaptain ? <Crown size={11} /> : <Eye size={11} />}
-      {isCaptain ? "CAPTAIN" : "MEMBER"}
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wider border ${cfg.cls}`}>
+      {cfg.icon}{cfg.label}
     </span>
   );
 }
@@ -697,17 +716,23 @@ function LeaveTeamModal({ onConfirm, onClose }: {
 }
 
 // ─── MemberActions dropdown ───────────────────────────────────────────────────
-function MemberActionsMenu({ member, isCaptain, onRemove, onAssignRole, onTransferCaptain }: {
+function MemberActionsMenu({ member, isTeamAdmin, isStrictCaptain, onRemove, onAssignRole, onTransferCaptain }: {
   member: TeamMember;
-  isCaptain: boolean;
+  isTeamAdmin:     boolean;  // captain OR vice captain — can manage members
+  isStrictCaptain: boolean;  // captain only — can transfer captaincy
   onRemove: (m: TeamMember) => void;
   onAssignRole: (m: TeamMember) => void;
   onTransferCaptain: (m: TeamMember) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const isMemberCaptain = CAPTAIN_ROLES.has(member.teamRole?.toUpperCase() ?? "");
+  const memberRole = member.teamRole?.toUpperCase() ?? "";
+  const isMemberCaptain    = memberRole === "CAPTAIN";
+  const isMemberViceCaptain = memberRole === "VICE_CAPTAIN";
 
-  if (!isCaptain || isMemberCaptain) return null;
+  // Hide if current user has no management access, or if target is the captain
+  if (!isTeamAdmin || isMemberCaptain) return null;
+  // Vice captains cannot manage other vice captains
+  if (!isStrictCaptain && isMemberViceCaptain) return null;
 
   return (
     <div className="relative">
@@ -727,12 +752,14 @@ function MemberActionsMenu({ member, isCaptain, onRemove, onAssignRole, onTransf
             >
               <UserCog size={14} className="text-[#fa4715]" /> Assign Role
             </button>
-            <button
-              onClick={() => { setOpen(false); onTransferCaptain(member); }}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/7 cursor-pointer transition-colors"
-            >
-              <Crown size={14} className="text-amber-400" /> Transfer Captain
-            </button>
+            {isStrictCaptain && (
+              <button
+                onClick={() => { setOpen(false); onTransferCaptain(member); }}
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/7 cursor-pointer transition-colors"
+              >
+                <Crown size={14} className="text-amber-400" /> Transfer Captain
+              </button>
+            )}
             <div className="h-px bg-white/9 mx-2 my-1" />
             <button
               onClick={() => { setOpen(false); onRemove(member); }}
@@ -795,12 +822,12 @@ export default function MyTeams() {
   const [logoError, setLogoError] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
 
-  const { role, isCaptain } = useTeamRole(team, teamMemberships, currentUser);
-  const roleResolved = role !== null;
+  const { myRole, isCaptain, isViceCaptain, isTeamAdmin } = useTeamRole(team, teamMemberships, currentUser);
+  const roleResolved = myRole !== null;
 
   // ── Action wrappers with error extraction ─────────────────────────────────
   const handleRemoveMember = useCallback(async (member: TeamMember): Promise<void> => {
-    if (!isCaptain) return;
+    if (!isTeamAdmin) return;  // captain OR vice captain
     const memberId = member.userId || member.id;
     if (!memberId) throw new Error("Member ID not found");
     try {
@@ -809,20 +836,20 @@ export default function MyTeams() {
     } catch (err) {
       throw new Error(parseApiError(err), { cause: err });
     }
-  }, [isCaptain, removeMemberFn, reloadMemberships]);
+  }, [isTeamAdmin, removeMemberFn, reloadMemberships]);
 
   const handleAssignRole = useCallback(async (userId: string, role: TeamRole): Promise<void> => {
-    if (!isCaptain) return;
+    if (!isTeamAdmin) return;  // captain OR vice captain (backend validates further)
     try {
       await assignRoleFn(userId, role);
       await reloadMemberships();
     } catch (err) {
       throw new Error(parseApiError(err), { cause: err });
     }
-  }, [isCaptain, assignRoleFn, reloadMemberships]);
+  }, [isTeamAdmin, assignRoleFn, reloadMemberships]);
 
   const handleTransferCaptain = useCallback(async (userId: string): Promise<void> => {
-    if (!isCaptain) return;
+    if (!isCaptain) return;  // CAPTAIN only
     try {
       await transferCaptainFn(userId);
       await reloadMemberships();
@@ -841,7 +868,7 @@ export default function MyTeams() {
   }, [leaveTeamFn, navigate]);
 
   const handleDeleteRobot = useCallback(async (robot: Robot) => {
-    if (!isCaptain) return;
+    if (!isTeamAdmin) return;  // captain OR vice captain
     const robotId = robot.id ?? robot.robotId;
     if (!robotId) return;
     try {
@@ -849,7 +876,7 @@ export default function MyTeams() {
     } catch (err) {
       setGlobalError(parseApiError(err));
     }
-  }, [isCaptain]);
+  }, [isTeamAdmin]);
 
   // ── Loading ───────────────────────────────────────────────────────────────
   if (isLoading) {
@@ -937,17 +964,19 @@ export default function MyTeams() {
           <div>
             <div className="flex items-center gap-3.5 mb-2">
               <h1 className="text-3xl font-bold tracking-wider m-0">TEAM DASHBOARD</h1>
-              <RoleBadge isCaptain={isCaptain} />
+              <RoleBadge myRole={myRole} />
             </div>
             <p className="text-gray-400 text-sm m-0">
               {isCaptain
                 ? "You have full captain access — manage your team, robots, and members."
+                : isViceCaptain
+                ? "You have vice captain access — invite members, manage robots, and edit team info."
                 : "Welcome back! You're viewing your team's information."}
             </p>
           </div>
 
           <div className="flex flex-wrap gap-2.5">
-            {isCaptain ? (
+            {isTeamAdmin ? (
               <>
                 <ActionBtn icon={UserPlus} label="Invite Member" onClick={() => setActiveModal("invite")} accent />
                 <ActionBtn icon={Bot} label="Add Robot" onClick={() => setActiveModal("robot")} />
@@ -964,7 +993,7 @@ export default function MyTeams() {
         </div>
 
         {/* ── READ-ONLY NOTICE ─────────────────────────────────────────── */}
-        {!isCaptain && <ReadOnlyBanner />}
+        {!isTeamAdmin && <ReadOnlyBanner />}
 
         {/* ── TEAM CARD ────────────────────────────────────────────────── */}
         <div className="bg-gradient-to-br from-[#434343] to-[#262626] border border-white/9 rounded-[24px] p-8 mb-7 shadow-[0_10px_40px_rgba(0,0,0,0.35)]">
@@ -979,7 +1008,7 @@ export default function MyTeams() {
                   {logoInitial}
                 </div>
               )}
-              {isCaptain && (
+              {isTeamAdmin && (
                 <button
                   onClick={() => alert("Upload logo coming soon!")}
                   className="mt-2.5 w-[130px] bg-white/6 border border-white/9 text-gray-400 py-1.5 rounded-[10px] cursor-pointer text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-white/10 transition-colors"
@@ -999,6 +1028,11 @@ export default function MyTeams() {
                     <Crown size={11} /> Captain
                   </span>
                 )}
+                {isViceCaptain && (
+                  <span className="bg-purple-500/14 text-purple-400 px-3 py-1 rounded-full text-xs font-bold tracking-wider inline-flex items-center gap-1">
+                    <Shield size={11} /> Vice Captain
+                  </span>
+                )}
               </div>
 
               <p className="text-[#c5c5c5] mt-3.5 leading-7 max-w-[780px] text-sm">{description}</p>
@@ -1012,8 +1046,8 @@ export default function MyTeams() {
 
               <div className="flex flex-wrap gap-2.5 mt-5">
                 <ActionBtn icon={CalendarDays} label="Register Event" onClick={() => navigate("/events")} />
-                {isCaptain && <ActionBtn icon={Pencil} label="Edit Info" onClick={() => setActiveModal("edit")} />}
-                {!isCaptain && <ActionBtn icon={LogOut} label="Leave Team" onClick={() => setActiveModal("leave")} />}
+                {isTeamAdmin && <ActionBtn icon={Pencil} label="Edit Info" onClick={() => setActiveModal("edit")} />}
+                {!isTeamAdmin && <ActionBtn icon={LogOut} label="Leave Team" onClick={() => setActiveModal("leave")} />}
               </div>
             </div>
           </div>
@@ -1034,29 +1068,29 @@ export default function MyTeams() {
             title="Team Members"
             icon={Users}
             action={
-              isCaptain ? (
+              isTeamAdmin ? (
                 <ActionBtn icon={UserPlus} label="Invite" small accent onClick={() => setActiveModal("invite")} />
               ) : null
             }
           >
             {teamMemberships.length ? (
-              teamMemberships.map((member) => (
+              teamMemberships.map((member) => {
+                const mRole = member.teamRole?.toUpperCase() ?? "";
+                const avatarColor = mRole === "CAPTAIN" ? "bg-amber-500" : mRole === "VICE_CAPTAIN" ? "bg-purple-500" : "bg-[#fa4715]";
+                const avatarIcon = mRole === "CAPTAIN" ? <Crown size={16} /> : mRole === "VICE_CAPTAIN" ? <Shield size={16} /> : (member.teamRole?.charAt(0)?.toUpperCase() || "T");
+                return (
                 <div key={member.userId} className="flex items-center justify-between py-3 border-b border-white/9 last:border-b-0">
                   {/* Avatar + name */}
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-base text-white shrink-0 ${
-                      CAPTAIN_ROLES.has(member.teamRole?.toUpperCase() ?? "") ? "bg-amber-500" : "bg-[#fa4715]"
-                    }`}>
-                      {CAPTAIN_ROLES.has(member.teamRole?.toUpperCase() ?? "")
-                        ? <Crown size={16} />
-                        : (member.teamRole?.charAt(0)?.toUpperCase() || "T")}
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-base text-white shrink-0 ${avatarColor}`}>
+                      {avatarIcon}
                     </div>
                     <div>
                       <div className="font-semibold text-sm text-white">
                         {member.username ||
                           `${member.firstName ?? ""} ${member.lastName ?? ""}`.trim() || "Unknown"}
                       </div>
-                      <div className="text-gray-400 text-xs">{member.teamRole}</div>
+                      <div className="text-gray-400 text-xs">{member.teamRole?.replace("_", " ")}</div>
                     </div>
                   </div>
 
@@ -1070,7 +1104,8 @@ export default function MyTeams() {
                     ) : (
                       <MemberActionsMenu
                         member={member}
-                        isCaptain={isCaptain}
+                        isTeamAdmin={isTeamAdmin}
+                        isStrictCaptain={isCaptain}
                         onRemove={setRemovingMember}
                         onAssignRole={setAssigningRoleMember}
                         onTransferCaptain={setTransferringCaptainMember}
@@ -1078,13 +1113,13 @@ export default function MyTeams() {
                     )}
                   </div>
                 </div>
-              ))
+              )})
             ) : (
               <EmptyState
                 icon={Users}
                 message="No members yet"
-                cta={isCaptain ? "Invite Your First Member" : undefined}
-                onCta={isCaptain ? () => setActiveModal("invite") : undefined}
+                cta={isTeamAdmin ? "Invite Your First Member" : undefined}
+                onCta={isTeamAdmin ? () => setActiveModal("invite") : undefined}
               />
             )}
           </Panel>
@@ -1109,7 +1144,7 @@ export default function MyTeams() {
           <Panel
             title="Robots"
             icon={Bot}
-            action={isCaptain
+            action={isTeamAdmin
               ? <ActionBtn icon={Plus} label="Add Robot" small accent onClick={() => setActiveModal("robot")} />
               : null}
           >
@@ -1130,7 +1165,7 @@ export default function MyTeams() {
                   <RobotCard
                     key={robot.id ?? robot.robotId}
                     robot={robot}
-                    isCaptain={isCaptain}
+                    isCaptain={isTeamAdmin}
                     onClick={() => setSelectedRobot(robot as any)}
                     onDelete={handleDeleteRobot}
                   />
@@ -1142,24 +1177,25 @@ export default function MyTeams() {
               <EmptyState
                 icon={BotOff}
                 message="No robots registered yet"
-                cta={isCaptain ? "Register Your First Robot" : undefined}
-                onCta={isCaptain ? () => setActiveModal("robot") : undefined}
+                cta={isTeamAdmin ? "Register Your First Robot" : undefined}
+                onCta={isTeamAdmin ? () => setActiveModal("robot") : undefined}
               />
             )}
           </Panel>
         </div>
 
         {/* ── SPONSORS PANEL ───────────────────────────────────────────── */}
-        <SponsorPanel teamId={team1?.id ?? null} isCaptain={isCaptain} />
+        <SponsorPanel teamId={team1?.id ?? null} isCaptain={isTeamAdmin} />
       </div>
 
       {/* ── MODALS ─────────────────────────────────────────────────────────── */}
 
-      {activeModal === "invite" && isCaptain && (
+      {/* Captain OR Vice Captain can invite, add robot, edit team */}
+      {activeModal === "invite" && isTeamAdmin && (
         <InviteCard onClose={() => setActiveModal(null)} teamCode={typedTeam.teamCode ?? ""} />
       )}
 
-      {activeModal === "robot" && isCaptain && (
+      {activeModal === "robot" && isTeamAdmin && (
         <div className="fixed inset-0 z-50 overflow-auto bg-black/80">
           <button
             onClick={() => setActiveModal(null)}
@@ -1171,7 +1207,7 @@ export default function MyTeams() {
         </div>
       )}
 
-      {activeModal === "edit" && isCaptain && (
+      {activeModal === "edit" && isTeamAdmin && (
         <EditTeamModal team={typedTeam} onClose={() => setActiveModal(null)} />
       )}
 
@@ -1179,11 +1215,12 @@ export default function MyTeams() {
         <ShareCodeModal teamCode={teamCode} onClose={() => setActiveModal(null)} />
       )}
 
-      {activeModal === "leave" && !isCaptain && (
+      {activeModal === "leave" && !isTeamAdmin && (
         <LeaveTeamModal onConfirm={handleLeaveTeam} onClose={() => setActiveModal(null)} />
       )}
 
-      {removingMember && isCaptain && (
+      {/* Captain OR Vice Captain can remove members and assign roles */}
+      {removingMember && isTeamAdmin && (
         <RemoveMemberModal
           member={removingMember}
           onConfirm={handleRemoveMember}
@@ -1191,7 +1228,7 @@ export default function MyTeams() {
         />
       )}
 
-      {assigningRoleMember && isCaptain && (
+      {assigningRoleMember && isTeamAdmin && (
         <AssignRoleModal
           member={assigningRoleMember}
           onConfirm={handleAssignRole}
@@ -1199,6 +1236,7 @@ export default function MyTeams() {
         />
       )}
 
+      {/* Transfer captain = CAPTAIN only */}
       {transferringCaptainMember && isCaptain && (
         <TransferCaptainModal
           member={transferringCaptainMember}
@@ -1211,15 +1249,15 @@ export default function MyTeams() {
         <RobotDetailModal robot={selectedRobot as any} onClose={() => setSelectedRobot(null)} />
       )}
 
-      {/* Safety net — non-captain restricted modal */}
-      {activeModal && !isCaptain && !["share", "leave"].includes(activeModal) && (
+      {/* Safety net — member-only restricted modal */}
+      {activeModal && !isTeamAdmin && !["share", "leave"].includes(activeModal) && (
         <Modal title="Access Restricted" onClose={() => setActiveModal(null)}>
           <div className="text-center pt-4 pb-6">
             <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/28 flex items-center justify-center mx-auto mb-4 text-red-400">
               <ShieldAlert size={28} />
             </div>
-            <p className="text-gray-300 text-sm mb-1.5">Only the team captain can perform this action.</p>
-            <p className="text-gray-500 text-xs">Contact your captain to make changes.</p>
+            <p className="text-gray-300 text-sm mb-1.5">Only the captain or vice captain can perform this action.</p>
+            <p className="text-gray-500 text-xs">Contact your team admin to make changes.</p>
           </div>
         </Modal>
       )}

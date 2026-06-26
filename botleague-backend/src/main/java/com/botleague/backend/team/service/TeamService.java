@@ -144,8 +144,9 @@ public class TeamService {
                 .findByUserIdAndStatus(userId, TeamMembershipStatus.ACTIVE)
                 .orElseThrow(() -> ApiException.forbidden("User is not part of any active team"));
 
-        if (!TeamRole.CAPTAIN.equals(membership.getRoleInTeam())) {
-            throw ApiException.forbidden("Only team captain can update the team");
+        if (membership.getRoleInTeam() != TeamRole.CAPTAIN
+                && membership.getRoleInTeam() != TeamRole.VICE_CAPTAIN) {
+            throw ApiException.forbidden("Only team captain or vice captain can update the team");
         }
 
         UUID teamId = membership.getTeamId();
