@@ -22,7 +22,6 @@ export interface PublicRobotProfile {
   description: string | null;
   status:      string | null;
   imageUrl:    string | null;
-  // specs
   robotType:   string | null;
   sport:       string | null;
   ageCategory: string | null;
@@ -33,12 +32,10 @@ export interface PublicRobotProfile {
   lengthCm:    number | null;
   widthCm:     number | null;
   heightCm:    number | null;
-  // team
   teamId:      string | null;
   teamName:    string | null;
   teamCode:    string | null;
   teamLogoUrl: string | null;
-  // career
   totalMatches:  number;
   totalWins:     number;
   totalLosses:   number;
@@ -47,11 +44,17 @@ export interface PublicRobotProfile {
   goldMedals:    number;
   silverMedals:  number;
   bronzeMedals:  number;
-  // records
   records: RobotTournamentRecord[];
 }
 
+// Look up by UUID
 export const getPublicRobotProfile = async (robotId: string): Promise<PublicRobotProfile> => {
   const res = await api.get<PublicRobotProfile>(`/robots/public/${robotId}`);
+  return res.data;
+};
+
+// Look up by robot code e.g. BLR0000001 (share links)
+export const getPublicRobotProfileByCode = async (robotCode: string): Promise<PublicRobotProfile> => {
+  const res = await api.get<PublicRobotProfile>(`/robots/public/code/${robotCode}`);
   return res.data;
 };

@@ -49,10 +49,19 @@ public class PublicRobotService {
         this.eventSportsRepository       = eventSportsRepository;
     }
 
+    public PublicRobotProfileDTO getPublicProfileByCode(String robotCode) {
+        Robot robot = robotRepository.findByRobotCode(robotCode)
+                .orElseThrow(() -> ApiException.notFound("Robot not found"));
+        return buildProfile(robot);
+    }
+
     public PublicRobotProfileDTO getPublicProfile(UUID robotId) {
         Robot robot = robotRepository.findByIdAndDeletedAtIsNull(robotId)
                 .orElseThrow(() -> ApiException.notFound("Robot not found"));
+        return buildProfile(robot);
+    }
 
+    private PublicRobotProfileDTO buildProfile(Robot robot) {
         PublicRobotProfileDTO dto = new PublicRobotProfileDTO();
 
         // ── Robot identity ────────────────────────────────────────────────────

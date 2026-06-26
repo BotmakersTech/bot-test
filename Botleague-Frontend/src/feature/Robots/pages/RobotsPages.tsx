@@ -6,6 +6,7 @@ import RobotDetailModal from "../components/RobotDetailModal";
 import CreateRobotForm from "../components/CreateRobotFrom";
 import Modal from "../../../shared/components/Modal";
 import type { Robot } from "../types/types";
+import ShareButton from "../../../shared/components/ShareButton";
 
 // ─── Category config ───────────────────────────────────────────────────────
 const CATEGORY_COLOR: Record<string, string> = {
@@ -639,8 +640,20 @@ export default function RobotsPage() {
 
                   {/* Body */}
                   <div className="rp-card-body">
-                    <p className="rp-card-name">{robot.robotName}</p>
-                    <p className="rp-card-code">{robot.robotCode}</p>
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 6 }}>
+                      <div>
+                        <p className="rp-card-name">{robot.robotName}</p>
+                        <p className="rp-card-code">{robot.robotCode}</p>
+                      </div>
+                      {robot.robotCode && (
+                        <div onClick={e => e.stopPropagation()}>
+                          <ShareButton
+                            url={`${window.location.origin}/robot/${robot.robotCode}`}
+                            size="sm"
+                          />
+                        </div>
+                      )}
+                    </div>
                     <div className="rp-card-divider" />
                     <div className="rp-meta">
                       {robot.weightClass && (

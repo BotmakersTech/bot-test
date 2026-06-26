@@ -5,6 +5,7 @@ import useProfile from "../hooks/useProfile";
 import CategoryBadge from "../../../shared/components/CategoryBadge";
 import GuardianForm from "../../Eligibility/components/GuardianForm";
 import { useEligibility } from "../../Eligibility/hooks/useEligibility";
+import ShareButton from "../../../shared/components/ShareButton";
 import "../../../styles/profile.css";
 
 const ProfilePage: React.FC = () => {
@@ -22,6 +23,17 @@ const ProfilePage: React.FC = () => {
         onUsernameChange={p.setUsername}
         botleagueId={p.botleagueId}
       >
+        {/* Share public profile link */}
+        {p.botleagueId && (
+          <div style={{ marginBottom: "12px" }}>
+            <ShareButton
+              url={`${window.location.origin}/user/${p.botleagueId}`}
+              label="Share Profile"
+              size="sm"
+            />
+          </div>
+        )}
+
         {/* Competition Category Badge */}
         {eligibility?.category && (
           <div style={{ marginBottom: "16px", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>

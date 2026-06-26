@@ -12,11 +12,18 @@ import org.springframework.web.multipart.MultipartFile;
 import com.botleague.backend.common.service.UploadService;
 import com.botleague.backend.profile.dto.ProfileResponseDTO;
 import com.botleague.backend.profile.dto.PublicProfileResponseDTO;
+import com.botleague.backend.auth.entity.User;
+import com.botleague.backend.auth.repository.UserRepository;
 import com.botleague.backend.profile.dto.ChangePhoneRequestDTO;
 import com.botleague.backend.profile.dto.UpdateEmailRequestDTO;
 import com.botleague.backend.profile.dto.UpdateProfileRequestDTO;
 import com.botleague.backend.profile.dto.UploadResponse;
 import com.botleague.backend.profile.dto.UsernameRequest;
+import com.botleague.backend.team.entity.Team;
+import com.botleague.backend.team.entity.TeamMembership;
+import com.botleague.backend.team.enums.TeamMembershipStatus;
+import com.botleague.backend.team.repository.TeamMembershipRepository;
+import com.botleague.backend.team.repository.TeamRepository;
 import com.botleague.backend.profile.service.PublicProfileService;
 
 import com.botleague.backend.profile.service.UserProfileService;
@@ -29,19 +36,28 @@ import com.botleague.backend.profile.service.FileKeyService;
 @RequestMapping("/api/profile")
 public class ProfileController {
 
-    private final UserProfileService userProfileService;
-    private final UploadService uploadService;
-    private final PublicProfileService publicProfileService;
-    private final FileKeyService fileKeyService;
+    private final UserProfileService    userProfileService;
+    private final UploadService         uploadService;
+    private final PublicProfileService  publicProfileService;
+    private final FileKeyService        fileKeyService;
+    private final UserRepository        userRepository;
+    private final TeamMembershipRepository teamMembershipRepository;
+    private final TeamRepository        teamRepository;
 
     public ProfileController(UserProfileService userProfileService,
                              UploadService uploadService,
                              PublicProfileService publicProfileService,
-                             FileKeyService fileKeyService) {
-        this.userProfileService = userProfileService;
-        this.uploadService = uploadService;
-        this.publicProfileService = publicProfileService;
-        this.fileKeyService = fileKeyService;
+                             FileKeyService fileKeyService,
+                             UserRepository userRepository,
+                             TeamMembershipRepository teamMembershipRepository,
+                             TeamRepository teamRepository) {
+        this.userProfileService       = userProfileService;
+        this.uploadService            = uploadService;
+        this.publicProfileService     = publicProfileService;
+        this.fileKeyService           = fileKeyService;
+        this.userRepository           = userRepository;
+        this.teamMembershipRepository = teamMembershipRepository;
+        this.teamRepository           = teamRepository;
     }
 
     // =========================
@@ -139,11 +155,51 @@ public class ProfileController {
     }
 
     // =========================
-    // Public profile
+    // Public profile by UUID (existing)
     // =========================
     @GetMapping("/{userId}")
     public PublicProfileResponseDTO getProfile(@PathVariable UUID userId) {
         return publicProfileService.publicProfileView(userId);
+    }
+
+    // =========================
+    // Public profile by BotLeague ID — no auth required
+    // e.g. GET /api/profile/public/BLU0000001
+    // =========================
+    @GetMapping("/public/{botleagueId}")
+    public ResponseEntity<Map<String, Object>> getPublicProfileByCode(
+            @PathVariable String botleagueId) {
+
+        User user = userRepository.findByBotleagueId(botleagueId)
+                .orElseThrow(() -> com.botleague.backend.common.exception.ApiException.notFound("User not found"));
+
+        Map<String, Object> profile = new java.util.LinkedHashMap<>();
+        profile.put("userId",        user.getId());
+        profile.put("botleagueId",   user.getBotleagueId());
+        profile.put("firstName",     user.getFirstName());
+        profile.put("lastName",      user.getLastName());
+        profile.put("username",      user.getUsername());
+        profile.put("profilePhotoUrl", user.getProfilePhotoUrl());
+        profile.put("city",          user.getCity());
+        profile.put("state",         user.getState());
+        profile.put("country",       user.getCountry());
+        profile.put("memberSince",   user.getCreatedAt());
+        profile.put("accountType",   user.getAccountType() != null ? user.getAccountType().name() : null);
+
+        // Active team info
+        teamMembershipRepository
+                .findByUserIdAndStatus(user.getId(), TeamMembershipStatus.ACTIVE)
+                .ifPresent(m -> {
+                    profile.put("teamRole", m.getRoleInTeam() != null ? m.getRoleInTeam().name() : null);
+                    teamRepository.findById(m.getTeamId()).ifPresent(t -> {
+                        profile.put("teamId",     t.getId());
+                        profile.put("teamCode",   t.getTeamCode());
+                        profile.put("teamName",   t.getTeamName());
+                        profile.put("teamLogo",   t.getLogoUrl());
+                    });
+                });
+
+        return ResponseEntity.ok(profile);
     }
     
     @PostMapping("/photo")

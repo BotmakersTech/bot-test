@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getPublicRobotProfile, type PublicRobotProfile } from "../api/robotPublic.api";
+import { getPublicRobotProfile, getPublicRobotProfileByCode, type PublicRobotProfile } from "../api/robotPublic.api";
+import ShareButton from "../../../shared/components/ShareButton";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const BG    = "#0d0d0f";
@@ -91,21 +92,26 @@ function PositionCell({ rank }: { rank: number | null }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function RobotPublicPage() {
-  const { robotId } = useParams<{ robotId: string }>();
-  const navigate    = useNavigate();
+  const { robotId, code } = useParams<{ robotId?: string; code?: string }>();
+  const param    = code ?? robotId ?? "";
+  const navigate = useNavigate();
+  const isCode   = !!code || (param.startsWith("BLR") && !param.includes("-"));
 
   const [profile, setProfile] = useState<PublicRobotProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
 
   useEffect(() => {
-    if (!robotId) return;
+    if (!param) return;
     setLoading(true);
-    getPublicRobotProfile(robotId)
+    const fetch = isCode
+      ? getPublicRobotProfileByCode(param)
+      : getPublicRobotProfile(param);
+    fetch
       .then(setProfile)
       .catch(e => setError(e?.response?.data?.message ?? "Robot not found"))
       .finally(() => setLoading(false));
-  }, [robotId]);
+  }, [param, isCode]);
 
   if (loading) return (
     <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -122,7 +128,8 @@ export default function RobotPublicPage() {
     </div>
   );
 
-  const winRate = profile.totalMatches > 0 ? Math.round((profile.totalWins / profile.totalMatches) * 100) : 0;
+  const winRate  = profile.totalMatches > 0 ? Math.round((profile.totalWins / profile.totalMatches) * 100) : 0;
+  const shareUrl = `${window.location.origin}/robot/${profile.robotCode}`;
 
   return (
     <div style={{ minHeight: "100vh", background: BG, color: TEXT, fontFamily: "Inter, system-ui, sans-serif" }}>
@@ -138,13 +145,16 @@ export default function RobotPublicPage() {
           <>
             <span style={{ color: MUTED }}>·</span>
             <button
-              onClick={() => profile.teamId && navigate(`/team/${profile.teamId}`)}
+              onClick={() => profile.teamCode && navigate(`/team/${profile.teamCode}`)}
               style={{ background: "none", border: "none", color: GOLD, fontSize: "0.78rem", fontWeight: 600, cursor: "pointer", padding: 0 }}
             >
               {profile.teamName} →
             </button>
           </>
         )}
+        <div style={{ marginLeft: "auto" }}>
+          <ShareButton url={shareUrl} label="Share" size="sm" />
+        </div>
       </div>
 
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "48px 32px" }}>

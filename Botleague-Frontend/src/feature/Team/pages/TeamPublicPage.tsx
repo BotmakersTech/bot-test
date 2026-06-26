@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getPublicTeamProfile, type PublicTeamProfile } from "../api/teamPublic.api";
+import { getPublicTeamProfile, getPublicTeamProfileByCode, type PublicTeamProfile } from "../api/teamPublic.api";
+import ShareButton from "../../../shared/components/ShareButton";
 
 // ── Design tokens (matching the dark esports aesthetic) ───────────────────────
 const BG      = "#0d0d0f";
@@ -84,21 +85,27 @@ function PositionCell({ rank }: { rank: number | null }) {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function TeamPublicPage() {
-  const { teamId } = useParams<{ teamId: string }>();
-  const navigate   = useNavigate();
+  // supports both /team/:teamId (UUID) and /team/:code (BLT...)
+  const { teamId, code } = useParams<{ teamId?: string; code?: string }>();
+  const param    = code ?? teamId ?? "";
+  const navigate = useNavigate();
+  const isCode   = !!code || (param.startsWith("BLT") && !param.includes("-"));
 
   const [profile, setProfile] = useState<PublicTeamProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
 
   useEffect(() => {
-    if (!teamId) return;
+    if (!param) return;
     setLoading(true);
-    getPublicTeamProfile(teamId)
+    const fetch = isCode
+      ? getPublicTeamProfileByCode(param)
+      : getPublicTeamProfile(param);
+    fetch
       .then(setProfile)
       .catch(e => setError(e?.response?.data?.message ?? "Team not found"))
       .finally(() => setLoading(false));
-  }, [teamId]);
+  }, [param, isCode]);
 
   if (loading) return (
     <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -115,8 +122,9 @@ export default function TeamPublicPage() {
     </div>
   );
 
-  const initials = profile.teamName.split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase();
-  const winRate  = profile.matchesPlayed > 0 ? Math.round((profile.totalWins / profile.matchesPlayed) * 100) : 0;
+  const initials  = profile.teamName.split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase();
+  const winRate   = profile.matchesPlayed > 0 ? Math.round((profile.totalWins / profile.matchesPlayed) * 100) : 0;
+  const shareUrl  = `${window.location.origin}/team/${profile.teamCode}`;
 
   return (
     <div style={{ minHeight: "100vh", background: BG, color: TEXT, fontFamily: "Inter, system-ui, sans-serif" }}>
@@ -129,6 +137,9 @@ export default function TeamPublicPage() {
           ← Back
         </button>
         <span style={{ color: MUTED, fontSize: "0.78rem" }}>Public Team Profile</span>
+        <div style={{ marginLeft: "auto" }}>
+          <ShareButton url={shareUrl} label="Share" size="sm" />
+        </div>
       </div>
 
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "48px 32px" }}>

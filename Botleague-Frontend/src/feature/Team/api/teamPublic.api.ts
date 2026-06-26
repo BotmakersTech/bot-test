@@ -27,7 +27,6 @@ export interface PublicTeamProfile {
   city:            string | null;
   state:           string | null;
   country:         string | null;
-  // global stats
   totalPoints:     number;
   totalWins:       number;
   totalLosses:     number;
@@ -37,11 +36,17 @@ export interface PublicTeamProfile {
   goldMedals:      number;
   silverMedals:    number;
   bronzeMedals:    number;
-  // records
   eventRecords:    EventRecord[];
 }
 
+// Look up by UUID (internal links)
 export const getPublicTeamProfile = async (teamId: string): Promise<PublicTeamProfile> => {
   const res = await api.get<PublicTeamProfile>(`/teams/public/${teamId}`);
+  return res.data;
+};
+
+// Look up by team code e.g. BLT0000001 (share links)
+export const getPublicTeamProfileByCode = async (teamCode: string): Promise<PublicTeamProfile> => {
+  const res = await api.get<PublicTeamProfile>(`/teams/public/code/${teamCode}`);
   return res.data;
 };

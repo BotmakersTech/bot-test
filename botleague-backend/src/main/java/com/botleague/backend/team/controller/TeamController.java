@@ -44,10 +44,16 @@ public class TeamController {
         this.publicTeamService = publicTeamService;
     }
 
-    /** Public team profile — no authentication required. */
+    /** Public team profile by UUID — no authentication required. */
     @GetMapping("/public/{teamId}")
     public ResponseEntity<PublicTeamProfileDTO> getPublicProfile(@PathVariable UUID teamId) {
         return ResponseEntity.ok(publicTeamService.getPublicProfile(teamId));
+    }
+
+    /** Public team profile by team code (e.g. BLT0000001) — no authentication required. */
+    @GetMapping("/public/code/{teamCode}")
+    public ResponseEntity<PublicTeamProfileDTO> getPublicProfileByCode(@PathVariable String teamCode) {
+        return ResponseEntity.ok(publicTeamService.getPublicProfileByCode(teamCode));
     }
 
     @PostMapping("/createTeam")

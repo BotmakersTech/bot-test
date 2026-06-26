@@ -21,6 +21,7 @@ import LocationSelects from "../../../shared/components/LocationSelects";
 import PrimaryBtn from "../../../shared/components/PrimaryBtn";
 import ProfileIncompleteModal from "../../../shared/components/ProfileIncompleteModal";
 import { useProfileComplete } from "../../../shared/hooks/useProfileComplete";
+import ShareButton from "../../../shared/components/ShareButton";
 import InviteCard from "../TeamMembership/components/InviteCard";
 import useTeamMembership from "../../Team/TeamMembership/hooks/useTeamMembership";
 import RobotDetailModal from "../../Robots/components/RobotDetailModal";
@@ -938,7 +939,7 @@ export default function MyTeams() {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2.5">
+          <div className="flex flex-wrap gap-2.5 items-center">
             {isTeamAdmin ? (
               <>
                 <ActionBtn icon={UserPlus} label="Invite Member" onClick={() => setActiveModal("invite")} accent />
@@ -951,6 +952,14 @@ export default function MyTeams() {
                 <ActionBtn icon={Share2} label="Share Code" onClick={() => setActiveModal("share")} />
                 <ActionBtn icon={LogOut} label="Leave Team" onClick={() => setActiveModal("leave")} />
               </>
+            )}
+            {/* Share public team profile link */}
+            {typedTeam?.teamCode && (
+              <ShareButton
+                url={`${window.location.origin}/team/${typedTeam.teamCode}`}
+                label="Share Profile"
+                size="sm"
+              />
             )}
           </div>
         </div>

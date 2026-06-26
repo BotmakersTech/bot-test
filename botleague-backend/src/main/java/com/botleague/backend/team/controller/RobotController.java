@@ -53,10 +53,16 @@ public class RobotController {
 		this.publicRobotService = publicRobotService;
 	}
 
-	/** Public robot profile — no authentication required. */
+	/** Public robot profile by UUID — no authentication required. */
 	@GetMapping("/public/{robotId}")
 	public ResponseEntity<PublicRobotProfileDTO> getPublicProfile(@PathVariable UUID robotId) {
 		return ResponseEntity.ok(publicRobotService.getPublicProfile(robotId));
+	}
+
+	/** Public robot profile by robot code (e.g. BLR0000001) — no authentication required. */
+	@GetMapping("/public/code/{robotCode}")
+	public ResponseEntity<PublicRobotProfileDTO> getPublicProfileByCode(@PathVariable String robotCode) {
+		return ResponseEntity.ok(publicRobotService.getPublicProfileByCode(robotCode));
 	}
 	@PostMapping("/createRobots")
 	public ResponseEntity<CreateRobotResponseDTO> createRobot(Authentication authentication ,@RequestBody CreateRobotRequestDTO request) {

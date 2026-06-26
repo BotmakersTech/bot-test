@@ -38,9 +38,19 @@ public class PublicTeamService {
         this.eventRepository             = eventRepository;
     }
 
+    public PublicTeamProfileDTO getPublicProfileByCode(String teamCode) {
+        Team team = teamRepository.findByTeamCode(teamCode)
+                .orElseThrow(() -> ApiException.notFound("Team not found"));
+        return buildProfile(team);
+    }
+
     public PublicTeamProfileDTO getPublicProfile(UUID teamId) {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> ApiException.notFound("Team not found"));
+        return buildProfile(team);
+    }
+
+    private PublicTeamProfileDTO buildProfile(Team team) {
 
         PublicTeamProfileDTO dto = new PublicTeamProfileDTO();
 

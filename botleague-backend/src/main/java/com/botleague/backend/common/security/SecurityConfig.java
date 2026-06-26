@@ -52,6 +52,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**", "/api/profile/verify-email", "/error").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/teams/public/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/robots/public/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/profile/public/**").permitAll()
                 .requestMatchers("/ws/chat/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/rankings/**").permitAll()

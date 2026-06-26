@@ -131,6 +131,7 @@ import VolunteerSchedulePage from "../feature/Volunteer/pages/VolunteerScheduleP
 
 import TeamPublicPage  from "../feature/Team/pages/TeamPublicPage";
 import RobotPublicPage from "../feature/Robots/pages/RobotPublicPage";
+import UserPublicPage  from "../feature/Profile/pages/UserPublicPage";
 
 // ============================
 // ROUTE GUARDS
@@ -153,8 +154,10 @@ function AppRoutes() {
       {/* PUBLIC ROUTES */}
       {/* ========================================= */}
       <Route path="/" element={<Home />} />
-      <Route path="/team/:teamId"   element={<TeamPublicPage />} />
-      <Route path="/robot/:robotId" element={<RobotPublicPage />} />
+      {/* Public profiles — accepts both UUID and BL-code (BLT.../BLR.../BLU...) */}
+      <Route path="/team/:teamId"    element={<TeamPublicPage />} />
+      <Route path="/robot/:robotId"  element={<RobotPublicPage />} />
+      <Route path="/user/:code"      element={<UserPublicPage />} />
       <Route path="/about-us" element={<AboutUs />} />
       <Route path="/contact-us" element={<ContactUs />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
