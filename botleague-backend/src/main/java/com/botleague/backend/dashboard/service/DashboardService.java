@@ -257,57 +257,37 @@ public class DashboardService {
     private List<EventDTO> getEvents(UUID userId) {
 
         // ─────────────────────────────────────────────
-        // 1. Resolve all active TeamMembership IDs for
-        //    this user. Lineup rows are keyed on
-        //    TeamMembership.id, NOT on User.id directly.
+        // 1. Find all teams this user is (or was) a member of.
         // ─────────────────────────────────────────────
 
-        List<UUID> membershipIds = teamMembershipRepository
+        List<UUID> teamIds = teamMembershipRepository
                 .findByUserId(userId)
                 .stream()
-                .map(TeamMembership::getId)
-                .collect(Collectors.toList());
-
-        if (membershipIds.isEmpty()) {
-            return List.of();
-        }
-
-        // ─────────────────────────────────────────────
-        // 2. Find all active lineup entries where this
-        //    user (via their memberships) is assigned.
-        //    Uses teamMembershipId, not teamMemberId.
-        // ─────────────────────────────────────────────
-
-        List<EventRegistrationLineup> lineupEntries = membershipIds.stream()
-                .flatMap(membershipId ->
-                        eventRegistrationLineupRepository
-                                .findByTeamMembershipIdAndIsActive(membershipId, true)
-                                .stream()
-                )
-                .collect(Collectors.toList());
-
-        if (lineupEntries.isEmpty()) {
-            return List.of();
-        }
-
-        // ─────────────────────────────────────────────
-        // 3. Collect distinct SportRegistration IDs from
-        //    lineup rows. Field is sportRegistrationId,
-        //    not eventRegistrationId.
-        // ─────────────────────────────────────────────
-
-        List<UUID> sportRegistrationIds = lineupEntries.stream()
-                .map(EventRegistrationLineup::getSportRegistrationId)
+                .map(TeamMembership::getTeamId)
                 .distinct()
                 .collect(Collectors.toList());
 
+        if (teamIds.isEmpty()) {
+            return List.of();
+        }
+
         // ─────────────────────────────────────────────
-        // 4. Load the SportRegistration rows.
-        //    SportRegistration replaces EventRegistration.
+        // 2. Load all SportRegistrations for those teams.
+        //    This works regardless of whether a lineup
+        //    was filled — the team participated as a unit.
+        //    We also check via lineup so individual
+        //    members on multi-bot teams see all their sports.
         // ─────────────────────────────────────────────
 
-        List<SportRegistration> registrations =
-                sportRegistrationRepository.findAllById(sportRegistrationIds);
+        List<SportRegistration> registrations = sportRegistrationRepository
+                .findByTeamIdIn(teamIds)
+                .stream()
+                .filter(r -> r.getStatus() != null &&
+                        (r.getStatus().name().equals("REGISTERED") ||
+                         r.getStatus().name().equals("PENDING") ||
+                         r.getStatus().name().equals("CONFIRMED") ||
+                         r.getStatus().name().equals("CHECKED_IN")))
+                .collect(Collectors.toList());
 
         List<EventDTO> result = new ArrayList<>();
 

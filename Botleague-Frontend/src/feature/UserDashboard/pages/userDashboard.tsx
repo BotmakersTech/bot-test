@@ -719,7 +719,7 @@ export default function UserDashboard() {
         className="text-4xl font-extrabold leading-none text-neutral-50"
         style={numStyle}
       >
-        {winRate}
+        {winRate}%
       </div>
 
       <div className="leading-tight">
