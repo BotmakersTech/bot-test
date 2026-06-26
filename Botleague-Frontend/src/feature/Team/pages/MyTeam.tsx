@@ -148,7 +148,8 @@ const CAPTAIN_ONLY = new Set(["CAPTAIN"]);
 
 // ─── useTeamRole hook ─────────────────────────────────────────────────────────
 function useTeamRole(team: Team | null, teamMemberships: TeamMember[], currentUser: CurrentUser | null) {
-  const [myRole, setMyRole]             = useState<string>("MEMBER");
+  // null = not resolved yet (data still loading) — keeps roleResolved guard working
+  const [myRole, setMyRole]             = useState<string | null>(null);
   const [myMembership, setMyMembership] = useState<TeamMember | null>(null);
 
   useEffect(() => {
@@ -180,13 +181,15 @@ function useTeamRole(team: Team | null, teamMemberships: TeamMember[], currentUs
   }, [team, teamMemberships, currentUser]);
 
   return {
-    myRole,
+    myRole: myRole ?? "MEMBER",
     myMembership,
     /** Can do everything: invite, remove members, edit team, manage robots */
-    isTeamAdmin:    ADMIN_ROLES.has(myRole),
+    isTeamAdmin:    ADMIN_ROLES.has(myRole ?? "MEMBER"),
     /** Strict captain only: transfer captaincy, assign vice-captain */
-    isCaptain:      CAPTAIN_ONLY.has(myRole),
+    isCaptain:      CAPTAIN_ONLY.has(myRole ?? "MEMBER"),
     isViceCaptain:  myRole === "VICE_CAPTAIN",
+    /** False while data is still loading — gates the full dashboard render */
+    resolved:       myRole !== null,
   };
 }
 
@@ -822,8 +825,7 @@ export default function MyTeams() {
   const [logoError, setLogoError] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
 
-  const { myRole, isCaptain, isViceCaptain, isTeamAdmin } = useTeamRole(team, teamMemberships, currentUser);
-  const roleResolved = myRole !== null;
+  const { myRole, isCaptain, isViceCaptain, isTeamAdmin, resolved: roleResolved } = useTeamRole(team, teamMemberships, currentUser);
 
   // ── Action wrappers with error extraction ─────────────────────────────────
   const handleRemoveMember = useCallback(async (member: TeamMember): Promise<void> => {
