@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { deleteRobot } from "../../Robots/api/robot.api";
 import {
@@ -83,27 +83,6 @@ interface Team {
   captainId?: string;
 }
 
-interface CurrentUser {
-  id?: string;
-  _id?: string;
-  userId: string;
-  botleagueId?: string;
-  username?: string;
-  firstName?: string;
-  lastName?: string;
-  gender?: string;
-  dateOfBirth?: string;
-  profilePhotoUrl?: string;
-  country?: string;
-  state?: string;
-  city?: string;
-  address?: string;
-  membershipId?: string;
-  teamId?: string;
-  teamMemberId?: string;
-  teamRole?: string;
-  membershipStatus?: string;
-}
 
 // ─── API Error Parser ─────────────────────────────────────────────────────────
 interface ApiError {
@@ -140,58 +119,6 @@ function parseApiError(err: unknown): string {
 
 // ─── Role constants ───────────────────────────────────────────────────────────
 const ALL_ROLES: TeamRole[] = ["CAPTAIN", "VICE_CAPTAIN", "MEMBER", "MENTOR"];
-
-// Roles that can manage the team (invite, remove members, edit info, manage robots)
-const ADMIN_ROLES  = new Set(["CAPTAIN", "VICE_CAPTAIN"]);
-// Only captain can do privileged ops (transfer, assign vice-captain, delete team)
-const CAPTAIN_ONLY = new Set(["CAPTAIN"]);
-
-// ─── useTeamRole hook ─────────────────────────────────────────────────────────
-function useTeamRole(team: Team | null, teamMemberships: TeamMember[], currentUser: CurrentUser | null) {
-  // null = not resolved yet (data still loading) — keeps roleResolved guard working
-  const [myRole, setMyRole]             = useState<string | null>(null);
-  const [myMembership, setMyMembership] = useState<TeamMember | null>(null);
-
-  useEffect(() => {
-    if (!team || !currentUser) { setMyRole("MEMBER"); setMyMembership(null); return; }
-
-    const uid     = currentUser.userId || currentUser.id || currentUser._id || "";
-    const isOwner = team.createdBy === uid || team.ownerId === uid ||
-                    team.captain   === uid || team.captainId === uid;
-    const mine    = (teamMemberships ?? []).find(
-      (m) => (uid && m.userId === uid) ||
-             (currentUser.username   && m.username   === currentUser.username) ||
-             (currentUser.botleagueId && m.botleagueId === currentUser.botleagueId)
-    );
-
-    setMyMembership(mine || null);
-
-    if (isOwner) { setMyRole("CAPTAIN"); return; }
-
-    const backendRole = mine?.teamRole?.toUpperCase() ?? "MEMBER";
-    // Normalise legacy aliases from older frontend versions
-    const normalized =
-      backendRole === "LEADER" || backendRole === "CO_CAPTAIN" || backendRole === "ADMIN"
-        ? "CAPTAIN"
-        : backendRole === "VICE_CAPTAIN"
-        ? "VICE_CAPTAIN"
-        : "MEMBER";
-
-    setMyRole(normalized);
-  }, [team, teamMemberships, currentUser]);
-
-  return {
-    myRole: myRole ?? "MEMBER",
-    myMembership,
-    /** Can do everything: invite, remove members, edit team, manage robots */
-    isTeamAdmin:    ADMIN_ROLES.has(myRole ?? "MEMBER"),
-    /** Strict captain only: transfer captaincy, assign vice-captain */
-    isCaptain:      CAPTAIN_ONLY.has(myRole ?? "MEMBER"),
-    isViceCaptain:  myRole === "VICE_CAPTAIN",
-    /** False while data is still loading — gates the full dashboard render */
-    resolved:       myRole !== null,
-  };
-}
 
 // ─── Error Alert ──────────────────────────────────────────────────────────────
 function ErrorAlert({ message, onDismiss }: { message: string; onDismiss?: () => void }) {
@@ -781,10 +708,6 @@ function MemberActionsMenu({ member, isTeamAdmin, isStrictCaptain, onRemove, onA
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function MyTeams() {
-  const currentUser = useAppSelector(
-    (state: any) => state.auth?.user || state.user?.user || state.user
-  ) as CurrentUser | null;
-
   const team1 = useAppSelector((state: any) => state.team);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
 
   const navigate = useNavigate();
@@ -814,6 +737,12 @@ export default function MyTeams() {
     leaveTeam: leaveTeamFn,
     reload: reloadMemberships,
     actionLoading,
+    // These are already computed correctly in the hook using authUser.id
+    isCaptain:    isCaptainFromHook,
+    isViceCaptain: isViceCaptainFromHook,
+    isAdmin:      isAdminFromHook,
+    currentUserMembership,
+    loading: membershipsLoading,
   } = useTeamMembership(team1?.teamCode);
 
   // ── Local state ───────────────────────────────────────────────────────────
@@ -825,7 +754,13 @@ export default function MyTeams() {
   const [logoError, setLogoError] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
 
-  const { myRole, isCaptain, isViceCaptain, isTeamAdmin, resolved: roleResolved } = useTeamRole(team, teamMemberships, currentUser);
+  // Use the hook's own computed roles — these correctly match authUser.id against member.userId
+  const isCaptain    = isCaptainFromHook;
+  const isViceCaptain = isViceCaptainFromHook;
+  const isTeamAdmin  = isAdminFromHook;  // captain || viceCaptain
+  const myRole       = currentUserMembership?.teamRole?.toUpperCase() ?? "MEMBER";
+  // Resolved once we've loaded memberships (even if empty = no team/loading done)
+  const roleResolved = !membershipsLoading;
 
   // ── Action wrappers with error extraction ─────────────────────────────────
   const handleRemoveMember = useCallback(async (member: TeamMember): Promise<void> => {
