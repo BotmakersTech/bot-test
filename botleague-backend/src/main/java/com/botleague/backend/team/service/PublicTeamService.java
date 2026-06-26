@@ -67,7 +67,7 @@ public class PublicTeamService {
         dto.setCountry(team.getCountry());
 
         // ── Global stats — aggregate all Ranking rows for this team ──────────
-        List<Ranking> allRankings = rankingRepository.findByTeamId(teamId);
+        List<Ranking> allRankings = rankingRepository.findByTeamId(team.getId());
 
         int totalPoints   = allRankings.stream().mapToInt(Ranking::getTotalPoints).sum();
         int totalWins     = allRankings.stream().mapToInt(Ranking::getWins).sum();
@@ -97,7 +97,7 @@ public class PublicTeamService {
         // ── Event sport records — one row per event sport participation ───────
         // Use a mutable list so we can sort it in place
         List<EventLeaderboardEntry> entries = new ArrayList<>(
-                leaderboardEntryRepository.findByTeamId(teamId));
+                leaderboardEntryRepository.findByTeamId(team.getId()));
 
         List<PublicTeamProfileDTO.EventRecord> records = entries.stream()
                 .sorted(Comparator.comparing(EventLeaderboardEntry::getCreatedAt).reversed())
