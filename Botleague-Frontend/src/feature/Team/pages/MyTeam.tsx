@@ -1,6 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { deleteRobot } from "../../Robots/api/robot.api";
+import { uploadTeamLogo } from "../CreateTeam/api/uploadTeamLogo.api";
 import {
   Users, Bot, Sword, Trophy, Plus, UserPlus, Pencil, Share2,
   MapPin, Globe, BadgeCheck, Building2, CalendarDays, Search,
@@ -751,8 +752,33 @@ export default function MyTeams() {
   const [removingMember, setRemovingMember] = useState<TeamMember | null>(null);
   const [assigningRoleMember, setAssigningRoleMember] = useState<TeamMember | null>(null);
   const [transferringCaptainMember, setTransferringCaptainMember] = useState<TeamMember | null>(null);
-  const [logoError, setLogoError] = useState(false);
-  const [globalError, setGlobalError] = useState<string | null>(null);
+  const [logoError,      setLogoError]      = useState(false);
+  const [globalError,    setGlobalError]    = useState<string | null>(null);
+  const [logoUploading,  setLogoUploading]  = useState(false);
+  const [logoSuccess,    setLogoSuccess]    = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !team1?.id) return;
+    // Reset input so same file can be re-selected
+    e.target.value = "";
+    setLogoUploading(true);
+    setLogoSuccess(false);
+    setGlobalError(null);
+    try {
+      await uploadTeamLogo(team1.id, file);
+      setLogoError(false);
+      setLogoSuccess(true);
+      setTimeout(() => setLogoSuccess(false), 3000);
+      // Reload team data to show new logo
+      await reloadMemberships();
+    } catch (err: any) {
+      setGlobalError(err?.message ?? "Logo upload failed");
+    } finally {
+      setLogoUploading(false);
+    }
+  }, [team1?.id, reloadMemberships]);
 
   // Use the hook's own computed roles — these correctly match authUser.id against member.userId
   const isCaptain    = isCaptainFromHook;
@@ -946,12 +972,30 @@ export default function MyTeams() {
                 </div>
               )}
               {isTeamAdmin && (
-                <button
-                  onClick={() => alert("Upload logo coming soon!")}
-                  className="mt-2.5 w-[130px] bg-white/6 border border-white/9 text-gray-400 py-1.5 rounded-[10px] cursor-pointer text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-white/10 transition-colors"
-                >
-                  <Camera size={13} /> Upload Logo
-                </button>
+                <>
+                  {/* Hidden file input */}
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleLogoChange}
+                  />
+                  <button
+                    onClick={() => logoInputRef.current?.click()}
+                    disabled={logoUploading}
+                    className="mt-2.5 w-[130px] border border-white/9 text-gray-400 py-1.5 rounded-[10px] cursor-pointer text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ background: logoSuccess ? "rgba(74,222,128,0.12)" : "rgba(255,255,255,0.06)" }}
+                  >
+                    {logoUploading ? (
+                      <><Loader2 size={13} className="animate-spin" /> Uploading…</>
+                    ) : logoSuccess ? (
+                      <><CircleCheckBig size={13} className="text-green-400" /> <span className="text-green-400">Uploaded!</span></>
+                    ) : (
+                      <><Camera size={13} /> Upload Logo</>
+                    )}
+                  </button>
+                </>
               )}
             </div>
 
