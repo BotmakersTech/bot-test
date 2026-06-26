@@ -28,14 +28,33 @@ function getAccessToken(): string | null {
 
 const IST: Intl.DateTimeFormatOptions = { timeZone: "Asia/Kolkata" }
 
+/**
+ * The backend uses Java LocalDateTime which serialises WITHOUT a 'Z' suffix
+ * (e.g. "2026-06-26T10:29:00"). Without the suffix, JavaScript's Date
+ * constructor treats the string as LOCAL time instead of UTC, causing a
+ * 5:30-hour error when the browser is in IST.
+ * Force-appending 'Z' ensures the value is always parsed as UTC first,
+ * then converted to IST by the Intl formatter.
+ */
+function toUTC(dateString: string): Date {
+  if (!dateString) return new Date()
+  const s = dateString.trim()
+  // Already has timezone info — parse as-is
+  if (s.endsWith("Z") || s.includes("+") || /[+-]\d{2}:\d{2}$/.test(s)) {
+    return new Date(s)
+  }
+  // No timezone suffix — treat as UTC (backend always stores UTC)
+  return new Date(s + "Z")
+}
+
 function formatTime(dateString: string): string {
-  return new Date(dateString).toLocaleTimeString("en-IN", {
+  return toUTC(dateString).toLocaleTimeString("en-IN", {
     ...IST, hour: "2-digit", minute: "2-digit", hour12: true,
   })
 }
 
 function formatRelativeTime(dateString: string): string {
-  const diffMs = Date.now() - new Date(dateString).getTime()
+  const diffMs = Date.now() - toUTC(dateString).getTime()
   const s = Math.floor(diffMs / 1000)
   const m = Math.floor(s / 60)
   const h = Math.floor(m / 60)
@@ -46,20 +65,18 @@ function formatRelativeTime(dateString: string): string {
   return `${d}d ago`
 }
 
-/** Returns "YYYY-MM-DD" in IST so date comparisons are timezone-correct. */
+/** Returns "YYYY-MM-DD" in IST for date-boundary comparisons. */
 function toISTDateStr(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("en-CA", IST) // "YYYY-MM-DD"
+  return toUTC(dateString).toLocaleDateString("en-CA", IST)
 }
 
 function formatDateDivider(dateString: string): string {
   const todayIST = toISTDateStr(new Date().toISOString())
   const dateIST  = toISTDateStr(dateString)
   if (dateIST === todayIST) return "Today"
-  // Check yesterday
-  const yd = new Date()
-  yd.setDate(yd.getDate() - 1)
+  const yd = new Date(); yd.setDate(yd.getDate() - 1)
   if (dateIST === toISTDateStr(yd.toISOString())) return "Yesterday"
-  return new Date(dateString).toLocaleDateString("en-IN", {
+  return toUTC(dateString).toLocaleDateString("en-IN", {
     ...IST, weekday: "long", month: "long", day: "numeric",
   })
 }
