@@ -1,5 +1,6 @@
 package com.botleague.backend.admin.controller;
 
+import com.botleague.backend.admin.dto.CreateAdminRobotRequest;
 import com.botleague.backend.team.dto.RobotResponseDTO;
 import com.botleague.backend.team.dto.UpdateRobotRequestDTO;
 import com.botleague.backend.team.enums.RobotStatus;
@@ -21,6 +22,17 @@ public class AdminRobotController {
 
     public AdminRobotController(RobotService robotService) {
         this.robotService = robotService;
+    }
+
+    /**
+     * Create robot (admin — no team-membership check).
+     * POST /api/admin/robots
+     */
+    @PostMapping
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<RobotResponseDTO> createRobot(
+            @Valid @RequestBody CreateAdminRobotRequest request) {
+        return ResponseEntity.ok(robotService.createRobotAdmin(request));
     }
 
     /**

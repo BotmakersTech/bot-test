@@ -11,8 +11,13 @@ import com.botleague.backend.auth.entity.User;
 import com.botleague.backend.auth.enums.AccountStatus;
 import com.botleague.backend.auth.enums.AccountType;
 import com.botleague.backend.auth.repository.UserRepository;
+import com.botleague.backend.admin.dto.CreateAdminUserRequest;
 import com.botleague.backend.common.exception.ApiException;
+import com.botleague.backend.common.service.BotleagueIdService;
+import com.botleague.backend.common.security.PasswordHasher;
 import com.botleague.backend.events.entity.Event;
+import com.botleague.backend.team.enums.TeamMembershipStatus;
+import com.botleague.backend.team.repository.TeamMembershipRepository;
 import com.botleague.backend.events.entity.EventSports;
 import com.botleague.backend.events.repository.EventRepository;
 import com.botleague.backend.events.repository.EventSportsRepository;
@@ -44,6 +49,9 @@ public class UserManagementService {
     private final UserSportAssignmentRepository sportAssignmentRepository;
     private final EventRepository eventRepository;
     private final EventSportsRepository eventSportsRepository;
+    private final BotleagueIdService botleagueIdService;
+    private final PasswordHasher passwordHasher;
+    private final TeamMembershipRepository teamMembershipRepository;
 
     public UserManagementService(
             UserRepository userRepository,
@@ -51,13 +59,19 @@ public class UserManagementService {
             UserEventAssignmentRepository eventAssignmentRepository,
             UserSportAssignmentRepository sportAssignmentRepository,
             EventRepository eventRepository,
-            EventSportsRepository eventSportsRepository) {
+            EventSportsRepository eventSportsRepository,
+            BotleagueIdService botleagueIdService,
+            PasswordHasher passwordHasher,
+            TeamMembershipRepository teamMembershipRepository) {
         this.userRepository = userRepository;
         this.userRoleRepository = userRoleRepository;
         this.eventAssignmentRepository = eventAssignmentRepository;
         this.sportAssignmentRepository = sportAssignmentRepository;
         this.eventRepository = eventRepository;
         this.eventSportsRepository = eventSportsRepository;
+        this.botleagueIdService = botleagueIdService;
+        this.passwordHasher = passwordHasher;
+        this.teamMembershipRepository = teamMembershipRepository;
     }
 
     // ── List / Search users (paginated) ───────────────────────────────────
@@ -283,5 +297,55 @@ public class UserManagementService {
             if (ev != null) dto.setEventName(ev.getEventName());
             return dto;
         }).collect(Collectors.toList());
+    }
+
+    // ── Create user (admin) ───────────────────────────────────────────────
+
+    public UserSummaryResponse createAdminUser(CreateAdminUserRequest req) {
+        if (userRepository.existsByPhone(req.getPhone())) {
+            throw ApiException.conflict("Phone number already registered");
+        }
+
+        AccountType roleType;
+        try { roleType = AccountType.valueOf(req.getRole().toUpperCase()); }
+        catch (IllegalArgumentException e) { throw ApiException.badRequest("Unknown role: " + req.getRole()); }
+
+        User user = new User();
+        user.setFirstName(req.getFirstName());
+        user.setLastName(req.getLastName());
+        user.setPhone(req.getPhone());
+        user.setEmail(req.getEmail());
+        user.setBotleagueId(botleagueIdService.generateBotleagueUserId());
+        user.setPasswordHash(passwordHasher.hash(req.getPassword()));
+        user.setAccountType(roleType);
+        user.setAccountStatus(AccountStatus.ACTIVE);
+        user.setPhoneVerified(true);
+        user.setEmailVerified(req.getEmail() != null && !req.getEmail().isBlank());
+        User saved = userRepository.save(user);
+
+        UserRole role = new UserRole();
+        role.setUserId(saved.getId());
+        role.setRoleType(roleType);
+        role.setStatus("APPROVED");
+        userRoleRepository.save(role);
+
+        return toSummary(saved, false);
+    }
+
+    // ── Users not in any active team (for captain picker) ─────────────────
+
+    @Transactional(readOnly = true)
+    public List<UserSummaryResponse> getUsersWithoutTeam() {
+        Set<UUID> inTeam = teamMembershipRepository
+                .findAll().stream()
+                .filter(m -> m.getStatus() == TeamMembershipStatus.ACTIVE)
+                .map(m -> m.getUserId())
+                .collect(java.util.stream.Collectors.toSet());
+
+        return userRepository.findAll().stream()
+                .filter(u -> u.getDeletedAt() == null && u.getAccountStatus() == AccountStatus.ACTIVE)
+                .filter(u -> !inTeam.contains(u.getId()))
+                .map(u -> toSummary(u, false))
+                .collect(Collectors.toList());
     }
 }

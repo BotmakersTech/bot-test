@@ -78,6 +78,29 @@ export interface SportOption {
   status: string;
 }
 
+// ── Admin create user ─────────────────────────────────────────────────────
+
+export interface CreateAdminUserPayload {
+  firstName: string;
+  lastName:  string;
+  phone:     string;
+  password:  string;
+  email?:    string;
+  role:      string;
+}
+
+export const createAdminUser = async (
+  payload: CreateAdminUserPayload
+): Promise<UserSummary> => {
+  const res = await api.post("/admin/users", payload);
+  return res.data;
+};
+
+export const getUsersWithoutTeam = async (): Promise<UserSummary[]> => {
+  const res = await api.get("/admin/users/no-team");
+  return res.data;
+};
+
 // ── User CRUD ─────────────────────────────────────────────────────────────
 
 export const listUsers = async (

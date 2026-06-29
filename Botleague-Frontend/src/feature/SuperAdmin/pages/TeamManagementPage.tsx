@@ -1,6 +1,72 @@
 import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { searchAdminTeams, type AdminTeamSummary } from "../api/teamManagement.api"
+import { searchAdminTeams, createAdminTeam, type AdminTeamSummary } from "../api/teamManagement.api"
+import { getUsersWithoutTeam, type UserSummary } from "../api/userManagement.api"
+
+function CreateTeamModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
+  const [form, setForm] = useState({ teamName:"", institutionName:"", city:"", state:"", country:"India", description:"", captainUserId:"" });
+  const [users, setUsers] = useState<UserSummary[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string|null>(null);
+
+  useEffect(() => {
+    getUsersWithoutTeam().then(setUsers).catch(() => setUsers([]));
+  }, []);
+
+  const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  const handle = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.teamName || !form.captainUserId) { setErr("Team name and captain are required."); return; }
+    setSaving(true); setErr(null);
+    try {
+      const team = await createAdminTeam({ ...form });
+      onCreated(team.id);
+    } catch (ex: any) {
+      setErr(ex?.response?.data?.message ?? "Failed to create team");
+    } finally { setSaving(false); }
+  };
+
+  const inp = "w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-[#fa4715]/50";
+  const lbl = "block mb-1 text-xs font-semibold text-neutral-400 uppercase tracking-wide";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#111113] p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <h2 className="mb-5 text-lg font-bold text-white">Create Team</h2>
+        <form onSubmit={handle} className="space-y-4">
+          <div><label className={lbl}>Team Name *</label><input className={inp} value={form.teamName} onChange={e=>set("teamName",e.target.value)} placeholder="Thunder Bots" /></div>
+          <div>
+            <label className={lbl}>Captain * (users without a team)</label>
+            <select className={`${inp} cursor-pointer`} value={form.captainUserId} onChange={e=>set("captainUserId",e.target.value)}>
+              <option value="">— Select Captain —</option>
+              {users.map(u => (
+                <option key={u.id} value={u.id}>
+                  {u.firstName || u.lastName ? `${u.firstName} ${u.lastName}`.trim() : u.username} · {u.phone}
+                </option>
+              ))}
+            </select>
+            {users.length === 0 && <p className="mt-1 text-xs text-neutral-500">No users available without a team.</p>}
+          </div>
+          <div><label className={lbl}>Institution / School</label><input className={inp} value={form.institutionName} onChange={e=>set("institutionName",e.target.value)} placeholder="IIT Bombay" /></div>
+          <div className="grid grid-cols-3 gap-3">
+            <div><label className={lbl}>City</label><input className={inp} value={form.city} onChange={e=>set("city",e.target.value)} placeholder="Mumbai" /></div>
+            <div><label className={lbl}>State</label><input className={inp} value={form.state} onChange={e=>set("state",e.target.value)} placeholder="MH" /></div>
+            <div><label className={lbl}>Country</label><input className={inp} value={form.country} onChange={e=>set("country",e.target.value)} /></div>
+          </div>
+          <div><label className={lbl}>Description</label><textarea className={`${inp} resize-none`} rows={2} value={form.description} onChange={e=>set("description",e.target.value)} placeholder="Short team bio…" /></div>
+          {err && <p className="rounded-lg bg-red-500/10 px-4 py-2.5 text-sm text-red-400">{err}</p>}
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={onClose} className="rounded-xl bg-white/5 px-5 py-2.5 text-sm font-semibold text-neutral-300 hover:bg-white/10">Cancel</button>
+            <button type="submit" disabled={saving} className="rounded-xl bg-[#fa4715] px-6 py-2.5 text-sm font-bold text-white hover:bg-orange-500 disabled:opacity-50">
+              {saving ? "Creating…" : "Create Team"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 function StatusBadge({ status }: { status: string }) {
   const color =
@@ -29,6 +95,7 @@ export default function TeamManagementPage() {
   const [totalPages, setTotalPages] = useState(0)
   const [totalElements, setTotalElements] = useState(0)
   const [statusFilter, setStatusFilter] = useState<string>("ALL")
+  const [showCreate, setShowCreate] = useState(false)
 
   const load = useCallback(async (q: string, p: number) => {
     try {
@@ -59,12 +126,27 @@ export default function TeamManagementPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0c10] text-white p-6">
+      {showCreate && (
+        <CreateTeamModal
+          onClose={() => setShowCreate(false)}
+          onCreated={id => { setShowCreate(false); navigate(`/admin/teams/${id}`); }}
+        />
+      )}
+
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Team Management</h1>
-        <p className="text-gray-400 text-sm mt-1">
-          {totalElements} team{totalElements !== 1 ? "s" : ""} registered
-        </p>
+      <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Team Management</h1>
+          <p className="text-gray-400 text-sm mt-1">
+            {totalElements} team{totalElements !== 1 ? "s" : ""} registered
+          </p>
+        </div>
+        <button
+          onClick={() => setShowCreate(true)}
+          className="rounded-xl bg-[#fa4715] px-5 py-2.5 text-sm font-bold text-white hover:bg-orange-500 transition-colors"
+        >
+          + Create Team
+        </button>
       </div>
 
       {/* Controls */}

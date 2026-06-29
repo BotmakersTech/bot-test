@@ -98,3 +98,20 @@ export const updateAdminTeam = async (
   const response = await api.put<AdminTeamDetail>(`/admin/teams/${teamId}`, request)
   return response.data
 }
+
+export interface CreateAdminTeamPayload {
+  teamName:        string;
+  institutionName?: string;
+  city?:           string;
+  state?:          string;
+  country?:        string;
+  description?:    string;
+  captainUserId:   string;
+}
+
+export const createAdminTeam = async (
+  payload: CreateAdminTeamPayload
+): Promise<AdminTeamDetail> => {
+  const res = await api.post<AdminTeamDetail>("/admin/teams", payload)
+  return res.data
+}

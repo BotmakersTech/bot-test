@@ -3,10 +3,12 @@ package com.botleague.backend.admin.controller;
 import com.botleague.backend.admin.dto.AssignEventRequest;
 import com.botleague.backend.admin.dto.AssignRoleRequest;
 import com.botleague.backend.admin.dto.AssignSportRequest;
+import com.botleague.backend.admin.dto.CreateAdminUserRequest;
 import com.botleague.backend.admin.dto.PagedResponse;
 import com.botleague.backend.admin.dto.UpdateUserProfileRequest;
 import com.botleague.backend.admin.dto.UserSummaryResponse;
 import com.botleague.backend.admin.service.UserManagementService;
+import java.util.List;
 import com.botleague.backend.auth.enums.AccountStatus;
 import com.botleague.backend.auth.enums.AccountType;
 import jakarta.validation.Valid;
@@ -29,6 +31,23 @@ public class UserManagementController {
 
     public UserManagementController(UserManagementService userManagementService) {
         this.userManagementService = userManagementService;
+    }
+
+    // ── Create user (admin) ───────────────────────────────────────────────
+
+    @PostMapping
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<UserSummaryResponse> createUser(
+            @Valid @RequestBody CreateAdminUserRequest request) {
+        return ResponseEntity.ok(userManagementService.createAdminUser(request));
+    }
+
+    // ── Users with no active team membership (for captain picker) ─────────
+
+    @GetMapping("/no-team")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<List<UserSummaryResponse>> getUsersWithoutTeam() {
+        return ResponseEntity.ok(userManagementService.getUsersWithoutTeam());
     }
 
     // ── List / Search ─────────────────────────────────────────────────────

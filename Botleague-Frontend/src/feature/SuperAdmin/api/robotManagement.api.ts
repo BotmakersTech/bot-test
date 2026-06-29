@@ -96,3 +96,37 @@ export const changeAdminRobotStatus = async (
 export const deleteAdminRobot = async (robotId: string): Promise<void> => {
   await api.delete(`/admin/robots/${robotId}`)
 }
+
+// ── Admin create robot ────────────────────────────────────────────────────
+
+export interface CreateAdminRobotPayload {
+  robotName:   string;
+  teamId:      string;
+  robotType:   string;
+  sport:       string;
+  ageCategory: string;
+  controlType: string;
+  controlMode?: string;
+  weightClass?: string;
+  weightKg?:   number;
+  lengthCm?:   number;
+  widthCm?:    number;
+  heightCm?:   number;
+  description?: string;
+}
+
+export const createAdminRobot = async (
+  payload: CreateAdminRobotPayload
+): Promise<AdminRobotDetail> => {
+  const res = await api.post<AdminRobotDetail>("/admin/robots", payload)
+  return res.data
+}
+
+// ── All teams (for team picker dropdown) ─────────────────────────────────
+
+export interface TeamOption { id: string; teamCode: string; teamName: string }
+
+export const getAllTeamsForPicker = async (): Promise<TeamOption[]> => {
+  const res = await api.get<{ content: TeamOption[] }>("/admin/teams", { params: { size: 200 } })
+  return res.data.content ?? []
+}

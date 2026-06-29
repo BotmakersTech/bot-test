@@ -12,15 +12,20 @@ import com.botleague.backend.admin.dto.AdminTeamDetail;
 import com.botleague.backend.admin.dto.AdminTeamMemberDTO;
 import com.botleague.backend.admin.dto.AdminTeamSummary;
 import com.botleague.backend.admin.dto.ChangeTeamStatusRequest;
+import com.botleague.backend.admin.dto.CreateAdminTeamRequest;
 import com.botleague.backend.admin.dto.PagedResponse;
 import com.botleague.backend.admin.dto.UpdateTeamRequest;
 import com.botleague.backend.auth.entity.User;
 import com.botleague.backend.auth.repository.UserRepository;
+import com.botleague.backend.common.exception.ApiException;
+import com.botleague.backend.common.service.BotleagueIdService;
 import com.botleague.backend.team.entity.Team;
 import com.botleague.backend.team.entity.TeamMembership;
 import com.botleague.backend.team.enums.TeamMembershipStatus;
+import com.botleague.backend.team.enums.TeamRole;
 import com.botleague.backend.team.repository.TeamMembershipRepository;
 import com.botleague.backend.team.repository.TeamRepository;
+import java.time.LocalDateTime;
 
 @Service
 public class AdminTeamService {
@@ -28,15 +33,61 @@ public class AdminTeamService {
     private final TeamRepository teamRepository;
     private final TeamMembershipRepository teamMembershipRepository;
     private final UserRepository userRepository;
+    private final BotleagueIdService botleagueIdService;
 
     public AdminTeamService(
             TeamRepository teamRepository,
             TeamMembershipRepository teamMembershipRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            BotleagueIdService botleagueIdService
     ) {
         this.teamRepository = teamRepository;
         this.teamMembershipRepository = teamMembershipRepository;
         this.userRepository = userRepository;
+        this.botleagueIdService = botleagueIdService;
+    }
+
+    // ── Create team (admin) ───────────────────────────────────────────────────
+
+    public AdminTeamDetail createAdminTeam(CreateAdminTeamRequest req) {
+        Team team = new Team();
+        team.setTeamCode(botleagueIdService.generateBotLeagueTeamId());
+        team.setTeamName(req.getTeamName());
+        team.setInstitutionName(req.getInstitutionName());
+        team.setCity(req.getCity());
+        team.setState(req.getState());
+        team.setCountry(req.getCountry());
+        team.setDescription(req.getDescription());
+        team.setStatus("ACTIVE");
+
+        // Resolve captain — required
+        if (req.getCaptainUserId() == null) {
+            throw ApiException.badRequest("A captain user ID is required");
+        }
+        User captain = userRepository.findById(req.getCaptainUserId())
+                .orElseThrow(() -> ApiException.notFound("User not found"));
+
+        // Guard: user must not already be in an active team
+        boolean alreadyInTeam = teamMembershipRepository
+                .findByUserId(captain.getId())
+                .stream()
+                .anyMatch(m -> m.getStatus() == TeamMembershipStatus.ACTIVE);
+        if (alreadyInTeam) {
+            throw ApiException.conflict("User is already a member of another team");
+        }
+
+        team.setCreatedBy(captain.getId());
+        Team saved = teamRepository.save(team);
+
+        TeamMembership membership = new TeamMembership();
+        membership.setTeamId(saved.getId());
+        membership.setUserId(captain.getId());
+        membership.setRoleInTeam(TeamRole.CAPTAIN);
+        membership.setStatus(TeamMembershipStatus.ACTIVE);
+        membership.setJoinedAt(LocalDateTime.now());
+        teamMembershipRepository.save(membership);
+
+        return getTeamDetail(saved.getId());
     }
 
     // ── Search / list ─────────────────────────────────────────────────────────

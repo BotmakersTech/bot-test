@@ -10,6 +10,64 @@ import {
   selectTotalPages,
   selectCurrentPage,
 } from "../store/userManagementSlice";
+import { createAdminUser } from "../api/userManagement.api";
+
+const ALL_ROLES = ["COMPETITOR","ORGANIZER","MANAGER","ADMINISTRATOR","SUPER_ADMIN","JUDGE","VOLUNTEER"];
+
+function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
+  const [form, setForm] = useState({ firstName:"", lastName:"", phone:"", email:"", password:"", role:"COMPETITOR" });
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string|null>(null);
+
+  const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  const handle = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.firstName || !form.lastName || !form.phone || !form.password) {
+      setErr("First name, last name, phone and password are required."); return;
+    }
+    setSaving(true); setErr(null);
+    try {
+      const user = await createAdminUser(form);
+      onCreated(user.id);
+    } catch (ex: any) {
+      setErr(ex?.response?.data?.message ?? "Failed to create user");
+    } finally { setSaving(false); }
+  };
+
+  const inp = "w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-[#fa4715]/50";
+  const lbl = "block mb-1 text-xs font-semibold text-neutral-400 uppercase tracking-wide";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#111113] p-6 shadow-2xl">
+        <h2 className="mb-5 text-lg font-bold text-white">Create User</h2>
+        <form onSubmit={handle} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div><label className={lbl}>First Name *</label><input className={inp} value={form.firstName} onChange={e=>set("firstName",e.target.value)} placeholder="First name" /></div>
+            <div><label className={lbl}>Last Name *</label><input className={inp} value={form.lastName} onChange={e=>set("lastName",e.target.value)} placeholder="Last name" /></div>
+          </div>
+          <div><label className={lbl}>Phone * (10 digits)</label><input className={inp} value={form.phone} onChange={e=>set("phone",e.target.value)} placeholder="9XXXXXXXXX" maxLength={10} /></div>
+          <div><label className={lbl}>Email (optional)</label><input className={inp} type="email" value={form.email} onChange={e=>set("email",e.target.value)} placeholder="email@example.com" /></div>
+          <div><label className={lbl}>Password *</label><input className={inp} type="password" value={form.password} onChange={e=>set("password",e.target.value)} placeholder="Min 8 characters" /></div>
+          <div>
+            <label className={lbl}>Initial Role *</label>
+            <select className={`${inp} cursor-pointer`} value={form.role} onChange={e=>set("role",e.target.value)}>
+              {ALL_ROLES.map(r => <option key={r} value={r}>{r.replace(/_/g," ")}</option>)}
+            </select>
+          </div>
+          {err && <p className="rounded-lg bg-red-500/10 px-4 py-2.5 text-sm text-red-400">{err}</p>}
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={onClose} className="rounded-xl bg-white/5 px-5 py-2.5 text-sm font-semibold text-neutral-300 hover:bg-white/10">Cancel</button>
+            <button type="submit" disabled={saving} className="rounded-xl bg-[#fa4715] px-6 py-2.5 text-sm font-bold text-white hover:bg-orange-500 disabled:opacity-50">
+              {saving ? "Creating…" : "Create User"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 // ── Small badge helpers ────────────────────────────────────────────────────
 
 function RoleBadge({ role }: { role: string }) {
@@ -46,6 +104,7 @@ export default function UserManagementPage() {
 
   const [search, setSearch] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
 
   const doSearch = useCallback(
     (q: string, page: number) => dispatch(fetchUsers({ q: q || undefined, page })),
@@ -61,7 +120,22 @@ export default function UserManagementPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 p-6 text-white">
-      <h1 className="mb-6 text-2xl font-bold text-red-500">User Management</h1>
+      {showCreate && (
+        <CreateUserModal
+          onClose={() => setShowCreate(false)}
+          onCreated={id => { setShowCreate(false); navigate(`/admin/users/${id}`); }}
+        />
+      )}
+
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-red-500">User Management</h1>
+        <button
+          onClick={() => setShowCreate(true)}
+          className="rounded-xl bg-[#fa4715] px-5 py-2.5 text-sm font-bold text-white hover:bg-orange-500 transition-colors"
+        >
+          + Create User
+        </button>
+      </div>
 
       {/* ── Search ── */}
       <form onSubmit={handleSearch} className="mb-4 flex gap-3">

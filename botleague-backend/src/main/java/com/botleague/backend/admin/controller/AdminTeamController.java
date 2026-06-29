@@ -17,9 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.botleague.backend.admin.dto.AdminTeamDetail;
 import com.botleague.backend.admin.dto.AdminTeamSummary;
 import com.botleague.backend.admin.dto.ChangeTeamStatusRequest;
+import com.botleague.backend.admin.dto.CreateAdminTeamRequest;
 import com.botleague.backend.admin.dto.PagedResponse;
 import com.botleague.backend.admin.dto.UpdateTeamRequest;
 import com.botleague.backend.admin.service.AdminTeamService;
+import org.springframework.web.bind.annotation.PostMapping;
 
 @RestController
 @RequestMapping("/api/admin/teams")
@@ -29,6 +31,15 @@ public class AdminTeamController {
 
     public AdminTeamController(AdminTeamService adminTeamService) {
         this.adminTeamService = adminTeamService;
+    }
+
+    // ── Create team (admin) ───────────────────────────────────────────────────
+
+    @PostMapping
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<AdminTeamDetail> createTeam(
+            @RequestBody CreateAdminTeamRequest request) {
+        return ResponseEntity.ok(adminTeamService.createAdminTeam(request));
     }
 
     // ── List / search teams ───────────────────────────────────────────────────

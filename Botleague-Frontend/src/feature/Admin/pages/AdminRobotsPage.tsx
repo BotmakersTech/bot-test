@@ -1,6 +1,87 @@
 import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { searchAdminRobots, type AdminRobotSummary } from "../../SuperAdmin/api/robotManagement.api"
+import {
+  searchAdminRobots,
+  createAdminRobot,
+  getAllTeamsForPicker,
+  type AdminRobotSummary,
+  type TeamOption,
+} from "../../SuperAdmin/api/robotManagement.api"
+
+const ROBOT_TYPES_CREATE = ["COMBAT_ROBOT","SOCCER_ROBOT","SUMO_ROBOT","LINE_FOLLOWER_ROBOT","TASK_ROBOT","RC_VEHICLE","DRONE","AIRCRAFT","INNOVATION_PROJECT"]
+const SPORTS_CREATE = ["ROBOWAR_1_5KG","ROBOWAR_8KG","ROBOWAR_15KG","ROBOWAR_30KG","ROBOWAR_60KG","ROBO_SOCCER","ROBO_SUMO","LINE_FOLLOWER","LINE_FOLLOWER_AUTO","MANUAL_TASK","THEME_BASED_TASKING","DRONE_RACING","DRONE_SOCCER","RC_RACING","AEROMODELLING","PROJECT_BASED"]
+const AGE_CATS = ["JUNIOR_INNOVATORS","YOUNG_ENGINEERS","ROBO_MINDS"]
+const CTRL_TYPES = ["MANUAL","AUTONOMOUS","HYBRID"]
+const CTRL_MODES = ["WIRELESS","WIRED"]
+
+function CreateRobotModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
+  const [form, setForm] = useState({ robotName:"", teamId:"", robotType:"COMBAT_ROBOT", sport:"ROBOWAR_1_5KG", ageCategory:"JUNIOR_INNOVATORS", controlType:"MANUAL", controlMode:"WIRELESS", weightClass:"", weightKg:"", description:"" });
+  const [teams, setTeams] = useState<TeamOption[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string|null>(null);
+
+  useEffect(() => { getAllTeamsForPicker().then(setTeams).catch(() => setTeams([])); }, []);
+
+  const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  const handle = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.robotName || !form.teamId) { setErr("Robot name and team are required."); return; }
+    setSaving(true); setErr(null);
+    try {
+      const robot = await createAdminRobot({
+        ...form,
+        weightKg: form.weightKg ? parseFloat(form.weightKg) : undefined,
+      });
+      onCreated(robot.id);
+    } catch (ex: any) {
+      setErr(ex?.response?.data?.message ?? "Failed to create robot");
+    } finally { setSaving(false); }
+  };
+
+  const inp = "w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-[#fa4715]/50";
+  const lbl = "block mb-1 text-xs font-semibold text-neutral-400 uppercase tracking-wide";
+  const sel = `${inp} cursor-pointer`;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#111113] p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <h2 className="mb-5 text-lg font-bold text-white">Create Robot</h2>
+        <form onSubmit={handle} className="space-y-4">
+          <div><label className={lbl}>Robot Name *</label><input className={inp} value={form.robotName} onChange={e=>set("robotName",e.target.value)} placeholder="Thunderstrike" /></div>
+          <div>
+            <label className={lbl}>Assign to Team *</label>
+            <select className={sel} value={form.teamId} onChange={e=>set("teamId",e.target.value)}>
+              <option value="">— Select Team —</option>
+              {teams.map(t => <option key={t.id} value={t.id}>{t.teamName} · {t.teamCode}</option>)}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className={lbl}>Robot Type</label><select className={sel} value={form.robotType} onChange={e=>set("robotType",e.target.value)}>{ROBOT_TYPES_CREATE.map(r=><option key={r} value={r}>{r.replace(/_/g," ")}</option>)}</select></div>
+            <div><label className={lbl}>Sport</label><select className={sel} value={form.sport} onChange={e=>set("sport",e.target.value)}>{SPORTS_CREATE.map(s=><option key={s} value={s}>{s.replace(/_/g," ")}</option>)}</select></div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div><label className={lbl}>Age Category</label><select className={sel} value={form.ageCategory} onChange={e=>set("ageCategory",e.target.value)}>{AGE_CATS.map(a=><option key={a} value={a}>{a.replace(/_/g," ")}</option>)}</select></div>
+            <div><label className={lbl}>Control Type</label><select className={sel} value={form.controlType} onChange={e=>set("controlType",e.target.value)}>{CTRL_TYPES.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+            <div><label className={lbl}>Connection</label><select className={sel} value={form.controlMode} onChange={e=>set("controlMode",e.target.value)}>{CTRL_MODES.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className={lbl}>Weight Class</label><input className={inp} value={form.weightClass} onChange={e=>set("weightClass",e.target.value)} placeholder="1.5KG" /></div>
+            <div><label className={lbl}>Weight (kg)</label><input className={inp} type="number" step="0.1" min="0" value={form.weightKg} onChange={e=>set("weightKg",e.target.value)} placeholder="1.4" /></div>
+          </div>
+          <div><label className={lbl}>Description</label><textarea className={`${inp} resize-none`} rows={2} value={form.description} onChange={e=>set("description",e.target.value)} placeholder="Short robot description…" /></div>
+          {err && <p className="rounded-lg bg-red-500/10 px-4 py-2.5 text-sm text-red-400">{err}</p>}
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={onClose} className="rounded-xl bg-white/5 px-5 py-2.5 text-sm font-semibold text-neutral-300 hover:bg-white/10">Cancel</button>
+            <button type="submit" disabled={saving} className="rounded-xl bg-[#fa4715] px-6 py-2.5 text-sm font-bold text-white hover:bg-orange-500 disabled:opacity-50">
+              {saving ? "Creating…" : "Create Robot"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 const STATUSES = ["ALL", "ACTIVE", "INACTIVE", "MAINTENANCE"]
 const ROBOT_TYPES = ["ALL", "COMBAT_ROBOT", "SOCCER_ROBOT", "SUMO_ROBOT", "LINE_FOLLOWER_ROBOT",
@@ -31,6 +112,7 @@ export default function AdminRobotsPage() {
   const [page, setPage]             = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const [totalElements, setTotalElements] = useState(0)
+  const [showCreate, setShowCreate] = useState(false)
 
   const load = useCallback(async (q: string, p: number, status: string, type: string) => {
     setLoading(true)
@@ -67,12 +149,27 @@ export default function AdminRobotsPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0c10] text-white p-6">
+      {showCreate && (
+        <CreateRobotModal
+          onClose={() => setShowCreate(false)}
+          onCreated={id => { setShowCreate(false); navigate(`/admin/robots/${id}`); }}
+        />
+      )}
+
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Robot Management</h1>
-        <p className="text-gray-400 text-sm mt-1">
-          {totalElements} robot{totalElements !== 1 ? "s" : ""} registered across all teams
-        </p>
+      <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Robot Management</h1>
+          <p className="text-gray-400 text-sm mt-1">
+            {totalElements} robot{totalElements !== 1 ? "s" : ""} registered across all teams
+          </p>
+        </div>
+        <button
+          onClick={() => setShowCreate(true)}
+          className="rounded-xl bg-[#fa4715] px-5 py-2.5 text-sm font-bold text-white hover:bg-orange-500 transition-colors"
+        >
+          + Create Robot
+        </button>
       </div>
 
       {/* Search + status filter row */}

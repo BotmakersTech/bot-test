@@ -17,7 +17,11 @@ import com.botleague.backend.common.service.UploadService;
 import com.botleague.backend.events.enums.AgeCategory;
 import com.botleague.backend.profile.dto.UploadResponse;
 import com.botleague.backend.profile.service.FileKeyService;
+import com.botleague.backend.admin.dto.CreateAdminRobotRequest;
 import com.botleague.backend.team.dto.CreateRobotRequestDTO;
+import com.botleague.backend.team.enums.ControlMode;
+import com.botleague.backend.team.enums.ControlType;
+import com.botleague.backend.team.enums.RobotCategory;
 import com.botleague.backend.team.dto.CreateRobotResponseDTO;
 import com.botleague.backend.team.dto.RobotResponseDTO;
 import com.botleague.backend.team.dto.UpdateRobotRequestDTO;
@@ -408,5 +412,46 @@ public class RobotService {
                         dto.setRobotIMG("https://media.botleague.in/" + media.getFileUrl()));
 
         return dto;
+    }
+
+    // ── Create robot (admin — no team-membership check) ───────────────────
+
+    @Transactional
+    public RobotResponseDTO createRobotAdmin(CreateAdminRobotRequest req) {
+        if (!teamRepository.existsById(req.getTeamId())) {
+            throw ApiException.notFound("Team not found");
+        }
+
+        Robot robot = new Robot();
+        robot.setRobotCode(botLeagueIdService.generateBotLeagueRobotId());
+        robot.setRobotName(req.getRobotName());
+        robot.setTeamId(req.getTeamId());
+        robot.setDescription(req.getDescription());
+        robot.setStatus(RobotStatus.ACTIVE);
+
+        try { robot.setRobotType(RobotCategory.valueOf(req.getRobotType().toUpperCase())); }
+        catch (IllegalArgumentException e) { throw ApiException.badRequest("Unknown robot type: " + req.getRobotType()); }
+
+        robot.setSport(req.getSport());
+
+        try { robot.setAgeCategory(AgeCategory.valueOf(req.getAgeCategory().toUpperCase())); }
+        catch (IllegalArgumentException e) { throw ApiException.badRequest("Unknown age category: " + req.getAgeCategory()); }
+
+        try { robot.setControlType(ControlType.valueOf(req.getControlType().toUpperCase())); }
+        catch (IllegalArgumentException e) { throw ApiException.badRequest("Unknown control type: " + req.getControlType()); }
+
+        if (req.getControlMode() != null && !req.getControlMode().isBlank()) {
+            try { robot.setControlMode(ControlMode.valueOf(req.getControlMode().toUpperCase())); }
+            catch (IllegalArgumentException ignored) {}
+        }
+
+        robot.setWeightClass(req.getWeightClass());
+        robot.setWeightKg(req.getWeightKg());
+        robot.setLengthCm(req.getLengthCm());
+        robot.setWidthCm(req.getWidthCm());
+        robot.setHeightCm(req.getHeightCm());
+
+        Robot saved = robotRepository.save(robot);
+        return mapRobotWithTeam(saved);
     }
 }
