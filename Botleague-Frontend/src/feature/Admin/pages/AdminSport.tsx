@@ -462,13 +462,69 @@ const FORMAT_TYPE_OPTIONS = [
   { value: "DOUBLE_ELIMINATION", label: "Double Elimination" },
 ]
 
+// Matches backend ControlMode enum exactly (team/enums/ControlMode.java).
+// NOTE: previously this listed MANUAL/AUTONOMOUS/HYBRID/REMOTE/SEMI_AUTONOMOUS,
+// none of which exist in ControlMode — selecting any of them would have made
+// the backend reject the save with a 400 enum-deserialization error.
 const CONTROL_TYPES = [
-  { value: "MANUAL",         label: "Manual"         },
-  { value: "AUTONOMOUS",     label: "Autonomous"      },
-  { value: "HYBRID",         label: "Hybrid"          },
-  { value: "REMOTE",         label: "Remote"          },
-  { value: "SEMI_AUTONOMOUS",label: "Semi-Autonomous" },
+  { value: "WIRED",    label: "Wired"    },
+  { value: "WIRELESS", label: "Wireless" },
+  { value: "ANY",      label: "Any (Wired or Wireless)" },
 ]
+
+// ── Official spec catalogue — keyed "ageGroup::sport" ──────────────────────
+// Mirrors the physical-limit table organizers must follow. Values come
+// straight from the published rulebook (see SportRegistrationService javadoc
+// on the backend for the same table). RoboWar's weight varies by the chosen
+// weight class, so it's resolved separately in getPresetSpec().
+interface SportSpecPreset {
+  weightLimitKg?: number
+  maxLengthCm?: number
+  maxWidthCm?: number
+  maxHeightCm?: number
+  controlType?: string   // WIRED | WIRELESS | ANY
+  maxBotsPerTeam?: number
+  note?: string
+}
+
+const SPORT_SPEC_PRESETS: Record<string, SportSpecPreset> = {
+  // ── Junior Innovators (8–12 yrs) — Wired or Wireless ──
+  "JUNIOR_INNOVATORS::PROJECT_BASED":           { controlType: "ANY", note: "No physical limits" },
+  "JUNIOR_INNOVATORS::PLUG_N_PLAY_RACE_SOCCER": { weightLimitKg: 1, maxLengthCm: 20, maxWidthCm: 20, maxHeightCm: 20, controlType: "ANY", maxBotsPerTeam: 1, note: "Single bot for both Race & Soccer" },
+  "JUNIOR_INNOVATORS::LINE_FOLLOWER":           { weightLimitKg: 1, maxLengthCm: 20, maxWidthCm: 20, maxHeightCm: 20, controlType: "ANY" },
+  "JUNIOR_INNOVATORS::MANUAL_TASK":             { weightLimitKg: 1, maxLengthCm: 20, maxWidthCm: 20, maxHeightCm: 20, controlType: "ANY" },
+  "JUNIOR_INNOVATORS::ROBO_SUMO":               { weightLimitKg: 1, maxLengthCm: 20, maxWidthCm: 20, maxHeightCm: 20, controlType: "ANY" },
+
+  // ── Young Engineers (12–18 yrs) — Wireless only ──
+  "YOUNG_ENGINEERS::ROBO_SOCCER":         { weightLimitKg: 3,   maxLengthCm: 30, maxWidthCm: 30, maxHeightCm: 30, controlType: "WIRELESS" },
+  "YOUNG_ENGINEERS::LINE_FOLLOWER_AUTO":  { weightLimitKg: 1.5, controlType: "WIRELESS" },
+  "YOUNG_ENGINEERS::THEME_BASED_TASKING": { weightLimitKg: 3,   controlType: "WIRELESS" },
+  "YOUNG_ENGINEERS::ROBO_WAR":            { weightLimitKg: 1.5, controlType: "WIRELESS", note: "Only 1.5kg weight class" },
+  "YOUNG_ENGINEERS::DRONE_RACING_SOCCER": { maxLengthCm: 30, maxWidthCm: 30, maxHeightCm: 30, controlType: "WIRELESS", note: "20cm diagonal" },
+  "YOUNG_ENGINEERS::RC_ROBO_RACING":      { controlType: "WIRELESS" },
+
+  // ── Robo Minds (18+ yrs) — Wireless only ──
+  "ROBO_MINDS::ROBO_SOCCER_OPEN":         { weightLimitKg: 5, maxLengthCm: 45, maxWidthCm: 45, maxHeightCm: 45, controlType: "WIRELESS" },
+  "ROBO_MINDS::THEME_BASED_TASKING_OPEN": { weightLimitKg: 5, maxLengthCm: 45, maxWidthCm: 45, maxHeightCm: 45, controlType: "WIRELESS" },
+  "ROBO_MINDS::ROBO_WAR_OPEN":            { controlType: "WIRELESS", note: "Weight derives from selected weight class (1.5/8/15/30/60kg)" },
+  "ROBO_MINDS::DRONE_RACING_FPV":         { controlType: "WIRELESS", note: "FPV" },
+  "ROBO_MINDS::RC_RACING_NITRO":          { controlType: "WIRELESS", note: "Nitro + Electric, 1:8 / 1:12 scale" },
+  "ROBO_MINDS::AEROMODELLING":            { controlType: "WIRELESS" },
+}
+
+// RoboWar's weight limit comes from the selected weight-class chip, not a fixed preset.
+const WEIGHT_CLASS_TO_KG: Record<string, number> = {
+  "1KG": 1, "1_5KG": 1.5, "3KG": 3, "5KG": 5, "8KG": 8, "15KG": 15, "30KG": 30, "60KG": 60,
+}
+
+function getPresetSpec(ageGroup: string, sport: string, weightClass?: string): SportSpecPreset | null {
+  const base = SPORT_SPEC_PRESETS[`${ageGroup}::${sport}`]
+  if (!base) return null
+  if (sport === "ROBO_WAR_OPEN" && weightClass && WEIGHT_CLASS_TO_KG[weightClass] != null) {
+    return { ...base, weightLimitKg: WEIGHT_CLASS_TO_KG[weightClass] }
+  }
+  return base
+}
 
 type EditForm = CreateEventSportRequest & { extraRulesList: { key: string; value: string }[] }
 
@@ -695,6 +751,55 @@ function EditSportModal({
                     Select an age group to filter sports
                   </span>
                 )}
+              </div>
+            )
+          })()}
+
+          {/* Official spec preview + one-click apply ────────────────────── */}
+          {(() => {
+            const preset = form.ageGroup && form.sport
+              ? getPresetSpec(form.ageGroup, form.sport, form.weightClass)
+              : null
+            if (!preset) return null
+
+            const parts: string[] = []
+            if (preset.weightLimitKg != null) parts.push(`${preset.weightLimitKg}kg`)
+            if (preset.maxLengthCm != null && preset.maxWidthCm != null && preset.maxHeightCm != null) {
+              parts.push(`${preset.maxLengthCm}×${preset.maxWidthCm}×${preset.maxHeightCm}cm`)
+            }
+            if (preset.controlType) parts.push(preset.controlType === "ANY" ? "Wired or Wireless" : preset.controlType)
+            if (preset.maxBotsPerTeam != null) parts.push(`max ${preset.maxBotsPerTeam} bot/team`)
+
+            return (
+              <div style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
+                background: "rgba(250,71,21,0.06)", border: "1px solid rgba(250,71,21,0.2)",
+                borderRadius: "8px", padding: "10px 14px",
+              }}>
+                <div style={{ fontSize: "0.74rem", color: TEXT }}>
+                  <strong style={{ color: ACCENT }}>Official spec:</strong>{" "}
+                  {parts.length > 0 ? parts.join(" · ") : "No physical limits"}
+                  {preset.note && <span style={{ color: MUTED }}> — {preset.note}</span>}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setForm(prev => ({
+                    ...prev,
+                    weightLimitKg: preset.weightLimitKg,
+                    maxLengthCm:   preset.maxLengthCm,
+                    maxWidthCm:    preset.maxWidthCm,
+                    maxHeightCm:   preset.maxHeightCm,
+                    controlType:   preset.controlType ?? prev.controlType,
+                    maxBotsPerTeam: preset.maxBotsPerTeam ?? prev.maxBotsPerTeam,
+                  }))}
+                  style={{
+                    flexShrink: 0, background: ACCENT, border: "none", color: "#fff",
+                    borderRadius: "6px", padding: "6px 12px", fontSize: "0.72rem", fontWeight: 700,
+                    cursor: "pointer", whiteSpace: "nowrap",
+                  }}
+                >
+                  Apply Spec
+                </button>
               </div>
             )
           })()}

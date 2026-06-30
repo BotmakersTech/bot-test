@@ -470,6 +470,13 @@ function RegistrationTab({
     if (robot.weightClass && sport.weightClass) {
       if (normWc(robot.weightClass) !== normWc(sport.weightClass)) return false;
     }
+    // 5. Control mode (WIRED/WIRELESS) must match — ANY/null means no restriction.
+    //    Mirrors backend SportRegistration.validateAgainst() so a robot that would be
+    //    rejected at submit time never appears selectable here.
+    const sportControl = (sport.controlType ?? "").toUpperCase();
+    if (sportControl && sportControl !== "ANY" && robot.controlMode) {
+      if (robot.controlMode.toUpperCase() !== sportControl) return false;
+    }
     return true;
   });
   const ineligibleCount = robots.length - eligibleRobots.length;
