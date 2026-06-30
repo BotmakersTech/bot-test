@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { createRobot } from "../api/robot.api";
 import { uploadRobotImage } from "../api/uploadRobot.api";
+import { getWeightClassOptions, weightClassLabel } from "../constants/weightClasses";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Domain types & rules
@@ -208,6 +209,7 @@ export default function CreateRobotForm({ onSuccess }: Props) {
   const [widthCm, setWidthCm]         = useState<number | null>(null);
   const [heightCm, setHeightCm]       = useState<number | null>(null);
   const [controlMode, setControlMode] = useState<ControlMode>("WIRELESS");
+  const [weightClass, setWeightClass] = useState<string>("");
   const [extraAttrs, setExtraAttrs]   = useState<Record<string, string>>({});
 
   // Photo upload state
@@ -238,6 +240,11 @@ export default function CreateRobotForm({ onSuccess }: Props) {
 
   const pickSport = useCallback((sport: SportOption) => {
     setSelectedSport(sport);
+    // RoboWar's weight class is implied by the sport card itself (e.g. ROBOWAR_8KG).
+    // For everything else, auto-select if there's exactly one valid class, otherwise
+    // leave blank so the user must explicitly pick (e.g. Robo Soccer: 3kg vs 5kg).
+    const opts = sport.weightClass ? [sport.weightClass] : getWeightClassOptions(sport.key);
+    setWeightClass(opts.length === 1 ? opts[0] : "");
     setStep(3);
   }, []);
 
@@ -264,6 +271,8 @@ export default function CreateRobotForm({ onSuccess }: Props) {
     e.preventDefault();
     if (!selectedType || !selectedSport) return;
     if (!robotName.trim()) { setError("Robot name is required"); return; }
+    const wcOptions = selectedSport.weightClass ? [selectedSport.weightClass] : getWeightClassOptions(selectedSport.key);
+    if (wcOptions.length > 0 && !weightClass) { setError("Please select a weight class"); return; }
 
     setSubmitting(true);
     setError(null);
@@ -275,7 +284,7 @@ export default function CreateRobotForm({ onSuccess }: Props) {
         sport: selectedSport.key,
         controlType: selectedSport.controlType,
         controlMode: selectedSport.controlMode ?? controlMode,
-        weightClass: selectedSport.weightClass,
+        weightClass: weightClass || selectedSport.weightClass,
         weightKg:  weightKg  ?? undefined,
         lengthCm:  lengthCm  ?? undefined,
         widthCm:   widthCm   ?? undefined,
@@ -467,6 +476,30 @@ export default function CreateRobotForm({ onSuccess }: Props) {
                 </div>
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
               </div>
+
+              {/* Weight Class — only shown when this sport has an official class */}
+              {(() => {
+                const wcOptions = selectedSport.weightClass ? [selectedSport.weightClass] : getWeightClassOptions(selectedSport.key);
+                if (wcOptions.length === 0) return null;
+                return (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                      Weight Class {wcOptions.length > 1 && <span className="text-orange-400">*</span>}
+                    </label>
+                    <select
+                      value={weightClass}
+                      onChange={e => setWeightClass(e.target.value)}
+                      disabled={wcOptions.length === 1}
+                      className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500/60 transition-colors disabled:opacity-60"
+                    >
+                      {wcOptions.length > 1 && <option value="">Select weight class…</option>}
+                      {wcOptions.map(wc => (
+                        <option key={wc} value={wc}>{weightClassLabel(wc)}</option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              })()}
 
               {/* Weight */}
               <div>

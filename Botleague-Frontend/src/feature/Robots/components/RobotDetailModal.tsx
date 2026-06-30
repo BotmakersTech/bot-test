@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Robot } from "../types/types";
 import { updateRobot, type UpdateRobotPayload } from "../api/robot.api";
+import { getWeightClassOptions, weightClassLabel } from "../constants/weightClasses";
 
 interface RobotDetailModalProps {
   robot: Robot;
@@ -647,7 +648,18 @@ export default function RobotDetailModal({ robot, onClose, canEdit = false, onUp
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                   <div>
                     <label className="rdm-field-label">Weight Class</label>
-                    <input className="rdm-input" value={form.weightClass ?? ""} onChange={e => set("weightClass", e.target.value)} />
+                    {(() => {
+                      const wcOptions = getWeightClassOptions(robot.sport);
+                      if (wcOptions.length === 0) {
+                        return <input className="rdm-input" value={form.weightClass ?? ""} onChange={e => set("weightClass", e.target.value)} placeholder="N/A for this sport" />;
+                      }
+                      return (
+                        <select className="rdm-select" value={form.weightClass ?? ""} onChange={e => set("weightClass", e.target.value)}>
+                          <option value="">— Select —</option>
+                          {wcOptions.map(wc => <option key={wc} value={wc}>{weightClassLabel(wc)}</option>)}
+                        </select>
+                      );
+                    })()}
                   </div>
                   <div>
                     <label className="rdm-field-label">Weight (kg)</label>

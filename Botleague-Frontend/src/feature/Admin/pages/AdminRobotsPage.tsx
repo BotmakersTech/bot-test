@@ -7,6 +7,7 @@ import {
   type AdminRobotSummary,
   type TeamOption,
 } from "../../SuperAdmin/api/robotManagement.api"
+import { getWeightClassOptions, weightClassLabel } from "../../Robots/constants/weightClasses"
 
 const ROBOT_TYPES_CREATE = ["COMBAT_ROBOT","SOCCER_ROBOT","SUMO_ROBOT","LINE_FOLLOWER_ROBOT","TASK_ROBOT","RC_VEHICLE","DRONE","AIRCRAFT","INNOVATION_PROJECT"]
 const SPORTS_CREATE = ["ROBOWAR_1_5KG","ROBOWAR_8KG","ROBOWAR_15KG","ROBOWAR_30KG","ROBOWAR_60KG","ROBO_SOCCER","ROBO_SUMO","LINE_FOLLOWER","LINE_FOLLOWER_AUTO","MANUAL_TASK","THEME_BASED_TASKING","DRONE_RACING","DRONE_SOCCER","RC_RACING","AEROMODELLING","PROJECT_BASED"]
@@ -23,6 +24,11 @@ function CreateRobotModal({ onClose, onCreated }: { onClose: () => void; onCreat
   useEffect(() => { getAllTeamsForPicker().then(setTeams).catch(() => setTeams([])); }, []);
 
   const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  const setSport = (sport: string) => {
+    const opts = getWeightClassOptions(sport);
+    setForm(f => ({ ...f, sport, weightClass: opts.length === 1 ? opts[0] : "" }));
+  };
 
   const handle = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +64,7 @@ function CreateRobotModal({ onClose, onCreated }: { onClose: () => void; onCreat
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div><label className={lbl}>Robot Type</label><select className={sel} value={form.robotType} onChange={e=>set("robotType",e.target.value)}>{ROBOT_TYPES_CREATE.map(r=><option key={r} value={r}>{r.replace(/_/g," ")}</option>)}</select></div>
-            <div><label className={lbl}>Sport</label><select className={sel} value={form.sport} onChange={e=>set("sport",e.target.value)}>{SPORTS_CREATE.map(s=><option key={s} value={s}>{s.replace(/_/g," ")}</option>)}</select></div>
+            <div><label className={lbl}>Sport</label><select className={sel} value={form.sport} onChange={e=>setSport(e.target.value)}>{SPORTS_CREATE.map(s=><option key={s} value={s}>{s.replace(/_/g," ")}</option>)}</select></div>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div><label className={lbl}>Age Category</label><select className={sel} value={form.ageCategory} onChange={e=>set("ageCategory",e.target.value)}>{AGE_CATS.map(a=><option key={a} value={a}>{a.replace(/_/g," ")}</option>)}</select></div>
@@ -66,7 +72,21 @@ function CreateRobotModal({ onClose, onCreated }: { onClose: () => void; onCreat
             <div><label className={lbl}>Connection</label><select className={sel} value={form.controlMode} onChange={e=>set("controlMode",e.target.value)}>{CTRL_MODES.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className={lbl}>Weight Class</label><input className={inp} value={form.weightClass} onChange={e=>set("weightClass",e.target.value)} placeholder="1.5KG" /></div>
+            <div>
+              <label className={lbl}>Weight Class</label>
+              {(() => {
+                const wcOptions = getWeightClassOptions(form.sport);
+                if (wcOptions.length === 0) {
+                  return <input className={inp} value={form.weightClass} onChange={e=>set("weightClass",e.target.value)} placeholder="N/A for this sport" />;
+                }
+                return (
+                  <select className={sel} value={form.weightClass} onChange={e=>set("weightClass",e.target.value)}>
+                    <option value="">— Select —</option>
+                    {wcOptions.map(wc => <option key={wc} value={wc}>{weightClassLabel(wc)}</option>)}
+                  </select>
+                );
+              })()}
+            </div>
             <div><label className={lbl}>Weight (kg)</label><input className={inp} type="number" step="0.1" min="0" value={form.weightKg} onChange={e=>set("weightKg",e.target.value)} placeholder="1.4" /></div>
           </div>
           <div><label className={lbl}>Description</label><textarea className={`${inp} resize-none`} rows={2} value={form.description} onChange={e=>set("description",e.target.value)} placeholder="Short robot description…" /></div>

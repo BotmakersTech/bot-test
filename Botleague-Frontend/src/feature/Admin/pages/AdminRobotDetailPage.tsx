@@ -7,6 +7,7 @@ import {
   deleteAdminRobot,
   type AdminRobotDetail,
 } from "../../SuperAdmin/api/robotManagement.api"
+import { getWeightClassOptions, weightClassLabel } from "../../Robots/constants/weightClasses"
 
 type Tab = "info" | "specs" | "actions"
 
@@ -73,6 +74,7 @@ export default function AdminRobotDetailPage() {
   const [form, setForm] = useState({
     robotName: "",
     description: "",
+    weightClass: "",
     weightKg: "",
     lengthCm: "",
     widthCm: "",
@@ -88,6 +90,7 @@ export default function AdminRobotDetailPage() {
         setForm({
           robotName:   data.robotName ?? "",
           description: data.description ?? "",
+          weightClass: data.weightClass ?? "",
           weightKg:    data.weightKg?.toString() ?? "",
           lengthCm:    data.lengthCm?.toString() ?? "",
           widthCm:     data.widthCm?.toString() ?? "",
@@ -111,6 +114,7 @@ export default function AdminRobotDetailPage() {
       const updated = await updateAdminRobot(robotId, {
         robotName:   form.robotName || undefined,
         description: form.description || undefined,
+        weightClass: form.weightClass || undefined,
         weightKg:    form.weightKg ? parseFloat(form.weightKg) : undefined,
         lengthCm:    form.lengthCm ? parseFloat(form.lengthCm) : undefined,
         widthCm:     form.widthCm  ? parseFloat(form.widthCm)  : undefined,
@@ -252,6 +256,31 @@ export default function AdminRobotDetailPage() {
                   value={form.robotName}
                   onChange={(v) => setForm((f) => ({ ...f, robotName: v }))}
                 />
+                {(() => {
+                  const wcOptions = getWeightClassOptions(robot?.sport)
+                  if (wcOptions.length === 0) {
+                    return (
+                      <FormField
+                        label="Weight Class"
+                        value={form.weightClass}
+                        onChange={(v) => setForm((f) => ({ ...f, weightClass: v }))}
+                      />
+                    )
+                  }
+                  return (
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1.5">Weight Class</label>
+                      <select
+                        value={form.weightClass}
+                        onChange={(e) => setForm((f) => ({ ...f, weightClass: e.target.value }))}
+                        className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#fa4715]/50"
+                      >
+                        <option value="">— Select —</option>
+                        {wcOptions.map((wc) => <option key={wc} value={wc}>{weightClassLabel(wc)}</option>)}
+                      </select>
+                    </div>
+                  )
+                })()}
                 <FormField
                   label="Weight (kg)"
                   value={form.weightKg}
