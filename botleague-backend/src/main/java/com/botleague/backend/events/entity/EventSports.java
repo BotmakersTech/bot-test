@@ -162,7 +162,7 @@ public class EventSports {
     @Column(name = "registered_teams_count")
     private Integer registeredTeamsCount = 0;
 
-    @Column(name = "bracket_generated", nullable = false)
+    @Column(name = "bracket_generated", nullable = false, columnDefinition = "boolean DEFAULT false")
     private boolean bracketGenerated = false;
 
     // =========================
