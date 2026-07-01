@@ -31,6 +31,7 @@ export interface OrganizerSport {
   weightClass: string | null;
   status: string;
   bracketGenerated: boolean;
+  rejectionReason?: string | null;
   registeredTeamsCount?: number;
   maxTeams?: number;
   registrationStartDate?: string;

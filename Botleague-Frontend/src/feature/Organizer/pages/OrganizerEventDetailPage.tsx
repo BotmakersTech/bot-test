@@ -239,11 +239,16 @@ function SportCard({
       <div className="flex items-center justify-between gap-2">
         <div className="flex gap-2 flex-wrap">
           {sport.status === "DRAFT" && (
-            <ActionBtn
-              label="Submit for Approval"
-              loading={loading}
-              onClick={() => act(() => submitSportForApproval(eventId, sport.id))}
-            />
+            <>
+              <ActionBtn
+                label="Submit for Approval"
+                loading={loading}
+                onClick={() => act(() => submitSportForApproval(eventId, sport.id))}
+              />
+              {sport.rejectionReason && (
+                <span className="text-xs text-red-400 italic">Rejected: {sport.rejectionReason}</span>
+              )}
+            </>
           )}
           {sport.status === "PENDING_APPROVAL" && !isManager && (
             <span className="text-xs text-orange-400 italic">Awaiting admin approval…</span>
@@ -279,8 +284,21 @@ function SportCard({
               onClick={() => act(() => toggleSportRegistration(eventId, sport.id))}
             />
           )}
-          {sport.status === "REGISTRATION_CLOSED" && (
-            <span className="text-xs text-neutral-400">Registration closed</span>
+          {sport.status === "REGISTRATION_CLOSED" && !sport.bracketGenerated && (
+            <ActionBtn
+              label="Generate Brackets →"
+              variant="primary"
+              loading={false}
+              onClick={() => navigate(`/organizer/schedule?eventId=${eventId}&sportId=${sport.id}&action=generate`)}
+            />
+          )}
+          {sport.status === "REGISTRATION_CLOSED" && sport.bracketGenerated && (
+            <ActionBtn
+              label="Schedule Matches →"
+              variant="ghost"
+              loading={false}
+              onClick={() => navigate(`/organizer/schedule?eventId=${eventId}&sportId=${sport.id}`)}
+            />
           )}
         </div>
       </div>

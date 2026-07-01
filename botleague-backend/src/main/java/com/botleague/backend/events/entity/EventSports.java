@@ -165,6 +165,9 @@ public class EventSports {
     @Column(name = "bracket_generated", nullable = false, columnDefinition = "boolean DEFAULT false")
     private boolean bracketGenerated = false;
 
+    @Column(name = "rejection_reason", length = 500)
+    private String rejectionReason;
+
     // =========================
     // AUDIT
     // =========================
@@ -315,6 +318,9 @@ public class EventSports {
 
     public boolean isBracketGenerated() { return bracketGenerated; }
     public void setBracketGenerated(boolean bracketGenerated) { this.bracketGenerated = bracketGenerated; }
+
+    public String getRejectionReason() { return rejectionReason; }
+    public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

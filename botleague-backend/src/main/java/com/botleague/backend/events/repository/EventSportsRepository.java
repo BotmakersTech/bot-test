@@ -13,6 +13,8 @@ public interface EventSportsRepository extends JpaRepository<EventSports, UUID> 
 
     List<EventSports> findByEventId(UUID eventId);
 
+    List<EventSports> findByEventIdIn(java.util.Collection<UUID> eventIds);
+
     boolean existsByEventIdAndSportAndAgeGroup(UUID eventId, String sport, AgeCategory ageCategory);
 
 

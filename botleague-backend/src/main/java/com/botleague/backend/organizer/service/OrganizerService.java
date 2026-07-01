@@ -13,6 +13,7 @@ import com.botleague.backend.realtime.service.RealtimePublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -71,11 +72,12 @@ public class OrganizerService {
                     .map(this::toSportResponse)
                     .collect(Collectors.toList());
         }
-        // ORGANIZER — sports within assigned events
-        List<UUID> eventIds = eventAssignmentRepository.findByUserId(userId)
-                .stream().map(a -> a.getEventId()).collect(Collectors.toList());
-        return eventSportsRepository.findAll().stream()
-                .filter(es -> eventIds.contains(es.getEventId()))
+        // ORGANIZER — sports within assigned events only
+        Set<UUID> assignedEventIds = new HashSet<>(
+                eventAssignmentRepository.findByUserId(userId).stream()
+                        .map(a -> a.getEventId())
+                        .collect(Collectors.toList()));
+        return eventSportsRepository.findByEventIdIn(assignedEventIds).stream()
                 .map(this::toSportResponse)
                 .collect(Collectors.toList());
     }
@@ -171,6 +173,12 @@ public class OrganizerService {
         dto.setAgeGroup(es.getAgeGroup() != null ? es.getAgeGroup().name() : null);
         dto.setWeightClass(es.getWeightClass());
         dto.setStatus(es.getStatus() != null ? es.getStatus().name() : null);
+        dto.setBracketGenerated(es.isBracketGenerated());
+        dto.setRejectionReason(es.getRejectionReason());
+        dto.setRegisteredTeamsCount(es.getRegisteredTeamsCount());
+        dto.setMaxTeams(es.getMaxTeams());
+        dto.setRegistrationStartDate(es.getRegistrationStartDate());
+        dto.setRegistrationEndDate(es.getRegistrationEndDate());
         return dto;
     }
 }

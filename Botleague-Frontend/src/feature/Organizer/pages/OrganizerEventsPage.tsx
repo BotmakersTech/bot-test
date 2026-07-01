@@ -31,7 +31,7 @@ export default function OrganizerEventsPage() {
   const [events, setEvents]   = useState<OrganizerEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState<string | null>(null);
-  const [tab, setTab]         = useState<Tab>("ACTIVE");
+  const [tab, setTab]         = useState<Tab>("UPCOMING");
   const navigate = useNavigate();
 
   useEffect(() => {

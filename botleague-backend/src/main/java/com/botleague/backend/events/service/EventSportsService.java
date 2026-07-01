@@ -133,11 +133,17 @@ public class EventSportsService {
         com.botleague.backend.realtime.enums.RealtimeEventType realtimeType;
         if (sport.getStatus() == SportEventStatus.REGISTRATION_OPEN) {
             sport.setStatus(SportEventStatus.REGISTRATION_CLOSED);
-            sport.setRegistrationEndDate(LocalDate.now());
+            // Stamp actual close date only if no end date was pre-configured
+            if (sport.getRegistrationEndDate() == null) {
+                sport.setRegistrationEndDate(LocalDate.now());
+            }
             realtimeType = com.botleague.backend.realtime.enums.RealtimeEventType.SPORT_REGISTRATION_CLOSED;
         } else if (sport.getStatus() == SportEventStatus.APPROVED) {
             sport.setStatus(SportEventStatus.REGISTRATION_OPEN);
-            sport.setRegistrationEndDate(LocalDate.now().plusDays(7));
+            // Only default end date if organiser hasn't configured one
+            if (sport.getRegistrationEndDate() == null) {
+                sport.setRegistrationEndDate(LocalDate.now().plusDays(7));
+            }
             realtimeType = com.botleague.backend.realtime.enums.RealtimeEventType.SPORT_REGISTRATION_OPENED;
         } else {
             throw new IllegalStateException(
@@ -171,6 +177,7 @@ public class EventSportsService {
         }
 
         sport.setStatus(SportEventStatus.PENDING_APPROVAL);
+        sport.setRejectionReason(null);
         EventSports saved = eventSportsRepository.save(sport);
         realtimePublisher.pushSportUpdate(saved.getId(), saved.getEventId(), mapToResponse(saved));
         return mapToResponse(saved);
@@ -191,6 +198,7 @@ public class EventSportsService {
         }
 
         sport.setStatus(SportEventStatus.APPROVED);
+        sport.setRejectionReason(null);
         EventSports saved = eventSportsRepository.save(sport);
         realtimePublisher.pushSportUpdate(saved.getId(), saved.getEventId(), mapToResponse(saved));
         return mapToResponse(saved);
@@ -211,6 +219,7 @@ public class EventSportsService {
         }
 
         sport.setStatus(SportEventStatus.DRAFT);
+        sport.setRejectionReason(reason);
         EventSports saved = eventSportsRepository.save(sport);
         realtimePublisher.pushSportUpdate(saved.getId(), saved.getEventId(), mapToResponse(saved));
         return mapToResponse(saved);
@@ -361,7 +370,7 @@ public class EventSportsService {
             response.setCompetitionType(sport.getCompetitionType().name());
         }
 
-        response.setAgeGroup(sport.getAgeGroup().name());
+        if (sport.getAgeGroup() != null) response.setAgeGroup(sport.getAgeGroup().name());
 
         // physical constraints
         response.setWeightClass(sport.getWeightClass());
@@ -391,6 +400,7 @@ public class EventSportsService {
 
         response.setStatus(sport.getStatus().name());
         response.setBracketGenerated(sport.isBracketGenerated());
+        response.setRejectionReason(sport.getRejectionReason());
         response.setCreatedAt(sport.getCreatedAt());
 
         return response;

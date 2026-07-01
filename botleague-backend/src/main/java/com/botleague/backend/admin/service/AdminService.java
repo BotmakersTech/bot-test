@@ -133,6 +133,7 @@ public class AdminService {
     // GET EVENT BY ID
     // =====================================================
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public AdminAllEventResponse getEventById(UUID eventId) {
         Event event = eventRepository
                 .findById(eventId)
@@ -439,7 +440,7 @@ public class AdminService {
         dto.setSportsInfo(sport.getSportsDescription());   // getSportsDescription(), not getSportsDescripction()
         dto.setStatus(sport.getStatus().name());
         dto.setFormatType(sport.getFormatType());
-        dto.setAgeGroup(sport.getAgeGroup().name());
+        if (sport.getAgeGroup() != null) dto.setAgeGroup(sport.getAgeGroup().name());
         dto.setWeightClass(sport.getWeightClass());
         dto.setEntryFee(sport.getEntryFee());
         dto.setMaxTeams(sport.getMaxTeams());

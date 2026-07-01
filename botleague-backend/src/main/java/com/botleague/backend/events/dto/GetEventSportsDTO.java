@@ -41,6 +41,7 @@ public class GetEventSportsDTO {
 
     private String status;            // enum name
     private boolean bracketGenerated;
+    private String rejectionReason;
     private LocalDateTime createdAt;
 
     // ---- getters & setters ----
@@ -118,6 +119,9 @@ public class GetEventSportsDTO {
 
     public boolean isBracketGenerated() { return bracketGenerated; }
     public void setBracketGenerated(boolean bracketGenerated) { this.bracketGenerated = bracketGenerated; }
+
+    public String getRejectionReason() { return rejectionReason; }
+    public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

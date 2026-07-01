@@ -97,7 +97,7 @@ public class AdminController {
     // =====================================================
 
     @PatchMapping("/events/{eventId}/status")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
     public ResponseEntity<AdminAllEventResponse> changeEventStatus(
             @PathVariable UUID eventId,
             @RequestBody ChangeEventStatusRequest request
