@@ -558,10 +558,13 @@ export interface OrganizerMatch {
   roundNumber?: number;
   scheduledAt?: string;
   status: string;
+  isBye?: boolean;
   teamARobotName?: string;
   teamAName?: string;
+  teamARegistrationId?: string;
   teamBRobotName?: string;
   teamBName?: string;
+  teamBRegistrationId?: string;
   teamAScore?: number;
   teamBScore?: number;
   arenaName?: string;
@@ -572,5 +575,49 @@ export interface OrganizerMatch {
 
 export const getMatchesForSport = async (eventSportId: string): Promise<OrganizerMatch[]> => {
   const res = await api.get(`/v1/matches/event-sport/${eventSportId}`);
+  return res.data;
+};
+
+export interface GenerateBracketRequest {
+  eventSportId: string;
+  teamRegistrationIds: string[];
+  tournamentFormat?: string;
+  matchType?: string;
+  format?: string;
+}
+
+export const generateBracket = async (req: GenerateBracketRequest): Promise<OrganizerMatch[]> => {
+  const res = await api.post('/v1/matches/generate', req);
+  return res.data;
+};
+
+export const scheduleMatch = async (
+  matchId: string,
+  scheduledAt: string
+): Promise<OrganizerMatch> => {
+  const res = await api.patch(`/v1/matches/${matchId}/schedule`, { scheduledAt });
+  return res.data;
+};
+
+export const startMatch = async (matchId: string): Promise<OrganizerMatch> => {
+  const res = await api.patch(`/v1/matches/${matchId}/start`);
+  return res.data;
+};
+
+export const updateMatchScore = async (
+  matchId: string,
+  scores: { teamAScore: number; teamBScore: number }
+): Promise<OrganizerMatch> => {
+  const res = await api.patch(`/v1/matches/${matchId}/score`, scores);
+  return res.data;
+};
+
+export const completeMatch = async (matchId: string): Promise<OrganizerMatch> => {
+  const res = await api.patch(`/v1/matches/${matchId}/complete`);
+  return res.data;
+};
+
+export const cancelMatch = async (matchId: string): Promise<OrganizerMatch> => {
+  const res = await api.patch(`/v1/matches/${matchId}/cancel`);
   return res.data;
 };
