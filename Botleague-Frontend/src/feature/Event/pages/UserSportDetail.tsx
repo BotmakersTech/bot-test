@@ -764,7 +764,7 @@ function LineupTab({
   lineupLoading, lineupError, onFetch, onAdd, onRemove,
 }: LineupTabProps) {
   const [selectedMember, setSelectedMember] = useState("");
-  const [lineupRole,     setLineupRole]     = useState("OPERATOR");
+  const [lineupRole,     setLineupRole]     = useState("DRIVER");
 
   const activeReg     = existingRegs.find(r => regId(r) === activeRegId);
   const currentLineup = lineupsMap[activeRegId] ?? [];
@@ -785,6 +785,10 @@ function LineupTab({
   );
   // Members already in the CURRENT robot's lineup
   const inCurrentLineup = new Set(currentLineup.map(memberKey));
+  // Roles already assigned in the CURRENT robot's lineup (each role is unique per registration)
+  const takenRoles = new Set(
+    currentLineup.filter(m => m.isActive).map(m => m.lineupRole)
+  );
 
   useEffect(() => {
     if (activeRegId) onFetch(activeRegId);
@@ -942,26 +946,51 @@ function LineupTab({
               </div>
             )}
 
+            {/* Role slots summary */}
+            {(() => {
+              const roles = [
+                { value: "DRIVER",           label: "Driver" },
+                { value: "SECONDARY_DRIVER", label: "Secondary Driver" },
+                { value: "BUILD_HEAD",        label: "Build Head" },
+              ];
+              return (
+                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                  {roles.map(r => {
+                    const taken = takenRoles.has(r.value);
+                    return (
+                      <span key={r.value} style={{
+                        fontSize: "0.68rem", fontWeight: 700, padding: "3px 10px", borderRadius: "999px",
+                        background: taken ? "rgba(74,222,128,0.1)" : "rgba(255,255,255,0.05)",
+                        border: `1px solid ${taken ? "rgba(74,222,128,0.3)" : BORDER}`,
+                        color: taken ? SUCCESS : MUTED,
+                      }}>
+                        {taken ? "✓ " : "○ "}{r.label}
+                      </span>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
             {/* Role picker + Add button */}
             {selectedMember && !atMax && (
               <div style={{ display: "flex", gap: "10px", alignItems: "flex-end", flexWrap: "wrap" }}>
-                <div style={{ flex: 1, minWidth: "140px" }}>
+                <div style={{ flex: 1, minWidth: "160px" }}>
                   <div style={{ fontSize: "0.67rem", color: MUTED, fontWeight: 600, marginBottom: "4px" }}>Role</div>
                   <select
                     value={lineupRole}
                     onChange={e => setLineupRole(e.target.value)}
                     style={{ width: "100%", background: "rgba(0,0,0,0.3)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "8px 10px", color: TEXT, fontSize: "0.82rem", outline: "none" }}
                   >
-                    <option value="OPERATOR">Operator</option>
-                    <option value="CO_OPERATOR">Co-Operator</option>
-                    <option value="TECHNICIAN">Technician</option>
-                    <option value="PRESENTER">Presenter</option>
-                    <option value="BUILDER">Builder</option>
+                    <option value="DRIVER"           disabled={takenRoles.has("DRIVER")}>Driver{takenRoles.has("DRIVER") ? " (taken)" : ""}</option>
+                    <option value="SECONDARY_DRIVER" disabled={takenRoles.has("SECONDARY_DRIVER")}>Secondary Driver{takenRoles.has("SECONDARY_DRIVER") ? " (taken)" : ""}</option>
+                    <option value="BUILD_HEAD"       disabled={takenRoles.has("BUILD_HEAD")}>Build Head{takenRoles.has("BUILD_HEAD") ? " (taken)" : ""}</option>
                   </select>
                 </div>
                 <button
+                  disabled={takenRoles.has(lineupRole)}
                   onClick={() => { onAdd(selectedMember, lineupRole); setSelectedMember(""); }}
-                  style={{ background: `linear-gradient(135deg, #ff4d4d, ${ACCENT})`, border: "none", color: "#fff", borderRadius: "8px", padding: "9px 20px", fontSize: "0.82rem", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", boxShadow: "0 4px 14px rgba(255,77,77,0.25)" }}
+                  style={{ background: takenRoles.has(lineupRole) ? "rgba(255,255,255,0.1)" : `linear-gradient(135deg, #ff4d4d, ${ACCENT})`, border: "none", color: takenRoles.has(lineupRole) ? MUTED : "#fff", borderRadius: "8px", padding: "9px 20px", fontSize: "0.82rem", fontWeight: 700, cursor: takenRoles.has(lineupRole) ? "not-allowed" : "pointer", whiteSpace: "nowrap", boxShadow: takenRoles.has(lineupRole) ? "none" : "0 4px 14px rgba(255,77,77,0.25)" }}
                 >+ Assign</button>
               </div>
             )}

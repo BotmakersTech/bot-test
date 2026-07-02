@@ -28,13 +28,10 @@ import jakarta.persistence.*;
  *   → one person can hold only ONE role per robot per competition.
  *   → the same person CAN operate different robots in different competitions.
  *
- * Role guide:
- *   OPERATOR     – primary driver/controller           (all robot sports)
- *   CO_OPERATOR  – second controller if format allows  (all robot sports)
- *   TECHNICIAN   – pit/maintenance, not controlling    (all robot sports)
- *   PRESENTER    – demonstrates the project            (Project Based only)
- *   BUILDER      – built the project                   (Project Based only)
- *   PLAYER / CAPTAIN / SUBSTITUTE – reserved for future non-robot sports
+ * Role guide (max ONE of each per SportRegistration):
+ *   DRIVER           – primary driver/controller
+ *   SECONDARY_DRIVER – second driver if format allows
+ *   BUILD_HEAD       – team member who built/maintains the robot
  */
 @Entity
 @Table(
@@ -113,13 +110,11 @@ public class EventRegistrationLineup {
     /**
      * The membership's role for this robot in this competition.
      * Stored as STRING — DB column is human-readable.
-     *
-     * Robot sports  → OPERATOR, CO_OPERATOR, TECHNICIAN
-     * Project Based → PRESENTER, BUILDER
+     * Only ONE of each role is allowed per SportRegistration (enforced at service level).
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "lineup_role", nullable = false, length = 20)
-    private LineupRole lineupRole = LineupRole.OPERATOR;
+    private LineupRole lineupRole = LineupRole.DRIVER;
 
     // =====================================================
     // STATUS

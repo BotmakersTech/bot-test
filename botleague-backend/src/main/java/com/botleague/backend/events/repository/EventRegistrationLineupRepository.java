@@ -8,10 +8,33 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.botleague.backend.events.entity.EventRegistrationLineup;
+import com.botleague.backend.events.enums.LineupRole;
 
 @Repository
 public interface EventRegistrationLineupRepository
         extends JpaRepository<EventRegistrationLineup, UUID> {
+
+    // ----------------------------------------------------------
+    // USED BY: addMember() – role uniqueness check
+    //   Each role (DRIVER/SECONDARY_DRIVER/BUILD_HEAD) may only appear once
+    //   per SportRegistration. Excludes soft-deleted (isActive=false) rows.
+    // ----------------------------------------------------------
+    boolean existsBySportRegistrationIdAndLineupRoleAndIsActive(
+            UUID sportRegistrationId,
+            LineupRole lineupRole,
+            Boolean isActive
+    );
+
+    // ----------------------------------------------------------
+    // USED BY: updateRole() – role uniqueness check (excludes self)
+    //   Same as above but skips the row being updated.
+    // ----------------------------------------------------------
+    boolean existsBySportRegistrationIdAndLineupRoleAndIsActiveAndIdNot(
+            UUID sportRegistrationId,
+            LineupRole lineupRole,
+            Boolean isActive,
+            UUID excludeId
+    );
 
     // ----------------------------------------------------------
     // USED BY: addMember() – duplicate check

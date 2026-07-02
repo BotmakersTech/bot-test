@@ -45,7 +45,7 @@ import com.botleague.backend.team.repository.TeamMembershipRepository;
  *  4. TeamMembership must exist, be ACTIVE, and belong to the same team
  *  5. Duplicate check: same membership cannot be in the same robot's lineup twice
  *  6. Roster cap: active lineup count < EventSports.maxTeamSize
- *  7. Role must be valid for the competition type (robot vs project)
+ *  7. Role uniqueness: DRIVER, SECONDARY_DRIVER, BUILD_HEAD can each appear at most once per registration
  */
 @Service
 @Transactional
@@ -256,12 +256,22 @@ public class SportRegistrationLineupService {
         }
 
         // =================================================
-        // 7. ROLE VALIDATION
-        //    Robot-based sports  → OPERATOR, CO_OPERATOR, TECHNICIAN
-        //    Project-based sports → PRESENTER, BUILDER
+        // 7. ROLE UNIQUENESS
+        //    Each role may appear at most ONCE per SportRegistration:
+        //    one DRIVER, one SECONDARY_DRIVER, one BUILD_HEAD.
         // =================================================
 
-        validateRoleForCompetition(role, eventSport);
+        if (role == null) {
+            throw new IllegalArgumentException("Lineup role must not be null.");
+        }
+        boolean roleTaken = lineupRepository
+                .existsBySportRegistrationIdAndLineupRoleAndIsActive(
+                        sportRegistrationId, role, true);
+        if (roleTaken) {
+            throw new IllegalStateException(
+                    "Role " + role + " is already assigned for this robot in this competition. " +
+                    "Each role (DRIVER, SECONDARY_DRIVER, BUILD_HEAD) can only be held by one person.");
+        }
 
         // =================================================
         // 8. BUILD LINEUP ENTRY
@@ -316,7 +326,7 @@ public class SportRegistrationLineupService {
 
     /**
      * Changes a member's role for the robot they are already assigned to.
-     * e.g. promote CO_OPERATOR → OPERATOR, or switch TECHNICIAN → CO_OPERATOR.
+     * The new role must not already be held by another active member in the same registration.
      */
     public EventRegistrationLineup updateRole(UUID lineupId, LineupRole newRole) {
 
@@ -330,12 +340,18 @@ public class SportRegistrationLineupService {
                     "Cannot update role on an inactive lineup entry. Re-add the member first.");
         }
 
-        EventSports eventSport = eventSportsRepository
-                .findById(lineup.getEventSportId())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Event sport not found: " + lineup.getEventSportId()));
+        if (newRole == null) {
+            throw new IllegalArgumentException("Lineup role must not be null.");
+        }
 
-        validateRoleForCompetition(newRole, eventSport);
+        boolean roleTaken = lineupRepository
+                .existsBySportRegistrationIdAndLineupRoleAndIsActiveAndIdNot(
+                        lineup.getSportRegistrationId(), newRole, true, lineupId);
+        if (roleTaken) {
+            throw new IllegalStateException(
+                    "Role " + newRole + " is already assigned for this robot in this competition. " +
+                    "Each role (DRIVER, SECONDARY_DRIVER, BUILD_HEAD) can only be held by one person.");
+        }
 
         lineup.setLineupRole(newRole);
         return lineupRepository.save(lineup);
@@ -417,43 +433,4 @@ public class SportRegistrationLineupService {
         return lineupRepository.findByEventIdAndIsActive(eventId, true);
     }
 
-    // =====================================================
-    // PRIVATE HELPERS
-    // =====================================================
-
-    /**
-     * Validates that the role is appropriate for the competition type.
-     *
-     * Project-based (Junior Innovators – Project Based):
-     *   → PRESENTER or BUILDER only
-     *
-     * All robot-based sports (everything else in BotLeague):
-     *   → OPERATOR, CO_OPERATOR, TECHNICIAN only
-     *   → PRESENTER / BUILDER are rejected
-     */
-    private void validateRoleForCompetition(LineupRole role, EventSports eventSport) {
-
-        if (role == null) {
-            throw new IllegalArgumentException("Lineup role must not be null.");
-        }
-
-        String sport = eventSport.getSport() == null
-                ? ""
-                : eventSport.getSport().toUpperCase();
-
-        boolean isProjectBased = sport.contains("PROJECT");
-
-        if (isProjectBased) {
-            if (role != LineupRole.PRESENTER && role != LineupRole.BUILDER) {
-                throw new IllegalArgumentException(
-                        "Project-based competitions require PRESENTER or BUILDER, " +
-                        "but got: " + role);
-            }
-        } else {
-            if (role == LineupRole.PRESENTER || role == LineupRole.BUILDER) {
-                throw new IllegalArgumentException(
-                        "Role " + role + " is only valid for Project-based competitions.");
-            }
-        }
-    }
 }

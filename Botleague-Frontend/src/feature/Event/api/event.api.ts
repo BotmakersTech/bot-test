@@ -107,11 +107,9 @@ export interface RegisterTeamRequest {
 // ======================================================
 
 export type LineupRole =
-  | "OPERATOR"
-  | "CO_OPERATOR"
-  | "TECHNICIAN"
-  | "PRESENTER"
-  | "BUILDER";
+  | "DRIVER"
+  | "SECONDARY_DRIVER"
+  | "BUILD_HEAD";
 
 // ======================================================
 // LINEUP TYPES
