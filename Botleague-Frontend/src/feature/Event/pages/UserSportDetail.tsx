@@ -1446,38 +1446,53 @@ export default function UserSportDetail() {
     if (!teamId || !sportId) return;
     setBusyReg(true);
     setRegError(null);
+
+    // ── Step A: register the robot ────────────────────────
+    let newRegId   = "";
+    let robotIdVal = botId;
     try {
-      const reg = await registerTeamToEvent({ eventSportId: sportId, teamId, botId, robotId: botId, robotName });
-      const newRegId   = reg.registrationId ?? reg.id ?? "";
-      const robotIdVal = reg.robotId ?? reg.botId ?? botId;
-      // Submit lineup entries sequentially
-      for (const entry of lineup) {
+      const reg  = await registerTeamToEvent({ eventSportId: sportId, teamId, botId, robotId: botId, robotName });
+      newRegId   = reg.registrationId ?? reg.id ?? "";
+      robotIdVal = reg.robotId ?? reg.botId ?? botId;
+    } catch (err) {
+      const e = err as { response?: { data?: { message?: string; error?: string } }; message?: string };
+      setRegError(e?.response?.data?.message ?? e?.response?.data?.error ?? e?.message ?? "Registration failed.");
+      setBusyReg(false);
+      return;
+    }
+
+    // Registration succeeded — refresh list so robot shows up immediately
+    try { await fetchTeamRegistrations(teamId); } catch (_) { /* non-fatal */ }
+
+    // ── Step B: submit lineup entries (each independently) ──
+    const lineupErrors: string[] = [];
+    for (const entry of lineup) {
+      try {
         await addLineupMember({
           sportRegistrationId: newRegId,
           robotId:             robotIdVal,
           teamMembershipId:    entry.membershipId,
           lineupRole:          entry.role as LineupRole,
         });
+      } catch (le) {
+        const e = le as { response?: { data?: { message?: string; error?: string } }; message?: string };
+        lineupErrors.push(e?.response?.data?.message ?? e?.response?.data?.error ?? e?.message ?? "Unknown error");
       }
-      await fetchTeamRegistrations(teamId);
-      // Seed the lineup cache so the Lineup tab is immediately populated
-      if (lineup.length > 0 && newRegId) {
-        try {
-          const lineupData = await getLineup(newRegId);
-          setLineupsMap(prev => ({ ...prev, [newRegId]: lineupData }));
-        } catch (_) { /* non-fatal */ }
-      }
-    } catch (err) {
-      const e = err as { response?: { data?: { message?: string; error?: string } }; message?: string };
-      setRegError(
-        e?.response?.data?.message ??
-        e?.response?.data?.error ??
-        e?.message ??
-        "Registration failed."
-      );
-    } finally {
-      setBusyReg(false);
     }
+
+    // Seed lineup cache with whatever was saved
+    if (newRegId) {
+      try {
+        const lineupData = await getLineup(newRegId);
+        setLineupsMap(prev => ({ ...prev, [newRegId]: lineupData }));
+      } catch (_) { /* non-fatal */ }
+    }
+
+    if (lineupErrors.length > 0) {
+      setRegError(`Robot registered! But lineup failed: ${lineupErrors[0]} — use the Lineup tab to add members.`);
+    }
+
+    setBusyReg(false);
   };
 
   const handleCancel = async (registrationId: string) => {

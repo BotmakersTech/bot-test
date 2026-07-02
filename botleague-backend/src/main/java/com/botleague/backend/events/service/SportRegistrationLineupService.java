@@ -6,13 +6,9 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.botleague.backend.auth.entity.User;
-import com.botleague.backend.auth.repository.UserRepository;
-import com.botleague.backend.common.utils.EligibilityUtils;
 import com.botleague.backend.events.entity.EventRegistrationLineup;
 import com.botleague.backend.events.entity.EventSports;
 import com.botleague.backend.events.entity.SportRegistration;
-import com.botleague.backend.events.enums.AgeCategory;
 import com.botleague.backend.events.enums.LineupRole;
 import com.botleague.backend.events.enums.RegistrationStatus;
 import com.botleague.backend.events.repository.EventRegistrationLineupRepository;
@@ -60,7 +56,6 @@ public class SportRegistrationLineupService {
     private final EventSportsRepository             eventSportsRepository;
     private final RobotRepository                   robotRepository;
     private final TeamMembershipRepository          teamMembershipRepository;
-    private final UserRepository                    userRepository;
 
     // =====================================================
     // CONSTRUCTOR
@@ -71,15 +66,13 @@ public class SportRegistrationLineupService {
             SportRegistrationRepository       sportRegistrationRepository,
             EventSportsRepository             eventSportsRepository,
             RobotRepository                   robotRepository,
-            TeamMembershipRepository          teamMembershipRepository,
-            UserRepository                    userRepository
+            TeamMembershipRepository          teamMembershipRepository
     ) {
         this.lineupRepository            = lineupRepository;
         this.sportRegistrationRepository = sportRegistrationRepository;
         this.eventSportsRepository       = eventSportsRepository;
         this.robotRepository             = robotRepository;
         this.teamMembershipRepository    = teamMembershipRepository;
-        this.userRepository              = userRepository;
     }
 
     // =====================================================
@@ -184,44 +177,6 @@ public class SportRegistrationLineupService {
                     "Team membership does not belong to the team that owns this registration. " +
                     "Registration team: " + registration.getTeamId() +
                     ", Membership team: " + membership.getTeamId());
-        }
-
-        // =================================================
-        // 4.5 AGE CATEGORY CHECK FOR LINEUP MEMBER
-        //     Same rule as captain registration: member's DOB must fall
-        //     in the sport's ageGroup (if the sport has one set).
-        // =================================================
-
-        if (eventSport.getAgeGroup() != null) {
-            User member = userRepository.findById(membership.getUserId())
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "User account not found for this team member."));
-
-            if (member.getDateOfBirth() == null) {
-                throw new IllegalStateException(
-                        "Team member does not have a date of birth on file. " +
-                        "All lineup members must complete their profile (date of birth) before being added.");
-            }
-
-            int memberAge = EligibilityUtils.calculateAge(member.getDateOfBirth());
-            AgeCategory memberCategory = EligibilityUtils.getCategoryForAge(memberAge);
-
-            if (memberCategory == null) {
-                throw new IllegalStateException(
-                        "Team member is not eligible for competition (age " + memberAge + "). " +
-                        "Minimum age is " + EligibilityUtils.JUNIOR_MIN + " years.");
-            }
-
-            if (!eventSport.getAgeGroup().equals(memberCategory)) {
-                throw new IllegalStateException(
-                        "Age category mismatch: this sport is for "
-                        + EligibilityUtils.toCategoryLabel(eventSport.getAgeGroup())
-                        + " (" + EligibilityUtils.toCategoryAgeRange(eventSport.getAgeGroup()) + "), "
-                        + "but this team member is in "
-                        + EligibilityUtils.toCategoryLabel(memberCategory)
-                        + " (age " + memberAge + "). "
-                        + "Only members in the correct age category can be added to this lineup.");
-            }
         }
 
         // =================================================
