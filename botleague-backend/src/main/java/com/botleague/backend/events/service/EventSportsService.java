@@ -139,16 +139,16 @@ public class EventSportsService {
                 sport.setRegistrationEndDate(LocalDate.now());
             }
             realtimeType = com.botleague.backend.realtime.enums.RealtimeEventType.SPORT_REGISTRATION_CLOSED;
-        } else if (sport.getStatus() == SportEventStatus.APPROVED) {
+        } else if (sport.getStatus() == SportEventStatus.APPROVED
+                || sport.getStatus() == SportEventStatus.REGISTRATION_CLOSED) {
             sport.setStatus(SportEventStatus.REGISTRATION_OPEN);
-            // Only default end date if organiser hasn't configured one
             if (sport.getRegistrationEndDate() == null) {
                 sport.setRegistrationEndDate(LocalDate.now().plusDays(7));
             }
             realtimeType = com.botleague.backend.realtime.enums.RealtimeEventType.SPORT_REGISTRATION_OPENED;
         } else {
             throw new IllegalStateException(
-                "Sport must be APPROVED by an admin before registration can be opened. Current status: "
+                "Cannot open registration. Sport must be APPROVED or previously REGISTRATION_CLOSED. Current status: "
                 + sport.getStatus());
         }
 
