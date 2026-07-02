@@ -407,7 +407,8 @@ interface RegistrationTabProps {
   busyReg:        boolean;
   regError:       string | null;
   eligibility:    EligibilityResponse | null;
-  onRegister:     (botId: string, robotName: string) => Promise<void>;
+  teamMembers:    { userName: string; userId: string; teamMemberId: string; membershipId: string; teamRole: string }[];
+  onRegister:     (botId: string, robotName: string, lineup: { membershipId: string; role: string }[]) => Promise<void>;
   onCancel:       (regId: string) => void;
   onManageLineup: (registrationId: string) => void;
 }
@@ -415,6 +416,7 @@ interface RegistrationTabProps {
 function RegistrationTab({
   sport, teamId, teamCode, isCaptain, existingRegs,
   busyReg, regError, eligibility,
+  teamMembers,
   onRegister, onCancel, onManageLineup,
 }: RegistrationTabProps) {
 
@@ -422,6 +424,10 @@ function RegistrationTab({
 
   const [selectedRobot, setSelectedRobot] = useState<Robot | null>(null);
   const [showRegForm,   setShowRegForm]   = useState(false);
+  const [step,          setStep]          = useState<1 | 2>(1);
+  const [pendingLineup, setPendingLineup] = useState<{ membershipId: string; role: string }[]>([]);
+  const [regMember,     setRegMember]     = useState("");
+  const [regRole,       setRegRole]       = useState("DRIVER");
 
   // Robots already registered — check both field names the backend may return
   const registeredBotIds = new Set(
@@ -498,11 +504,33 @@ function RegistrationTab({
 
   const canAdd = isCaptain && isRegOpen && !isFull && !!teamId && !eligBlocked && !categoryMismatch;
 
-  const handleRegister = async () => {
+  // Lineup helpers (step 2)
+  const takenRoles    = new Set(pendingLineup.map(l => l.role));
+  const assignedMemberIds = new Set(pendingLineup.map(l => l.membershipId));
+  const REG_ROLES = [
+    { value: "DRIVER",           label: "Driver" },
+    { value: "SECONDARY_DRIVER", label: "Secondary Driver" },
+    { value: "BUILD_HEAD",       label: "Build Head" },
+  ];
+  const addToPending = () => {
+    if (!regMember || takenRoles.has(regRole) || assignedMemberIds.has(regMember)) return;
+    setPendingLineup(prev => [...prev, { membershipId: regMember, role: regRole }]);
+    setRegMember("");
+    const nextRole = REG_ROLES.find(r => !takenRoles.has(r.value) && r.value !== regRole);
+    if (nextRole) setRegRole(nextRole.value);
+  };
+  const removeFromPending = (membershipId: string) => {
+    setPendingLineup(prev => prev.filter(l => l.membershipId !== membershipId));
+  };
+  const resetForm = () => {
+    setSelectedRobot(null); setShowRegForm(false); setStep(1);
+    setPendingLineup([]); setRegMember(""); setRegRole("DRIVER");
+  };
+
+  const handleConfirmRegistration = async () => {
     if (!selectedRobot) return;
-    await onRegister(selectedRobot.id, selectedRobot.robotName);
-    setSelectedRobot(null);
-    setShowRegForm(false);
+    await onRegister(selectedRobot.id, selectedRobot.robotName, pendingLineup);
+    resetForm();
   };
 
   return (
@@ -616,119 +644,203 @@ function RegistrationTab({
           {showRegForm && (
             <div style={{ padding: "0 18px 18px", display: "flex", flexDirection: "column", gap: "14px" }}>
 
-              {/* Robot picker */}
-              <div>
-                <div style={{ fontSize: "0.67rem", color: MUTED, fontWeight: 600, marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.06em", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span>Select Robot <span style={{ color: DANGER }}>*</span></span>
-                  {ineligibleCount > 0 && (
-                    <span style={{ fontSize: "0.62rem", color: WARNING, fontWeight: 600, textTransform: "none", letterSpacing: 0 }}>
-                      ({ineligibleCount} robot{ineligibleCount !== 1 ? "s" : ""} don't meet sport requirements)
-                    </span>
-                  )}
-                </div>
-
-                {robotsLoading ? (
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", color: MUTED, fontSize: "0.82rem", padding: "10px 0" }}>
-                    <Spinner size={14} /> Loading your robots…
+              {/* Step indicator */}
+              <div style={{ display: "flex", alignItems: "center", gap: "0" }}>
+                {[{ n: 1, label: "Select Robot" }, { n: 2, label: "Assign Lineup" }].map(({ n, label }, i) => (
+                  <div key={n} style={{ display: "flex", alignItems: "center", flex: i < 1 ? "none" : 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: step >= n ? ACCENT : "rgba(255,255,255,0.08)", border: `2px solid ${step >= n ? ACCENT : BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: 800, color: step >= n ? "#fff" : MUTED, flexShrink: 0 }}>{n}</div>
+                      <span style={{ fontSize: "0.7rem", fontWeight: step === n ? 700 : 500, color: step === n ? TEXT : MUTED, whiteSpace: "nowrap" }}>{label}</span>
+                    </div>
+                    {i < 1 && <div style={{ flex: 1, height: "1px", background: step >= 2 ? ACCENT : BORDER, margin: "0 8px" }} />}
                   </div>
-                ) : availableRobots.length === 0 ? (
-                  <div style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.18)", borderRadius: "8px", padding: "10px 14px", color: WARNING, fontSize: "0.82rem" }}>
-                    {robots.length === 0
-                      ? "⚠️ Your team has no robots yet. Add a robot from your team dashboard first."
-                      : eligibleRobots.length === 0
-                        ? `⚠️ None of your robots are eligible for this competition. Robots must be built for "${sport.sport?.replace(/_/g, " ")}" with matching weight class.`
-                        : "✅ All eligible robots are already registered in this sport."}
-                  </div>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    {availableRobots.map(robot => {
-                      const isSelected = selectedRobot?.id === robot.id;
-                      return (
-                        <div
-                          key={robot.id}
-                          onClick={() => setSelectedRobot(isSelected ? null : robot)}
-                          style={{
-                            background: isSelected ? "rgba(250,71,21,0.1)" : "rgba(0,0,0,0.2)",
-                            border: `1px solid ${isSelected ? "rgba(250,71,21,0.4)" : BORDER}`,
-                            borderRadius: "10px",
-                            padding: "12px 14px",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "12px",
-                            cursor: "pointer",
-                            transition: "all 0.15s",
-                          }}
-                        >
-                          {/* Robot avatar */}
-                          <div style={{
-                            width: "34px", height: "34px", borderRadius: "8px",
-                            background: isSelected ? "rgba(250,71,21,0.2)" : "rgba(255,255,255,0.06)",
-                            border: `1px solid ${isSelected ? "rgba(250,71,21,0.35)" : BORDER}`,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: "1rem", flexShrink: 0,
-                          }}>
-                            🤖
-                          </div>
+                ))}
+              </div>
 
-                          {/* Robot details */}
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: 700, color: isSelected ? ACCENT : TEXT, fontSize: "0.88rem" }}>
-                              {robot.robotName}
+              {/* ── STEP 1: Robot picker ── */}
+              {step === 1 && (
+                <>
+                  <div>
+                    <div style={{ fontSize: "0.67rem", color: MUTED, fontWeight: 600, marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.06em", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span>Select Robot <span style={{ color: DANGER }}>*</span></span>
+                      {ineligibleCount > 0 && (
+                        <span style={{ fontSize: "0.62rem", color: WARNING, fontWeight: 600, textTransform: "none", letterSpacing: 0 }}>
+                          ({ineligibleCount} robot{ineligibleCount !== 1 ? "s" : ""} don't meet sport requirements)
+                        </span>
+                      )}
+                    </div>
+
+                    {robotsLoading ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", color: MUTED, fontSize: "0.82rem", padding: "10px 0" }}>
+                        <Spinner size={14} /> Loading your robots…
+                      </div>
+                    ) : availableRobots.length === 0 ? (
+                      <div style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.18)", borderRadius: "8px", padding: "10px 14px", color: WARNING, fontSize: "0.82rem" }}>
+                        {robots.length === 0
+                          ? "⚠️ Your team has no robots yet. Add a robot from your team dashboard first."
+                          : eligibleRobots.length === 0
+                            ? `⚠️ None of your robots are eligible for this competition. Robots must be built for "${sport.sport?.replace(/_/g, " ")}" with matching weight class.`
+                            : "✅ All eligible robots are already registered in this sport."}
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                        {availableRobots.map(robot => {
+                          const isSelected = selectedRobot?.id === robot.id;
+                          return (
+                            <div
+                              key={robot.id}
+                              onClick={() => setSelectedRobot(isSelected ? null : robot)}
+                              style={{ background: isSelected ? "rgba(250,71,21,0.1)" : "rgba(0,0,0,0.2)", border: `1px solid ${isSelected ? "rgba(250,71,21,0.4)" : BORDER}`, borderRadius: "10px", padding: "12px 14px", display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", transition: "all 0.15s" }}
+                            >
+                              <div style={{ width: "34px", height: "34px", borderRadius: "8px", background: isSelected ? "rgba(250,71,21,0.2)" : "rgba(255,255,255,0.06)", border: `1px solid ${isSelected ? "rgba(250,71,21,0.35)" : BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", flexShrink: 0 }}>🤖</div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 700, color: isSelected ? ACCENT : TEXT, fontSize: "0.88rem" }}>{robot.robotName}</div>
+                                {robot.robotType && <div style={{ fontSize: "0.67rem", color: MUTED, marginTop: "2px" }}>{robot.robotType}</div>}
+                              </div>
+                              <div style={{ width: "18px", height: "18px", borderRadius: "50%", border: `2px solid ${isSelected ? ACCENT : BORDER}`, background: isSelected ? ACCENT : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "0.6rem", color: "#fff", transition: "all 0.15s" }}>
+                                {isSelected && "✓"}
+                              </div>
                             </div>
-                            {robot.robotType && (
-                              <div style={{ fontSize: "0.67rem", color: MUTED, marginTop: "2px" }}>{robot.robotType}</div>
-                            )}
-                          </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
 
-                          {/* Selected indicator */}
-                          <div style={{
-                            width: "18px", height: "18px", borderRadius: "50%",
-                            border: `2px solid ${isSelected ? ACCENT : BORDER}`,
-                            background: isSelected ? ACCENT : "transparent",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            flexShrink: 0, fontSize: "0.6rem", color: "#fff",
-                            transition: "all 0.15s",
-                          }}>
-                            {isSelected && "✓"}
-                          </div>
-                        </div>
+                  {availableRobots.length > 0 && (
+                    <button
+                      onClick={() => { if (selectedRobot) { setStep(2); setPendingLineup([]); setRegMember(""); setRegRole("DRIVER"); } }}
+                      disabled={!selectedRobot}
+                      style={{ background: selectedRobot ? `linear-gradient(135deg, #ff4d4d, ${ACCENT})` : "rgba(255,255,255,0.06)", border: "none", color: selectedRobot ? "#fff" : MUTED, borderRadius: "8px", padding: "11px 24px", fontSize: "0.88rem", fontWeight: 700, cursor: selectedRobot ? "pointer" : "not-allowed", boxShadow: selectedRobot ? "0 4px 14px rgba(255,77,77,0.3)" : "none", display: "flex", alignItems: "center", gap: "8px", width: "100%", justifyContent: "center", transition: "all 0.18s" }}
+                    >
+                      {selectedRobot ? <>Next: Assign Lineup →</> : "Select a robot above"}
+                    </button>
+                  )}
+                </>
+              )}
+
+              {/* ── STEP 2: Lineup assignment ── */}
+              {step === 2 && selectedRobot && (
+                <>
+                  {/* Selected robot summary */}
+                  <div style={{ background: "rgba(250,71,21,0.07)", border: "1px solid rgba(250,71,21,0.2)", borderRadius: "10px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ fontSize: "1.1rem" }}>🤖</span>
+                    <div>
+                      <div style={{ fontSize: "0.72rem", color: MUTED, fontWeight: 600 }}>Registering robot</div>
+                      <div style={{ fontWeight: 700, color: ACCENT, fontSize: "0.9rem" }}>{selectedRobot.robotName}</div>
+                    </div>
+                  </div>
+
+                  {/* Role slots status */}
+                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                    {REG_ROLES.map(r => {
+                      const taken = takenRoles.has(r.value);
+                      const member = taken ? teamMembers.find(m => pendingLineup.find(l => l.membershipId === m.membershipId && l.role === r.value)) : null;
+                      return (
+                        <span key={r.value} style={{ fontSize: "0.68rem", fontWeight: 700, padding: "3px 10px", borderRadius: "999px", background: taken ? "rgba(74,222,128,0.1)" : "rgba(255,255,255,0.05)", border: `1px solid ${taken ? "rgba(74,222,128,0.3)" : BORDER}`, color: taken ? SUCCESS : MUTED }}>
+                          {taken ? "✓ " : "○ "}{r.label}{member ? ` — ${member.userName}` : ""}
+                        </span>
                       );
                     })}
                   </div>
-                )}
-              </div>
 
-              {/* Register button */}
-              {availableRobots.length > 0 && (
-                <button
-                  onClick={handleRegister}
-                  disabled={!selectedRobot || busyReg}
-                  style={{
-                    background: selectedRobot && !busyReg
-                      ? `linear-gradient(135deg, #ff4d4d, ${ACCENT})`
-                      : "rgba(255,255,255,0.06)",
-                    border: "none",
-                    color: selectedRobot && !busyReg ? "#fff" : MUTED,
-                    borderRadius: "8px",
-                    padding: "11px 24px",
-                    fontSize: "0.88rem",
-                    fontWeight: 700,
-                    cursor: selectedRobot && !busyReg ? "pointer" : "not-allowed",
-                    boxShadow: selectedRobot && !busyReg ? "0 4px 14px rgba(255,77,77,0.3)" : "none",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    transition: "all 0.18s",
-                    width: "100%",
-                    justifyContent: "center",
-                  }}
-                >
-                  {busyReg
-                    ? <><Spinner size={14} color="#fff" /> Registering…</>
-                    : selectedRobot
-                      ? <>⚡ Register "{selectedRobot.robotName}"</>
-                      : "Select a robot above"}
-                </button>
+                  {/* Member picker */}
+                  <div>
+                    <div style={{ fontSize: "0.67rem", color: MUTED, fontWeight: 600, marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.06em" }}>Assign Team Member</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      {teamMembers.length === 0 && (
+                        <div style={{ color: WARNING, fontSize: "0.82rem", padding: "8px 0" }}>⚠️ No team members found.</div>
+                      )}
+                      {teamMembers.map(m => {
+                        const inPending  = assignedMemberIds.has(m.membershipId);
+                        const isSelected = regMember === m.membershipId;
+                        return (
+                          <div
+                            key={m.membershipId || m.userId}
+                            onClick={() => !inPending && setRegMember(isSelected ? "" : m.membershipId)}
+                            style={{ background: inPending ? "rgba(74,222,128,0.06)" : isSelected ? "rgba(250,71,21,0.1)" : "rgba(0,0,0,0.2)", border: `1px solid ${inPending ? "rgba(74,222,128,0.2)" : isSelected ? "rgba(250,71,21,0.4)" : BORDER}`, borderRadius: "8px", padding: "9px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: inPending ? "not-allowed" : "pointer", transition: "all 0.15s" }}
+                          >
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: isSelected ? `linear-gradient(135deg, ${ACCENT}, ${ACCENT2})` : "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.72rem", fontWeight: 700, color: isSelected ? "#fff" : MUTED, flexShrink: 0 }}>
+                                {m.userName.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <div style={{ fontSize: "0.85rem", fontWeight: 600, color: inPending ? MUTED : isSelected ? ACCENT : TEXT }}>{m.userName}</div>
+                                <div style={{ fontSize: "0.65rem", color: MUTED }}>{toLabel(m.teamRole)}</div>
+                              </div>
+                            </div>
+                            {inPending  && <span style={{ fontSize: "0.65rem", color: SUCCESS, fontWeight: 700 }}>✓ Added</span>}
+                            {isSelected && !inPending && <span style={{ fontSize: "0.65rem", color: ACCENT, fontWeight: 700 }}>● Selected</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Role picker + Add */}
+                  {regMember && (
+                    <div style={{ display: "flex", gap: "10px", alignItems: "flex-end", flexWrap: "wrap" }}>
+                      <div style={{ flex: 1, minWidth: "160px" }}>
+                        <div style={{ fontSize: "0.67rem", color: MUTED, fontWeight: 600, marginBottom: "4px" }}>Role</div>
+                        <select
+                          value={regRole}
+                          onChange={e => setRegRole(e.target.value)}
+                          style={{ width: "100%", background: "rgba(0,0,0,0.3)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "8px 10px", color: TEXT, fontSize: "0.82rem", outline: "none" }}
+                        >
+                          {REG_ROLES.map(r => (
+                            <option key={r.value} value={r.value} disabled={takenRoles.has(r.value)}>
+                              {r.label}{takenRoles.has(r.value) ? " (taken)" : ""}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        onClick={addToPending}
+                        disabled={takenRoles.has(regRole)}
+                        style={{ background: takenRoles.has(regRole) ? "rgba(255,255,255,0.06)" : `linear-gradient(135deg, #ff4d4d, ${ACCENT})`, border: "none", color: takenRoles.has(regRole) ? MUTED : "#fff", borderRadius: "8px", padding: "9px 20px", fontSize: "0.82rem", fontWeight: 700, cursor: takenRoles.has(regRole) ? "not-allowed" : "pointer", whiteSpace: "nowrap", boxShadow: takenRoles.has(regRole) ? "none" : "0 4px 14px rgba(255,77,77,0.25)" }}
+                      >+ Add to Lineup</button>
+                    </div>
+                  )}
+
+                  {/* Pending lineup list */}
+                  {pendingLineup.length > 0 && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <div style={{ fontSize: "0.67rem", color: MUTED, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Lineup ({pendingLineup.length}/3)</div>
+                      {pendingLineup.map(entry => {
+                        const member = teamMembers.find(m => m.membershipId === entry.membershipId);
+                        const roleLabel = REG_ROLES.find(r => r.value === entry.role)?.label ?? entry.role;
+                        return (
+                          <div key={entry.membershipId} style={{ background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.2)", borderRadius: "8px", padding: "8px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <div>
+                              <span style={{ fontWeight: 700, color: TEXT, fontSize: "0.85rem" }}>{member?.userName ?? "Unknown"}</span>
+                              <span style={{ color: MUTED, fontSize: "0.72rem", marginLeft: "8px" }}>{roleLabel}</span>
+                            </div>
+                            <button onClick={() => removeFromPending(entry.membershipId)} style={{ background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.2)", color: DANGER, borderRadius: "6px", padding: "3px 9px", fontSize: "0.68rem", fontWeight: 700, cursor: "pointer" }}>✕</button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Navigation */}
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button
+                      onClick={() => setStep(1)}
+                      style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "8px", padding: "10px 18px", fontSize: "0.82rem", fontWeight: 600, cursor: "pointer" }}
+                    >← Back</button>
+                    <button
+                      onClick={handleConfirmRegistration}
+                      disabled={busyReg || pendingLineup.length === 0}
+                      style={{ flex: 1, background: !busyReg && pendingLineup.length > 0 ? `linear-gradient(135deg, #ff4d4d, ${ACCENT})` : "rgba(255,255,255,0.06)", border: "none", color: !busyReg && pendingLineup.length > 0 ? "#fff" : MUTED, borderRadius: "8px", padding: "11px 24px", fontSize: "0.88rem", fontWeight: 700, cursor: !busyReg && pendingLineup.length > 0 ? "pointer" : "not-allowed", boxShadow: !busyReg && pendingLineup.length > 0 ? "0 4px 14px rgba(255,77,77,0.3)" : "none", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", transition: "all 0.18s" }}
+                    >
+                      {busyReg
+                        ? <><Spinner size={14} color="#fff" /> Registering…</>
+                        : pendingLineup.length === 0
+                          ? "Add at least one lineup member"
+                          : <>⚡ Complete Registration</>}
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           )}
@@ -1330,15 +1442,31 @@ export default function UserSportDetail() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existingRegs.length]);
 
-  const handleRegister = async (botId: string, robotName: string) => {
+  const handleRegister = async (botId: string, robotName: string, lineup: { membershipId: string; role: string }[]) => {
     if (!teamId || !sportId) return;
     setBusyReg(true);
     setRegError(null);
     try {
-      // Send both botId and robotId — the backend accepts either field name
-      // depending on the API version; sending both makes it future-proof.
-      await registerTeamToEvent({ eventSportId: sportId, teamId, botId, robotId: botId, robotName });
+      const reg = await registerTeamToEvent({ eventSportId: sportId, teamId, botId, robotId: botId, robotName });
+      const newRegId   = reg.registrationId ?? reg.id ?? "";
+      const robotIdVal = reg.robotId ?? reg.botId ?? botId;
+      // Submit lineup entries sequentially
+      for (const entry of lineup) {
+        await addLineupMember({
+          sportRegistrationId: newRegId,
+          robotId:             robotIdVal,
+          teamMembershipId:    entry.membershipId,
+          lineupRole:          entry.role as LineupRole,
+        });
+      }
       await fetchTeamRegistrations(teamId);
+      // Seed the lineup cache so the Lineup tab is immediately populated
+      if (lineup.length > 0 && newRegId) {
+        try {
+          const lineupData = await getLineup(newRegId);
+          setLineupsMap(prev => ({ ...prev, [newRegId]: lineupData }));
+        } catch (_) { /* non-fatal */ }
+      }
     } catch (err) {
       const e = err as { response?: { data?: { message?: string; error?: string } }; message?: string };
       setRegError(
@@ -1599,6 +1727,7 @@ export default function UserSportDetail() {
               busyReg={busyReg}
               regError={regError}
               eligibility={eligibility}
+              teamMembers={teamMembers}
               onRegister={handleRegister}
               onCancel={handleCancel}
               onManageLineup={handleManageLineup}
