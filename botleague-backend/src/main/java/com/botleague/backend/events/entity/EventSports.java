@@ -153,7 +153,7 @@ public class EventSports {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
-    private SportEventStatus status = SportEventStatus.REGISTRATION_OPEN;
+    private SportEventStatus status = SportEventStatus.DRAFT;
 
     // =========================
     // METRICS

@@ -49,7 +49,7 @@ public class EventSportsService {
     // CREATE SPORT
     // =========================
     @Transactional
-    public EventSports addSport(EventSportsRequestDTO dto) {
+    public EventSports addSport(EventSportsRequestDTO dto, SportEventStatus initialStatus) {
 
         validateCreateRequest(dto);
 
@@ -67,6 +67,7 @@ public class EventSportsService {
         );
 
         EventSports entity = mapToEntity(dto);
+        entity.setStatus(initialStatus);
 
         EventSports savedSport = eventSportsRepository.save(entity);
 

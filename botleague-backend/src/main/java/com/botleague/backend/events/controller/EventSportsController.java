@@ -8,12 +8,14 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import com.botleague.backend.events.dto.EventSportsRequestDTO;
 import com.botleague.backend.events.dto.GetEventSportsDTO;
 import com.botleague.backend.events.dto.UpdateSportsDTO;
 import com.botleague.backend.events.entity.EventSports;
+import com.botleague.backend.events.enums.SportEventStatus;
 import com.botleague.backend.events.service.EventSportsService;
 
 @RestController
@@ -30,13 +32,27 @@ public class EventSportsController {
     // CREATE SPORT
     // =========================
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
     public ResponseEntity<EventSports> createEventSport(
             @PathVariable UUID eventId,
-            @Valid @RequestBody EventSportsRequestDTO dto) {
+            @Valid @RequestBody EventSportsRequestDTO dto,
+            Authentication auth) {
 
-        dto.setEventId(eventId); // enforce path consistency
-        EventSports response = service.addSport(dto);
+        dto.setEventId(eventId);
+
+        // Privileged roles (admin/manager) get immediate approval;
+        // organizers go through the approval workflow starting at DRAFT.
+        boolean isPrivileged = auth.getAuthorities().stream()
+                .map(a -> a.getAuthority())
+                .anyMatch(r -> r.equals("ROLE_SUPER_ADMIN")
+                            || r.equals("ROLE_ADMINISTRATOR")
+                            || r.equals("ROLE_MANAGER"));
+
+        SportEventStatus initialStatus = isPrivileged
+                ? SportEventStatus.APPROVED
+                : SportEventStatus.DRAFT;
+
+        EventSports response = service.addSport(dto, initialStatus);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -44,7 +60,7 @@ public class EventSportsController {
     // UPDATE SPORT
     // =========================
     @PatchMapping("/{sportId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
     public ResponseEntity<String> updateEventSport(
             @PathVariable UUID eventId,
             @PathVariable UUID sportId,
