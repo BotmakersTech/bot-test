@@ -117,6 +117,14 @@ public interface SportRegistrationRepository
             UUID robotId
     );
 
+    // Looks up the single CANCELLED row so re-registration can reactivate it
+    // rather than inserting a new row (which would violate the UK constraint).
+    Optional<SportRegistration> findByEventSportIdAndRobotIdAndStatus(
+            UUID eventSportId,
+            UUID robotId,
+            RegistrationStatus status
+    );
+
     // Replaces findByEventSportIdAndRobotName(): looking up by robot name ALONE
     // can match several rows (different teams) and then throws. Scoping by team
     // matches the unique constraint, so at most one row comes back.

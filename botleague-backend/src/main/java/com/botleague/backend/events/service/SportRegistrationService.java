@@ -3,6 +3,7 @@ package com.botleague.backend.events.service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -334,6 +335,76 @@ public class SportRegistrationService {
             throw new IllegalStateException(
                     "Robot '" + robot.getRobotName() +
                     "' is already registered (or pending) in this competition.");
+        }
+
+        // =================================================
+        // 7.5 REACTIVATE CANCELLED REGISTRATION
+        //     If a CANCELLED row already exists for this (sport, robot), reuse
+        //     it rather than inserting a new row — the unique constraint on
+        //     (event_sport_id, team_id, robot_name) would otherwise reject the
+        //     INSERT even though the previous entry was cancelled.
+        // =================================================
+
+        Optional<SportRegistration> cancelledOpt = sportRegistrationRepository
+                .findByEventSportIdAndRobotIdAndStatus(
+                        eventSportId, robotId, RegistrationStatus.CANCELLED);
+
+        if (cancelledOpt.isPresent()) {
+            SportRegistration existing = cancelledOpt.get();
+
+            // Refresh snapshot — robot specs may have changed since the first registration
+            existing.setWeightKg(robot.getWeightKg());
+            existing.setLengthCm(robot.getLengthCm());
+            existing.setWidthCm(robot.getWidthCm());
+            existing.setHeightCm(robot.getHeightCm());
+            existing.setControlType(robot.getControlType());
+            existing.setControlMode(robot.getControlMode());
+            existing.setStatus(RegistrationStatus.REGISTERED);
+
+            existing.validateAgainst(eventSport);
+            SportRegistration reactivated = sportRegistrationRepository.save(existing);
+
+            realtimePublisher.pushRegistration(eventSport.getId(), eventSport.getEventId(),
+                    java.util.Map.of(
+                            "sportId",              eventSport.getId().toString(),
+                            "eventId",              eventSport.getEventId().toString(),
+                            "registeredTeamsCount", eventSport.getRegisteredTeamsCount() + 1,
+                            "teamId",               team.getId().toString(),
+                            "teamName",             team.getTeamName(),
+                            "robotName",            robot.getRobotName()
+                    ));
+
+            try {
+                UUID captainId = teamMembershipRepository
+                        .findByTeamIdAndRoleInTeamAndStatus(team.getId(), TeamRole.CAPTAIN, TeamMembershipStatus.ACTIVE)
+                        .map(m -> m.getUserId())
+                        .orElse(team.getId());
+                UUID organizerUserId = eventRepository.findById(eventSport.getEventId())
+                        .map(e -> e.getCreatedBy()).orElse(null);
+                chatService.createRegistrationChat(reactivated, captainId, organizerUserId);
+            } catch (Exception ignored) {}
+
+            auditLogService.log("ROBOT_REGISTERED", "REGISTRATION", reactivated.getId(),
+                    robot.getRobotName() + " → " + eventSport.getSport(),
+                    "CANCELLED", "REGISTERED");
+
+            notificationService.systemNotify(
+                    "Registration Confirmed: " + robot.getRobotName(),
+                    team.getTeamName() + "'s robot has been registered for "
+                            + eventSport.getSport() + ". Good luck!",
+                    NotificationType.REGISTRATION_APPROVED,
+                    NotificationPriority.MEDIUM,
+                    NotificationTargetType.TEAM,
+                    team.getId(),
+                    "/events/" + eventSport.getEventId()
+            );
+
+            int curr = eventSport.getRegisteredTeamsCount() == null
+                    ? 0 : eventSport.getRegisteredTeamsCount();
+            eventSport.setRegisteredTeamsCount(curr + 1);
+            eventSportsRepository.save(eventSport);
+
+            return reactivated;
         }
 
         // =================================================
