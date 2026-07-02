@@ -297,9 +297,12 @@ public class AdminService {
             );
         }
 
-        // ── Publish gate ──────────────────────────────────────────────────────
+        // ── Status gates ─────────────────────────────────────────────────────
         if (newStatus == EventStatus.PUBLISHED) {
             validatePublishPrerequisites(eventId);
+        }
+        if (newStatus == EventStatus.LIVE) {
+            validateGoLivePrerequisites(eventId);
         }
 
         event.setStatus(newStatus);
@@ -333,6 +336,8 @@ public class AdminService {
 
     // ── Publish prerequisite validation ──────────────────────────────────────
 
+    // PUBLISH: only needs sports to exist and all be admin-approved.
+    // Brackets and scheduling are checked at LIVE transition instead.
     private void validatePublishPrerequisites(UUID eventId) {
         List<com.botleague.backend.events.entity.EventSports> sports =
                 eventSportRepository.findByEventId(eventId);
@@ -351,19 +356,35 @@ public class AdminService {
             if (sport.getStatus() == SportEventStatus.DRAFT
                     || sport.getStatus() == SportEventStatus.PENDING_APPROVAL) {
                 blockers.add(label + ": not yet approved by admin");
-                continue;
             }
-            if (sport.getStatus() == SportEventStatus.APPROVED
-                    || sport.getStatus() == SportEventStatus.REGISTRATION_OPEN) {
+        }
+
+        if (!blockers.isEmpty()) {
+            throw new IllegalStateException(
+                "Cannot publish event. Unmet prerequisites:\n• " +
+                String.join("\n• ", blockers));
+        }
+    }
+
+    // LIVE: requires registration closed, bracket generated, and all matches scheduled.
+    private void validateGoLivePrerequisites(UUID eventId) {
+        List<com.botleague.backend.events.entity.EventSports> sports =
+                eventSportRepository.findByEventId(eventId);
+
+        List<String> blockers = new ArrayList<>();
+
+        for (com.botleague.backend.events.entity.EventSports sport : sports) {
+            String label = sport.getSport()
+                + (sport.getWeightClass() != null ? " (" + sport.getWeightClass() + ")" : "");
+
+            if (sport.getStatus() != SportEventStatus.REGISTRATION_CLOSED) {
                 blockers.add(label + ": registration is not closed");
                 continue;
             }
-            // Status is REGISTRATION_CLOSED — check bracket
             if (!sport.isBracketGenerated()) {
                 blockers.add(label + ": tournament bracket not generated");
                 continue;
             }
-            // Check all non-bye matches are scheduled
             long unscheduled = matchRepository
                     .findByEventSportIdAndDeletedAtIsNull(sport.getId())
                     .stream()
@@ -377,7 +398,7 @@ public class AdminService {
 
         if (!blockers.isEmpty()) {
             throw new IllegalStateException(
-                "Cannot publish event. Unmet prerequisites:\n• " +
+                "Cannot go live. Unmet prerequisites:\n• " +
                 String.join("\n• ", blockers));
         }
     }

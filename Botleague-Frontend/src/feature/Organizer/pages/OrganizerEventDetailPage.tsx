@@ -396,7 +396,12 @@ export default function OrganizerEventDetailPage() {
   const nextStatus = NEXT_EVENT_STATUS[event.status];
   const nextLabel  = NEXT_EVENT_LABEL[event.status];
   const sports     = event.sports ?? [];
-  const publishReady = sports.length > 0 && sports.every(isPublishReady);
+  // Publish only needs all sports approved; brackets/scheduling is checked at LIVE
+  const publishReady = sports.length > 0 && sports.every(
+    s => !["DRAFT", "PENDING_APPROVAL"].includes(s.status)
+  );
+  // Go-live needs registration closed + bracket + matches scheduled (validated server-side)
+  const liveReady = sports.length > 0 && sports.every(isPublishReady);
 
   return (
     <div className="min-h-screen bg-gray-950 p-6 text-white max-w-4xl mx-auto">
@@ -439,10 +444,17 @@ export default function OrganizerEventDetailPage() {
             <ActionBtn
               label={nextLabel}
               loading={statusWorking}
-              disabled={event.status === "DRAFT" && !publishReady && sports.length > 0}
-              disabledReason={event.status === "DRAFT" && !publishReady && sports.length > 0
-                ? "Not all sports are publish-ready"
-                : undefined}
+              disabled={
+                (event.status === "DRAFT" && sports.length > 0 && !publishReady) ||
+                (event.status === "PUBLISHED" && sports.length > 0 && !liveReady)
+              }
+              disabledReason={
+                event.status === "DRAFT" && sports.length > 0 && !publishReady
+                  ? "All sports must be approved before publishing"
+                  : event.status === "PUBLISHED" && sports.length > 0 && !liveReady
+                  ? "All sports need closed registration + bracket + scheduled matches"
+                  : undefined
+              }
               onClick={() => handleEventStatusChange(nextStatus)}
             />
           )}
@@ -485,7 +497,12 @@ export default function OrganizerEventDetailPage() {
           </h2>
           {event.status === "DRAFT" && sports.length > 0 && (
             <span className={`text-xs ${publishReady ? "text-green-400" : "text-neutral-500"}`}>
-              {sports.filter(isPublishReady).length}/{sports.length} publish-ready
+              {sports.filter(s => !["DRAFT","PENDING_APPROVAL"].includes(s.status)).length}/{sports.length} approved
+            </span>
+          )}
+          {event.status === "PUBLISHED" && sports.length > 0 && (
+            <span className={`text-xs ${liveReady ? "text-green-400" : "text-neutral-500"}`}>
+              {sports.filter(isPublishReady).length}/{sports.length} ready to go live
             </span>
           )}
         </div>
