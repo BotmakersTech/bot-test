@@ -19,6 +19,7 @@ import com.botleague.backend.team.enums.TeamMembershipStatus;
 import com.botleague.backend.team.repository.TeamMembershipRepository;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -120,6 +121,7 @@ public class ChatService {
                 });
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public ChatRoom createRegistrationChat(
             SportRegistration registration,
             UUID captainId,

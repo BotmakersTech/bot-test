@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -35,7 +36,7 @@ public class AuditLogService {
      * Log an audit event. Resolves the current actor from the Spring Security context —
      * no need to pass authentication through service method chains.
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void log(String action,
                     String entityType,
                     UUID entityId,
@@ -45,7 +46,7 @@ public class AuditLogService {
         log(action, entityType, entityId, entityName, oldValue, newValue, null);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void log(String action,
                     String entityType,
                     UUID entityId,

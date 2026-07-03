@@ -616,8 +616,10 @@ public class SportRegistrationService {
                     lineupRepository.save(entry);
                 });
 
-        auditLogService.log("REGISTRATION_CANCELLED", "REGISTRATION", registration.getId(),
-                registration.getRobotName(), "REGISTERED", "CANCELLED");
+        try {
+            auditLogService.log("REGISTRATION_CANCELLED", "REGISTRATION", registration.getId(),
+                    registration.getRobotName(), "REGISTERED", "CANCELLED");
+        } catch (Exception ignored) {}
 
         // Free the slot on the competition
         eventSportsRepository.findById(registration.getEventSportId())

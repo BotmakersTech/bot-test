@@ -25,6 +25,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -140,7 +141,9 @@ public class NotificationService {
     /**
      * Create and immediately dispatch a notification.
      * Resolves recipients based on targetType and saves NotificationRecipient rows.
+     * REQUIRES_NEW so failures never poison the caller's transaction.
      */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public NotificationResponse dispatch(CreateNotificationRequest req, UUID createdBy) {
         // 1. Build and save Notification entity
         Notification notification = new Notification();
