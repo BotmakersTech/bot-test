@@ -1,6 +1,7 @@
 package com.botleague.backend.events.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -226,6 +227,24 @@ public class SportRegistrationLineupService {
             throw new IllegalStateException(
                     "Role " + role + " is already assigned for this robot in this competition. " +
                     "Each role (DRIVER, SECONDARY_DRIVER, BUILD_HEAD) can only be held by one person.");
+        }
+
+        // =================================================
+        // 7.5 REACTIVATE SOFT-DELETED ROW
+        //     The unique index covers (sport_registration_id, robot_id, team_membership_id).
+        //     After cancel + re-register the old lineup row is soft-deleted (isActive=false)
+        //     but still holds its slot — a fresh INSERT would violate the constraint.
+        //     Find and reactivate the existing row instead of inserting a duplicate.
+        // =================================================
+
+        Optional<EventRegistrationLineup> inactiveOpt = lineupRepository
+                .findBySportRegistrationIdAndRobotIdAndTeamMembershipId(
+                        sportRegistrationId, robotId, teamMembershipId);
+        if (inactiveOpt.isPresent()) {
+            EventRegistrationLineup existing = inactiveOpt.get();
+            existing.setLineupRole(role);
+            existing.setIsActive(true);
+            return lineupRepository.save(existing);
         }
 
         // =================================================
