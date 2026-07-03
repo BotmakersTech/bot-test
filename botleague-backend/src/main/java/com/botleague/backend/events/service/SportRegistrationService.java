@@ -376,14 +376,16 @@ public class SportRegistrationService {
             existing.validateAgainst(eventSport);
             SportRegistration reactivated = sportRegistrationRepository.save(existing);
 
+            int reactivatedCount = eventSport.getRegisteredTeamsCount() == null
+                    ? 0 : eventSport.getRegisteredTeamsCount();
             realtimePublisher.pushRegistration(eventSport.getId(), eventSport.getEventId(),
                     java.util.Map.of(
                             "sportId",              eventSport.getId().toString(),
                             "eventId",              eventSport.getEventId().toString(),
-                            "registeredTeamsCount", eventSport.getRegisteredTeamsCount() + 1,
+                            "registeredTeamsCount", reactivatedCount + 1,
                             "teamId",               team.getId().toString(),
-                            "teamName",             team.getTeamName(),
-                            "robotName",            robot.getRobotName()
+                            "teamName",             team.getTeamName() != null ? team.getTeamName() : "",
+                            "robotName",            robot.getRobotName() != null ? robot.getRobotName() : ""
                     ));
 
             try {
@@ -396,20 +398,24 @@ public class SportRegistrationService {
                 chatService.createRegistrationChat(reactivated, captainId, organizerUserId);
             } catch (Exception ignored) {}
 
-            auditLogService.log("ROBOT_REGISTERED", "REGISTRATION", reactivated.getId(),
-                    robot.getRobotName() + " → " + eventSport.getSport(),
-                    "CANCELLED", "REGISTERED");
+            try {
+                auditLogService.log("ROBOT_REGISTERED", "REGISTRATION", reactivated.getId(),
+                        robot.getRobotName() + " → " + eventSport.getSport(),
+                        "CANCELLED", "REGISTERED");
+            } catch (Exception ignored) {}
 
-            notificationService.systemNotify(
-                    "Registration Confirmed: " + robot.getRobotName(),
-                    team.getTeamName() + "'s robot has been registered for "
-                            + eventSport.getSport() + ". Good luck!",
-                    NotificationType.REGISTRATION_APPROVED,
-                    NotificationPriority.MEDIUM,
-                    NotificationTargetType.TEAM,
-                    team.getId(),
-                    "/events/" + eventSport.getEventId()
-            );
+            try {
+                notificationService.systemNotify(
+                        "Registration Confirmed: " + robot.getRobotName(),
+                        team.getTeamName() + "'s robot has been registered for "
+                                + eventSport.getSport() + ". Good luck!",
+                        NotificationType.REGISTRATION_APPROVED,
+                        NotificationPriority.MEDIUM,
+                        NotificationTargetType.TEAM,
+                        team.getId(),
+                        "/events/" + eventSport.getEventId()
+                );
+            } catch (Exception ignored) {}
 
             int curr = eventSport.getRegisteredTeamsCount() == null
                     ? 0 : eventSport.getRegisteredTeamsCount();
@@ -489,14 +495,16 @@ public class SportRegistrationService {
         SportRegistration saved = sportRegistrationRepository.save(registration);
 
         // Push realtime registration count update to watchers
+        int newRegCount = eventSport.getRegisteredTeamsCount() == null
+                ? 0 : eventSport.getRegisteredTeamsCount();
         realtimePublisher.pushRegistration(eventSport.getId(), eventSport.getEventId(),
                 java.util.Map.of(
                         "sportId",              eventSport.getId().toString(),
                         "eventId",              eventSport.getEventId().toString(),
-                        "registeredTeamsCount", eventSport.getRegisteredTeamsCount() + 1,
+                        "registeredTeamsCount", newRegCount + 1,
                         "teamId",               team.getId().toString(),
-                        "teamName",             team.getTeamName(),
-                        "robotName",            robot.getRobotName()
+                        "teamName",             team.getTeamName() != null ? team.getTeamName() : "",
+                        "robotName",            robot.getRobotName() != null ? robot.getRobotName() : ""
                 ));
 
         // =================================================
@@ -524,20 +532,24 @@ public class SportRegistrationService {
         // AUDIT + NOTIFY TEAM — registration confirmed
         // =================================================
 
-        auditLogService.log("ROBOT_REGISTERED", "REGISTRATION", saved.getId(),
-                robot.getRobotName() + " → " + eventSport.getSport(),
-                null, "REGISTERED");
+        try {
+            auditLogService.log("ROBOT_REGISTERED", "REGISTRATION", saved.getId(),
+                    robot.getRobotName() + " → " + eventSport.getSport(),
+                    null, "REGISTERED");
+        } catch (Exception ignored) {}
 
-        notificationService.systemNotify(
-                "Registration Confirmed: " + robot.getRobotName(),
-                team.getTeamName() + "'s robot has been registered for "
-                        + eventSport.getSport() + ". Good luck!",
-                NotificationType.REGISTRATION_APPROVED,
-                NotificationPriority.MEDIUM,
-                NotificationTargetType.TEAM,
-                team.getId(),
-                "/events/" + eventSport.getEventId()
-        );
+        try {
+            notificationService.systemNotify(
+                    "Registration Confirmed: " + robot.getRobotName(),
+                    team.getTeamName() + "'s robot has been registered for "
+                            + eventSport.getSport() + ". Good luck!",
+                    NotificationType.REGISTRATION_APPROVED,
+                    NotificationPriority.MEDIUM,
+                    NotificationTargetType.TEAM,
+                    team.getId(),
+                    "/events/" + eventSport.getEventId()
+            );
+        } catch (Exception ignored) {}
 
         // =================================================
         // 12. INCREMENT COMPETITION HEADCOUNT
