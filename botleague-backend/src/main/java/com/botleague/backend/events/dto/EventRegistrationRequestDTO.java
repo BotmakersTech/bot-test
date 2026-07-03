@@ -15,7 +15,7 @@ public class EventRegistrationRequestDTO {
     @NotNull(message = "Team ID is required")
     private UUID teamId;
     
-    @NotNull(message = "Team ID is required")
+    @NotNull(message = "Robot ID is required")
     private UUID botId;
 
     @NotBlank(message = "Robot name is required")

@@ -357,9 +357,11 @@ function RobotRegistrationCard({
             {reg.botType && (
               <span style={{ fontSize: "0.65rem", color: MUTED, background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, borderRadius: "4px", padding: "1px 7px" }}>{reg.botType}</span>
             )}
-            <span style={{ fontSize: "0.65rem", color: MUTED }}>
-              Operators: {reg.lineupSize} / {(reg.lineupSize ?? 0) >= 0 ? reg.lineupSize : "—"}
-            </span>
+            {reg.lineupSize != null && (
+              <span style={{ fontSize: "0.65rem", color: MUTED }}>
+                Operators: {reg.lineupSize}
+              </span>
+            )}
             {reg.lineupLocked && (
               <span style={{ fontSize: "0.65rem", color: WARNING, fontWeight: 700 }}>🔒 Locked</span>
             )}
@@ -399,25 +401,26 @@ function RobotRegistrationCard({
 
 // ─── Registration Tab ─────────────────────────────────
 interface RegistrationTabProps {
-  sport:          EventSportResponse;
-  teamId:         string;
-  teamCode:       string;
-  isCaptain:      boolean;
-  existingRegs:   EventRegistrationResponse[];
-  busyReg:        boolean;
-  regError:       string | null;
-  eligibility:    EligibilityResponse | null;
-  teamMembers:    { userName: string; userId: string; teamMemberId: string; membershipId: string; teamRole: string }[];
-  onRegister:     (botId: string, robotName: string, lineup: { membershipId: string; role: string }[]) => Promise<void>;
-  onCancel:       (regId: string) => void;
-  onManageLineup: (registrationId: string) => void;
+  sport:           EventSportResponse;
+  teamId:          string;
+  teamCode:        string;
+  isCaptain:       boolean;
+  existingRegs:    EventRegistrationResponse[];
+  busyReg:         boolean;
+  regError:        string | null;
+  eligibility:     EligibilityResponse | null;
+  teamMembers:     { userName: string; userId: string; teamMemberId: string; membershipId: string; teamRole: string }[];
+  onRegister:      (botId: string, robotName: string, lineup: { membershipId: string; role: string }[]) => Promise<void>;
+  onCancel:        (regId: string) => void;
+  onManageLineup:  (registrationId: string) => void;
+  onDismissError:  () => void;
 }
 
 function RegistrationTab({
   sport, teamId, teamCode, isCaptain, existingRegs,
   busyReg, regError, eligibility,
   teamMembers,
-  onRegister, onCancel, onManageLineup,
+  onRegister, onCancel, onManageLineup, onDismissError,
 }: RegistrationTabProps) {
 
   const { robots, loading: robotsLoading } = useRobots(teamCode);
@@ -588,8 +591,9 @@ function RegistrationTab({
         </div>
       )}
       {regError && (
-        <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "10px", padding: "10px 16px", color: DANGER, fontSize: "0.82rem", fontWeight: 600 }}>
-          ⚠️ {regError}
+        <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "10px", padding: "10px 16px", color: DANGER, fontSize: "0.82rem", fontWeight: 600, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "10px" }}>
+          <span>⚠️ {regError}</span>
+          <button onClick={onDismissError} style={{ background: "none", border: "none", color: DANGER, cursor: "pointer", fontSize: "1rem", lineHeight: 1, flexShrink: 0, padding: "0 2px" }}>✕</button>
         </div>
       )}
 
@@ -1746,6 +1750,7 @@ export default function UserSportDetail() {
               onRegister={handleRegister}
               onCancel={handleCancel}
               onManageLineup={handleManageLineup}
+              onDismissError={() => setRegError(null)}
             />
           )}
 

@@ -25,6 +25,7 @@ import com.botleague.backend.events.enums.AgeCategory;
 import com.botleague.backend.events.enums.RegistrationStatus;
 import com.botleague.backend.events.enums.SportEventStatus;
 import com.botleague.backend.events.repository.EventRepository;
+import com.botleague.backend.events.repository.EventRegistrationLineupRepository;
 import com.botleague.backend.events.repository.EventSportsRepository;
 import com.botleague.backend.events.repository.SportRegistrationRepository;
 import com.botleague.backend.audit.service.AuditLogService;
@@ -62,36 +63,38 @@ public class SportRegistrationService {
     // DEPENDENCIES
     // =====================================================
 
-    private final SportRegistrationRepository sportRegistrationRepository;
-    private final EventSportsRepository        eventSportsRepository;
-    private final EventRepository              eventRepository;
-    private final TeamRepository               teamRepository;
-    private final TeamMembershipRepository     teamMembershipRepository;
-    private final RobotRepository              robotRepository;
-    private final UserRepository               userRepository;
-    private final GuardianRepository           guardianRepository;
-    private final NotificationService          notificationService;
-    private final AuditLogService              auditLogService;
-    private final ChatService                  chatService;
-    private final RealtimePublisher            realtimePublisher;
+    private final SportRegistrationRepository     sportRegistrationRepository;
+    private final EventSportsRepository           eventSportsRepository;
+    private final EventRepository                 eventRepository;
+    private final TeamRepository                  teamRepository;
+    private final TeamMembershipRepository        teamMembershipRepository;
+    private final RobotRepository                 robotRepository;
+    private final UserRepository                  userRepository;
+    private final GuardianRepository              guardianRepository;
+    private final NotificationService             notificationService;
+    private final AuditLogService                 auditLogService;
+    private final ChatService                     chatService;
+    private final RealtimePublisher               realtimePublisher;
+    private final EventRegistrationLineupRepository lineupRepository;
 
     // =====================================================
     // CONSTRUCTOR
     // =====================================================
 
     public SportRegistrationService(
-            SportRegistrationRepository sportRegistrationRepository,
-            EventSportsRepository       eventSportsRepository,
-            EventRepository             eventRepository,
-            TeamRepository              teamRepository,
-            TeamMembershipRepository    teamMembershipRepository,
-            RobotRepository             robotRepository,
-            UserRepository              userRepository,
-            GuardianRepository          guardianRepository,
-            NotificationService         notificationService,
-            AuditLogService             auditLogService,
-            ChatService                 chatService,
-            RealtimePublisher           realtimePublisher
+            SportRegistrationRepository          sportRegistrationRepository,
+            EventSportsRepository                eventSportsRepository,
+            EventRepository                      eventRepository,
+            TeamRepository                       teamRepository,
+            TeamMembershipRepository             teamMembershipRepository,
+            RobotRepository                      robotRepository,
+            UserRepository                       userRepository,
+            GuardianRepository                   guardianRepository,
+            NotificationService                  notificationService,
+            AuditLogService                      auditLogService,
+            ChatService                          chatService,
+            RealtimePublisher                    realtimePublisher,
+            EventRegistrationLineupRepository    lineupRepository
     ) {
         this.sportRegistrationRepository = sportRegistrationRepository;
         this.eventSportsRepository       = eventSportsRepository;
@@ -105,6 +108,7 @@ public class SportRegistrationService {
         this.auditLogService             = auditLogService;
         this.chatService                 = chatService;
         this.realtimePublisher           = realtimePublisher;
+        this.lineupRepository            = lineupRepository;
     }
 
     // =====================================================
@@ -583,6 +587,15 @@ public class SportRegistrationService {
 
         registration.setStatus(RegistrationStatus.CANCELLED);
         sportRegistrationRepository.save(registration);
+
+        // Soft-delete all active lineup entries so they don't block role-uniqueness
+        // checks if the same robot is re-registered later (step 7.5 reactivation).
+        lineupRepository.findBySportRegistrationIdAndIsActive(registration.getId(), true)
+                .forEach(entry -> {
+                    entry.setIsActive(false);
+                    lineupRepository.save(entry);
+                });
+
         auditLogService.log("REGISTRATION_CANCELLED", "REGISTRATION", registration.getId(),
                 registration.getRobotName(), "REGISTERED", "CANCELLED");
 
