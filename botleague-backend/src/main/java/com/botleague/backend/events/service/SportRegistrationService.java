@@ -1,6 +1,7 @@
 package com.botleague.backend.events.service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -15,7 +16,11 @@ import com.botleague.backend.auth.repository.UserRepository;
 import com.botleague.backend.chat.service.ChatService;
 import com.botleague.backend.common.utils.EligibilityUtils;
 import com.botleague.backend.events.dto.EventRegistrationResponse;
+import com.botleague.backend.events.dto.LineupResponse;
 import com.botleague.backend.events.dto.RegistrationRequest;
+import com.botleague.backend.events.dto.RegistrationWithLineupRequest;
+import com.botleague.backend.events.dto.RegistrationWithLineupResponse;
+import com.botleague.backend.events.entity.EventRegistrationLineup;
 import com.botleague.backend.events.entity.Event;
 import com.botleague.backend.events.entity.EventSports;
 import com.botleague.backend.events.enums.ControlMode;
@@ -63,19 +68,20 @@ public class SportRegistrationService {
     // DEPENDENCIES
     // =====================================================
 
-    private final SportRegistrationRepository     sportRegistrationRepository;
-    private final EventSportsRepository           eventSportsRepository;
-    private final EventRepository                 eventRepository;
-    private final TeamRepository                  teamRepository;
-    private final TeamMembershipRepository        teamMembershipRepository;
-    private final RobotRepository                 robotRepository;
-    private final UserRepository                  userRepository;
-    private final GuardianRepository              guardianRepository;
-    private final NotificationService             notificationService;
-    private final AuditLogService                 auditLogService;
-    private final ChatService                     chatService;
-    private final RealtimePublisher               realtimePublisher;
+    private final SportRegistrationRepository       sportRegistrationRepository;
+    private final EventSportsRepository             eventSportsRepository;
+    private final EventRepository                   eventRepository;
+    private final TeamRepository                    teamRepository;
+    private final TeamMembershipRepository          teamMembershipRepository;
+    private final RobotRepository                   robotRepository;
+    private final UserRepository                    userRepository;
+    private final GuardianRepository                guardianRepository;
+    private final NotificationService               notificationService;
+    private final AuditLogService                   auditLogService;
+    private final ChatService                       chatService;
+    private final RealtimePublisher                 realtimePublisher;
     private final EventRegistrationLineupRepository lineupRepository;
+    private final SportRegistrationLineupService    lineupService;
 
     // =====================================================
     // CONSTRUCTOR
@@ -94,7 +100,8 @@ public class SportRegistrationService {
             AuditLogService                      auditLogService,
             ChatService                          chatService,
             RealtimePublisher                    realtimePublisher,
-            EventRegistrationLineupRepository    lineupRepository
+            EventRegistrationLineupRepository    lineupRepository,
+            SportRegistrationLineupService       lineupService
     ) {
         this.sportRegistrationRepository = sportRegistrationRepository;
         this.eventSportsRepository       = eventSportsRepository;
@@ -109,6 +116,7 @@ public class SportRegistrationService {
         this.chatService                 = chatService;
         this.realtimePublisher           = realtimePublisher;
         this.lineupRepository            = lineupRepository;
+        this.lineupService               = lineupService;
     }
 
     // =====================================================
@@ -608,6 +616,67 @@ public class SportRegistrationService {
                     eventSport.setRegisteredTeamsCount(Math.max(0, current - 1));
                     eventSportsRepository.save(eventSport);
                 });
+    }
+
+    // =====================================================
+    // REGISTER ROBOT + LINEUP (ATOMIC)
+    // =====================================================
+
+    /**
+     * Registers a robot AND its lineup in a single transaction.
+     * If any lineup entry fails validation, the entire operation is rolled back —
+     * no robot is left registered without its required lineup.
+     */
+    public RegistrationWithLineupResponse registerRobotWithLineup(
+            RegistrationWithLineupRequest request
+    ) {
+        // Build a RegistrationRequest from the combined request
+        RegistrationRequest regReq = new RegistrationRequest();
+        regReq.setEventSportId(request.getEventSportId());
+        regReq.setTeamId(request.getTeamId());
+        regReq.setBotId(request.getBotId());
+        regReq.setCallerId(request.getCallerId());
+
+        // Register the robot — any validation failure throws and aborts everything
+        SportRegistration registration = registerRobot(regReq);
+
+        // Add each lineup entry — any failure throws and rolls back the registration too
+        List<EventRegistrationLineup> savedLineup = new ArrayList<>();
+        for (RegistrationWithLineupRequest.LineupEntry entry : request.getLineup()) {
+            EventRegistrationLineup lineupEntry = lineupService.addMember(
+                    registration.getId(),
+                    registration.getRobotId(),
+                    entry.getTeamMembershipId(),
+                    entry.getLineupRole()
+            );
+            savedLineup.add(lineupEntry);
+        }
+
+        // Build response
+        RegistrationWithLineupResponse response = new RegistrationWithLineupResponse();
+        response.setRegistrationId(registration.getId());
+        response.setRobotId(registration.getRobotId());
+        response.setRobotName(registration.getRobotName());
+        response.setStatus(registration.getStatus().name());
+
+        List<LineupResponse> lineupResponses = new ArrayList<>();
+        for (EventRegistrationLineup entry : savedLineup) {
+            LineupResponse lr = new LineupResponse();
+            lr.setLineupId(entry.getId());
+            lr.setSportRegistrationId(entry.getSportRegistrationId());
+            lr.setRobotId(entry.getRobotId());
+            lr.setTeamMembershipId(entry.getTeamMembershipId());
+            lr.setEventId(entry.getEventId());
+            lr.setEventSportId(entry.getEventSportId());
+            lr.setTeamId(entry.getTeamId());
+            lr.setLineupRole(entry.getLineupRole());
+            lr.setIsActive(entry.getIsActive());
+            lr.setCreatedAt(entry.getCreatedAt());
+            lineupResponses.add(lr);
+        }
+        response.setLineup(lineupResponses);
+
+        return response;
     }
 
     // =====================================================

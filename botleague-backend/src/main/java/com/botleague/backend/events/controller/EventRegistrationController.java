@@ -13,6 +13,8 @@ import com.botleague.backend.common.security.SecurityUtils;
 import com.botleague.backend.events.dto.EventRegistrationRequestDTO;
 import com.botleague.backend.events.dto.EventRegistrationResponse;
 import com.botleague.backend.events.dto.RegistrationRequest;
+import com.botleague.backend.events.dto.RegistrationWithLineupRequest;
+import com.botleague.backend.events.dto.RegistrationWithLineupResponse;
 import com.botleague.backend.events.entity.SportRegistration;
 import com.botleague.backend.events.service.SportRegistrationService;
 
@@ -63,6 +65,28 @@ public class EventRegistrationController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(sportRegistrationService.mapToResponse(registration));
+    }
+
+    // =====================================================
+    // REGISTER ROBOT + LINEUP (ATOMIC)
+    // POST /api/event-registrations/with-lineup
+    //
+    // Single transaction: robot registration + all lineup entries.
+    // If any lineup entry is invalid, the entire operation rolls back —
+    // no half-registered state is ever persisted.
+    // =====================================================
+
+    @PostMapping("/with-lineup")
+    public ResponseEntity<RegistrationWithLineupResponse> registerWithLineup(
+            @Valid
+            @RequestBody
+            RegistrationWithLineupRequest request,
+            Authentication authentication
+    ) {
+        request.setCallerId(SecurityUtils.currentUserId(authentication));
+        RegistrationWithLineupResponse response =
+                sportRegistrationService.registerRobotWithLineup(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     // =====================================================

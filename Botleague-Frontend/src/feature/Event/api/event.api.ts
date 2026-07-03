@@ -144,6 +144,25 @@ export interface AddLineupMemberRequest {
 }
 
 // ======================================================
+// ATOMIC REGISTER + LINEUP TYPES
+// ======================================================
+
+export interface RegisterWithLineupRequest {
+  eventSportId: string;
+  teamId: string;
+  botId: string;
+  lineup: { teamMembershipId: string; lineupRole: LineupRole }[];
+}
+
+export interface RegisterWithLineupResponse {
+  registrationId: string;
+  robotId: string;
+  robotName: string;
+  status: string;
+  lineup: TeamLineUpResponse[];
+}
+
+// ======================================================
 // GET LIVE EVENTS
 // ======================================================
 
@@ -257,5 +276,16 @@ export const removeLineupMember = async (
   const response = await api.delete(
     `/event-registration-lineups/${lineupId}`
   );
+  return response.data;
+};
+
+// ======================================================
+// REGISTER ROBOT + LINEUP (ATOMIC)
+// ======================================================
+
+export const registerTeamWithLineup = async (
+  request: RegisterWithLineupRequest
+): Promise<RegisterWithLineupResponse> => {
+  const response = await api.post("/event-registrations/with-lineup", request);
   return response.data;
 };
