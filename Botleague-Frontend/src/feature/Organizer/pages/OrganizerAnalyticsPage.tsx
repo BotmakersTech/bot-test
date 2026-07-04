@@ -1,219 +1,174 @@
 import { useEffect, useState } from "react"
-import { getMyEvents, getMySports, getMatchesForSport, getVolunteers, getJudges, getCertificates,
-  type OrganizerEvent, type OrganizerSport, type OrganizerMatch } from "../api/organizer.api"
+import {
+  CalendarDays, Trophy, Users, Activity, TrendingUp, Clock, Zap, CheckCircle2
+} from "lucide-react"
+import { getMyEvents, getDashboardStats, type OrganizerEvent, type DashboardStats } from "../api/organizer.api"
 
-interface SportStat {
-  sport: OrganizerSport
-  totalMatches: number
-  completedMatches: number
-  liveMatches: number
-  completionRate: number
+// ── theme ─────────────────────────────────────────────────────────────────────
+const P      = "#8C6CFF"
+const BLUE   = "#0162D1"
+const BG     = "#F4F3FF"
+const SURF   = "#FFFFFF"
+const BORDER = "#E0D9FF"
+const TEXT   = "#111111"
+const MUTED  = "#6B7280"
+
+const toLabel = (raw?: string | null) => {
+  if (!raw) return "—"
+  return raw.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
 }
 
-function BarChart({ data, label, color = "#fa4715" }: { data: { label: string; value: number }[]; label: string; color?: string }) {
-  const max = Math.max(...data.map(d => d.value), 1)
+function BigStat({ icon, label, value, color, subtitle }: { icon: React.ReactNode; label: string; value: number; color: string; subtitle?: string }) {
   return (
-    <div className="space-y-3">
-      <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wide">{label}</p>
-      {data.map(d => (
-        <div key={d.label} className="space-y-1">
-          <div className="flex justify-between text-xs">
-            <span className="text-neutral-300 truncate max-w-[150px]">{d.label.replace(/_/g, " ")}</span>
-            <span className="text-neutral-400 ml-2 shrink-0">{d.value}</span>
-          </div>
-          <div className="h-1.5 rounded-full bg-white/[0.07]">
-            <div className="h-full rounded-full transition-all" style={{ width: `${(d.value / max) * 100}%`, background: color }} />
-          </div>
-        </div>
-      ))}
+    <div style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: "16px", padding: "22px 26px", display: "flex", alignItems: "center", gap: "16px" }}>
+      <div style={{ background: `${color}1A`, color, borderRadius: "12px", width: "50px", height: "50px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{icon}</div>
+      <div>
+        <p style={{ color: MUTED, fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", margin: 0 }}>{label}</p>
+        <p style={{ color: TEXT, fontSize: "2rem", fontWeight: 700, fontFamily: "'Sarpanch',sans-serif", margin: "2px 0 0", lineHeight: 1 }}>{value}</p>
+        {subtitle && <p style={{ color: MUTED, fontSize: "0.75rem", margin: "4px 0 0" }}>{subtitle}</p>}
+      </div>
     </div>
   )
 }
 
-function DonutRing({ pct, color = "#fa4715", size = 80 }: { pct: number; color?: string; size?: number }) {
-  const r = size / 2 - 8
-  const circ = 2 * Math.PI * r
-  const dash = (pct / 100) * circ
+function ProgressBar({ label, value, total, color }: { label: string; value: number; total: number; color: string }) {
+  const pct = total > 0 ? Math.min(100, Math.round((value / total) * 100)) : 0
   return (
-    <svg width={size} height={size}>
-      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={8} />
-      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={8}
-        strokeDasharray={`${dash} ${circ}`} strokeDashoffset={circ / 4} strokeLinecap="round" />
-      <text x={size/2} y={size/2 + 5} textAnchor="middle" fill="white" fontSize={14} fontWeight="bold">{pct}%</text>
-    </svg>
+    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ color: TEXT, fontSize: "0.82rem", fontWeight: 500 }}>{label}</span>
+        <span style={{ color: MUTED, fontSize: "0.78rem" }}>{value} ({pct}%)</span>
+      </div>
+      <div style={{ height: "6px", background: BORDER, borderRadius: "3px", overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${pct}%`, background: color, borderRadius: "3px", transition: "width 0.5s ease" }} />
+      </div>
+    </div>
   )
 }
 
 export default function OrganizerAnalyticsPage() {
-  const [events, setEvents] = useState<OrganizerEvent[]>([])
-  const [sports, setSports] = useState<OrganizerSport[]>([])
-  const [selectedEventId, setSelectedEventId] = useState("")
-  const [sportStats, setSportStats] = useState<SportStat[]>([])
-  const [volunteerCount, setVolunteerCount] = useState(0)
-  const [judgeCount, setJudgeCount] = useState(0)
-  const [certCount, setCertCount] = useState(0)
-  const [loading, setLoading] = useState(false)
+  const [events,  setEvents]  = useState<OrganizerEvent[]>([])
+  const [stats,   setStats]   = useState<DashboardStats | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    Promise.all([getMyEvents(), getMySports()]).then(([ev, sp]) => {
-      setEvents(ev); setSports(sp)
-      if (ev.length) setSelectedEventId(ev[0].id)
-    }).catch(() => {})
+    Promise.all([getMyEvents(), getDashboardStats().catch(() => null)])
+      .then(([evts, st]) => { setEvents(evts); setStats(st) })
+      .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => {
-    if (!selectedEventId) return
-    setLoading(true)
-    const eventSports = sports.filter(s => s.eventId === selectedEventId)
+  const totalEvents  = events.length
+  const liveCount    = events.filter(e => e.status?.toUpperCase() === "LIVE").length
+  const draftCount   = events.filter(e => e.status?.toUpperCase() === "DRAFT").length
+  const pubCount     = events.filter(e => e.status?.toUpperCase() === "PUBLISHED").length
+  const doneCount    = events.filter(e => e.status?.toUpperCase() === "COMPLETED").length
+  const allSports    = events.flatMap(e => e.sports ?? [])
+  const totalSports  = allSports.length
+  const totalTeams   = allSports.reduce((a, s) => a + (s.registeredTeamsCount ?? 0), 0)
+  const totalVols    = stats?.totalVolunteers ?? 0
+  const totalJudges  = stats?.totalJudges ?? 0
+  const totalStaff   = stats?.totalStaff ?? 0
+  const totalMatches = stats?.totalMatches ?? 0
+  const openIncidents = stats?.openIncidents ?? 0
 
-    Promise.all([
-      ...eventSports.map(s => getMatchesForSport(s.id).catch(() => [] as OrganizerMatch[])),
-      getVolunteers(selectedEventId).catch(() => []),
-      getJudges(selectedEventId).catch(() => []),
-      getCertificates(selectedEventId).catch(() => []),
-    ]).then(results => {
-      const matchResults = results.slice(0, eventSports.length) as OrganizerMatch[][]
-      const volunteers = results[eventSports.length] as any[]
-      const judges     = results[eventSports.length + 1] as any[]
-      const certs      = results[eventSports.length + 2] as any[]
-
-      setVolunteerCount(volunteers.length)
-      setJudgeCount(judges.length)
-      setCertCount(certs.length)
-
-      const stats: SportStat[] = eventSports.map((sp, i) => {
-        const matches = matchResults[i] ?? []
-        const total   = matches.length
-        const done    = matches.filter(m => m.status === "COMPLETED").length
-        const live    = matches.filter(m => m.status === "LIVE").length
-        return { sport: sp, totalMatches: total, completedMatches: done, liveMatches: live,
-          completionRate: total > 0 ? Math.round((done / total) * 100) : 0 }
-      })
-      setSportStats(stats)
-    }).finally(() => setLoading(false))
-  }, [selectedEventId, sports])
-
-  const totalMatches   = sportStats.reduce((a, s) => a + s.totalMatches, 0)
-  const doneMatches    = sportStats.reduce((a, s) => a + s.completedMatches, 0)
-  const overallPct     = totalMatches > 0 ? Math.round((doneMatches / totalMatches) * 100) : 0
+  if (loading) return (
+    <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, fontFamily: "'Inter',sans-serif" }}>
+      Loading analytics…
+    </div>
+  )
 
   return (
-    <div className="min-h-full p-6 space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-white">Analytics</h1>
-          <p className="text-sm text-neutral-500 mt-0.5">Event performance and participation insights</p>
-        </div>
-        <select value={selectedEventId} onChange={e => setSelectedEventId(e.target.value)}
-          className="rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none">
-          {events.map(e => <option key={e.id} value={e.id}>{e.eventName}</option>)}
-        </select>
+    <div style={{ minHeight: "100vh", background: BG, padding: "28px 32px", fontFamily: "'Inter',sans-serif" }}>
+      <div style={{ marginBottom: "24px" }}>
+        <h1 style={{ color: TEXT, fontFamily: "'Sarpanch',sans-serif", fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>Analytics</h1>
+        <p style={{ color: MUTED, fontSize: "0.85rem", margin: "4px 0 0" }}>Overview of your event portfolio</p>
       </div>
 
-      {loading ? (
-        <div className="space-y-3">{[1,2,3,4].map(i => <div key={i} className="h-24 animate-pulse rounded-2xl bg-white/[0.04]" />)}</div>
-      ) : (
-        <>
-          {/* ── Key Stats ── */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {/* Big stats */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: "14px", marginBottom: "28px" }}>
+        <BigStat icon={<CalendarDays size={22} />} label="Total Events"    value={totalEvents}  color={P}       />
+        <BigStat icon={<Zap size={22} />}           label="Live Now"       value={liveCount}    color="#10b981" />
+        <BigStat icon={<Clock size={22} />}          label="Upcoming"      value={pubCount}     color={BLUE}    />
+        <BigStat icon={<Trophy size={22} />}         label="Sports"        value={totalSports}  color="#f59e0b" />
+        <BigStat icon={<Users size={22} />}          label="Teams"         value={totalTeams}   color="#0ea5e9" />
+        <BigStat icon={<Activity size={22} />}       label="Matches"       value={totalMatches} color="#8b5cf6" />
+        <BigStat icon={<CheckCircle2 size={22} />}   label="Completed"     value={doneCount}    color="#94a3b8" />
+        <BigStat icon={<TrendingUp size={22} />}     label="Open Incidents" value={openIncidents} color="#ef4444" />
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+        {/* Event status breakdown */}
+        <div style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: "16px", padding: "22px 26px" }}>
+          <h2 style={{ color: TEXT, fontFamily: "'Sarpanch',sans-serif", fontSize: "1rem", fontWeight: 700, margin: "0 0 18px" }}>Event Status Breakdown</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+            <ProgressBar label="Live"      value={liveCount}  total={totalEvents} color="#10b981" />
+            <ProgressBar label="Published" value={pubCount}   total={totalEvents} color={P}       />
+            <ProgressBar label="Draft"     value={draftCount} total={totalEvents} color="#f59e0b" />
+            <ProgressBar label="Completed" value={doneCount}  total={totalEvents} color="#94a3b8" />
+          </div>
+        </div>
+
+        {/* Personnel overview */}
+        <div style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: "16px", padding: "22px 26px" }}>
+          <h2 style={{ color: TEXT, fontFamily: "'Sarpanch',sans-serif", fontSize: "1rem", fontWeight: 700, margin: "0 0 18px" }}>Personnel Overview</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
             {[
-              { label: "Total Matches", value: totalMatches, color: "text-white" },
-              { label: "Completed", value: doneMatches, color: "text-green-400" },
-              { label: "Volunteers", value: volunteerCount, color: "text-blue-400" },
-              { label: "Certificates Issued", value: certCount, color: "text-yellow-400" },
-            ].map(s => (
-              <div key={s.label} className="rounded-2xl border border-white/[0.06] bg-[#0e0e10] p-4">
-                <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
-                <div className="text-xs text-neutral-500 mt-1">{s.label}</div>
+              { label: "Volunteers", value: totalVols,   color: "#0ea5e9" },
+              { label: "Judges",     value: totalJudges, color: "#8b5cf6" },
+              { label: "Staff",      value: totalStaff,  color: "#f59e0b" },
+            ].map(({ label, value, color }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: BG, borderRadius: "10px" }}>
+                <span style={{ color: TEXT, fontWeight: 500, fontSize: "0.875rem" }}>{label}</span>
+                <span style={{ color, fontWeight: 700, fontFamily: "'Sarpanch',sans-serif", fontSize: "1.1rem" }}>{value}</span>
               </div>
             ))}
           </div>
+        </div>
+      </div>
 
-          <div className="grid gap-6 lg:grid-cols-3">
-            {/* ── Overall Completion Donut ── */}
-            <div className="rounded-2xl border border-white/[0.06] bg-[#0e0e10] p-5 flex flex-col items-center gap-3">
-              <p className="text-sm font-semibold text-neutral-200 self-start">Match Completion</p>
-              <DonutRing pct={overallPct} size={120} />
-              <p className="text-xs text-neutral-500">{doneMatches} of {totalMatches} matches done</p>
-            </div>
-
-            {/* ── Matches by Sport ── */}
-            <div className="rounded-2xl border border-white/[0.06] bg-[#0e0e10] p-5">
-              <BarChart
-                label="Matches by Sport"
-                data={sportStats.map(s => ({ label: s.sport.sport, value: s.totalMatches }))}
-              />
-            </div>
-
-            {/* ── Completion Rate by Sport ── */}
-            <div className="rounded-2xl border border-white/[0.06] bg-[#0e0e10] p-5">
-              <BarChart
-                label="Completion Rate by Sport"
-                color="#4ade80"
-                data={sportStats.map(s => ({ label: s.sport.sport, value: s.completionRate }))}
-              />
-            </div>
-          </div>
-
-          {/* ── People Summary ── */}
-          <div className="grid gap-3 sm:grid-cols-3">
-            {[
-              { label: "Volunteers", value: volunteerCount, icon: "👥", color: "text-blue-400" },
-              { label: "Judges", value: judgeCount, icon: "⚖️", color: "text-purple-400" },
-              { label: "Certificates Issued", value: certCount, icon: "🎖️", color: "text-yellow-400" },
-            ].map(s => (
-              <div key={s.label} className="rounded-2xl border border-white/[0.06] bg-[#0e0e10] p-5 flex items-center gap-4">
-                <span className="text-3xl">{s.icon}</span>
-                <div>
-                  <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
-                  <div className="text-xs text-neutral-500">{s.label}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* ── Per-Sport Breakdown Table ── */}
-          {sportStats.length > 0 && (
-            <div className="rounded-2xl border border-white/[0.06] bg-[#0e0e10] overflow-hidden">
-              <div className="px-5 py-4 border-b border-white/[0.06]">
-                <h2 className="text-sm font-semibold text-neutral-200">Sport Breakdown</h2>
-              </div>
-              <div className="overflow-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-white/[0.06] text-left text-[11px] text-neutral-500 uppercase">
-                      <th className="px-5 py-3">Sport</th>
-                      <th className="px-5 py-3">Total</th>
-                      <th className="px-5 py-3">Done</th>
-                      <th className="px-5 py-3">Live</th>
-                      <th className="px-5 py-3">Progress</th>
+      {/* Per-event sports table */}
+      <div style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: "16px", padding: "22px 26px" }}>
+        <h2 style={{ color: TEXT, fontFamily: "'Sarpanch',sans-serif", fontSize: "1rem", fontWeight: 700, margin: "0 0 16px" }}>Events at a Glance</h2>
+        {events.length === 0 ? (
+          <p style={{ color: MUTED, textAlign: "center", padding: "20px 0" }}>No events found</p>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
+              <thead>
+                <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
+                  {["Event", "Status", "Sports", "Teams", "Dates"].map((h, i) => (
+                    <th key={i} style={{ textAlign: i >= 2 ? "center" : "left", padding: "10px 12px", color: MUTED, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {events.map((ev, i) => {
+                  const sc  = ev.sports?.length ?? 0
+                  const tc  = ev.sports?.reduce((a, s) => a + (s.registeredTeamsCount ?? 0), 0) ?? 0
+                  const cfg = { LIVE: "#10b981", PUBLISHED: P, DRAFT: "#f59e0b", COMPLETED: "#94a3b8", ARCHIVED: "#64748b" }
+                  const statusColor = (cfg as any)[ev.status?.toUpperCase() ?? ""] ?? MUTED
+                  return (
+                    <tr key={ev.id} style={{ borderBottom: i < events.length - 1 ? `1px solid ${BORDER}` : "none" }}>
+                      <td style={{ padding: "12px 12px", color: TEXT, fontWeight: 600 }}>{ev.eventName}</td>
+                      <td style={{ padding: "12px 12px" }}>
+                        <span style={{ background: `${statusColor}18`, color: statusColor, border: `1px solid ${statusColor}44`, borderRadius: "999px", padding: "3px 10px", fontSize: "0.67rem", fontWeight: 700 }}>
+                          {toLabel(ev.status)}
+                        </span>
+                      </td>
+                      <td style={{ padding: "12px 12px", textAlign: "center", color: TEXT, fontWeight: 600 }}>{sc}</td>
+                      <td style={{ padding: "12px 12px", textAlign: "center", color: TEXT, fontWeight: 600 }}>{tc}</td>
+                      <td style={{ padding: "12px 12px", color: MUTED, fontSize: "0.8rem", textAlign: "center" }}>
+                        {ev.startDate ? new Date(ev.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—"}
+                        {ev.endDate ? ` – ${new Date(ev.endDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}` : ""}
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {sportStats.map(s => (
-                      <tr key={s.sport.id} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
-                        <td className="px-5 py-3 font-medium text-white">{s.sport.sport.replace(/_/g, " ")}</td>
-                        <td className="px-5 py-3 text-neutral-300">{s.totalMatches}</td>
-                        <td className="px-5 py-3 text-green-400">{s.completedMatches}</td>
-                        <td className="px-5 py-3 text-orange-400">{s.liveMatches}</td>
-                        <td className="px-5 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-24 h-1.5 rounded-full bg-white/[0.07]">
-                              <div className="h-full rounded-full bg-[#fa4715] transition-all"
-                                style={{ width: `${s.completionRate}%` }} />
-                            </div>
-                            <span className="text-xs text-neutral-400">{s.completionRate}%</span>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </>
-      )}
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

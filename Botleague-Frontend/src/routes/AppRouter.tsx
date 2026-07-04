@@ -87,7 +87,9 @@ import AdminRobotsPage from "../feature/Admin/pages/AdminRobotsPage";
 import AdminRobotDetailPage from "../feature/Admin/pages/AdminRobotDetailPage";
 import OrganizerEventsPage        from "../feature/Organizer/pages/OrganizerEventsPage";
 import OrganizerEventDetailPage   from "../feature/Organizer/pages/OrganizerEventDetailPage";
-import OrganizerTeamsPage         from "../feature/Organizer/pages/OrganizerTeamsPage";
+import OrganizerSportsPage        from "../feature/Organizer/pages/OrganizerSportsPage";
+import OrganizerMatchesPage       from "../feature/Organizer/pages/OrganizerMatchesPage";
+import OrganizerRegistrationsPage from "../feature/Organizer/pages/OrganizerRegistrationsPage";
 import OrganizerCommunicationPage from "../feature/Organizer/pages/OrganizerCommunicationPage";
 import OrganizerSchedulePage      from "../feature/Organizer/pages/OrganizerSchedulePage";
 import OrganizerMonitoringPage    from "../feature/Organizer/pages/OrganizerMonitoringPage";
@@ -261,16 +263,16 @@ function AppRoutes() {
         <Route path="/super-admin-dashboard" element={<RoleRoute roles={[AppRole.SUPER_ADMIN]}><SuperAdminDashboard /></RoleRoute>} />
 
         {/* ── Organizer Portal ── */}
-        <Route path="/organizer/my-events"       element={<RoleRoute roles={ORG_MIN}><OrganizerEventsPage /></RoleRoute>} />
         <Route path="/organizer/events"          element={<RoleRoute roles={ORG_MIN}><OrganizerEventsPage /></RoleRoute>} />
         <Route path="/organizer/events/:eventId" element={<RoleRoute roles={ORG_MIN}><OrganizerEventDetailPage /></RoleRoute>} />
-        <Route path="/organizer/teams"           element={<RoleRoute roles={ORG_MIN}><OrganizerTeamsPage /></RoleRoute>} />
+        <Route path="/organizer/sports"          element={<RoleRoute roles={ORG_MIN}><OrganizerSportsPage /></RoleRoute>} />
+        <Route path="/organizer/matches"         element={<RoleRoute roles={ORG_MIN}><OrganizerMatchesPage /></RoleRoute>} />
+        <Route path="/organizer/registrations"   element={<RoleRoute roles={ORG_MIN}><OrganizerRegistrationsPage /></RoleRoute>} />
         <Route path="/organizer/communication"   element={<RoleRoute roles={ORG_MIN}><OrganizerCommunicationPage /></RoleRoute>} />
         <Route path="/organizer/schedule"        element={<RoleRoute roles={ORG_MIN}><OrganizerSchedulePage /></RoleRoute>} />
         <Route path="/organizer/monitoring"      element={<RoleRoute roles={ORG_MIN}><OrganizerMonitoringPage /></RoleRoute>} />
         <Route path="/organizer/reports"         element={<RoleRoute roles={ORG_MIN}><OrganizerReportsPage /></RoleRoute>} />
         <Route path="/organizer/closure"         element={<RoleRoute roles={ORG_MIN}><OrganizerClosurePage /></RoleRoute>} />
-        {/* New organiser modules */}
         <Route path="/organizer/volunteers"      element={<RoleRoute roles={ORG_MIN}><OrganizerVolunteersPage /></RoleRoute>} />
         <Route path="/organizer/judges"          element={<RoleRoute roles={ORG_MIN}><OrganizerJudgesPage /></RoleRoute>} />
         <Route path="/organizer/staff"           element={<RoleRoute roles={ORG_MIN}><OrganizerStaffPage /></RoleRoute>} />
@@ -281,8 +283,6 @@ function AppRoutes() {
 
         {/* ── Sub-Organizer Portal ── */}
         <Route path="/organizer/my-sports"      element={<RoleRoute roles={ORG_MIN}><SubOrganizerSportsPage /></RoleRoute>} />
-        <Route path="/organizer/registrations"  element={<RoleRoute roles={ORG_MIN}><SubOrganizerRegistrationsPage /></RoleRoute>} />
-        <Route path="/organizer/matches"        element={<RoleRoute roles={ORG_MIN}><SubOrganizerMatchesPage /></RoleRoute>} />
         <Route path="/organizer/scores"         element={<RoleRoute roles={ORG_MIN}><SubOrganizerScoresPage /></RoleRoute>} />
         <Route path="/organizer/announcements"  element={<RoleRoute roles={ORG_MIN}><SubOrganizerAnnouncementsPage /></RoleRoute>} />
 

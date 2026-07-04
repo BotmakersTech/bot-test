@@ -1,392 +1,191 @@
 import { useEffect, useMemo, useState } from "react"
-import { Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import {
-  getMyEvents,
-  getMySports,
-  type OrganizerEvent,
-  type OrganizerSport,
+  CalendarDays, Trophy, Users, Search, MapPin,
+  Activity, Clock, Zap, CheckCircle2, TrendingUp,
+} from "lucide-react"
+import {
+  getMyEvents, getDashboardStats,
+  type OrganizerEvent, type DashboardStats,
 } from "../api/organizer.api"
 
-// ─── date utils ──────────────────────────────────────────────────────────────
+// ── theme ─────────────────────────────────────────────────────────────────────
+const P      = "#8C6CFF"
+const BLUE   = "#0162D1"
+const BG     = "#F4F3FF"
+const SURF   = "#FFFFFF"
+const BORDER = "#E0D9FF"
+const TEXT   = "#111111"
+const MUTED  = "#6B7280"
 
-function today0(): Date {
-  const d = new Date()
-  d.setHours(0, 0, 0, 0)
-  return d
+const STATUS: Record<string, { label: string; color: string; bg: string; border: string; dot: boolean }> = {
+  LIVE:      { label: "Live",      color: "#10b981", bg: "rgba(16,185,129,0.12)",  border: "rgba(16,185,129,0.3)",   dot: true  },
+  PUBLISHED: { label: "Published", color: P,          bg: "rgba(140,108,255,0.1)", border: "rgba(140,108,255,0.28)", dot: false },
+  DRAFT:     { label: "Draft",     color: "#f59e0b", bg: "rgba(245,158,11,0.1)",  border: "rgba(245,158,11,0.28)",  dot: false },
+  COMPLETED: { label: "Completed", color: "#94a3b8", bg: "rgba(148,163,184,0.1)", border: "rgba(148,163,184,0.25)", dot: false },
+  ARCHIVED:  { label: "Archived",  color: "#64748b", bg: "rgba(100,116,139,0.1)", border: "rgba(100,116,139,0.25)", dot: false },
 }
 
-function addDays(d: Date, n: number): Date {
-  const r = new Date(d)
-  r.setDate(r.getDate() + n)
-  return r
+const TABS = ["ALL", "LIVE", "PUBLISHED", "DRAFT", "COMPLETED", "ARCHIVED"]
+
+const fmt = (d?: string | null) => {
+  if (!d) return "—"
+  return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
 }
 
-function toISO(d: Date): string {
-  return d.toISOString().split("T")[0]
-}
+// ── sub-components ────────────────────────────────────────────────────────────
 
-function fmtDay(d: Date): string {
-  return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short" })
-}
-
-function fmtFull(s?: string | null): string {
-  if (!s) return "—"
-  try {
-    return new Date(s + "T00:00:00").toLocaleDateString("en-IN", {
-      day: "numeric", month: "short", year: "numeric",
-    })
-  } catch { return s }
-}
-
-function inRange(key: string, start: string | null, end: string | null): boolean {
-  if (!start || !end) return false
-  return key >= start && key <= end
-}
-
-// ─── status helpers ──────────────────────────────────────────────────────────
-
-type EventStatusKey = "live" | "upcoming" | "completed" | "draft"
-
-function deriveEventStatus(status?: string | null): EventStatusKey {
-  switch (status?.toUpperCase()) {
-    case "LIVE":      return "live"
-    case "PUBLISHED": return "upcoming"
-    case "COMPLETED": return "completed"
-    default:          return "draft"
-  }
-}
-
-type RegKey = "OPEN" | "CLOSED" | "DRAFT"
-
-function deriveRegStatus(s: OrganizerSport): RegKey {
-  if (s.status === "REGISTRATION_OPEN")   return "OPEN"
-  if (s.status === "REGISTRATION_CLOSED") return "CLOSED"
-  return "DRAFT"
-}
-
-// ─── config maps ─────────────────────────────────────────────────────────────
-
-const EVT_STYLE: Record<EventStatusKey, { label: string; color: string; bg: string }> = {
-  live:      { label: "Live",      color: "#4ade80", bg: "rgba(74,222,128,.12)"  },
-  upcoming:  { label: "Upcoming",  color: "#fa7545", bg: "rgba(250,117,69,.12)"  },
-  completed: { label: "Completed", color: "#94a3b8", bg: "rgba(148,163,184,.12)" },
-  draft:     { label: "Draft",     color: "#64748b", bg: "rgba(100,116,139,.12)" },
-}
-
-const REG_STYLE: Record<RegKey, { label: string; color: string; bg: string }> = {
-  OPEN:   { label: "Reg Open",   color: "#4ade80", bg: "rgba(74,222,128,.10)"  },
-  CLOSED: { label: "Reg Closed", color: "#f87171", bg: "rgba(248,113,113,.10)" },
-  DRAFT:  { label: "Draft",      color: "#64748b", bg: "rgba(100,116,139,.10)" },
-}
-
-// ─── micro components ────────────────────────────────────────────────────────
-
-function EventPill({ status }: { status: EventStatusKey }) {
-  const c = EVT_STYLE[status]
+function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: number; color: string }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-      style={{ color: c.color, background: c.bg }}>
-      {status === "live" && (
-        <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: c.color }} />
-      )}
-      {c.label}
-    </span>
-  )
-}
-
-function RegPill({ reg }: { reg: RegKey }) {
-  const c = REG_STYLE[reg]
-  return (
-    <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-      style={{ color: c.color, background: c.bg }}>
-      {c.label}
-    </span>
-  )
-}
-
-function KpiCard({ label, value, accent }: { label: string; value: number; accent: string }) {
-  return (
-    <div className="rounded-2xl border border-white/[0.06] bg-[#0e0e10] p-5">
-      <div className="text-2xl font-bold" style={{ color: accent }}>{value}</div>
-      <div className="mt-1 text-xs text-neutral-400">{label}</div>
+    <div style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: "14px", padding: "18px 22px", display: "flex", alignItems: "center", gap: "14px", flex: 1, minWidth: "150px" }}>
+      <span style={{ background: `${color}1A`, color, borderRadius: "10px", width: "44px", height: "44px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{icon}</span>
+      <div>
+        <p style={{ color: MUTED, fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", margin: 0 }}>{label}</p>
+        <p style={{ color: TEXT, fontSize: "1.55rem", fontWeight: 700, fontFamily: "'Sarpanch',sans-serif", margin: 0, lineHeight: 1.2 }}>{value}</p>
+      </div>
     </div>
   )
 }
 
-function SportLabel({ sport, weightClass }: { sport: string; weightClass?: string | null }) {
+function StatusBadge({ status }: { status: string }) {
+  const s = STATUS[status?.toUpperCase()] ?? STATUS.DRAFT
   return (
-    <span>
-      {sport}
-      {weightClass && (
-        <span className="ml-1.5 text-xs text-neutral-500">({weightClass})</span>
-      )}
+    <span style={{ background: s.bg, border: `1px solid ${s.border}`, color: s.color, borderRadius: "999px", fontSize: "0.67rem", padding: "3px 10px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "5px", whiteSpace: "nowrap" }}>
+      {s.dot && <span style={{ width: 6, height: 6, borderRadius: "50%", background: s.color, display: "inline-block" }} />}
+      {s.label}
     </span>
   )
 }
 
-function EmptyState({ text }: { text: string }) {
+function EventCard({ event, onClick }: { event: OrganizerEvent; onClick: () => void }) {
+  const sportCount = event.sports?.length ?? 0
+  const teamCount  = event.sports?.reduce((a, s) => a + (s.registeredTeamsCount ?? 0), 0) ?? 0
   return (
-    <div className="rounded-2xl border border-dashed border-white/10 py-10 text-center">
-      <p className="text-sm text-neutral-500">{text}</p>
+    <div
+      onClick={onClick}
+      style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: "16px", padding: "20px 22px", cursor: "pointer", display: "flex", flexDirection: "column", gap: "14px", transition: "box-shadow 0.15s, border-color 0.15s" }}
+      onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = "0 6px 24px rgba(140,108,255,0.15)"; el.style.borderColor = "rgba(140,108,255,0.45)" }}
+      onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = "none"; el.style.borderColor = BORDER }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px" }}>
+        <div style={{ minWidth: 0 }}>
+          <h3 style={{ color: TEXT, fontWeight: 700, fontSize: "0.95rem", fontFamily: "'Sarpanch',sans-serif", margin: "0 0 3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{event.eventName}</h3>
+          {event.eventCode && <span style={{ color: MUTED, fontSize: "0.7rem", fontFamily: "monospace" }}>{event.eventCode}</span>}
+        </div>
+        <StatusBadge status={event.status} />
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+        {event.city && (
+          <span style={{ display: "flex", alignItems: "center", gap: "4px", color: MUTED, fontSize: "0.75rem" }}>
+            <MapPin size={12} />{event.city}{event.state ? `, ${event.state}` : ""}
+          </span>
+        )}
+        <span style={{ display: "flex", alignItems: "center", gap: "4px", color: MUTED, fontSize: "0.75rem" }}>
+          <CalendarDays size={12} />{fmt(event.startDate)} – {fmt(event.endDate)}
+        </span>
+      </div>
+      <div style={{ display: "flex", gap: "16px", borderTop: `1px solid ${BORDER}`, paddingTop: "12px" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: "5px", color: MUTED, fontSize: "0.78rem" }}>
+          <Trophy size={12} style={{ color: P }} /><strong style={{ color: TEXT }}>{sportCount}</strong> sport{sportCount !== 1 ? "s" : ""}
+        </span>
+        <span style={{ display: "flex", alignItems: "center", gap: "5px", color: MUTED, fontSize: "0.78rem" }}>
+          <Users size={12} style={{ color: P }} /><strong style={{ color: TEXT }}>{teamCount}</strong> team{teamCount !== 1 ? "s" : ""}
+        </span>
+      </div>
     </div>
   )
 }
 
-function Skeleton({ n = 3, h = "h-16" }: { n?: number; h?: string }) {
-  return (
-    <div className="space-y-2">
-      {Array.from({ length: n }).map((_, i) => (
-        <div key={i} className={`${h} animate-pulse rounded-xl bg-white/[0.04]`} />
-      ))}
-    </div>
-  )
-}
-
-// ─── main ────────────────────────────────────────────────────────────────────
-
-type SportWithEvent = { sport: OrganizerSport; event: OrganizerEvent }
+// ── page ──────────────────────────────────────────────────────────────────────
 
 export default function OrganizerDashboard() {
-  const base = useMemo(today0, [])
-
+  const navigate = useNavigate()
   const [events,  setEvents]  = useState<OrganizerEvent[]>([])
-  const [sports,  setSports]  = useState<OrganizerSport[]>([])
+  const [stats,   setStats]   = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
-  const [selDate, setSelDate] = useState<Date>(base)
+  const [search,  setSearch]  = useState("")
+  const [tab,     setTab]     = useState("ALL")
 
   useEffect(() => {
-    Promise.all([getMyEvents(), getMySports()])
-      .then(([evs, sps]) => { setEvents(evs); setSports(sps) })
-      .catch(() => {})
+    Promise.all([getMyEvents(), getDashboardStats().catch(() => null)])
+      .then(([evts, st]) => { setEvents(evts); setStats(st) })
       .finally(() => setLoading(false))
   }, [])
 
-  // eventId → event lookup
-  const eventMap = useMemo(() => {
-    const m: Record<string, OrganizerEvent> = {}
-    events.forEach(e => { m[e.id] = e })
-    return m
-  }, [events])
-
-  // pair every sport with its parent event
-  const paired = useMemo<SportWithEvent[]>(() =>
-    sports.flatMap(s => {
-      const ev = eventMap[s.eventId]
-      return ev ? [{ sport: s, event: ev }] : []
-    }),
-    [sports, eventMap]
-  )
-
-  // KPIs
-  const totalEvents = events.length
-  const totalSports = sports.length
-  const liveSports  = useMemo(
-    () => paired.filter(p => deriveEventStatus(p.event.status) === "live").length,
-    [paired]
-  )
-
-  // 5-day bar
-  const dateDays = useMemo(
-    () => [-2, -1, 0, 1, 2].map(n => addDays(base, n)),
-    [base]
-  )
-  const todayKey = toISO(base)
-  const selKey   = toISO(selDate)
-
-  // schedule: sports whose parent event spans selDate, sorted by sport name
-  const schedule = useMemo(() =>
-    paired
-      .filter(p => inRange(selKey, p.event.startDate, p.event.endDate))
-      .sort((a, b) => a.sport.sport.localeCompare(b.sport.sport)),
-    [paired, selKey]
-  )
-
-  // upcoming: parent event starts after selDate, next 5
-  const upcoming = useMemo(() =>
-    paired
-      .filter(p => (p.event.startDate ?? "") > selKey)
-      .sort((a, b) => (a.event.startDate ?? "").localeCompare(b.event.startDate ?? ""))
-      .slice(0, 5),
-    [paired, selKey]
-  )
-
-  // live: parent event is LIVE
-  const liveList = useMemo(() =>
-    paired.filter(p => deriveEventStatus(p.event.status) === "live"),
-    [paired]
-  )
+  const filtered = useMemo(() => events.filter(ev => {
+    if (tab !== "ALL" && ev.status?.toUpperCase() !== tab) return false
+    if (!search) return true
+    const q = search.toLowerCase()
+    return ev.eventName.toLowerCase().includes(q) ||
+      (ev.city ?? "").toLowerCase().includes(q) ||
+      (ev.eventCode ?? "").toLowerCase().includes(q)
+  }), [events, tab, search])
 
   return (
-    <div className="min-h-full p-6 space-y-8 max-w-5xl mx-auto">
-
-      {/* ── Header ── */}
-      <div>
-        <h1 className="text-xl font-bold text-white">Organiser Dashboard</h1>
-        <p className="text-sm text-neutral-500">Daily event operations at a glance</p>
+    <div style={{ minHeight: "100vh", background: BG, padding: "28px 32px", fontFamily: "'Inter',sans-serif" }}>
+      <div style={{ marginBottom: "24px" }}>
+        <h1 style={{ color: TEXT, fontFamily: "'Sarpanch',sans-serif", fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>Events Dashboard</h1>
+        <p style={{ color: MUTED, fontSize: "0.85rem", margin: "4px 0 0" }}>
+          {loading ? "Loading…" : `${events.length} event${events.length !== 1 ? "s" : ""} assigned to you`}
+        </p>
       </div>
 
-      {/* ── KPI Cards ── */}
-      {loading
-        ? <div className="grid grid-cols-3 gap-4"><Skeleton n={3} h="h-20" /></div>
-        : (
-          <div className="grid grid-cols-3 gap-4">
-            <KpiCard label="Total Events"       value={totalEvents} accent="#e2e8f0" />
-            <KpiCard label="Total Event Sports" value={totalSports} accent="#60a5fa" />
-            <KpiCard label="Live Event Sports"  value={liveSports}  accent="#4ade80" />
-          </div>
-        )
-      }
-
-      {/* ── Schedule ── */}
-      <section>
-        <h2 className="mb-4 text-sm font-semibold text-neutral-200">Schedule</h2>
-
-        {/* Date bar */}
-        <div className="mb-5 flex gap-2 overflow-x-auto pb-1">
-          {dateDays.map(d => {
-            const key      = toISO(d)
-            const isToday  = key === todayKey
-            const isSel    = key === selKey
-            return (
-              <button
-                key={key}
-                onClick={() => setSelDate(d)}
-                className={[
-                  "shrink-0 rounded-xl border px-4 py-2 text-sm font-medium transition-all",
-                  isSel
-                    ? "border-[#fa4715] bg-[#fa4715]/10 text-[#fa4715]"
-                    : "border-white/[0.06] bg-[#0e0e10] text-neutral-400 hover:border-white/10 hover:text-neutral-200",
-                ].join(" ")}
-              >
-                {isToday && <span className="mr-1 text-[10px] opacity-70">★</span>}
-                {fmtDay(d)}
-              </button>
-            )
-          })}
+      {stats && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "24px" }}>
+          <StatCard icon={<CalendarDays size={20} />} label="Total Events"    value={stats.totalEvents}        color={P}       />
+          <StatCard icon={<Zap size={20} />}           label="Live"           value={stats.liveEvents}         color="#10b981" />
+          <StatCard icon={<Clock size={20} />}          label="Upcoming"      value={stats.upcomingEvents}     color={BLUE}    />
+          <StatCard icon={<Users size={20} />}          label="Registrations" value={stats.totalRegistrations} color="#f59e0b" />
+          <StatCard icon={<Activity size={20} />}       label="Matches"       value={stats.totalMatches}       color="#ef4444" />
+          <StatCard icon={<CheckCircle2 size={20} />}   label="Completed"     value={stats.completedEvents}    color="#94a3b8" />
         </div>
+      )}
 
-        {/* Schedule cards */}
-        {loading ? (
-          <Skeleton n={3} />
-        ) : schedule.length === 0 ? (
-          <EmptyState text="No event sports are scheduled for this day." />
-        ) : (
-          <div className="space-y-2">
-            {schedule.map(({ sport, event }) => {
-              const evStatus = deriveEventStatus(event.status)
-              const regStatus = deriveRegStatus(sport)
-              return (
-                <div key={sport.id}
-                  className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-[#0e0e10] px-4 py-3 gap-4">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-neutral-200">
-                      <SportLabel sport={sport.sport} weightClass={sport.weightClass} />
-                    </p>
-                    <p className="mt-0.5 truncate text-xs text-neutral-500">
-                      {event.eventName}
-                      {event.venueName && <> &middot; {event.venueName}</>}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <EventPill status={evStatus} />
-                    <RegPill   reg={regStatus}  />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </section>
-
-      {/* ── Bottom two columns ── */}
-      <div className="grid gap-6 lg:grid-cols-2">
-
-        {/* Upcoming Sports */}
-        <section>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-neutral-200">Upcoming Sports</h2>
-            <Link to="/organizer/events" className="text-xs text-[#fa4715] hover:underline">
-              View all
-            </Link>
-          </div>
-          {loading ? (
-            <Skeleton n={3} />
-          ) : upcoming.length === 0 ? (
-            <EmptyState text="No upcoming sports after the selected date." />
-          ) : (
-            <div className="space-y-2">
-              {upcoming.map(({ sport, event }) => (
-                <div key={sport.id}
-                  className="rounded-xl border border-white/[0.06] bg-[#0e0e10] px-4 py-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-neutral-200">
-                        <SportLabel sport={sport.sport} weightClass={sport.weightClass} />
-                      </p>
-                      <p className="mt-0.5 truncate text-xs text-neutral-500">{event.eventName}</p>
-                    </div>
-                    <RegPill reg={deriveRegStatus(sport)} />
-                  </div>
-                  <p className="mt-2 text-xs text-neutral-500">
-                    Starts: <span className="text-neutral-400">{fmtFull(event.startDate)}</span>
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* Live Sports */}
-        <section>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-neutral-200">Live Sports</h2>
-            {liveList.length > 0 && (
-              <span className="flex items-center gap-1.5 text-xs text-green-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
-                {liveList.length} live
-              </span>
-            )}
-          </div>
-          {loading ? (
-            <Skeleton n={2} h="h-20" />
-          ) : liveList.length === 0 ? (
-            <EmptyState text="No sports are live right now." />
-          ) : (
-            <div className="space-y-2">
-              {liveList.map(({ sport, event }) => (
-                <div key={sport.id}
-                  className="rounded-xl border border-green-500/20 bg-green-500/[0.04] px-4 py-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 shrink-0 rounded-full bg-green-400 animate-pulse" />
-                        <p className="truncate text-sm font-medium text-neutral-200">
-                          <SportLabel sport={sport.sport} weightClass={sport.weightClass} />
-                        </p>
-                      </div>
-                      <p className="mt-0.5 pl-4 truncate text-xs text-neutral-500">{event.eventName}</p>
-                      {event.venueName && (
-                        <p className="pl-4 truncate text-xs text-neutral-600">{event.venueName}</p>
-                      )}
-                    </div>
-                    <Link
-                      to={`/organizer/matches?sport=${sport.id}`}
-                      className="shrink-0 rounded-lg border border-[#fa4715]/30 px-2.5 py-1 text-xs text-[#fa4715] transition-colors hover:bg-[#fa4715]/10">
-                      Manage
-                    </Link>
-                  </div>
-                  {(sport.registeredTeamsCount !== undefined && sport.registeredTeamsCount !== null) && (
-                    <p className="mt-2 pl-4 text-xs text-neutral-500">
-                      {sport.registeredTeamsCount} team{sport.registeredTeamsCount !== 1 ? "s" : ""} registered
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "14px", alignItems: "center" }}>
+        <div style={{ flex: 1, minWidth: "220px", position: "relative" }}>
+          <Search size={15} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: MUTED, pointerEvents: "none" }} />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search events…"
+            style={{ width: "100%", paddingLeft: "36px", paddingRight: "12px", height: "40px", background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "10px", color: TEXT, fontSize: "0.85rem", outline: "none", boxSizing: "border-box" }}
+          />
+        </div>
+        <button
+          onClick={() => navigate("/organizer/events")}
+          style={{ background: `linear-gradient(135deg,${P},${BLUE})`, color: "#fff", border: "none", borderRadius: "10px", padding: "0 18px", height: "40px", fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+        >
+          <TrendingUp size={15} /> View All
+        </button>
       </div>
+
+      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "20px" }}>
+        {TABS.map(t => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            style={{ background: tab === t ? "rgba(140,108,255,0.12)" : "rgba(0,0,0,0.04)", border: `1px solid ${tab === t ? "rgba(140,108,255,0.4)" : BORDER}`, color: tab === t ? P : MUTED, borderRadius: "8px", padding: "5px 14px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer", transition: "all 0.12s" }}
+          >
+            {t === "ALL" ? "All" : t.charAt(0) + t.slice(1).toLowerCase()}
+            {t !== "ALL" && ` (${events.filter(e => e.status?.toUpperCase() === t).length})`}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 0", color: MUTED }}>Loading events…</div>
+      ) : filtered.length === 0 ? (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 0", color: MUTED, gap: "8px" }}>
+          <CalendarDays size={40} style={{ opacity: 0.25 }} />
+          <p style={{ margin: 0 }}>No events found</p>
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: "16px" }}>
+          {filtered.map(ev => (
+            <EventCard key={ev.id} event={ev} onClick={() => navigate(`/organizer/events/${ev.id}`)} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

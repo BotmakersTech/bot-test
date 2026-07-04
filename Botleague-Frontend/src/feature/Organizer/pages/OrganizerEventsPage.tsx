@@ -1,110 +1,173 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { getMyEvents, type OrganizerEvent } from "../api/organizer.api";
+import { useEffect, useMemo, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { Search, MapPin, CalendarDays, Trophy, Users, ChevronRight } from "lucide-react"
+import { getMyEvents, type OrganizerEvent } from "../api/organizer.api"
 
-type Tab = "UPCOMING" | "ACTIVE" | "PAST";
+// ── theme ─────────────────────────────────────────────────────────────────────
+const P      = "#8C6CFF"
+const BLUE   = "#0162D1"
+const BG     = "#F4F3FF"
+const SURF   = "#FFFFFF"
+const BORDER = "#E0D9FF"
+const TEXT   = "#111111"
+const MUTED  = "#6B7280"
 
-function StatusPill({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    LIVE:      "bg-green-500/10 text-green-400",
-    PUBLISHED: "bg-blue-500/10 text-blue-400",
-    COMPLETED: "bg-white/6 text-neutral-400",
-    DRAFT:     "bg-yellow-500/10 text-yellow-400",
-    ARCHIVED:  "bg-slate-500/10 text-slate-400",
-  };
-  return (
-    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${map[status] ?? "bg-white/[0.06] text-neutral-400"}`}>
-      {status}
-    </span>
-  );
+const STATUS_MAP: Record<string, { label: string; color: string; bg: string; border: string; dot?: boolean }> = {
+  LIVE:      { label: "Live",      color: "#10b981", bg: "rgba(16,185,129,0.12)",  border: "rgba(16,185,129,0.3)", dot: true },
+  PUBLISHED: { label: "Published", color: P,          bg: "rgba(140,108,255,0.1)", border: "rgba(140,108,255,0.28)" },
+  DRAFT:     { label: "Draft",     color: "#f59e0b", bg: "rgba(245,158,11,0.1)",  border: "rgba(245,158,11,0.28)" },
+  COMPLETED: { label: "Completed", color: "#94a3b8", bg: "rgba(148,163,184,0.1)", border: "rgba(148,163,184,0.25)" },
+  ARCHIVED:  { label: "Archived",  color: "#64748b", bg: "rgba(100,116,139,0.1)", border: "rgba(100,116,139,0.25)" },
 }
 
-function categorise(events: OrganizerEvent[]): Record<Tab, OrganizerEvent[]> {
-  return {
-    ACTIVE:   events.filter(e => e.status === "LIVE"),
-    UPCOMING: events.filter(e => e.status === "DRAFT" || e.status === "PUBLISHED"),
-    PAST:     events.filter(e => e.status === "COMPLETED" || e.status === "ARCHIVED"),
-  };
+const TABS = ["ALL", "LIVE", "PUBLISHED", "DRAFT", "COMPLETED", "ARCHIVED"]
+
+const fmt = (d?: string | null) => {
+  if (!d) return "—"
+  return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const s = STATUS_MAP[status?.toUpperCase()] ?? STATUS_MAP.DRAFT
+  return (
+    <span style={{ background: s.bg, border: `1px solid ${s.border}`, color: s.color, borderRadius: "999px", fontSize: "0.67rem", padding: "3px 10px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "5px", whiteSpace: "nowrap" }}>
+      {s.dot && <span style={{ width: 6, height: 6, borderRadius: "50%", background: s.color, display: "inline-block" }} />}
+      {s.label}
+    </span>
+  )
 }
 
 export default function OrganizerEventsPage() {
-  const [events, setEvents]   = useState<OrganizerEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState<string | null>(null);
-  const [tab, setTab]         = useState<Tab>("UPCOMING");
-  const navigate = useNavigate();
+  const navigate = useNavigate()
+  const [events,  setEvents]  = useState<OrganizerEvent[]>([])
+  const [loading, setLoading] = useState(true)
+  const [search,  setSearch]  = useState("")
+  const [tab,     setTab]     = useState("ALL")
 
   useEffect(() => {
-    getMyEvents()
-      .then(setEvents)
-      .catch(() => setError("Failed to load your events."))
-      .finally(() => setLoading(false));
-  }, []);
+    getMyEvents().then(setEvents).finally(() => setLoading(false))
+  }, [])
 
-  if (loading) return <div className="flex h-64 items-center justify-center text-neutral-400">Loading…</div>;
-  if (error)   return <div className="p-6 text-red-400">{error}</div>;
-
-  const grouped = categorise(events);
-  const tabs: { key: Tab; label: string }[] = [
-    { key: "ACTIVE",   label: `Active (${grouped.ACTIVE.length})` },
-    { key: "UPCOMING", label: `Upcoming (${grouped.UPCOMING.length})` },
-    { key: "PAST",     label: `Past (${grouped.PAST.length})` },
-  ];
-  const list = grouped[tab];
+  const filtered = useMemo(() => events.filter(ev => {
+    if (tab !== "ALL" && ev.status?.toUpperCase() !== tab) return false
+    if (!search) return true
+    const q = search.toLowerCase()
+    return ev.eventName.toLowerCase().includes(q) ||
+      (ev.city ?? "").toLowerCase().includes(q) ||
+      (ev.eventCode ?? "").toLowerCase().includes(q)
+  }), [events, tab, search])
 
   return (
-    <div className="min-h-screen bg-gray-950 p-6 text-white">
-      <h1 className="mb-6 text-2xl font-bold text-red-500">My Events</h1>
+    <div style={{ minHeight: "100vh", background: BG, padding: "28px 32px", fontFamily: "'Inter',sans-serif" }}>
+      <div style={{ marginBottom: "24px" }}>
+        <h1 style={{ color: TEXT, fontFamily: "'Sarpanch',sans-serif", fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>Event Management</h1>
+        <p style={{ color: MUTED, fontSize: "0.85rem", margin: "4px 0 0" }}>
+          {loading ? "Loading…" : `${filtered.length} of ${events.length} event${events.length !== 1 ? "s" : ""}`}
+        </p>
+      </div>
+
+      {/* Controls */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "14px", alignItems: "center" }}>
+        <div style={{ flex: 1, minWidth: "220px", position: "relative" }}>
+          <Search size={15} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: MUTED, pointerEvents: "none" }} />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search by name, city, or code…"
+            style={{ width: "100%", paddingLeft: "36px", paddingRight: "12px", height: "40px", background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "10px", color: TEXT, fontSize: "0.85rem", outline: "none", boxSizing: "border-box" }}
+          />
+        </div>
+      </div>
 
       {/* Tabs */}
-      <div className="mb-6 flex gap-2 border-b border-white/8">
-        {tabs.map(t => (
+      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "20px" }}>
+        {TABS.map(t => (
           <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={[
-              "pb-2 px-3 text-sm font-medium transition-colors",
-              tab === t.key
-                ? "border-b-2 border-red-500 text-white"
-                : "text-neutral-400 hover:text-white",
-            ].join(" ")}
+            key={t}
+            onClick={() => setTab(t)}
+            style={{ background: tab === t ? "rgba(140,108,255,0.12)" : "rgba(0,0,0,0.04)", border: `1px solid ${tab === t ? "rgba(140,108,255,0.4)" : BORDER}`, color: tab === t ? P : MUTED, borderRadius: "8px", padding: "5px 14px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
           >
-            {t.label}
+            {t === "ALL" ? "All" : t.charAt(0) + t.slice(1).toLowerCase()}
+            {t !== "ALL" && ` (${events.filter(e => e.status?.toUpperCase() === t).length})`}
           </button>
         ))}
       </div>
 
-      {list.length === 0 ? (
-        <div className="rounded-xl bg-white/3 p-8 text-center text-neutral-500">
-          No {tab.toLowerCase()} events.
-        </div>
+      {/* Table */}
+      {loading ? (
+        <div style={{ textAlign: "center", padding: "80px 0", color: MUTED }}>Loading events…</div>
+      ) : filtered.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "80px 0", color: MUTED }}>No events found</div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {list.map(e => (
-            <div
-              key={e.id}
-              className="cursor-pointer rounded-xl bg-white/4 p-5 ring-1 ring-white/8 hover:ring-red-500/40 transition-all"
-              onClick={() => navigate(`/organizer/events/${e.id}`)}
-            >
-              {e.eventLogoUrl && (
-                <img src={e.eventLogoUrl} alt={e.eventName} className="mb-3 h-12 w-12 rounded-lg object-cover" />
-              )}
-              <h2 className="font-semibold text-white">{e.eventName}</h2>
-              <p className="mt-1 text-xs font-mono text-neutral-500">{e.eventCode}</p>
-              {e.venueName && (
-                <p className="mt-2 text-xs text-neutral-400">{e.venueName}{e.city ? `, ${e.city}` : ""}</p>
-              )}
-              <div className="mt-3 flex items-center justify-between">
-                <StatusPill status={e.status} />
-                {e.startDate && <span className="text-xs text-neutral-500">{e.startDate}</span>}
-              </div>
-              {e.sports && (
-                <p className="mt-2 text-xs text-neutral-500">{e.sports.length} sport{e.sports.length !== 1 ? "s" : ""}</p>
-              )}
-            </div>
-          ))}
+        <div style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: "16px", overflow: "hidden" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
+            <thead>
+              <tr style={{ background: "rgba(140,108,255,0.06)", borderBottom: `1px solid ${BORDER}` }}>
+                <th style={{ textAlign: "left", padding: "12px 16px", color: MUTED, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Event</th>
+                <th style={{ textAlign: "left", padding: "12px 16px", color: MUTED, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Dates</th>
+                <th style={{ textAlign: "left", padding: "12px 16px", color: MUTED, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Venue</th>
+                <th style={{ textAlign: "center", padding: "12px 16px", color: MUTED, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Sports</th>
+                <th style={{ textAlign: "center", padding: "12px 16px", color: MUTED, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Teams</th>
+                <th style={{ textAlign: "center", padding: "12px 16px", color: MUTED, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Status</th>
+                <th style={{ textAlign: "right", padding: "12px 16px" }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((ev, i) => {
+                const sportCount = ev.sports?.length ?? 0
+                const teamCount  = ev.sports?.reduce((a, s) => a + (s.registeredTeamsCount ?? 0), 0) ?? 0
+                return (
+                  <tr
+                    key={ev.id}
+                    style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${BORDER}` : "none", cursor: "pointer", transition: "background 0.1s" }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(140,108,255,0.04)"}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
+                    onClick={() => navigate(`/organizer/events/${ev.id}`)}
+                  >
+                    <td style={{ padding: "14px 16px" }}>
+                      <p style={{ color: TEXT, fontWeight: 600, margin: 0 }}>{ev.eventName}</p>
+                      {ev.eventCode && <p style={{ color: MUTED, fontSize: "0.72rem", fontFamily: "monospace", margin: "2px 0 0" }}>{ev.eventCode}</p>}
+                    </td>
+                    <td style={{ padding: "14px 16px", color: MUTED, fontSize: "0.82rem" }}>
+                      <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                        <CalendarDays size={12} />{fmt(ev.startDate)}
+                      </span>
+                      <span style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
+                        <CalendarDays size={12} style={{ opacity: 0 }} />{fmt(ev.endDate)}
+                      </span>
+                    </td>
+                    <td style={{ padding: "14px 16px" }}>
+                      {ev.city ? (
+                        <span style={{ display: "flex", alignItems: "center", gap: "4px", color: MUTED, fontSize: "0.82rem" }}>
+                          <MapPin size={12} />{ev.city}{ev.state ? `, ${ev.state}` : ""}
+                        </span>
+                      ) : <span style={{ color: MUTED }}>—</span>}
+                    </td>
+                    <td style={{ padding: "14px 16px", textAlign: "center" }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: TEXT, fontWeight: 600 }}>
+                        <Trophy size={12} style={{ color: P }} />{sportCount}
+                      </span>
+                    </td>
+                    <td style={{ padding: "14px 16px", textAlign: "center" }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: TEXT, fontWeight: 600 }}>
+                        <Users size={12} style={{ color: P }} />{teamCount}
+                      </span>
+                    </td>
+                    <td style={{ padding: "14px 16px", textAlign: "center" }}>
+                      <StatusBadge status={ev.status} />
+                    </td>
+                    <td style={{ padding: "14px 16px", textAlign: "right" }}>
+                      <span style={{ color: P, display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                        <ChevronRight size={16} />
+                      </span>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
-  );
+  )
 }

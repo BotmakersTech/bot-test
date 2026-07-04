@@ -1,530 +1,365 @@
-import { useEffect, useState, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import type { RootState } from "../../../app/store";
-import { hasRole, MANAGER_AND_UP, AppRole } from "../../../shared/constants/roles";
+import { useEffect, useState, useCallback } from "react"
+import { useParams, useNavigate } from "react-router-dom"
 import {
-  getMyEventById,
-  submitSportForApproval,
-  toggleSportRegistration,
-  changeEventStatus,
-  adminApproveSport,
-  adminRejectSport,
-  type OrganizerEvent,
-  type OrganizerSport,
-} from "../api/organizer.api";
-import { useEventRealtime } from "../../../shared/realtime/useEventRealtime";
+  ArrowLeft, Save, Edit3, X, ExternalLink,
+  CalendarDays, MapPin, Globe, Building2, Trophy, Users, CheckCircle2,
+} from "lucide-react"
+import {
+  getMyEventById, updateEventInfo, changeEventStatus, submitSportForApproval, toggleSportRegistration,
+  type OrganizerEvent, type OrganizerSport, type UpdateEventInfoRequest,
+} from "../api/organizer.api"
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// ── theme ─────────────────────────────────────────────────────────────────────
+const P      = "#8C6CFF"
+const BLUE   = "#0162D1"
+const BG     = "#F4F3FF"
+const SURF   = "#FFFFFF"
+const BORDER = "#E0D9FF"
+const TEXT   = "#111111"
+const MUTED  = "#6B7280"
+const SUCCESS = "#10b981"
+const WARNING = "#f59e0b"
+const DANGER  = "#ef4444"
 
-const SPORT_STEPS = [
-  "DRAFT",
-  "PENDING_APPROVAL",
-  "APPROVED",
-  "REGISTRATION_OPEN",
-  "REGISTRATION_CLOSED",
-] as const;
+const EVENT_STATUSES = ["DRAFT", "PUBLISHED", "LIVE", "COMPLETED", "ARCHIVED"]
 
-const SPORT_STEP_LABELS: Record<string, string> = {
-  DRAFT:               "Draft",
-  PENDING_APPROVAL:    "Pending",
-  APPROVED:            "Approved",
-  REGISTRATION_OPEN:   "Reg Open",
-  REGISTRATION_CLOSED: "Reg Closed",
-};
-
-const EVENT_STEPS = ["DRAFT", "PUBLISHED", "LIVE", "COMPLETED", "ARCHIVED"] as const;
-
-const EVENT_STEP_LABELS: Record<string, string> = {
-  DRAFT:     "Draft",
-  PUBLISHED: "Published",
-  LIVE:      "Live",
-  COMPLETED: "Completed",
-  ARCHIVED:  "Archived",
-};
-
-const NEXT_EVENT_STATUS: Record<string, string> = {
-  DRAFT:     "PUBLISHED",
-  PUBLISHED: "LIVE",
-  LIVE:      "COMPLETED",
-  COMPLETED: "ARCHIVED",
-};
-
-const NEXT_EVENT_LABEL: Record<string, string> = {
-  DRAFT:     "Publish Event",
-  PUBLISHED: "Go Live",
-  LIVE:      "Mark Completed",
-  COMPLETED: "Archive Event",
-};
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function sportLabel(s: OrganizerSport): string {
-  return [s.sport.replace(/_/g, " "), s.weightClass, s.ageGroup]
-    .filter(Boolean)
-    .join(" · ");
+const SPORT_STATUS_MAP: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  PENDING_APPROVAL: { label: "Pending Approval", color: WARNING, bg: "rgba(245,158,11,0.1)",   border: "rgba(245,158,11,0.28)" },
+  APPROVED:         { label: "Approved",          color: SUCCESS, bg: "rgba(16,185,129,0.1)",   border: "rgba(16,185,129,0.28)" },
+  ACTIVE:           { label: "Active",            color: SUCCESS, bg: "rgba(16,185,129,0.12)",  border: "rgba(16,185,129,0.3)"  },
+  REGISTRATION_OPEN:{ label: "Reg. Open",         color: P,       bg: "rgba(140,108,255,0.1)",  border: "rgba(140,108,255,0.28)" },
+  REGISTRATION_CLOSED:{ label: "Reg. Closed",     color: MUTED,   bg: "rgba(107,114,128,0.1)",  border: "rgba(107,114,128,0.25)" },
+  REJECTED:         { label: "Rejected",          color: DANGER,  bg: "rgba(239,68,68,0.1)",    border: "rgba(239,68,68,0.28)"  },
+  DRAFT:            { label: "Draft",             color: MUTED,   bg: "rgba(107,114,128,0.08)", border: "rgba(107,114,128,0.2)" },
+  COMPLETED:        { label: "Completed",         color: "#94a3b8", bg: "rgba(148,163,184,0.1)", border: "rgba(148,163,184,0.25)" },
 }
 
-function isPublishReady(sport: OrganizerSport): boolean {
-  return sport.status === "REGISTRATION_CLOSED" && sport.bracketGenerated;
+const EVENT_STATUS_MAP: Record<string, { label: string; color: string; bg: string; border: string; dot?: boolean }> = {
+  LIVE:      { label: "Live",      color: SUCCESS, bg: "rgba(16,185,129,0.12)", border: "rgba(16,185,129,0.3)", dot: true },
+  PUBLISHED: { label: "Published", color: P,       bg: "rgba(140,108,255,0.1)", border: "rgba(140,108,255,0.28)" },
+  DRAFT:     { label: "Draft",     color: WARNING, bg: "rgba(245,158,11,0.1)",  border: "rgba(245,158,11,0.28)" },
+  COMPLETED: { label: "Completed", color: "#94a3b8", bg: "rgba(148,163,184,0.1)", border: "rgba(148,163,184,0.25)" },
+  ARCHIVED:  { label: "Archived",  color: "#64748b", bg: "rgba(100,116,139,0.1)", border: "rgba(100,116,139,0.25)" },
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+const toLabel = (raw?: string | null) => {
+  if (!raw) return "—"
+  return raw.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+}
 
-function StatusPill({ status, className = "" }: { status: string; className?: string }) {
-  const colours: Record<string, string> = {
-    LIVE:                "bg-green-500/15 text-green-400",
-    PUBLISHED:           "bg-blue-500/15 text-blue-400",
-    DRAFT:               "bg-yellow-500/15 text-yellow-400",
-    PENDING_APPROVAL:    "bg-orange-500/15 text-orange-400",
-    APPROVED:            "bg-teal-500/15 text-teal-400",
-    REGISTRATION_OPEN:   "bg-sky-500/15 text-sky-400",
-    REGISTRATION_CLOSED: "bg-white/8 text-neutral-400",
-    COMPLETED:           "bg-white/8 text-neutral-400",
-    ARCHIVED:            "bg-white/5 text-neutral-600",
-  };
-  const label = (SPORT_STEP_LABELS[status] ?? EVENT_STEP_LABELS[status] ?? status).replace(/_/g, " ");
+const fmt = (d?: string | null) => {
+  if (!d) return "—"
+  return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+}
+
+// ── shared input style ────────────────────────────────────────────────────────
+const inputSt: React.CSSProperties = {
+  width: "100%", background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "8px",
+  color: TEXT, fontSize: "0.85rem", padding: "9px 12px", outline: "none", boxSizing: "border-box",
+}
+
+// ── sub-components ────────────────────────────────────────────────────────────
+
+function StatusBadge({ status, map = EVENT_STATUS_MAP }: { status: string; map?: typeof EVENT_STATUS_MAP }) {
+  const s = map[status?.toUpperCase()] ?? { label: status, color: MUTED, bg: "rgba(0,0,0,0.06)", border: "rgba(0,0,0,0.1)" }
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colours[status] ?? "bg-white/8 text-neutral-400"} ${className}`}>
-      {label}
+    <span style={{ background: s.bg, border: `1px solid ${s.border}`, color: s.color, borderRadius: "999px", fontSize: "0.67rem", padding: "3px 10px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "5px", whiteSpace: "nowrap" }}>
+      {(s as any).dot && <span style={{ width: 6, height: 6, borderRadius: "50%", background: s.color, display: "inline-block" }} />}
+      {s.label}
     </span>
-  );
+  )
 }
 
-function MiniStepper({
-  steps,
-  labels,
-  current,
-}: {
-  steps: readonly string[];
-  labels: Record<string, string>;
-  current: string;
-}) {
-  const idx = steps.indexOf(current as typeof steps[number]);
+function InfoRow({ label, value }: { label: string; value?: string | null }) {
   return (
-    <div className="flex items-center gap-0.5 flex-wrap">
-      {steps.map((step, i) => {
-        const done   = i < idx;
-        const active = i === idx;
-        return (
-          <div key={step} className="flex items-center gap-0.5">
-            <div className={[
-              "h-1.5 w-1.5 rounded-full shrink-0",
-              done   ? "bg-green-500"    :
-              active ? "bg-red-500"      : "bg-white/15",
-            ].join(" ")} />
-            <span className={[
-              "text-[10px] leading-none",
-              done   ? "text-green-500"   :
-              active ? "text-red-400"     : "text-neutral-600",
-            ].join(" ")}>
-              {labels[step]}
-            </span>
-            {i < steps.length - 1 && (
-              <span className="text-neutral-700 text-[10px] mx-0.5">›</span>
-            )}
-          </div>
-        );
-      })}
+    <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+      <p style={{ color: MUTED, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", margin: 0 }}>{label}</p>
+      <p style={{ color: TEXT, fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>{value || "—"}</p>
     </div>
-  );
+  )
 }
 
-function ActionBtn({
-  onClick,
-  loading,
-  label,
-  variant = "primary",
-  disabled = false,
-  disabledReason,
-}: {
-  onClick: () => void;
-  loading: boolean;
-  label: string;
-  variant?: "primary" | "ghost" | "danger";
-  disabled?: boolean;
-  disabledReason?: string;
-}) {
-  const colours = {
-    primary: "bg-red-600 hover:bg-red-700 text-white",
-    ghost:   "bg-white/8 hover:bg-white/12 text-white",
-    danger:  "bg-red-900/40 hover:bg-red-900/60 text-red-300",
-  };
-  const btn = (
-    <button
-      onClick={onClick}
-      disabled={disabled || loading}
-      className={[
-        "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
-        colours[variant],
-        (disabled || loading) ? "opacity-50 cursor-not-allowed" : "",
-      ].join(" ")}
-    >
-      {loading ? "…" : label}
-    </button>
-  );
-  if (disabled && disabledReason) {
-    return (
-      <div className="flex flex-col items-end gap-0.5">
-        {btn}
-        <span className="text-[10px] text-neutral-500">{disabledReason}</span>
-      </div>
-    );
-  }
-  return btn;
-}
+function SportRow({ sport, eventId, onRefresh }: { sport: OrganizerSport; eventId: string; onRefresh: () => void }) {
+  const [busy, setBusy] = useState(false)
+  const sMap = SPORT_STATUS_MAP
+  const s = sMap[sport.status?.toUpperCase()] ?? sMap.DRAFT
 
-// ── Sport card ────────────────────────────────────────────────────────────────
-
-function SportCard({
-  sport,
-  eventId,
-  isManager,
-  onRefresh,
-}: {
-  sport: OrganizerSport;
-  eventId: string;
-  isManager: boolean;
-  onRefresh: () => void;
-}) {
-  const navigate = useNavigate();
-  const [loading, setLoading]   = useState(false);
-  const [error,   setError]     = useState<string | null>(null);
-  const [rejectOpen, setRejectOpen] = useState(false);
-  const [rejectReason, setRejectReason] = useState("");
-
-  async function act(fn: () => Promise<unknown>) {
-    setLoading(true);
-    setError(null);
-    try {
-      await fn();
-      onRefresh();
-    } catch (e: any) {
-      setError(e?.response?.data?.message ?? e?.message ?? "Action failed");
-    } finally {
-      setLoading(false);
-    }
+  const doSubmit = async () => {
+    setBusy(true)
+    try { await submitSportForApproval(eventId, sport.id); onRefresh() } catch { alert("Failed to submit") } finally { setBusy(false) }
   }
 
-  const prereqOk = isPublishReady(sport);
+  const doToggleReg = async () => {
+    setBusy(true)
+    try { await toggleSportRegistration(eventId, sport.id); onRefresh() } catch { alert("Failed to toggle registration") } finally { setBusy(false) }
+  }
+
+  const canSubmit    = sport.status?.toUpperCase() === "DRAFT"
+  const canToggleReg = ["APPROVED","ACTIVE","REGISTRATION_OPEN","REGISTRATION_CLOSED"].includes(sport.status?.toUpperCase())
 
   return (
-    <div className="rounded-xl bg-white/4 p-4 ring-1 ring-white/8 space-y-3">
-      {/* Header row */}
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="font-medium text-white text-sm">{sportLabel(sport)}</p>
-          <div className="mt-1.5">
-            <MiniStepper steps={SPORT_STEPS} labels={SPORT_STEP_LABELS} current={sport.status} />
-          </div>
+    <div style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: "12px", padding: "16px 18px", display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+      <div style={{ flex: 1, minWidth: "180px" }}>
+        <p style={{ color: TEXT, fontWeight: 600, margin: "0 0 3px", fontSize: "0.875rem" }}>{toLabel(sport.sport)}</p>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", fontSize: "0.75rem", color: MUTED }}>
+          {sport.ageGroup && <span>{toLabel(sport.ageGroup)}</span>}
+          {sport.weightClass && <span>· {toLabel(sport.weightClass)}</span>}
+          {sport.formatType && <span>· {toLabel(sport.formatType)}</span>}
         </div>
-        <StatusPill status={sport.status} className="shrink-0 mt-0.5" />
       </div>
 
-      {/* Readiness row */}
-      <div className="flex items-center gap-4 text-xs">
-        <span className={sport.bracketGenerated ? "text-green-400" : "text-neutral-500"}>
-          {sport.bracketGenerated ? "✓ Bracket" : "✗ No bracket"}
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+        <span style={{ fontSize: "0.78rem", color: MUTED }}>
+          <strong style={{ color: TEXT }}>{sport.registeredTeamsCount ?? 0}</strong>
+          {sport.maxTeams ? `/${sport.maxTeams}` : ""} teams
         </span>
-        <span className={prereqOk ? "text-green-400" : "text-neutral-500"}>
-          {prereqOk ? "✓ Ready to publish" : ""}
-        </span>
-        {sport.registeredTeamsCount !== undefined && (
-          <span className="text-neutral-500 ml-auto">
-            {sport.registeredTeamsCount}{sport.maxTeams ? `/${sport.maxTeams}` : ""} teams
-          </span>
+        <StatusBadge status={sport.status} map={SPORT_STATUS_MAP} />
+      </div>
+
+      <div style={{ display: "flex", gap: "8px" }}>
+        {canSubmit && (
+          <button onClick={doSubmit} disabled={busy}
+            style={{ background: `linear-gradient(135deg,${P},${BLUE})`, color: "#fff", border: "none", borderRadius: "8px", padding: "6px 14px", fontSize: "0.78rem", fontWeight: 600, cursor: "pointer", opacity: busy ? 0.6 : 1 }}>
+            Submit for Approval
+          </button>
         )}
+        {canToggleReg && (
+          <button onClick={doToggleReg} disabled={busy}
+            style={{ background: "rgba(140,108,255,0.1)", color: P, border: `1px solid rgba(140,108,255,0.3)`, borderRadius: "8px", padding: "6px 14px", fontSize: "0.78rem", fontWeight: 600, cursor: "pointer", opacity: busy ? 0.6 : 1 }}>
+            {sport.status?.toUpperCase() === "REGISTRATION_OPEN" ? "Close Reg." : "Open Reg."}
+          </button>
+        )}
+        <button
+          onClick={() => window.location.href = `/admin/events/${eventId}/sports/${sport.id}`}
+          style={{ background: "rgba(0,0,0,0.05)", color: MUTED, border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "6px 10px", fontSize: "0.78rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}>
+          <ExternalLink size={12} /> Manage
+        </button>
       </div>
-
-      {/* Action row */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex gap-2 flex-wrap">
-          {sport.status === "DRAFT" && (
-            <>
-              <ActionBtn
-                label="Submit for Approval"
-                loading={loading}
-                onClick={() => act(() => submitSportForApproval(eventId, sport.id))}
-              />
-              {sport.rejectionReason && (
-                <span className="text-xs text-red-400 italic">Rejected: {sport.rejectionReason}</span>
-              )}
-            </>
-          )}
-          {sport.status === "PENDING_APPROVAL" && !isManager && (
-            <span className="text-xs text-orange-400 italic">Awaiting admin approval…</span>
-          )}
-          {sport.status === "PENDING_APPROVAL" && isManager && (
-            <>
-              <ActionBtn
-                label="Approve"
-                variant="primary"
-                loading={loading}
-                onClick={() => act(() => adminApproveSport(sport.id))}
-              />
-              <ActionBtn
-                label="Reject"
-                variant="danger"
-                loading={loading}
-                onClick={() => setRejectOpen(true)}
-              />
-            </>
-          )}
-          {sport.status === "APPROVED" && (
-            <ActionBtn
-              label="Open Registration"
-              loading={loading}
-              onClick={() => act(() => toggleSportRegistration(eventId, sport.id))}
-            />
-          )}
-          {sport.status === "REGISTRATION_OPEN" && (
-            <ActionBtn
-              label="Close Registration"
-              variant="ghost"
-              loading={loading}
-              onClick={() => act(() => toggleSportRegistration(eventId, sport.id))}
-            />
-          )}
-          {sport.status === "REGISTRATION_CLOSED" && !sport.bracketGenerated && (
-            <ActionBtn
-              label="Generate Brackets →"
-              variant="primary"
-              loading={false}
-              onClick={() => navigate(`/organizer/schedule?eventId=${eventId}&sportId=${sport.id}&action=generate`)}
-            />
-          )}
-          {sport.status === "REGISTRATION_CLOSED" && sport.bracketGenerated && (
-            <ActionBtn
-              label="Schedule Matches →"
-              variant="ghost"
-              loading={false}
-              onClick={() => navigate(`/organizer/schedule?eventId=${eventId}&sportId=${sport.id}`)}
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Reject modal (inline) */}
-      {rejectOpen && (
-        <div className="mt-2 rounded-lg bg-white/5 p-3 space-y-2">
-          <p className="text-xs text-neutral-300">Rejection reason (optional)</p>
-          <input
-            value={rejectReason}
-            onChange={e => setRejectReason(e.target.value)}
-            placeholder="e.g. Missing weight class details"
-            className="w-full rounded bg-white/8 px-3 py-1.5 text-xs text-white placeholder-neutral-500 outline-none focus:ring-1 focus:ring-red-500"
-          />
-          <div className="flex gap-2">
-            <ActionBtn
-              label="Confirm Reject"
-              variant="danger"
-              loading={loading}
-              onClick={() => {
-                setRejectOpen(false);
-                act(() => adminRejectSport(sport.id, rejectReason || undefined));
-              }}
-            />
-            <ActionBtn
-              label="Cancel"
-              variant="ghost"
-              loading={false}
-              onClick={() => setRejectOpen(false)}
-            />
-          </div>
-        </div>
-      )}
-
-      {error && <p className="text-xs text-red-400">{error}</p>}
     </div>
-  );
+  )
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// ── page ──────────────────────────────────────────────────────────────────────
+
+type Tab = "overview" | "sports" | "status"
 
 export default function OrganizerEventDetailPage() {
-  const { eventId }   = useParams<{ eventId: string }>();
-  const navigate      = useNavigate();
-  const { user }      = useSelector((state: RootState) => state.auth);
-  const userRoles     = user?.allRoles ?? (user?.role ? [user.role] : []);
-  const isManager     = hasRole(userRoles, MANAGER_AND_UP);
-  const isAdminOrUp   = hasRole(userRoles, [AppRole.SUPER_ADMIN, AppRole.ADMINISTRATOR]);
+  const { eventId } = useParams<{ eventId: string }>()
+  const navigate = useNavigate()
 
-  const [event,   setEvent]   = useState<OrganizerEvent | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState<string | null>(null);
-  const [statusWorking, setStatusWorking] = useState(false);
-  const [statusError,   setStatusError]   = useState<string | null>(null);
+  const [event,   setEvent]   = useState<OrganizerEvent | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [tab,     setTab]     = useState<Tab>("overview")
+  const [editing, setEditing] = useState(false)
+  const [saving,  setSaving]  = useState(false)
+  const [form,    setForm]    = useState<UpdateEventInfoRequest>({})
+  const [newStatus, setNewStatus] = useState("")
+  const [statusBusy, setStatusBusy] = useState(false)
 
   const load = useCallback(() => {
-    if (!eventId) return;
-    setLoading(true);
+    if (!eventId) return
+    setLoading(true)
     getMyEventById(eventId)
-      .then(setEvent)
-      .catch(() => setError("Failed to load event details."))
-      .finally(() => setLoading(false));
-  }, [eventId]);
+      .then(ev => { setEvent(ev); setForm({ eventName: ev.eventName, eventDescription: ev.eventDescription ?? "", venueName: ev.venueName ?? "", venueAddress: ev.venueAddress ?? "", city: ev.city ?? "", state: ev.state ?? "", country: ev.country ?? "", organizationName: ev.organizationName ?? "", organizationUrl: ev.organizationUrl ?? "" }); setNewStatus(ev.status ?? "") })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [eventId])
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load() }, [load])
 
-  useEventRealtime(eventId, {
-    onEventUpdated:       (p) => setEvent(prev => prev ? { ...prev, ...(p as Partial<OrganizerEvent>) } : prev),
-    onEventStatusChanged: (p) => setEvent(prev => prev ? { ...prev, ...(p as Partial<OrganizerEvent>) } : prev),
-    onSportUpdated:       (p: any) => setEvent(prev => {
-      if (!prev?.sports) return prev;
-      return { ...prev, sports: prev.sports.map(s => s.id === p?.id ? { ...s, ...p } : s) };
-    }),
-  });
-
-  async function handleEventStatusChange(nextStatus: string) {
-    if (!eventId || !event) return;
-    setStatusWorking(true);
-    setStatusError(null);
-    try {
-      const updated = await changeEventStatus(eventId, nextStatus);
-      setEvent(prev => prev ? { ...prev, status: updated.status } : prev);
-    } catch (e: any) {
-      const msg: string = e?.response?.data?.message ?? e?.message ?? "Failed to change status";
-      setStatusError(msg);
-    } finally {
-      setStatusWorking(false);
-    }
+  const handleSave = async () => {
+    if (!eventId) return
+    setSaving(true)
+    try { const updated = await updateEventInfo(eventId, form); setEvent(updated); setEditing(false) } catch { alert("Failed to save") } finally { setSaving(false) }
   }
 
-  if (loading) return <div className="flex h-64 items-center justify-center text-neutral-400">Loading…</div>;
-  if (error || !event) return <div className="p-6 text-red-400">{error ?? "Event not found."}</div>;
+  const handleStatusChange = async () => {
+    if (!eventId || !newStatus) return
+    setStatusBusy(true)
+    try { const updated = await changeEventStatus(eventId, newStatus); setEvent(updated) } catch { alert("Failed to change status") } finally { setStatusBusy(false) }
+  }
 
-  const nextStatus = NEXT_EVENT_STATUS[event.status];
-  const nextLabel  = NEXT_EVENT_LABEL[event.status];
-  const sports     = event.sports ?? [];
-  // Publish only needs all sports approved; brackets/scheduling is checked at LIVE
-  const publishReady = sports.length > 0 && sports.every(
-    s => !["DRAFT", "PENDING_APPROVAL"].includes(s.status)
-  );
-  // Go-live needs registration closed + bracket + matches scheduled (validated server-side)
-  const liveReady = sports.length > 0 && sports.every(isPublishReady);
+  if (loading) return (
+    <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, fontFamily: "'Inter',sans-serif" }}>Loading event…</div>
+  )
+
+  if (!event) return (
+    <div style={{ minHeight: "100vh", background: BG, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "12px", fontFamily: "'Inter',sans-serif" }}>
+      <p style={{ color: DANGER }}>Event not found</p>
+      <button onClick={() => navigate("/organizer/events")} style={{ color: P, background: "none", border: "none", cursor: "pointer", fontSize: "0.875rem" }}>← Back to events</button>
+    </div>
+  )
+
+  const totalTeams = event.sports?.reduce((a, s) => a + (s.registeredTeamsCount ?? 0), 0) ?? 0
+
+  const TAB_ITEMS: { id: Tab; label: string }[] = [
+    { id: "overview", label: "Overview" },
+    { id: "sports",   label: `Sports (${event.sports?.length ?? 0})` },
+    { id: "status",   label: "Status" },
+  ]
 
   return (
-    <div className="min-h-screen bg-gray-950 p-6 text-white max-w-4xl mx-auto">
-      {/* Back */}
-      <button
-        onClick={() => navigate("/organizer/events")}
-        className="mb-5 flex items-center gap-1.5 text-sm text-neutral-400 hover:text-white transition-colors"
-      >
-        ← Back to Events
-      </button>
+    <div style={{ minHeight: "100vh", background: BG, fontFamily: "'Inter',sans-serif" }}>
+      {/* Header bar */}
+      <div style={{ background: SURF, borderBottom: `1px solid ${BORDER}`, padding: "16px 32px", display: "flex", alignItems: "center", gap: "16px" }}>
+        <button onClick={() => navigate("/organizer/events")} style={{ background: "none", border: "none", color: MUTED, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontSize: "0.85rem" }}>
+          <ArrowLeft size={16} /> Events
+        </button>
+        <span style={{ color: BORDER, fontSize: "1.2rem" }}>/</span>
+        <h1 style={{ color: TEXT, fontFamily: "'Sarpanch',sans-serif", fontSize: "1.15rem", fontWeight: 700, margin: 0, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{event.eventName}</h1>
+        <StatusBadge status={event.status} />
+      </div>
 
-      {/* Event header */}
-      <div className="mb-6 flex items-start gap-4">
-        {event.eventLogoUrl && (
-          <img src={event.eventLogoUrl} alt={event.eventName} className="h-14 w-14 rounded-xl object-cover shrink-0" />
-        )}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-bold text-white truncate">{event.eventName}</h1>
-            <StatusPill status={event.status} />
+      {/* Stats strip */}
+      <div style={{ background: SURF, borderBottom: `1px solid ${BORDER}`, padding: "12px 32px", display: "flex", gap: "28px", flexWrap: "wrap" }}>
+        {[
+          { icon: <Trophy size={14} style={{ color: P }} />, label: "Sports",  value: event.sports?.length ?? 0 },
+          { icon: <Users  size={14} style={{ color: P }} />, label: "Teams",   value: totalTeams },
+          { icon: <CalendarDays size={14} style={{ color: P }} />, label: "Start", value: fmt(event.startDate) },
+          { icon: <CalendarDays size={14} style={{ color: P }} />, label: "End",   value: fmt(event.endDate) },
+        ].map(({ icon, label, value }) => (
+          <div key={label} style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.82rem" }}>
+            {icon}
+            <span style={{ color: MUTED }}>{label}:</span>
+            <strong style={{ color: TEXT }}>{value}</strong>
           </div>
-          <p className="mt-0.5 font-mono text-xs text-neutral-500">{event.eventCode}</p>
-          {event.venueName && (
-            <p className="mt-0.5 text-sm text-neutral-400">
-              {event.venueName}{event.city ? `, ${event.city}` : ""}
+        ))}
+      </div>
+
+      {/* Tab nav */}
+      <div style={{ borderBottom: `1px solid ${BORDER}`, padding: "0 32px", display: "flex", gap: "0", background: SURF }}>
+        {TAB_ITEMS.map(({ id, label }) => (
+          <button
+            key={id}
+            onClick={() => setTab(id)}
+            style={{ background: "none", border: "none", borderBottom: tab === id ? `2px solid ${P}` : "2px solid transparent", color: tab === id ? P : MUTED, fontWeight: tab === id ? 700 : 500, fontSize: "0.875rem", padding: "12px 18px", cursor: "pointer", transition: "color 0.12s" }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab content */}
+      <div style={{ padding: "28px 32px", maxWidth: "900px" }}>
+
+        {/* ── Overview tab ─────────────────────────────────────────────────── */}
+        {tab === "overview" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: "14px", padding: "20px 24px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
+                <h2 style={{ color: TEXT, fontFamily: "'Sarpanch',sans-serif", fontSize: "1rem", fontWeight: 700, margin: 0 }}>Event Information</h2>
+                {!editing ? (
+                  <button onClick={() => setEditing(true)} style={{ background: "rgba(140,108,255,0.1)", color: P, border: `1px solid rgba(140,108,255,0.3)`, borderRadius: "8px", padding: "6px 14px", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "5px" }}>
+                    <Edit3 size={13} /> Edit
+                  </button>
+                ) : (
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button onClick={() => setEditing(false)} style={{ background: "rgba(0,0,0,0.05)", color: MUTED, border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "6px 12px", fontSize: "0.8rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}>
+                      <X size={13} /> Cancel
+                    </button>
+                    <button onClick={handleSave} disabled={saving} style={{ background: `linear-gradient(135deg,${P},${BLUE})`, color: "#fff", border: "none", borderRadius: "8px", padding: "6px 14px", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", opacity: saving ? 0.7 : 1 }}>
+                      <Save size={13} /> {saving ? "Saving…" : "Save"}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {editing ? (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                  {([
+                    ["eventName", "Event Name *"],
+                    ["organizationName", "Organization Name"],
+                    ["organizationUrl", "Organization URL"],
+                    ["venueName", "Venue Name"],
+                    ["venueAddress", "Venue Address"],
+                    ["city", "City"],
+                    ["state", "State"],
+                    ["country", "Country"],
+                  ] as [keyof UpdateEventInfoRequest, string][]).map(([key, label]) => (
+                    <div key={key} style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                      <label style={{ color: MUTED, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</label>
+                      <input value={(form[key] as string) ?? ""} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} style={inputSt} />
+                    </div>
+                  ))}
+                  <div style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", gap: "5px" }}>
+                    <label style={{ color: MUTED, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Description</label>
+                    <textarea value={form.eventDescription ?? ""} onChange={e => setForm(f => ({ ...f, eventDescription: e.target.value }))} rows={3}
+                      style={{ ...inputSt, resize: "vertical", fontFamily: "inherit" }} />
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                  <InfoRow label="Organization"  value={event.organizationName} />
+                  <InfoRow label="Organization URL" value={event.organizationUrl} />
+                  <InfoRow label="Venue"         value={event.venueName} />
+                  <InfoRow label="Address"       value={event.venueAddress} />
+                  <InfoRow label="City"          value={event.city} />
+                  <InfoRow label="State"         value={event.state} />
+                  <InfoRow label="Country"       value={event.country} />
+                  <InfoRow label="Tier"          value={event.tier} />
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <InfoRow label="Description" value={event.eventDescription} />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Sports tab ───────────────────────────────────────────────────── */}
+        {tab === "sports" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+              <h2 style={{ color: TEXT, fontFamily: "'Sarpanch',sans-serif", fontSize: "1rem", fontWeight: 700, margin: 0 }}>
+                Sports in this Event
+              </h2>
+              <span style={{ color: MUTED, fontSize: "0.8rem" }}>{event.sports?.length ?? 0} sport{(event.sports?.length ?? 0) !== 1 ? "s" : ""}</span>
+            </div>
+            {!event.sports?.length ? (
+              <div style={{ textAlign: "center", padding: "60px 0", color: MUTED }}>
+                <Trophy size={36} style={{ opacity: 0.2, margin: "0 auto 8px" }} />
+                <p style={{ margin: 0 }}>No sports have been added to this event yet.</p>
+              </div>
+            ) : (
+              event.sports.map(sp => (
+                <SportRow key={sp.id} sport={sp} eventId={event.id} onRefresh={load} />
+              ))
+            )}
+          </div>
+        )}
+
+        {/* ── Status tab ───────────────────────────────────────────────────── */}
+        {tab === "status" && (
+          <div style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: "14px", padding: "24px" }}>
+            <h2 style={{ color: TEXT, fontFamily: "'Sarpanch',sans-serif", fontSize: "1rem", fontWeight: 700, margin: "0 0 16px" }}>Change Event Status</h2>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                <label style={{ color: MUTED, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Current Status</label>
+                <StatusBadge status={event.status} />
+              </div>
+              <span style={{ color: BORDER, fontSize: "1.5rem" }}>→</span>
+              <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                <label style={{ color: MUTED, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>New Status</label>
+                <select value={newStatus} onChange={e => setNewStatus(e.target.value)}
+                  style={{ ...inputSt, width: "180px", appearance: "none", cursor: "pointer", paddingRight: "28px" }}>
+                  {EVENT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <button
+                onClick={handleStatusChange}
+                disabled={statusBusy || newStatus === event.status}
+                style={{ marginTop: "18px", background: `linear-gradient(135deg,${P},${BLUE})`, color: "#fff", border: "none", borderRadius: "8px", padding: "9px 18px", fontWeight: 600, fontSize: "0.875rem", cursor: "pointer", opacity: (statusBusy || newStatus === event.status) ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                <CheckCircle2 size={15} /> {statusBusy ? "Updating…" : "Apply"}
+              </button>
+            </div>
+            <p style={{ color: MUTED, fontSize: "0.78rem", marginTop: "16px" }}>
+              Changing the event status affects visibility and participant access. Proceed carefully.
             </p>
-          )}
-        </div>
-      </div>
-
-      {/* Event lifecycle stepper + status action */}
-      <div className="mb-6 rounded-xl bg-white/4 p-4 ring-1 ring-white/8 space-y-3">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <p className="text-xs text-neutral-500 mb-1.5">Event Lifecycle</p>
-            <MiniStepper steps={EVENT_STEPS} labels={EVENT_STEP_LABELS} current={event.status} />
-          </div>
-
-          {nextStatus && (isManager || isAdminOrUp) && (
-            <ActionBtn
-              label={nextLabel}
-              loading={statusWorking}
-              disabled={
-                (event.status === "DRAFT" && sports.length > 0 && !publishReady) ||
-                (event.status === "PUBLISHED" && sports.length > 0 && !liveReady)
-              }
-              disabledReason={
-                event.status === "DRAFT" && sports.length > 0 && !publishReady
-                  ? "All sports must be approved before publishing"
-                  : event.status === "PUBLISHED" && sports.length > 0 && !liveReady
-                  ? "All sports need closed registration + bracket + scheduled matches"
-                  : undefined
-              }
-              onClick={() => handleEventStatusChange(nextStatus)}
-            />
-          )}
-        </div>
-
-        {statusError && (
-          <div className="rounded-lg bg-red-900/20 border border-red-700/40 p-3">
-            <p className="text-xs text-red-300 whitespace-pre-line">{statusError}</p>
           </div>
         )}
-      </div>
 
-      {/* Quick nav */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        <button
-          onClick={() => navigate(`/organizer/communication?eventId=${event.id}`)}
-          className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors"
-        >
-          Broadcast Announcement
-        </button>
-        <button
-          onClick={() => navigate(`/organizer/schedule?eventId=${event.id}`)}
-          className="rounded-lg bg-white/8 px-4 py-2 text-sm font-medium text-white hover:bg-white/12 transition-colors"
-        >
-          View Schedule
-        </button>
-        <button
-          onClick={() => navigate(`/organizer/monitoring?eventId=${event.id}`)}
-          className="rounded-lg bg-white/8 px-4 py-2 text-sm font-medium text-white hover:bg-white/12 transition-colors"
-        >
-          Live Monitor
-        </button>
-      </div>
-
-      {/* Sports section */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-white">
-            Sports <span className="text-neutral-500 font-normal">({sports.length})</span>
-          </h2>
-          {event.status === "DRAFT" && sports.length > 0 && (
-            <span className={`text-xs ${publishReady ? "text-green-400" : "text-neutral-500"}`}>
-              {sports.filter(s => !["DRAFT","PENDING_APPROVAL"].includes(s.status)).length}/{sports.length} approved
-            </span>
-          )}
-          {event.status === "PUBLISHED" && sports.length > 0 && (
-            <span className={`text-xs ${liveReady ? "text-green-400" : "text-neutral-500"}`}>
-              {sports.filter(isPublishReady).length}/{sports.length} ready to go live
-            </span>
-          )}
-        </div>
-
-        {sports.length === 0 ? (
-          <div className="rounded-xl bg-white/3 p-8 text-center text-neutral-500 text-sm">
-            No sports configured for this event.
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {sports.map(s => (
-              <SportCard
-                key={s.id}
-                sport={s}
-                eventId={event.id}
-                isManager={isManager}
-                onRefresh={load}
-              />
-            ))}
-          </div>
-        )}
       </div>
     </div>
-  );
+  )
 }
