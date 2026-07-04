@@ -1,4 +1,4 @@
-package com.botleague.backend.admin.service;
+﻿package com.botleague.backend.admin.service;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -40,6 +40,7 @@ import com.botleague.backend.notification.enums.NotificationPriority;
 import com.botleague.backend.notification.enums.NotificationTargetType;
 import com.botleague.backend.notification.enums.NotificationType;
 import com.botleague.backend.notification.service.NotificationService;
+import com.botleague.backend.common.exception.ResourceNotFoundException;
 import com.botleague.backend.realtime.service.RealtimePublisher;
 import com.botleague.backend.team.repository.TeamMembershipRepository;
 import com.botleague.backend.team.repository.TeamRepository;
@@ -136,8 +137,8 @@ public class AdminService {
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public AdminAllEventResponse getEventById(UUID eventId) {
         Event event = eventRepository
-                .findById(eventId)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
+                .findByIdAndDeletedAtIsNull(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
 
         AdminAllEventResponse dto = mapToResponse(event);
 
@@ -213,7 +214,7 @@ public class AdminService {
     public AdminAllEventResponse updateEvent(UUID eventId, UpdateEventRequest request) {
         Event event = eventRepository
                 .findByIdAndDeletedAtIsNull(eventId)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
 
         EventStatus status   = event.getStatus();
         boolean     isAdmin  = isAdminOrAbove();
@@ -265,7 +266,7 @@ public class AdminService {
     public void softDeleteEvent(UUID eventId) {
         Event event = eventRepository
                 .findByIdAndDeletedAtIsNull(eventId)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
         event.setDeletedAt(LocalDateTime.now());
         eventRepository.save(event);
         auditLogService.log("EVENT_DELETED", "EVENT", event.getId(), event.getEventName(), null, null);
@@ -278,7 +279,7 @@ public class AdminService {
     public AdminAllEventResponse changeEventStatus(UUID eventId, ChangeEventStatusRequest request) {
         Event event = eventRepository
                 .findByIdAndDeletedAtIsNull(eventId)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
 
         EventStatus oldStatus;
         EventStatus newStatus;
@@ -425,7 +426,7 @@ public class AdminService {
         dto.setEventCode(event.getEventCode());
         dto.setEventName(event.getEventName());
         dto.setEventDescription(event.getEventDescription());
-        dto.setStatus(event.getStatus().name());
+        dto.setStatus(event.getStatus() != null ? event.getStatus().name() : null);
         dto.setTier(event.getTier() != null ? event.getTier().name() : null);
         dto.setEventLogoUrl(event.getEventLogoUrl());
         dto.setCity(event.getCity());
@@ -459,7 +460,7 @@ public class AdminService {
         dto.setId(sport.getId());
         dto.setSport(sport.getSport());
         dto.setSportsInfo(sport.getSportsDescription());   // getSportsDescription(), not getSportsDescripction()
-        dto.setStatus(sport.getStatus().name());
+        dto.setStatus(sport.getStatus() != null ? sport.getStatus().name() : null);
         dto.setFormatType(sport.getFormatType());
         if (sport.getAgeGroup() != null) dto.setAgeGroup(sport.getAgeGroup().name());
         dto.setWeightClass(sport.getWeightClass());

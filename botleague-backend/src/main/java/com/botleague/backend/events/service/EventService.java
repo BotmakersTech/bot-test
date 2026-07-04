@@ -1,11 +1,13 @@
-package com.botleague.backend.events.service;
+﻿package com.botleague.backend.events.service;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.botleague.backend.common.exception.ResourceNotFoundException;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import com.botleague.backend.common.exception.ResourceNotFoundException;
 
 import com.botleague.backend.chat.service.ChatService;
 import com.botleague.backend.common.service.BotleagueIdService;
@@ -23,6 +25,7 @@ import com.botleague.backend.notification.service.NotificationService;
 import com.botleague.backend.role.service.UserRoleService;
 import com.botleague.backend.team.entity.RobotMedia;
 import com.botleague.backend.team.enums.MediaType;
+import com.botleague.backend.common.exception.ResourceNotFoundException;
 
 @Service
 public class EventService {
@@ -218,7 +221,7 @@ public class EventService {
     public CreateEventResponseDTO makeEventLive(UUID eventId) {
         Event event = eventRepository
                 .findByIdAndDeletedAtIsNull(eventId)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
         event.setStatus(EventStatus.PUBLISHED);
         Event saved = eventRepository.save(event);
         auditLogService.log("EVENT_PUBLISHED", "EVENT", saved.getId(),

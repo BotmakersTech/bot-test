@@ -1,4 +1,4 @@
-package com.botleague.backend.organizer.service;
+﻿package com.botleague.backend.organizer.service;
 
 import com.botleague.backend.admin.repository.UserEventAssignmentRepository;
 import com.botleague.backend.events.dto.CreateEventResponseDTO;
@@ -12,12 +12,14 @@ import com.botleague.backend.organizer.dto.UpdateEventInfoDTO;
 import com.botleague.backend.realtime.service.RealtimePublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.botleague.backend.common.exception.ResourceNotFoundException;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.botleague.backend.common.exception.ResourceNotFoundException;
 
 @Service
 @Transactional(readOnly = true)
@@ -100,7 +102,7 @@ public class OrganizerService {
     public CreateEventResponseDTO updateEventInfo(UUID eventId, UUID requestingUserId,
                                                   List<String> userRoles, UpdateEventInfoDTO dto) {
         Event event = eventRepository.findByIdAndDeletedAtIsNull(eventId)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
 
         EventStatus status = event.getStatus();
 

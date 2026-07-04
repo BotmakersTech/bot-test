@@ -1,16 +1,19 @@
-package com.botleague.backend.matches.service;
+﻿package com.botleague.backend.matches.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import com.botleague.backend.common.exception.ResourceNotFoundException;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.botleague.backend.common.exception.ResourceNotFoundException;
 
 import com.botleague.backend.admin.repository.UserEventAssignmentRepository;
 import com.botleague.backend.auth.enums.AccountType;
+import com.botleague.backend.common.exception.ResourceNotFoundException;
 
 import com.botleague.backend.events.repository.EventSportsRepository;
 import com.botleague.backend.events.repository.SportRegistrationRepository;
@@ -31,9 +34,11 @@ import com.botleague.backend.matches.tournament.SingleEliminationBracketGenerato
 import com.botleague.backend.realtime.enums.RealtimeEventType;
 import com.botleague.backend.realtime.service.RealtimePublisher;
 import com.botleague.backend.role.service.UserRoleService;
+import com.botleague.backend.common.exception.ResourceNotFoundException;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import com.botleague.backend.common.exception.ResourceNotFoundException;
 
 @Service
 public class MatchService {
@@ -133,7 +138,7 @@ public class MatchService {
 
         eventSportsRepository
                 .findById(request.getEventSportId())
-                .orElseThrow(() -> new RuntimeException("Event sport not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Event sport not found"));
 
         List<Match> existingMatches =
                 matchRepository.findByEventSportIdAndDeletedAtIsNull(
@@ -257,7 +262,7 @@ public class MatchService {
 
         eventSportsRepository
                 .findById(eventSportId)
-                .orElseThrow(() -> new RuntimeException("Event sport not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Event sport not found"));
 
         List<Match> existingMatches =
                 matchRepository.findByEventSportIdAndDeletedAtIsNull(eventSportId);
@@ -307,7 +312,7 @@ public class MatchService {
     public MatchResponseDTO getMatchById(UUID matchId) {
         Match match = matchRepository
                 .findById(matchId)
-                .orElseThrow(() -> new RuntimeException("Match not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
         return mapToResponseDTO(match);
     }
 
@@ -385,7 +390,7 @@ public class MatchService {
 
         Match match = matchRepository
                 .findById(matchId)
-                .orElseThrow(() -> new RuntimeException("Match not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
 
         if (request.getTournamentFormat()    != null) match.setTournamentFormat(request.getTournamentFormat());
         if (request.getMatchType()           != null) match.setMatchType(request.getMatchType());
@@ -430,7 +435,7 @@ public class MatchService {
 
         Match match = matchRepository
                 .findById(matchId)
-                .orElseThrow(() -> new RuntimeException("Match not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
 
         if (request.getTeamARegistrationId() != null) match.setTeamARegistrationId(request.getTeamARegistrationId());
         if (request.getTeamBRegistrationId() != null) match.setTeamBRegistrationId(request.getTeamBRegistrationId());
@@ -455,7 +460,7 @@ public class MatchService {
 
         Match match = matchRepository
                 .findById(matchId)
-                .orElseThrow(() -> new RuntimeException("Match not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
 
         if (request.getScheduledAt() == null) {
             throw new RuntimeException("scheduledAt is required");
@@ -484,7 +489,7 @@ public class MatchService {
 
         Match match = matchRepository
                 .findById(matchId)
-                .orElseThrow(() -> new RuntimeException("Match not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
 
         if (match.getStatus() != MatchStatus.SCHEDULED) {
             throw new RuntimeException(
@@ -529,7 +534,7 @@ public class MatchService {
 
         Match match = matchRepository
                 .findById(matchId)
-                .orElseThrow(() -> new RuntimeException("Match not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
 
         if (match.getStatus() != MatchStatus.LIVE) {
             throw new RuntimeException(
@@ -583,7 +588,7 @@ public class MatchService {
 
         Match match = matchRepository
                 .findById(matchId)
-                .orElseThrow(() -> new RuntimeException("Match not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
 
         if (match.getStatus() != MatchStatus.LIVE) {
             throw new RuntimeException(
@@ -698,7 +703,7 @@ public class MatchService {
 
         Match match = matchRepository
                 .findById(matchId)
-                .orElseThrow(() -> new RuntimeException("Match not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
 
         if (match.getStatus() != MatchStatus.LIVE) {
             throw new RuntimeException(
@@ -785,7 +790,7 @@ public class MatchService {
 
         Match match = matchRepository
                 .findById(matchId)
-                .orElseThrow(() -> new RuntimeException("Match not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
 
         if (match.getStatus() == MatchStatus.COMPLETED) {
             throw new RuntimeException("Completed matches cannot be cancelled");
@@ -814,7 +819,7 @@ public class MatchService {
 
         Match match = matchRepository
                 .findById(matchId)
-                .orElseThrow(() -> new RuntimeException("Match not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
 
         match.setDeletedAt(LocalDateTime.now());
         matchRepository.save(match);

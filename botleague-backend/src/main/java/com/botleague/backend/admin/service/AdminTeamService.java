@@ -1,12 +1,14 @@
-package com.botleague.backend.admin.service;
+﻿package com.botleague.backend.admin.service;
 
 import java.util.List;
 import java.util.UUID;
+import com.botleague.backend.common.exception.ResourceNotFoundException;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import com.botleague.backend.common.exception.ResourceNotFoundException;
 
 import com.botleague.backend.admin.dto.AdminTeamDetail;
 import com.botleague.backend.admin.dto.AdminTeamMemberDTO;
@@ -26,6 +28,7 @@ import com.botleague.backend.team.enums.TeamRole;
 import com.botleague.backend.team.repository.TeamMembershipRepository;
 import com.botleague.backend.team.repository.TeamRepository;
 import java.time.LocalDateTime;
+import com.botleague.backend.common.exception.ResourceNotFoundException;
 
 @Service
 public class AdminTeamService {
@@ -115,7 +118,7 @@ public class AdminTeamService {
 
     public AdminTeamDetail getTeamDetail(UUID teamId) {
         Team team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new RuntimeException("Team not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Team not found"));
 
         List<TeamMembership> memberships = teamMembershipRepository.findByTeamId(teamId);
 
@@ -136,7 +139,7 @@ public class AdminTeamService {
 
     public AdminTeamDetail changeTeamStatus(UUID teamId, ChangeTeamStatusRequest request) {
         Team team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new RuntimeException("Team not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Team not found"));
         team.setStatus(request.getStatus());
         teamRepository.save(team);
         return getTeamDetail(teamId);
@@ -147,7 +150,7 @@ public class AdminTeamService {
     public void removeMember(UUID teamId, UUID userId) {
         TeamMembership membership = teamMembershipRepository
                 .findByTeamIdAndUserId(teamId, userId)
-                .orElseThrow(() -> new RuntimeException("Membership not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Membership not found"));
         membership.setStatus(TeamMembershipStatus.LEFT);
         teamMembershipRepository.save(membership);
     }
@@ -156,7 +159,7 @@ public class AdminTeamService {
 
     public AdminTeamDetail updateTeam(UUID teamId, UpdateTeamRequest request) {
         Team team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new RuntimeException("Team not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Team not found"));
         if (request.getTeamName()        != null) team.setTeamName(request.getTeamName());
         if (request.getDescription()     != null) team.setDescription(request.getDescription());
         if (request.getInstitutionName() != null) team.setInstitutionName(request.getInstitutionName());
@@ -171,7 +174,7 @@ public class AdminTeamService {
 
     public void deleteTeam(UUID teamId) {
         Team team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new RuntimeException("Team not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Team not found"));
         teamRepository.delete(team);
     }
 

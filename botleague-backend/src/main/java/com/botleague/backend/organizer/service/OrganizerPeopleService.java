@@ -1,15 +1,17 @@
-package com.botleague.backend.organizer.service;
+﻿package com.botleague.backend.organizer.service;
 
 import com.botleague.backend.organizer.dto.OrganizerDTOs.*;
 import com.botleague.backend.organizer.entity.*;
 import com.botleague.backend.organizer.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.botleague.backend.common.exception.ResourceNotFoundException;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.botleague.backend.common.exception.ResourceNotFoundException;
 
 /**
  * Manages volunteers, judges, staff, and arenas for organiser events.
@@ -52,7 +54,7 @@ public class OrganizerPeopleService {
     }
 
     public ArenaResponse updateArena(UUID arenaId, ArenaRequest req) {
-        EventArena a = arenaRepo.findById(arenaId).orElseThrow(() -> new RuntimeException("Arena not found"));
+        EventArena a = arenaRepo.findById(arenaId).orElseThrow(() -> new ResourceNotFoundException("Arena not found"));
         if (req.arenaName    != null) a.setArenaName(req.arenaName);
         if (req.capacity     != null) a.setCapacity(req.capacity);
         if (req.locationNotes!= null) a.setLocationNotes(req.locationNotes);
@@ -61,7 +63,7 @@ public class OrganizerPeopleService {
     }
 
     public void deleteArena(UUID arenaId) {
-        EventArena a = arenaRepo.findById(arenaId).orElseThrow(() -> new RuntimeException("Arena not found"));
+        EventArena a = arenaRepo.findById(arenaId).orElseThrow(() -> new ResourceNotFoundException("Arena not found"));
         a.setIsActive(false);
         arenaRepo.save(a);
     }
@@ -86,7 +88,7 @@ public class OrganizerPeopleService {
     }
 
     public VolunteerResponse updateVolunteer(UUID volunteerId, VolunteerRequest req) {
-        EventVolunteer v = volunteerRepo.findById(volunteerId).orElseThrow(() -> new RuntimeException("Volunteer not found"));
+        EventVolunteer v = volunteerRepo.findById(volunteerId).orElseThrow(() -> new ResourceNotFoundException("Volunteer not found"));
         if (req.name        != null) v.setName(req.name);
         if (req.email       != null) v.setEmail(req.email);
         if (req.phone       != null) v.setPhone(req.phone);
@@ -97,13 +99,13 @@ public class OrganizerPeopleService {
     }
 
     public VolunteerResponse checkInVolunteer(UUID volunteerId) {
-        EventVolunteer v = volunteerRepo.findById(volunteerId).orElseThrow(() -> new RuntimeException("Volunteer not found"));
+        EventVolunteer v = volunteerRepo.findById(volunteerId).orElseThrow(() -> new ResourceNotFoundException("Volunteer not found"));
         v.setCheckedInAt(LocalDateTime.now());
         return toVolunteerResponse(volunteerRepo.save(v));
     }
 
     public VolunteerResponse checkOutVolunteer(UUID volunteerId) {
-        EventVolunteer v = volunteerRepo.findById(volunteerId).orElseThrow(() -> new RuntimeException("Volunteer not found"));
+        EventVolunteer v = volunteerRepo.findById(volunteerId).orElseThrow(() -> new ResourceNotFoundException("Volunteer not found"));
         v.setCheckedOutAt(LocalDateTime.now());
         return toVolunteerResponse(volunteerRepo.save(v));
     }
@@ -134,7 +136,7 @@ public class OrganizerPeopleService {
     }
 
     public JudgeResponse updateJudge(UUID judgeId, JudgeRequest req) {
-        EventJudge j = judgeRepo.findById(judgeId).orElseThrow(() -> new RuntimeException("Judge not found"));
+        EventJudge j = judgeRepo.findById(judgeId).orElseThrow(() -> new ResourceNotFoundException("Judge not found"));
         if (req.name            != null) j.setName(req.name);
         if (req.email           != null) j.setEmail(req.email);
         if (req.phone           != null) j.setPhone(req.phone);
@@ -170,7 +172,7 @@ public class OrganizerPeopleService {
     }
 
     public StaffResponse updateStaff(UUID staffId, StaffRequest req) {
-        EventStaff s = staffRepo.findById(staffId).orElseThrow(() -> new RuntimeException("Staff not found"));
+        EventStaff s = staffRepo.findById(staffId).orElseThrow(() -> new ResourceNotFoundException("Staff not found"));
         if (req.name            != null) s.setName(req.name);
         if (req.email           != null) s.setEmail(req.email);
         if (req.phone           != null) s.setPhone(req.phone);
@@ -181,13 +183,13 @@ public class OrganizerPeopleService {
     }
 
     public StaffResponse checkInStaff(UUID staffId) {
-        EventStaff s = staffRepo.findById(staffId).orElseThrow(() -> new RuntimeException("Staff not found"));
+        EventStaff s = staffRepo.findById(staffId).orElseThrow(() -> new ResourceNotFoundException("Staff not found"));
         s.setCheckedInAt(LocalDateTime.now());
         return toStaffResponse(staffRepo.save(s));
     }
 
     public StaffResponse checkOutStaff(UUID staffId) {
-        EventStaff s = staffRepo.findById(staffId).orElseThrow(() -> new RuntimeException("Staff not found"));
+        EventStaff s = staffRepo.findById(staffId).orElseThrow(() -> new ResourceNotFoundException("Staff not found"));
         s.setCheckedOutAt(LocalDateTime.now());
         return toStaffResponse(staffRepo.save(s));
     }

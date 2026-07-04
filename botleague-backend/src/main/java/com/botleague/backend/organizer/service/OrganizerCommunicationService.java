@@ -1,4 +1,4 @@
-package com.botleague.backend.organizer.service;
+﻿package com.botleague.backend.organizer.service;
 
 import com.botleague.backend.organizer.dto.OrganizerDTOs.*;
 import com.botleague.backend.organizer.entity.EventAnnouncement;
@@ -7,11 +7,13 @@ import com.botleague.backend.organizer.repository.EventAnnouncementRepository;
 import com.botleague.backend.organizer.repository.EventIncidentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.botleague.backend.common.exception.ResourceNotFoundException;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.botleague.backend.common.exception.ResourceNotFoundException;
 
 /**
  * Manages event announcements and incident reports for the organiser portal.
@@ -53,7 +55,7 @@ public class OrganizerCommunicationService {
 
     public AnnouncementResponse updateAnnouncement(UUID announcementId, AnnouncementRequest req) {
         EventAnnouncement a = announcementRepo.findById(announcementId)
-                .orElseThrow(() -> new RuntimeException("Announcement not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Announcement not found"));
         if (req.title      != null) a.setTitle(req.title);
         if (req.body       != null) a.setBody(req.body);
         if (req.targetType != null) a.setTargetType(req.targetType);
@@ -86,7 +88,7 @@ public class OrganizerCommunicationService {
 
     public IncidentResponse updateIncident(UUID incidentId, IncidentUpdateRequest req) {
         EventIncident i = incidentRepo.findById(incidentId)
-                .orElseThrow(() -> new RuntimeException("Incident not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Incident not found"));
         if (req.status          != null) i.setStatus(req.status.toUpperCase());
         if (req.resolutionNotes != null) i.setResolutionNotes(req.resolutionNotes);
         if ("RESOLVED".equalsIgnoreCase(req.status) || "CLOSED".equalsIgnoreCase(req.status)) {
