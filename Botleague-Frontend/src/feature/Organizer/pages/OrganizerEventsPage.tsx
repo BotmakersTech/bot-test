@@ -5,7 +5,6 @@ import { getMyEvents, type OrganizerEvent } from "../api/organizer.api"
 
 // ── theme ─────────────────────────────────────────────────────────────────────
 const P      = "#8C6CFF"
-const BLUE   = "#0162D1"
 const BG     = "#F4F3FF"
 const SURF   = "#FFFFFF"
 const BORDER = "#E0D9FF"

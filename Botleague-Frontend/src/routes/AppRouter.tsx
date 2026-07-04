@@ -103,8 +103,6 @@ import OrganizerCertificatesPage  from "../feature/Organizer/pages/OrganizerCert
 import OrganizerAnalyticsPage     from "../feature/Organizer/pages/OrganizerAnalyticsPage";
 import OrganizerSettingsPage      from "../feature/Organizer/pages/OrganizerSettingsPage";
 import SubOrganizerSportsPage        from "../feature/SubOrganizer/pages/SubOrganizerSportsPage";
-import SubOrganizerRegistrationsPage from "../feature/SubOrganizer/pages/SubOrganizerRegistrationsPage";
-import SubOrganizerMatchesPage       from "../feature/SubOrganizer/pages/SubOrganizerMatchesPage";
 import SubOrganizerScoresPage        from "../feature/SubOrganizer/pages/SubOrganizerScoresPage";
 import SubOrganizerAnnouncementsPage from "../feature/SubOrganizer/pages/SubOrganizerAnnouncementsPage";
 

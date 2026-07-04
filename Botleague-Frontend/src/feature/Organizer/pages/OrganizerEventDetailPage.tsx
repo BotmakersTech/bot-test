@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import {
   ArrowLeft, Save, Edit3, X, ExternalLink,
-  CalendarDays, MapPin, Globe, Building2, Trophy, Users, CheckCircle2,
+  CalendarDays, Trophy, Users, CheckCircle2,
 } from "lucide-react"
 import {
   getMyEventById, updateEventInfo, changeEventStatus, submitSportForApproval, toggleSportRegistration,
@@ -81,8 +81,6 @@ function InfoRow({ label, value }: { label: string; value?: string | null }) {
 
 function SportRow({ sport, eventId, onRefresh }: { sport: OrganizerSport; eventId: string; onRefresh: () => void }) {
   const [busy, setBusy] = useState(false)
-  const sMap = SPORT_STATUS_MAP
-  const s = sMap[sport.status?.toUpperCase()] ?? sMap.DRAFT
 
   const doSubmit = async () => {
     setBusy(true)

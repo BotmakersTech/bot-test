@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { FileText, Trophy, Users, Activity } from "lucide-react"
+import { FileText, Users } from "lucide-react"
 import {
   getMyEvents, getRegistrationsForSport,
   type OrganizerEvent, type OrganizerSport,
