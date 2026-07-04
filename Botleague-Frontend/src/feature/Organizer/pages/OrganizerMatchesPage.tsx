@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react"
 import { Search } from "lucide-react"
 import {
-  getMyEvents, getMatchesForSport,
+  getMyEvents, getMySports, getMatchesForSport,
   type OrganizerEvent, type OrganizerSport, type OrganizerMatch,
 } from "../api/organizer.api"
 
@@ -34,28 +34,39 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function OrganizerMatchesPage() {
-  const [events,  setEvents]  = useState<OrganizerEvent[]>([])
-  const [matches, setMatches] = useState<OrganizerMatch[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error,   setError]   = useState<string | null>(null)
+  const [events,     setEvents]     = useState<OrganizerEvent[]>([])
+  const [sportsList, setSportsList] = useState<OrganizerSport[]>([])
+  const [matches,    setMatches]    = useState<OrganizerMatch[]>([])
+  const [loading,    setLoading]    = useState(false)
+  const [error,      setError]      = useState<string | null>(null)
 
   const [selectedEventId,  setSelectedEventId]  = useState("")
   const [selectedSportId,  setSelectedSportId]  = useState("")
   const [statusFilter,     setStatusFilter]     = useState<MatchStatus>("ALL")
   const [search,           setSearch]           = useState("")
 
-  const selectedEvent  = events.find(e => e.id === selectedEventId)
-  const sports: OrganizerSport[] = (selectedEvent?.sports ?? []) as OrganizerSport[]
+  const loadFallbackSports = () => {
+    getMySports().then(sps => {
+      setSportsList(sps)
+      if (sps.length > 0) setSelectedSportId(sps[0].id)
+    }).catch(() => {})
+  }
 
   useEffect(() => {
-    getMyEvents().then(evts => {
-      setEvents(evts)
-      if (evts.length > 0) {
-        setSelectedEventId(evts[0].id)
-        const first = evts[0].sports?.[0]
-        if (first) setSelectedSportId(first.id)
-      }
-    })
+    getMyEvents()
+      .then(evts => {
+        if (evts.length > 0) {
+          setEvents(evts)
+          setSelectedEventId(evts[0].id)
+          const evSports = (evts[0].sports ?? []) as OrganizerSport[]
+          setSportsList(evSports)
+          if (evSports.length > 0) setSelectedSportId(evSports[0].id)
+        } else {
+          loadFallbackSports()
+        }
+      })
+      .catch(loadFallbackSports)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const loadMatches = useCallback(async () => {
@@ -73,8 +84,9 @@ export default function OrganizerMatchesPage() {
   const handleEventChange = (evId: string) => {
     setSelectedEventId(evId)
     const ev = events.find(e => e.id === evId)
-    const first = ev?.sports?.[0]
-    setSelectedSportId(first?.id ?? "")
+    const evSports = (ev?.sports ?? []) as OrganizerSport[]
+    setSportsList(evSports)
+    setSelectedSportId(evSports[0]?.id ?? "")
     setMatches([])
   }
 
@@ -120,15 +132,17 @@ export default function OrganizerMatchesPage() {
 
       {/* Filters */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "14px" }}>
-        <select value={selectedEventId} onChange={e => handleEventChange(e.target.value)}
+        {events.length > 0 && (
+          <select value={selectedEventId} onChange={e => handleEventChange(e.target.value)}
+            style={{ height: "40px", background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "10px", color: TEXT, fontSize: "0.85rem", padding: "0 14px", outline: "none", cursor: "pointer" }}>
+            <option value="">— Select Event —</option>
+            {events.map(ev => <option key={ev.id} value={ev.id}>{ev.eventName}</option>)}
+          </select>
+        )}
+        <select value={selectedSportId} onChange={e => setSelectedSportId(e.target.value)}
           style={{ height: "40px", background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "10px", color: TEXT, fontSize: "0.85rem", padding: "0 14px", outline: "none", cursor: "pointer" }}>
-          <option value="">— Select Event —</option>
-          {events.map(ev => <option key={ev.id} value={ev.id}>{ev.eventName}</option>)}
-        </select>
-        <select value={selectedSportId} onChange={e => setSelectedSportId(e.target.value)} disabled={!selectedEventId}
-          style={{ height: "40px", background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "10px", color: TEXT, fontSize: "0.85rem", padding: "0 14px", outline: "none", cursor: "pointer", opacity: !selectedEventId ? 0.5 : 1 }}>
           <option value="">— Select Sport —</option>
-          {sports.map(sp => <option key={sp.id} value={sp.id}>{toLabel(sp.sport)}{sp.ageGroup ? ` · ${toLabel(sp.ageGroup)}` : ""}</option>)}
+          {sportsList.map(sp => <option key={sp.id} value={sp.id}>{toLabel(sp.sport)}{sp.ageGroup ? ` · ${toLabel(sp.ageGroup)}` : ""}</option>)}
         </select>
         <div style={{ flex: 1, minWidth: "200px", position: "relative" }}>
           <Search size={14} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: MUTED, pointerEvents: "none" }} />

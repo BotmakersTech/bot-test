@@ -1,6 +1,8 @@
-import mascote from ".././assets/mascote.png";
-import bg_1 from ".././assets/bg-1.png";
-import bg_2 from ".././assets/bg-2.png";
+import flight from ".././assets/Auth/flight.svg";
+import drone from ".././assets/Auth/drone.svg";
+import star1 from ".././assets/Auth/Star-18.svg";
+import star2 from ".././assets/Auth/Star-19.svg";
+import "../styles/AuthLayout.css";
 
 const LOGO_URL = "https://botleague.in/logo/bot.png";
 
@@ -10,59 +12,59 @@ interface Props {
 
 export default function AuthLayout({ children }: Props) {
   return (
-    <div className="cna-root">
+    <div className="cna-root relative min-h-screen overflow-hidden bg-white">
+      {/* ---------- Background decorations (fixed corners, behind card) ---------- */}
 
-      {/* Background Images */}
-      {bg_1 && (
-        <img
-          src={bg_1}
-          alt=""
-          aria-hidden="true"
-          className="cna-bg cna-bg--top-right"
-        />
-      )}
+      {/* Plane — upper left */}
+      <img
+        src={flight}
+        alt=""
+        aria-hidden="true"
+        className="cna-bg cna-bg--flight"
+      />
 
-      {bg_2 && (
-        <img
-          src={bg_2}
-          alt=""
-          aria-hidden="true"
-          className="cna-bg cna-bg--bottom-left"
-        />
-      )}
+      {/* Big star — top right */}
+      <img
+        src={star1}
+        alt=""
+        aria-hidden="true"
+        className="cna-bg cna-bg--star-tr"
+      />
 
-      <div className="cna-card">
+      {/* Drone — right, vertically centered-ish */}
+      <img
+        src={drone}
+        alt=""
+        aria-hidden="true"
+        className="cna-bg cna-bg--drone"
+      />
 
-        {/* LEFT PANEL (STATIC) */}
-        <div className="cna-panel cna-panel--left">
+      {/* Small star — bottom left */}
+      <img
+        src={star2}
+        alt=""
+        aria-hidden="true"
+        className="cna-bg cna-bg--star-bl"
+      />
 
-          {/* Logo */}
+      {/* ---------- Foreground content ---------- */}
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-8">
+        {/* Logo */}
+        <div className="flex justify-center pb-6">
           <img
             src={LOGO_URL}
             alt="BotLeague"
-            className="cna-logo"
+            className="cna-logo h-10 md:h-14 object-contain"
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = "none";
             }}
           />
-
-          {/* Mascot */}
-          <div className="cna-mascot-wrapper">
-            {mascote && (
-              <img
-                src={mascote}
-                alt="Mascot"
-                className="cna-mascot"
-              />
-            )}
-          </div>
         </div>
 
-        {/* RIGHT PANEL (DYNAMIC CONTENT) */}
-        <div className="cna-panel cna-panel--right">
-          {children}
+        {/* Card — gradient border, white body */}
+        <div className="cna-card w-full max-w-170">
+          <div className="cna-card-inner">{children}</div>
         </div>
-
       </div>
     </div>
   );

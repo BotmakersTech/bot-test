@@ -54,13 +54,21 @@ export default function RegisterPage() {
           </p>
         )}
 
-   <button
-          onClick={register.handleRegister}
-          className="cna-btn cna-btn--light cna-btn--full "
-          disabled={register.isLoading}
-        >
-          {register.isLoading ? "Loading..." : "Create Account"}
-        </button>
+  <button
+  onClick={register.handleRegister}
+  className="shadow-xs text-white tracking-wide cursor-pointer text-[14px] md:text-[18px] w-full bg-custom-gradient
+  px-1.5 py-2.5 md:py-4 md:px-2 font-poppins font-semibold rounded-xl transition-transform duration-150 active:scale-95
+  disabled:opacity-60 disabled:cursor-not-allowed"
+  disabled={register.isLoading}
+>
+  {register.isLoading ? "Loading..." : "Create Account"}
+</button>
+
+{register.error && (
+  <p className="text-red-500 text-[10px] md:text-[12px] font-inter text-center">
+    {register.error}
+  </p>
+)}
         {/* SUBMIT */}
      
 

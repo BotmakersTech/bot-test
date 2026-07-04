@@ -63,7 +63,7 @@
   justify-content: center;
   min-height: 100vh;
   overflow: hidden;
-  background: linear-gradient(135deg, #F4F3FF 0%, #EDE9FE 50%, #F4F3FF 100%);
+ 
   font-family: var(--cna-font);
 }
 

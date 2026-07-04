@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { Search, Users } from "lucide-react"
 import {
-  getMyEvents, getRegistrationsForSport,
+  getMyEvents, getMySports, getRegistrationsForSport,
   type OrganizerEvent, type OrganizerSport, type OrganizerTeamRegistration,
 } from "../api/organizer.api"
 
@@ -35,16 +35,25 @@ export default function OrganizerRegistrationsPage() {
     setLoadingEvents(true)
     getMyEvents()
       .then(evts => {
-        setEvents(evts)
         if (evts.length > 0) {
+          setEvents(evts)
           const first = evts[0]
           setSelectedEventId(first.id)
           const evSports = (first.sports ?? []) as OrganizerSport[]
           setSports(evSports)
           if (evSports.length > 0) setSelectedSportId(evSports[0].id)
+        } else {
+          getMySports().then(sps => {
+            setSports(sps)
+            if (sps.length > 0) setSelectedSportId(sps[0].id)
+          }).catch(() => {})
         }
       })
-      .catch(() => setError("Failed to load events"))
+      .catch(() => {
+        getMySports()
+          .then(sps => { setSports(sps); if (sps.length > 0) setSelectedSportId(sps[0].id) })
+          .catch(() => setError("Failed to load sports"))
+      })
       .finally(() => setLoadingEvents(false))
   }, [])
 
@@ -100,13 +109,15 @@ export default function OrganizerRegistrationsPage() {
 
       {/* Selectors */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "20px" }}>
-        <select value={selectedEventId} onChange={e => handleEventChange(e.target.value)} disabled={loadingEvents}
+        {events.length > 0 && (
+          <select value={selectedEventId} onChange={e => handleEventChange(e.target.value)} disabled={loadingEvents}
+            style={{ height: "40px", background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "10px", color: TEXT, fontSize: "0.85rem", padding: "0 14px", outline: "none", cursor: "pointer" }}>
+            <option value="">— Select Event —</option>
+            {events.map(ev => <option key={ev.id} value={ev.id}>{ev.eventName}</option>)}
+          </select>
+        )}
+        <select value={selectedSportId} onChange={e => setSelectedSportId(e.target.value)}
           style={{ height: "40px", background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "10px", color: TEXT, fontSize: "0.85rem", padding: "0 14px", outline: "none", cursor: "pointer" }}>
-          <option value="">— Select Event —</option>
-          {events.map(ev => <option key={ev.id} value={ev.id}>{ev.eventName}</option>)}
-        </select>
-        <select value={selectedSportId} onChange={e => setSelectedSportId(e.target.value)} disabled={!selectedEventId}
-          style={{ height: "40px", background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "10px", color: TEXT, fontSize: "0.85rem", padding: "0 14px", outline: "none", cursor: "pointer", opacity: !selectedEventId ? 0.5 : 1 }}>
           <option value="">— Select Sport —</option>
           {sports.map(sp => <option key={sp.id} value={sp.id}>{toLabel(sp.sport)}{sp.ageGroup ? ` · ${toLabel(sp.ageGroup)}` : ""}</option>)}
         </select>

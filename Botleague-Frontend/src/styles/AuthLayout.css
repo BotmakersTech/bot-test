@@ -1,0 +1,79 @@
+/* ============ AuthLayout — BotLeague ============ */
+
+.cna-root {
+  background: #ffffff;
+}
+
+/* ---- Background decorations ---- */
+.cna-bg {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.9; /* the assets themselves look faded; raise/lower to taste */
+}
+
+/* Plane — upper left, slightly off-canvas, tilted like the mock */
+.cna-bg--flight {
+  top: 4%;
+  left: -2%;
+  width: clamp(160px, 18vw, 280px);
+  transform: rotate(-8deg);
+}
+
+/* Big outlined star — top right */
+.cna-bg--star-tr {
+  top: 6%;
+  right: 8%;
+  width: clamp(80px, 10vw, 160px);
+}
+
+/* Drone — right edge, middle/lower */
+.cna-bg--drone {
+  top: 52%;
+  right: -3%;
+  width: clamp(200px, 22vw, 340px);
+}
+
+/* Small outlined star — bottom left */
+.cna-bg--star-bl {
+  bottom: 18%;
+  left: 6%;
+  width: clamp(50px, 6vw, 90px);
+}
+
+/* Hide heavy decorations on small screens so the form stays clean */
+@media (max-width: 768px) {
+  .cna-bg--flight,
+  .cna-bg--drone {
+    display: none;
+  }
+  .cna-bg--star-tr {
+    right: 2%;
+    width: 70px;
+  }
+  .cna-bg--star-bl {
+    left: 2%;
+    width: 44px;
+  }
+}
+
+/* ---- Card with blue → purple gradient border ---- */
+.cna-card {
+  border-radius: 24px;
+  padding: 3px; /* border thickness */
+  background: linear-gradient(180deg, #3b82f6 0%, #8b7cf6 100%);
+  box-shadow: 0 12px 40px rgba(59, 130, 246, 0.12);
+}
+
+.cna-card-inner {
+  border-radius: 21px; /* outer radius - padding */
+  background: #ffffff;
+  padding: 32px 40px 40px;
+}
+
+@media (max-width: 640px) {
+  .cna-card-inner {
+    padding: 24px 20px 28px;
+  }
+}
