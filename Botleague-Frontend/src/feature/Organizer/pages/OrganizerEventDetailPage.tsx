@@ -5,7 +5,7 @@ import {
   CalendarDays, Trophy, Users, CheckCircle2,
 } from "lucide-react"
 import {
-  getMyEventById, updateEventInfo, changeEventStatus, submitSportForApproval, toggleSportRegistration,
+  getMyEvents, updateEventInfo, changeEventStatus, submitSportForApproval, toggleSportRegistration,
   type OrganizerEvent, type OrganizerSport, type UpdateEventInfoRequest,
 } from "../api/organizer.api"
 
@@ -157,8 +157,15 @@ export default function OrganizerEventDetailPage() {
   const load = useCallback(() => {
     if (!eventId) return
     setLoading(true)
-    getMyEventById(eventId)
-      .then(ev => { setEvent(ev); setForm({ eventName: ev.eventName, eventDescription: ev.eventDescription ?? "", venueName: ev.venueName ?? "", venueAddress: ev.venueAddress ?? "", city: ev.city ?? "", state: ev.state ?? "", country: ev.country ?? "", organizationName: ev.organizationName ?? "", organizationUrl: ev.organizationUrl ?? "" }); setNewStatus(ev.status ?? "") })
+    getMyEvents()
+      .then(evts => {
+        const ev = evts.find(e => e.id === eventId) ?? null
+        setEvent(ev)
+        if (ev) {
+          setForm({ eventName: ev.eventName, eventDescription: ev.eventDescription ?? "", venueName: ev.venueName ?? "", venueAddress: ev.venueAddress ?? "", city: ev.city ?? "", state: ev.state ?? "", country: ev.country ?? "", organizationName: ev.organizationName ?? "", organizationUrl: ev.organizationUrl ?? "" })
+          setNewStatus(ev.status ?? "")
+        }
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [eventId])
