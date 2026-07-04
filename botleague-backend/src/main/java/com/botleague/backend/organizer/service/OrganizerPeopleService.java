@@ -1,4 +1,4 @@
-﻿package com.botleague.backend.organizer.service;
+ackage com.botleague.backend.organizer.service;
 
 import com.botleague.backend.organizer.dto.OrganizerDTOs.*;
 import com.botleague.backend.organizer.entity.*;

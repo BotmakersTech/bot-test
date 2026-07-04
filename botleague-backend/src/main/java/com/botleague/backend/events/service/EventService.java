@@ -1,4 +1,4 @@
-﻿package com.botleague.backend.events.service;
+ackage com.botleague.backend.events.service;
 
 import java.util.List;
 import java.util.UUID;

@@ -1,4 +1,4 @@
-﻿package com.botleague.backend.organizer.service;
+ackage com.botleague.backend.organizer.service;
 
 import com.botleague.backend.admin.repository.UserEventAssignmentRepository;
 import com.botleague.backend.events.dto.CreateEventResponseDTO;
