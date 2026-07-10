@@ -109,7 +109,9 @@
       "PowerShell($env:PGPASSWORD = \"admin123\"; & \"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -c \"SELECT conname, pg_get_constraintdef\\(oid\\) FROM pg_constraint WHERE conname = 'event_registration_lineups_lineup_role_check';\")",
       "PowerShell($env:PGPASSWORD = \"admin123\"; & \"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -c \"BEGIN; ALTER TABLE event_registration_lineups DROP CONSTRAINT event_registration_lineups_lineup_role_check; UPDATE event_registration_lineups SET lineup_role = 'DRIVER' WHERE lineup_role = 'OPERATOR'; UPDATE event_registration_lineups SET lineup_role = 'SECONDARY_DRIVER' WHERE lineup_role = 'CO_OPERATOR'; UPDATE event_registration_lineups SET lineup_role = 'BUILD_HEAD' WHERE lineup_role = 'TECHNICIAN'; UPDATE event_registration_lineups SET lineup_role = 'BUILD_HEAD', is_active = false WHERE lineup_role = 'BUILDER'; ALTER TABLE event_registration_lineups ADD CONSTRAINT event_registration_lineups_lineup_role_check CHECK \\(lineup_role IN \\('DRIVER','SECONDARY_DRIVER','BUILD_HEAD'\\)\\); COMMIT;\")",
       "Bash(git check-ignore *)",
-      "PowerShell($env:PGPASSWORD = \"admin123\"; & \"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -c \"ALTER TABLE events DROP COLUMN IF EXISTS tier;\")"
+      "PowerShell($env:PGPASSWORD = \"admin123\"; & \"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -c \"ALTER TABLE events DROP COLUMN IF EXISTS tier;\")",
+      "Bash(curl -s \"http://localhost:5173/src/feature/Organizer/pages/OrganizerEventDetailPage.tsx\" -o /dev/null -w \"organizer-page: %{http_code}\\\\n\")",
+      "Bash(curl -s \"http://localhost:5173/src/feature/Organizer/api/organizer.api.ts\" -o /dev/null -w \"organizer-api: %{http_code}\\\\n\")"
     ]
   }
 }
