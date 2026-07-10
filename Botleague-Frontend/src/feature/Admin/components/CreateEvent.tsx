@@ -271,8 +271,7 @@ function CreateEvent() {
                             name="eventDescription"
                             value={formData.eventDescription}
                             onChange={handleChange}
-                            placeholder="Write event details..."
-                            required
+                            placeholder="Write event details... (optional)"
                         />
 
                         {/* FILE */}
@@ -322,14 +321,13 @@ function CreateEvent() {
                     </Section>
 
                     {/* ORGANIZATION */}
-                    <Section title="Organization">
+                    <Section title="Organization (optional)">
                         <Input
                             icon={<Building2 size={16} />}
                             label="Organization Name"
                             name="organizationName"
                             value={formData.organizationName}
                             onChange={handleChange}
-                            required
                         />
 
                         <Input
@@ -343,14 +341,13 @@ function CreateEvent() {
                     </Section>
 
                     {/* VENUE */}
-                    <Section title="Venue">
+                    <Section title="Venue (optional)">
                         <Input
                             icon={<MapPin size={16} />}
                             label="Venue Name"
                             name="venueName"
                             value={formData.venueName}
                             onChange={handleChange}
-                            required
                         />
 
                         <Input
@@ -359,7 +356,6 @@ function CreateEvent() {
                             name="venueAddress"
                             value={formData.venueAddress}
                             onChange={handleChange}
-                            required
                         />
 
                         <LocationSelects
@@ -369,7 +365,6 @@ function CreateEvent() {
                             onCountry={v => setFormData(f => ({ ...f, country: v }))}
                             onState={v => setFormData(f => ({ ...f, state: v }))}
                             onCity={v => setFormData(f => ({ ...f, city: v }))}
-                            required
                             gridStyle={{
                                 display: "grid",
                                 gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
@@ -379,7 +374,7 @@ function CreateEvent() {
                     </Section>
 
                     {/* DATES */}
-                    <Section title="Event Dates">
+                    <Section title="Event Dates (optional)">
                         <div
                             style={{
                                 display: "grid",
@@ -395,7 +390,6 @@ function CreateEvent() {
                                 name="startDate"
                                 value={formData.startDate}
                                 onChange={handleChange}
-                                required
                             />
 
                             <Input
@@ -405,7 +399,6 @@ function CreateEvent() {
                                 name="endDate"
                                 value={formData.endDate}
                                 onChange={handleChange}
-                                required
                             />
                         </div>
                     </Section>

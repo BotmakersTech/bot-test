@@ -1,10 +1,13 @@
-import React, { useState } from "react"
+import React, { useCallback, useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ArrowLeft, Plus, X, ChevronDown, Info, Calendar, Users, Trophy, Swords, Tag, Edit2, Trash2 } from "lucide-react"
+import { ArrowLeft, Plus, X, ChevronDown, Info, Calendar, Users, Trophy, Swords, Tag, Edit2, Trash2, UserPlus } from "lucide-react"
 import { useSelector } from "react-redux"
 import { useAdminEvents } from "../hooks/UseAdminEvent"
 import { useEventRealtime } from "../../../shared/realtime/useEventRealtime"
-import type { CreateEventSportRequest, UpdateEventRequest } from "../api/admin.api"
+import {
+  searchUsers, getEventAssignments, assignOrganizerToEvent, unassignOrganizerFromEvent,
+  type CreateEventSportRequest, type UpdateEventRequest, type UserSearchResult, type EventAssignment,
+} from "../api/admin.api"
 import type { RootState } from "../../../app/store"
 import { hasRole, AppRole } from "../../../shared/constants/roles"
 import LocationSelects from "../../../shared/components/LocationSelects"
@@ -770,6 +773,159 @@ function EditEventModal({ event, onSave, saving, onClose, limitedEdit = false }:
 }
 
 // ─────────────────────────────────────────────────────────────
+// ASSIGN ORGANIZER PANEL
+// — search a user, assign them to this event (grants ORGANIZER role
+//   if they don't already have it), list/remove current assignees.
+// ─────────────────────────────────────────────────────────────
+
+function AssignOrganizerPanel({ eventId }: { eventId: string }) {
+  const [assignments, setAssignments] = useState<EventAssignment[]>([])
+  const [loading, setLoading]         = useState(true)
+  const [query, setQuery]             = useState("")
+  const [results, setResults]         = useState<UserSearchResult[]>([])
+  const [searching, setSearching]     = useState(false)
+  const [assigning, setAssigning]     = useState<string | null>(null)
+  const [removing, setRemoving]       = useState<string | null>(null)
+  const [error, setError]             = useState<string | null>(null)
+
+  const loadAssignments = useCallback(() => {
+    setLoading(true)
+    getEventAssignments(eventId)
+      .then(setAssignments)
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [eventId])
+
+  useEffect(() => { loadAssignments() }, [loadAssignments])
+
+  useEffect(() => {
+    if (query.trim().length < 2) { setResults([]); return }
+    setSearching(true)
+    const timeout = setTimeout(() => {
+      searchUsers(query.trim())
+        .then(setResults)
+        .catch(() => setResults([]))
+        .finally(() => setSearching(false))
+    }, 300)
+    return () => clearTimeout(timeout)
+  }, [query])
+
+  const handleAssign = async (userId: string) => {
+    setAssigning(userId)
+    setError(null)
+    try {
+      await assignOrganizerToEvent(userId, eventId)
+      setQuery("")
+      setResults([])
+      loadAssignments()
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Failed to assign organizer.")
+    } finally {
+      setAssigning(null)
+    }
+  }
+
+  const handleRemove = async (userId: string) => {
+    setRemoving(userId)
+    setError(null)
+    try {
+      await unassignOrganizerFromEvent(userId, eventId)
+      loadAssignments()
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Failed to remove organizer.")
+    } finally {
+      setRemoving(null)
+    }
+  }
+
+  const assignedUserIds = new Set(assignments.map(a => a.userId))
+
+  return (
+    <div style={{ background: CARD2, border: "1px solid rgba(250,71,21,0.14)", borderRadius: "16px", overflow: "hidden", marginTop: "24px" }}>
+      <div style={{ padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, background: "rgba(250,71,21,0.04)", display: "flex", alignItems: "center", gap: "10px" }}>
+        <UserPlus size={15} style={{ color: ACCENT }} />
+        <span style={{ fontWeight: 700, letterSpacing: "0.06em", fontSize: "0.85rem" }}>ASSIGNED ORGANIZERS</span>
+        <span style={{ background: "rgba(250,71,21,0.13)", border: "1px solid rgba(250,71,21,0.28)", color: ACCENT, borderRadius: "999px", fontSize: "0.65rem", fontWeight: 800, padding: "1px 9px" }}>{assignments.length}</span>
+      </div>
+
+      <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: "14px" }}>
+        {/* search */}
+        <div style={{ position: "relative" }}>
+          <input
+            style={inputStyle}
+            placeholder="Search users by name, phone, or BotLeague ID…"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+          />
+          {query.trim().length >= 2 && (
+            <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, zIndex: 5, background: "#2a2a2a", border: `1px solid ${BORDER}`, borderRadius: "10px", maxHeight: "260px", overflowY: "auto", boxShadow: "0 12px 30px rgba(0,0,0,0.4)" }}>
+              {searching ? (
+                <div style={{ padding: "14px", color: MUTED, fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "8px" }}><Spinner size={14} />Searching…</div>
+              ) : results.length === 0 ? (
+                <div style={{ padding: "14px", color: MUTED, fontSize: "0.82rem" }}>No users found.</div>
+              ) : (
+                results.map(u => {
+                  const already = assignedUserIds.has(u.id)
+                  return (
+                    <button
+                      key={u.id}
+                      type="button"
+                      onClick={() => !already && handleAssign(u.id)}
+                      disabled={already || assigning === u.id}
+                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", padding: "10px 14px", background: "transparent", border: "none", borderBottom: `1px solid ${BORDER}`, color: TEXT, textAlign: "left", cursor: already ? "default" : "pointer" }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: "0.85rem" }}>{u.firstName} {u.lastName} <span style={{ color: MUTED, fontWeight: 500 }}>· {u.botleagueId}</span></div>
+                        <div style={{ color: MUTED, fontSize: "0.72rem" }}>{u.phone || u.email}</div>
+                      </div>
+                      {already ? (
+                        <span style={{ color: SUCCESS, fontSize: "0.72rem", fontWeight: 700 }}>✓ Assigned</span>
+                      ) : assigning === u.id ? (
+                        <Spinner size={14} />
+                      ) : (
+                        <span style={{ color: ACCENT, fontSize: "0.72rem", fontWeight: 700 }}>+ Assign</span>
+                      )}
+                    </button>
+                  )
+                })
+              )}
+            </div>
+          )}
+        </div>
+
+        {error && <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "8px", padding: "8px 12px", color: DANGER, fontSize: "0.78rem", fontWeight: 600 }}>⚠️ {error}</div>}
+
+        {/* current assignments */}
+        {loading ? (
+          <div style={{ color: MUTED, fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "8px" }}><Spinner size={14} />Loading…</div>
+        ) : assignments.length === 0 ? (
+          <div style={{ color: MUTED, fontSize: "0.82rem" }}>No organizers assigned yet — search above to assign one.</div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {assignments.map(a => (
+              <div key={a.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}`, borderRadius: "9px", padding: "10px 14px" }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: "0.85rem" }}>{a.userDisplayName || a.username}</div>
+                  <div style={{ color: MUTED, fontSize: "0.72rem" }}>{a.userEmail}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemove(a.userId)}
+                  disabled={removing === a.userId}
+                  style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", color: DANGER, borderRadius: "7px", padding: "6px 12px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                >
+                  {removing === a.userId ? <Spinner size={12} color={DANGER} /> : <X size={12} />} Remove
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────
 // PAGE WRAPPER
 // ─────────────────────────────────────────────────────────────
 
@@ -1042,11 +1198,14 @@ export default function AdminEventPage() {
             <InfoCell label="State"        value={event.state} />
             <InfoCell label="Country"      value={event.country} />
             <InfoCell label="Venue"        value={event.venueName} />
-            <InfoCell label="Start Date"   value={new Date(event.startDate).toLocaleDateString("en-IN")} />
-            <InfoCell label="End Date"     value={new Date(event.endDate).toLocaleDateString("en-IN")} />
+            <InfoCell label="Start Date"   value={event.startDate ? new Date(event.startDate).toLocaleDateString("en-IN") : undefined} />
+            <InfoCell label="End Date"     value={event.endDate ? new Date(event.endDate).toLocaleDateString("en-IN") : undefined} />
           </div>
         </div>
       </div>
+
+      {/* ASSIGN ORGANIZER — ADMINISTRATOR+ */}
+      {eventId && isAdmin && <AssignOrganizerPanel eventId={eventId} />}
 
       {/* SPORTS LIST */}
       {eventId && (

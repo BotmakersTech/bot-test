@@ -14,6 +14,7 @@ import com.botleague.backend.events.repository.EventSportsRepository;
 import com.botleague.backend.organizer.dto.AssignmentResponse;
 import com.botleague.backend.organizer.dto.EventAssignmentRequest;
 import com.botleague.backend.organizer.dto.SportAssignmentRequest;
+import com.botleague.backend.role.service.UserRoleService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,18 +31,21 @@ public class OrganizerAssignmentService {
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
     private final EventSportsRepository eventSportsRepository;
+    private final UserRoleService userRoleService;
 
     public OrganizerAssignmentService(
             UserEventAssignmentRepository eventAssignmentRepo,
             UserSportAssignmentRepository sportAssignmentRepo,
             UserRepository userRepository,
             EventRepository eventRepository,
-            EventSportsRepository eventSportsRepository) {
+            EventSportsRepository eventSportsRepository,
+            UserRoleService userRoleService) {
         this.eventAssignmentRepo  = eventAssignmentRepo;
         this.sportAssignmentRepo  = sportAssignmentRepo;
         this.userRepository       = userRepository;
         this.eventRepository      = eventRepository;
         this.eventSportsRepository = eventSportsRepository;
+        this.userRoleService      = userRoleService;
     }
 
     // ── Event assignments ──────────────────────────────────────────────────────
@@ -64,6 +68,10 @@ public class OrganizerAssignmentService {
         assignment.setEventId(eventId);
         assignment.setAssignedBy(assignedBy);
         UserEventAssignment saved = eventAssignmentRepo.save(assignment);
+
+        // Assigning someone to an event as organizer grants them the ORGANIZER
+        // role if they don't already hold it — idempotent, no-op if present.
+        userRoleService.ensureOrganiserRole(userId);
 
         return toEventAssignmentResponse(saved, event);
     }

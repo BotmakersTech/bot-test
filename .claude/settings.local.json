@@ -111,7 +111,12 @@
       "Bash(git check-ignore *)",
       "PowerShell($env:PGPASSWORD = \"admin123\"; & \"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -c \"ALTER TABLE events DROP COLUMN IF EXISTS tier;\")",
       "Bash(curl -s \"http://localhost:5173/src/feature/Organizer/pages/OrganizerEventDetailPage.tsx\" -o /dev/null -w \"organizer-page: %{http_code}\\\\n\")",
-      "Bash(curl -s \"http://localhost:5173/src/feature/Organizer/api/organizer.api.ts\" -o /dev/null -w \"organizer-api: %{http_code}\\\\n\")"
+      "Bash(curl -s \"http://localhost:5173/src/feature/Organizer/api/organizer.api.ts\" -o /dev/null -w \"organizer-api: %{http_code}\\\\n\")",
+      "Bash(git revert *)",
+      "Bash(git checkout *)",
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"ProcessId=203612\")",
+      "PowerShell(Stop-Process -Id 203612 -Force -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 8081 -ErrorAction SilentlyContinue)"
     ]
   }
 }

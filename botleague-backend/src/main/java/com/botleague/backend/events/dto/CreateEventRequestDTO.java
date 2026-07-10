@@ -3,7 +3,6 @@ package com.botleague.backend.events.dto;
 import java.time.LocalDate;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 public class CreateEventRequestDTO {
@@ -14,7 +13,6 @@ public class CreateEventRequestDTO {
     @NotBlank(message = "Event name is required")
     private String eventName;
 
-    @NotBlank(message = "Event description is required")
     private String eventDescription;
 
     private String eventLogoUrl;
@@ -22,7 +20,6 @@ public class CreateEventRequestDTO {
     // =========================
     // Organizer Info
     // =========================
-    @NotBlank(message = "Organization name is required")
     private String organizationName;
 
     private String organizationUrl;
@@ -30,37 +27,28 @@ public class CreateEventRequestDTO {
     // =========================
     // Location
     // =========================
-    @NotBlank(message = "Venue name is required")
     private String venueName;
 
-    @NotBlank(message = "Venue address is required")
     private String venueAddress;
 
-    @NotBlank(message = "City is required")
     private String city;
 
-    @NotBlank(message = "State is required")
     private String state;
 
-    @NotBlank(message = "Country is required")
     private String country;
 
     // =========================
     // Timeline
     // =========================
-    @NotNull(message = "Start date is required")
     private LocalDate startDate;
 
-    @NotNull(message = "End date is required")
     private LocalDate endDate;
 
-    @NotNull(message = "Registration deadline is required")
     private LocalDate registrationDeadline;
 
     // =========================
     // Participation
     // =========================
-    @NotNull(message = "Max teams is required")
     @Positive(message = "Max teams must be greater than 0")
     private Integer maxTeams;
 

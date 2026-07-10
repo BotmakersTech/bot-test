@@ -355,3 +355,70 @@ export const changeRegistrationStatus = async (
         return response.data
     }
 
+// =====================================================
+// ORGANIZER ASSIGNMENT — assign a user to manage an event
+// =====================================================
+
+export interface UserSearchResult {
+  id: string
+  botleagueId: string
+  username: string
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  allRoles: string[]
+}
+
+export interface PagedResponse<T> {
+  content: T[]
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+}
+
+export const searchUsers = async (
+  q: string
+): Promise<UserSearchResult[]> => {
+  const response = await api.get<PagedResponse<UserSearchResult>>("/admin/users", {
+    params: { q, page: 0, size: 10 },
+  })
+  return response.data.content
+}
+
+export interface EventAssignment {
+  id: string
+  userId: string
+  username: string
+  userDisplayName: string
+  userEmail: string
+  eventId: string
+  eventName: string
+  eventCode: string
+  assignedBy: string
+  assignedAt: string
+}
+
+export const getEventAssignments = async (
+  eventId: string
+): Promise<EventAssignment[]> => {
+  const response = await api.get<EventAssignment[]>(`/admin/assignments/event/${eventId}`)
+  return response.data
+}
+
+export const assignOrganizerToEvent = async (
+  userId: string,
+  eventId: string
+): Promise<EventAssignment> => {
+  const response = await api.post<EventAssignment>("/admin/assignments/event", { userId, eventId })
+  return response.data
+}
+
+export const unassignOrganizerFromEvent = async (
+  userId: string,
+  eventId: string
+): Promise<void> => {
+  await api.delete("/admin/assignments/event", { params: { userId, eventId } })
+}
+
