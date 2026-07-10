@@ -78,7 +78,7 @@ public class AdminController {
     }
 
     // =====================================================
-    // UPDATE EVENT — full update including tier
+    // UPDATE EVENT — full update
     // ADMINISTRATOR and SUPER_ADMIN only.
     // Organisers use PATCH /api/organizer/events/{id}/info.
     // =====================================================

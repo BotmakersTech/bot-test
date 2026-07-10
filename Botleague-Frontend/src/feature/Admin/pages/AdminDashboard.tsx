@@ -10,7 +10,6 @@ import { useAdminEvents } from "../hooks/useAdmin"
 import type { AdminEventResponse } from "../api/admin.api"
 import { getRecentAuditLogs, type AuditLogEntry } from "../api/auditLog.api"
 import { Link } from "react-router-dom"
-import TierBadge from "../../../shared/components/TierBadge"
 
 // =====================================================
 // HELPERS
@@ -359,7 +358,6 @@ function EventCard({ event }: { event: AdminEventResponse }) {
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px" }}>
-          <TierBadge tier={event.tier} size="sm" />
           <StatusBadge config={cfg} />
         </div>
       </div>

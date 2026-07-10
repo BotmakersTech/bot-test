@@ -62,12 +62,6 @@ export default function AdminAnalyticsPage() {
     return Object.entries(counts).sort(([, a], [, b]) => b - a).slice(0, 8)
   })()
 
-  const tierCounts = (() => {
-    const counts: Record<string, number> = {}
-    events.forEach((e) => { const t = e.tier ?? "UNRANKED"; counts[t] = (counts[t] ?? 0) + 1 })
-    return counts
-  })()
-
   const maxSportCount = sportCounts[0]?.[1] ?? 1
 
   return (
@@ -92,7 +86,7 @@ export default function AdminAnalyticsPage() {
           </div>
 
           {/* Event status breakdown */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 gap-5">
             <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
               <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Event Status</h3>
               <div className="space-y-3">
@@ -106,19 +100,6 @@ export default function AdminAnalyticsPage() {
                   color="bg-gray-500"
                 />
               </div>
-            </div>
-
-            <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Event Tiers</h3>
-              {Object.keys(tierCounts).length === 0 ? (
-                <p className="text-gray-600 text-sm">No tier data</p>
-              ) : (
-                <div className="space-y-3">
-                  {Object.entries(tierCounts).map(([tier, count]) => (
-                    <HorizBar key={tier} label={tier.replace(/_/g, " ")} value={count} max={totalEvents} />
-                  ))}
-                </div>
-              )}
             </div>
           </div>
 

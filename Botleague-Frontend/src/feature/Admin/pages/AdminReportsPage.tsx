@@ -124,7 +124,7 @@ export default function AdminReportsPage() {
                     </div>
 
                     {/* Event stats row */}
-                    <div className="grid grid-cols-3 gap-3 mb-4">
+                    <div className="grid grid-cols-2 gap-3 mb-4">
                       <div className="rounded-lg bg-white/5 p-3 text-center">
                         <p className="text-lg font-bold text-orange-400">{evSports}</p>
                         <p className="text-[10px] text-gray-500 uppercase mt-0.5">Sports</p>
@@ -132,10 +132,6 @@ export default function AdminReportsPage() {
                       <div className="rounded-lg bg-white/5 p-3 text-center">
                         <p className="text-lg font-bold text-blue-400">{evTeams}</p>
                         <p className="text-[10px] text-gray-500 uppercase mt-0.5">Teams</p>
-                      </div>
-                      <div className="rounded-lg bg-white/5 p-3 text-center">
-                        <p className="text-lg font-bold text-purple-400">{ev.tier ?? "—"}</p>
-                        <p className="text-[10px] text-gray-500 uppercase mt-0.5">Tier</p>
                       </div>
                     </div>
 

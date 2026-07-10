@@ -32,8 +32,6 @@ public class CreateEventResponseDTO {
 
     private String status;
 
-    private String tier;
-
     private LocalDateTime createdAt;
 
     // Getters & Setters
@@ -142,13 +140,6 @@ public class CreateEventResponseDTO {
         this.status = status;
     }
 
-    public String getTier() {
-        return tier;
-    }
-
-    public void setTier(String tier) {
-        this.tier = tier;
-    }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;

@@ -71,7 +71,7 @@ public class OrganizerController {
             organizerService.getMySports(extractUserId(auth), extractRoles(auth)));
     }
 
-    /** Organiser-safe event info update (no tier / sport spec changes) */
+    /** Organiser-safe event info update (no sport spec changes) */
     @PatchMapping("/events/{eventId}/info")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
     public ResponseEntity<CreateEventResponseDTO> updateEventInfo(

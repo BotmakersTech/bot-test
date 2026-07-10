@@ -21,8 +21,6 @@ public class AdminAllEventResponse {
 
     private String status;
 
-    private String tier;
-
     private String eventLogoUrl;
 
     // =====================================================
@@ -130,14 +128,6 @@ public class AdminAllEventResponse {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public String getTier() {
-        return tier;
-    }
-
-    public void setTier(String tier) {
-        this.tier = tier;
     }
 
     public String getEventLogoUrl() {

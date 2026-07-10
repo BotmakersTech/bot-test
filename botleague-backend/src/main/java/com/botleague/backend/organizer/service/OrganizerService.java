@@ -94,7 +94,7 @@ public class OrganizerService {
 
     /**
      * ORGANIZER-safe event update — only descriptive / venue / timeline fields.
-     * Tier, status, and sport specifications are NOT touched here.
+     * Status and sport specifications are NOT touched here.
      * ARCHIVED events are read-only for everyone.
      * LIVE / COMPLETED events are read-only for organisers too.
      */
@@ -120,7 +120,7 @@ public class OrganizerService {
                     "Organisers cannot edit events in " + status + " state.");
         }
 
-        // Apply allowed info fields — never touches tier or sport specs
+        // Apply allowed info fields — never touches sport specs
         if (dto.getEventName()        != null) event.setEventName(dto.getEventName());
         if (dto.getEventDescription() != null) event.setEventDescription(dto.getEventDescription());
         if (dto.getEventLogoUrl()     != null) event.setEventLogoUrl(dto.getEventLogoUrl());

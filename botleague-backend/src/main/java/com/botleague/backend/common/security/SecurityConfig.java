@@ -24,7 +24,7 @@ import java.util.List;
  *
  * Roles (AccountType):
  *   SUPER_ADMIN     — unrestricted platform access
- *   ADMINISTRATOR   — user mgmt, event creation, tier/sport-spec changes
+ *   ADMINISTRATOR   — user mgmt, event creation, sport-spec changes
  *   MANAGER         — event operations, registrations, matches, reports
  *   ORGANIZER       — assigned-event management
  *   SUB_ORGANIZER   — assigned-sport management within an event

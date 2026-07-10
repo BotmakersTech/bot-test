@@ -6,7 +6,6 @@ import java.time.LocalDate;
  * Fields an ORGANIZER is permitted to change on an event.
  *
  * Excluded (ADMINISTRATOR / SUPER_ADMIN only):
- *   - tier          — competitive classification, locked after approval
  *   - status        — lifecycle managed by admin via /admin/events/{id}/status
  *   - sport specs   — modified through EventSports endpoints (SUPER_ADMIN only)
  */

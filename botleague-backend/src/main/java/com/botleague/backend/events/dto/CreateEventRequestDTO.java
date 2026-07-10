@@ -74,11 +74,6 @@ public class CreateEventRequestDTO {
     private String notes;
 
     // =========================
-    // Tier
-    // =========================
-    private String tier;
-
-    // =========================
     // Getters & Setters
     // =========================
 
@@ -218,11 +213,4 @@ public class CreateEventRequestDTO {
         this.notes = notes;
     }
 
-    public String getTier() {
-        return tier;
-    }
-
-    public void setTier(String tier) {
-        this.tier = tier;
-    }
 }

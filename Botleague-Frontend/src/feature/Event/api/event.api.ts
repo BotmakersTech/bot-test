@@ -9,8 +9,6 @@ import api from "../../../shared/api/Base";
 // EVENT TYPES
 // ======================================================
 
-export type EventTier = "S_TIER" | "A_TIER" | "B_TIER";
-
 export interface EventResponse {
   id: string;
   eventCode: string;
@@ -25,7 +23,6 @@ export interface EventResponse {
   startDate?: string;
   endDate?: string;
   status: string;
-  tier?: EventTier;
   createdAt: string;
 }
 

@@ -301,7 +301,6 @@ export default function OrganizerEventDetailPage() {
                   <InfoRow label="City"          value={event.city} />
                   <InfoRow label="State"         value={event.state} />
                   <InfoRow label="Country"       value={event.country} />
-                  <InfoRow label="Tier"          value={event.tier} />
                   <div style={{ gridColumn: "1 / -1" }}>
                     <InfoRow label="Description" value={event.eventDescription} />
                   </div>

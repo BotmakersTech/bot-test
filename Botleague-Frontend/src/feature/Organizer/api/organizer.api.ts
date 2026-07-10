@@ -18,7 +18,6 @@ export interface OrganizerEvent {
   startDate: string | null;
   endDate: string | null;
   status: string;
-  tier?: string;
   createdAt: string;
   sports?: OrganizerSport[];
 }

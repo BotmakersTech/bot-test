@@ -2,7 +2,6 @@ import React from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { ArrowLeft, Users, Trophy, Calendar, Tag, Swords, Weight, Zap, DollarSign, Award, Cpu, Ruler, Bot, Edit2, X } from "lucide-react"
 import { useAdminEvents } from "../hooks/UseAdminEvent"
-import TierBadge from "../../../shared/components/TierBadge"
 import { type CreateEventSportRequest } from "../api/admin.api"
 import { finalizeEventLeaderboard } from "../../Rankings/api/rankings.api"
 
@@ -1250,7 +1249,6 @@ export default function AdminSport() {
         {/* event breadcrumb */}
         <div style={{ color: MUTED, fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
           Event: <span style={{ color: LABEL, fontWeight: 600 }}>{event?.eventName}</span>
-          {event?.tier && <TierBadge tier={event.tier} size="sm" />}
         </div>
 
         {/* description */}

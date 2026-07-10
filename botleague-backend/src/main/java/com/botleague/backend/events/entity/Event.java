@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.botleague.backend.events.enums.EventStatus;
-import com.botleague.backend.events.enums.EventTier;
 
 import jakarta.persistence.*;
 
@@ -79,13 +78,6 @@ public class Event {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private EventStatus status = EventStatus.DRAFT;
-
-    // =========================
-    // Prestige Tier
-    // =========================
-    @Enumerated(EnumType.STRING)
-    @Column(name = "tier")
-    private EventTier tier = EventTier.B_TIER;
 
     // =========================
     // Admin Control
@@ -255,14 +247,6 @@ public class Event {
 
     public void setStatus(EventStatus status) {
         this.status = status;
-    }
-
-    public EventTier getTier() {
-        return tier;
-    }
-
-    public void setTier(EventTier tier) {
-        this.tier = tier;
     }
 
     public UUID getApprovedBy() {

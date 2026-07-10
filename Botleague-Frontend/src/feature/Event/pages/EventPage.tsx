@@ -8,7 +8,6 @@ import { useNavigate } from "react-router-dom";
 import { useEvent } from "../hook/useEvent";
 import { useAppSelector } from "../../../app/hooks";
 import { selectRobots } from "../../Robots/store/robotsSlice";
-import TierBadge from "../../../shared/components/TierBadge";
 import CategoryBadge from "../../../shared/components/CategoryBadge";
 import { useEligibility } from "../../Eligibility/hooks/useEligibility";
 import { getEventSponsors, type EventSponsor } from "../api/eventSponsor.api";
@@ -225,7 +224,6 @@ function EventCard({ event, isRegistered, isSelected, onSelect }: EventCardProps
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "5px", flexShrink: 0 }}>
-          <TierBadge tier={event.tier} size="sm" />
           {isRegistered
             ? <span style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.28)", color: SUCCESS, borderRadius: "999px", fontSize: "0.67rem", padding: "3px 10px", fontWeight: 700, whiteSpace: "nowrap" }}>✅ Registered</span>
             : <StatusPill status={event.status} />

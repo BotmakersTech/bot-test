@@ -5,7 +5,7 @@ public enum AccountType {
     /** Platform-wide super administrator — unrestricted access to everything. */
     SUPER_ADMIN,
 
-    /** Platform administrator — user management, event creation, tier & sport-spec changes. */
+    /** Platform administrator — user management, event creation, sport-spec changes. */
     ADMINISTRATOR,
 
     /** Event manager — event operations, registrations, matches, reports (no user mgmt). */

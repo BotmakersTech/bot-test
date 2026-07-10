@@ -4,10 +4,9 @@ import { ArrowLeft, Plus, X, ChevronDown, Info, Calendar, Users, Trophy, Swords,
 import { useSelector } from "react-redux"
 import { useAdminEvents } from "../hooks/UseAdminEvent"
 import { useEventRealtime } from "../../../shared/realtime/useEventRealtime"
-import type { CreateEventSportRequest, UpdateEventRequest, EventTier } from "../api/admin.api"
+import type { CreateEventSportRequest, UpdateEventRequest } from "../api/admin.api"
 import type { RootState } from "../../../app/store"
 import { hasRole, AppRole } from "../../../shared/constants/roles"
-import TierBadge from "../../../shared/components/TierBadge"
 import LocationSelects from "../../../shared/components/LocationSelects"
 import SponsorManager from "../components/SponsorManager"
 
@@ -662,19 +661,13 @@ const STATUS_TRANSITIONS: Record<string, { value: string; label: string; color: 
 // ─────────────────────────────────────────────────────────────
 
 interface EditEventModalProps {
-  event: { eventName: string; eventDescription?: string; organizationName?: string; organizationUrl?: string; venueName?: string; city?: string; state?: string; country?: string; startDate?: string; endDate?: string; tier?: string }
+  event: { eventName: string; eventDescription?: string; organizationName?: string; organizationUrl?: string; venueName?: string; city?: string; state?: string; country?: string; startDate?: string; endDate?: string }
   onSave: (req: UpdateEventRequest) => Promise<unknown>
   saving: boolean
   onClose: () => void
   /** When true (PUBLISHED + organizer), only name/description/logo/org are editable */
   limitedEdit?: boolean
 }
-
-const TIER_OPTIONS: { value: EventTier; label: string; icon: string; desc: string }[] = [
-  { value: "S_TIER", label: "S-Tier", icon: "👑", desc: "Elite championship events" },
-  { value: "A_TIER", label: "A-Tier", icon: "⭐", desc: "Major competitive events"  },
-  { value: "B_TIER", label: "B-Tier", icon: "🏅", desc: "Standard events"           },
-]
 
 function EditEventModal({ event, onSave, saving, onClose, limitedEdit = false }: EditEventModalProps) {
   const fmt = (d?: string) => d ? d.slice(0, 10) : ""
@@ -689,7 +682,6 @@ function EditEventModal({ event, onSave, saving, onClose, limitedEdit = false }:
     country:         event.country          ?? "",
     startDate:       fmt(event.startDate),
     endDate:         fmt(event.endDate),
-    tier:            (event.tier as EventTier) ?? "B_TIER",
   })
   const [error, setError] = useState<string | null>(null)
   const set = (k: keyof UpdateEventRequest, v: string) => setForm(f => ({ ...f, [k]: v }))
@@ -760,38 +752,6 @@ function EditEventModal({ event, onSave, saving, onClose, limitedEdit = false }:
                 <FormField label="Start Date"><input type="date" style={dateInputStyle} value={form.startDate} onChange={e => set("startDate", e.target.value)} /></FormField>
                 <FormField label="End Date"><input type="date" style={dateInputStyle} value={form.endDate} min={form.startDate || undefined} onChange={e => set("endDate", e.target.value)} /></FormField>
               </div>
-
-              {/* TIER SELECTOR */}
-              <FormField label="Event Tier">
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
-                  {TIER_OPTIONS.map(opt => {
-                    const active = form.tier === opt.value
-                    const colors = { S_TIER: "#fbbf24", A_TIER: "#60a5fa", B_TIER: "#fa8c4f" }
-                    const c = colors[opt.value]
-                    return (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => set("tier", opt.value)}
-                        style={{
-                          background:   active ? `${c}18` : "rgba(0,0,0,0.25)",
-                          border:       `1.5px solid ${active ? c : "rgba(255,255,255,0.1)"}`,
-                          borderRadius: "10px",
-                          padding:      "10px 8px",
-                          cursor:       "pointer",
-                          textAlign:    "center",
-                          transition:   "all 0.18s",
-                          boxShadow:    active ? `0 0 10px ${c}30` : "none",
-                        }}
-                      >
-                        <div style={{ fontSize: "1.3rem", marginBottom: "3px" }}>{opt.icon}</div>
-                        <div style={{ color: active ? c : "#fff", fontWeight: 700, fontSize: "0.8rem" }}>{opt.label}</div>
-                        <div style={{ color: MUTED, fontSize: "0.62rem", marginTop: "2px" }}>{opt.desc}</div>
-                      </button>
-                    )
-                  })}
-                </div>
-              </FormField>
             </>
           )}
 
@@ -1077,10 +1037,6 @@ export default function AdminEventPage() {
         <div style={{ padding: "18px 20px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "10px" }}>
             <InfoCell label="Status"       value={event.status} />
-            <div>
-              <div style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.08em", color: MUTED, textTransform: "uppercase", marginBottom: "4px" }}>Tier</div>
-              <TierBadge tier={event.tier} size="md" />
-            </div>
             <InfoCell label="Organization" value={event.organizationName} />
             <InfoCell label="City"         value={event.city} />
             <InfoCell label="State"        value={event.state} />

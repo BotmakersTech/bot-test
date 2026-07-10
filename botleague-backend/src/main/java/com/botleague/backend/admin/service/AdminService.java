@@ -22,7 +22,6 @@ import com.botleague.backend.admin.dto.ChangeEventStatusRequest;
 import com.botleague.backend.admin.dto.UpdateEventRequest;
 import com.botleague.backend.events.entity.Event;
 import com.botleague.backend.events.enums.EventStatus;
-import com.botleague.backend.events.enums.EventTier;
 import com.botleague.backend.events.enums.SportEventStatus;
 import com.botleague.backend.events.entity.EventRegistrationLineup;
 import com.botleague.backend.events.entity.EventSports;
@@ -246,11 +245,6 @@ public class AdminService {
             if (request.getCountry()          != null) event.setCountry(request.getCountry());
             if (request.getStartDate()        != null) event.setStartDate(request.getStartDate());
             if (request.getEndDate()          != null) event.setEndDate(request.getEndDate());
-            if (request.getTier()             != null) {
-                try {
-                    event.setTier(EventTier.valueOf(request.getTier().toUpperCase()));
-                } catch (IllegalArgumentException ignored) { /* keep existing */ }
-            }
         }
 
         Event saved = eventRepository.save(event);
@@ -427,7 +421,6 @@ public class AdminService {
         dto.setEventName(event.getEventName());
         dto.setEventDescription(event.getEventDescription());
         dto.setStatus(event.getStatus() != null ? event.getStatus().name() : null);
-        dto.setTier(event.getTier() != null ? event.getTier().name() : null);
         dto.setEventLogoUrl(event.getEventLogoUrl());
         dto.setCity(event.getCity());
         dto.setState(event.getState());

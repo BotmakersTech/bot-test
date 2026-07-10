@@ -4,8 +4,6 @@ import api from "../../../shared/api/Base"
 // CREATE EVENT REQUEST
 // =====================================================
 
-export type EventTier = "S_TIER" | "A_TIER" | "B_TIER"
-
 export interface CreateEventRequest {
   eventName: string
   eventDescription: string
@@ -19,7 +17,6 @@ export interface CreateEventRequest {
   country: string
   startDate: string
   endDate: string
-  tier?: EventTier
 }
 
 // =====================================================
@@ -100,7 +97,6 @@ export interface AdminEventResponse {
   state: string
   country: string
   status?: string
-  tier?: EventTier
   startDate: string
   endDate: string
   sports?: AdminEventSportResponse[]
@@ -193,7 +189,6 @@ export interface UpdateEventRequest {
   country?: string
   startDate?: string
   endDate?: string
-  tier?: EventTier
 }
 
 // =====================================================

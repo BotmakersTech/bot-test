@@ -76,7 +76,7 @@ export default function OrganizerSettingsPage() {
       <div>
         <h1 className="text-xl font-bold text-white">Event Settings</h1>
         <p className="text-sm text-neutral-500 mt-0.5">
-          Update event information. Tier and sport specifications are managed by administrators.
+          Update event information. Sport specifications are managed by administrators.
         </p>
       </div>
 
@@ -100,7 +100,6 @@ export default function OrganizerSettingsPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Event Code"  value={event.eventCode} readOnly />
               <Field label="Status"      value={event.status}    readOnly />
-              <Field label="Tier"        value={event.tier ?? "—"} readOnly />
             </div>
           </div>
 

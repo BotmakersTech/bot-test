@@ -18,7 +18,6 @@ import com.botleague.backend.events.dto.CreateEventRequestDTO;
 import com.botleague.backend.events.dto.CreateEventResponseDTO;
 import com.botleague.backend.events.entity.Event;
 import com.botleague.backend.events.enums.EventStatus;
-import com.botleague.backend.events.enums.EventTier;
 import com.botleague.backend.events.repository.EventRepository;
 import com.botleague.backend.audit.service.AuditLogService;
 import com.botleague.backend.notification.enums.NotificationPriority;
@@ -167,20 +166,10 @@ public class EventService {
         event.setCreatedBy(userId);
 
         // =============================================
-        // DEFAULT STATUS + TIER
+        // DEFAULT STATUS
         // =============================================
 
         event.setStatus(EventStatus.DRAFT);
-
-        if (request.getTier() != null && !request.getTier().isBlank()) {
-            try {
-                event.setTier(EventTier.valueOf(request.getTier().toUpperCase()));
-            } catch (IllegalArgumentException ignored) {
-                event.setTier(EventTier.B_TIER);
-            }
-        } else {
-            event.setTier(EventTier.B_TIER);
-        }
 
         // =============================================
         // SAVE
@@ -410,10 +399,6 @@ public class EventService {
 
         response.setStatus(
                 event.getStatus().name()
-        );
-
-        response.setTier(
-                event.getTier() != null ? event.getTier().name() : null
         );
 
         response.setCreatedAt(

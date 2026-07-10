@@ -16,7 +16,6 @@ public class UpdateEventRequest {
     private String country;
     private LocalDate startDate;
     private LocalDate endDate;
-    private String tier;
 
     public String getEventName()                    { return eventName; }
     public void setEventName(String v)              { this.eventName = v; }
@@ -42,6 +41,4 @@ public class UpdateEventRequest {
     public void setStartDate(LocalDate v)           { this.startDate = v; }
     public LocalDate getEndDate()                   { return endDate; }
     public void setEndDate(LocalDate v)             { this.endDate = v; }
-    public String getTier()                         { return tier; }
-    public void setTier(String v)                   { this.tier = v; }
 }
