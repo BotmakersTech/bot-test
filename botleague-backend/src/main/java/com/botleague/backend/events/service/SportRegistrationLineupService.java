@@ -33,7 +33,7 @@ import com.botleague.backend.team.repository.TeamMembershipRepository;
  *        ├── robotId            ← which physical robot
  *        └── EventRegistrationLineup[]
  *               ├── robotId + teamMembershipId  ← person ↔ robot binding
- *               └── lineupRole                  ← OPERATOR / CO_OPERATOR / TECHNICIAN ...
+ *               └── lineupRole                  ← DRIVER / SECONDARY_DRIVER / BUILD_HEAD
  *
  * Validation pipeline for addMember():
  *  1. SportRegistration must exist and NOT be CANCELLED
@@ -86,7 +86,7 @@ public class SportRegistrationLineupService {
      * @param sportRegistrationId  SportRegistration.id   (robot's competition entry)
      * @param robotId              Robot.id               (must match the registration)
      * @param teamMembershipId     TeamMembership.id      (person to assign)
-     * @param role                 their role             (OPERATOR / CO_OPERATOR / ...)
+     * @param role                 their role             (DRIVER / SECONDARY_DRIVER / BUILD_HEAD)
      * @return                     the saved lineup row
      */
     public EventRegistrationLineup addMember(

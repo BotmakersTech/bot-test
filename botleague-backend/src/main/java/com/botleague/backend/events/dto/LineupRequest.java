@@ -25,7 +25,7 @@ public class LineupRequest {
     @NotNull
     private UUID teamMembershipId;
 
-    // OPERATOR / CO_OPERATOR / TECHNICIAN / PRESENTER / BUILDER
+    // DRIVER / SECONDARY_DRIVER / BUILD_HEAD
     @NotNull
     private LineupRole lineupRole;
 

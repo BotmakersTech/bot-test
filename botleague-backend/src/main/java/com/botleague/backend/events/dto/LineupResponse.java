@@ -35,7 +35,7 @@ public class LineupResponse {
     private UUID eventSportId;
     private UUID teamId;
 
-    // OPERATOR / CO_OPERATOR / TECHNICIAN / PRESENTER / BUILDER
+    // DRIVER / SECONDARY_DRIVER / BUILD_HEAD
     private LineupRole lineupRole;
 
     private Boolean isActive;
