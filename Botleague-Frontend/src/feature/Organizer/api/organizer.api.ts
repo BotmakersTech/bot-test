@@ -512,44 +512,6 @@ export const deleteCertificate = async (eventId: string, certId: string): Promis
   await api.delete(`/organizer/events/${eventId}/certificates/${certId}`);
 };
 
-// ── Sport creation (shared /events/{id}/sports endpoint — ORGANIZER-permitted) ─
-
-export interface CreateEventSportRequest {
-  sport: string;
-  ageGroup: string;
-
-  competitionType?: string;
-  sportData?: string;
-
-  weightClass?: string;
-  weightLimitKg?: number;
-  maxLengthCm?: number;
-  maxWidthCm?: number;
-  maxHeightCm?: number;
-  controlType?: string;
-  maxBotsPerTeam?: number;
-  extraRules?: Record<string, string>;
-
-  minTeamSize?: number;
-  maxTeamSize?: number;
-  maxTeams?: number;
-
-  entryFee?: number;
-  prizeMoney?: number;
-
-  formatType?: string;
-  registrationStartDate?: string;
-  registrationEndDate?: string;
-}
-
-export const createEventSport = async (
-  eventId: string,
-  request: CreateEventSportRequest
-): Promise<OrganizerSport> => {
-  const res = await api.post(`/events/${eventId}/sports`, request);
-  return res.data;
-};
-
 // ── Sport lifecycle ───────────────────────────────────────────────────────────
 
 export const submitSportForApproval = async (
