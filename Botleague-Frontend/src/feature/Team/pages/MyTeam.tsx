@@ -393,10 +393,10 @@ export default function MyTeam() {
                 {primarySponsor ? (
                   primarySponsor.website ? (
                     <a href={primarySponsor.website} target="_blank" rel="noopener noreferrer">
-                      Sponsored By {primarySponsor.name}
+                      Sponsored By {primarySponsor.sponsorName}
                     </a>
                   ) : (
-                    <a href="#team-info">Sponsored By {primarySponsor.name}</a>
+                    <a href="#team-info">Sponsored By {primarySponsor.sponsorName}</a>
                   )
                 ) : (
                   <a href="#team-info">{resolvedTeam?.institutionName || location || resolvedTeam?.memberRole || "Team profile details pending"}</a>
