@@ -16,6 +16,8 @@ import com.botleague.backend.admin.repository.UserEventAssignmentRepository;
 import com.botleague.backend.auth.enums.AccountType;
 import com.botleague.backend.common.exception.ResourceNotFoundException;
 
+import com.botleague.backend.events.entity.EventSports;
+import com.botleague.backend.events.enums.SportEventStatus;
 import com.botleague.backend.events.repository.EventSportsRepository;
 import com.botleague.backend.events.repository.SportRegistrationRepository;
 import com.botleague.backend.team.repository.TeamRepository;
@@ -131,15 +133,21 @@ public class MatchService {
             Authentication authentication,
             GenerateBracketRequestDTO request
     ) {
-        validateAdmin(authentication);
-
         if (request.getEventSportId() == null) {
             throw ApiException.badRequest("eventSportId is required");
         }
 
-        eventSportsRepository
+        validateAdminOrOrganizerForSport(authentication, request.getEventSportId());
+
+        EventSports eventSports = eventSportsRepository
                 .findById(request.getEventSportId())
                 .orElseThrow(() -> new ResourceNotFoundException("Event sport not found"));
+
+        if (eventSports.getStatus() != SportEventStatus.REGISTRATION_CLOSED) {
+            throw ApiException.conflict(
+                    "Bracket can only be generated once registration is closed. Current status: "
+                            + eventSports.getStatus());
+        }
 
         List<Match> existingMatches =
                 matchRepository.findByEventSportIdAndDeletedAtIsNull(
@@ -258,17 +266,23 @@ public class MatchService {
             Authentication authentication,
             List<CreateMatchRequestDTO> requests
     ) {
-        validateAdmin(authentication);
-
         if (requests == null || requests.isEmpty()) {
             throw ApiException.badRequest("No matches provided");
         }
 
         UUID eventSportId = requests.get(0).getEventSportId();
 
-        eventSportsRepository
+        validateAdminOrOrganizerForSport(authentication, eventSportId);
+
+        EventSports eventSports = eventSportsRepository
                 .findById(eventSportId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event sport not found"));
+
+        if (eventSports.getStatus() != SportEventStatus.REGISTRATION_CLOSED) {
+            throw ApiException.conflict(
+                    "Bracket can only be generated once registration is closed. Current status: "
+                            + eventSports.getStatus());
+        }
 
         List<Match> existingMatches =
                 matchRepository.findByEventSportIdAndDeletedAtIsNull(eventSportId);
@@ -392,11 +406,11 @@ public class MatchService {
             UpdateMatchRequestDTO request,
             Authentication authentication
     ) {
-        validateAdmin(authentication);
-
         Match match = matchRepository
                 .findById(matchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+
+        validateAdminOrOrganizerForSport(authentication, match.getEventSportId());
 
         if (request.getTournamentFormat()    != null) match.setTournamentFormat(request.getTournamentFormat());
         if (request.getMatchType()           != null) match.setMatchType(request.getMatchType());
@@ -437,11 +451,11 @@ public class MatchService {
             UpdateMatchRequestDTO request,
             Authentication authentication
     ) {
-        validateAdmin(authentication);
-
         Match match = matchRepository
                 .findById(matchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+
+        validateAdminOrOrganizerForSport(authentication, match.getEventSportId());
 
         if (request.getTeamARegistrationId() != null) match.setTeamARegistrationId(request.getTeamARegistrationId());
         if (request.getTeamBRegistrationId() != null) match.setTeamBRegistrationId(request.getTeamBRegistrationId());
@@ -462,11 +476,11 @@ public class MatchService {
             UpdateMatchRequestDTO request,
             Authentication authentication
     ) {
-        validateAdmin(authentication);
-
         Match match = matchRepository
                 .findById(matchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+
+        validateAdminOrOrganizerForSport(authentication, match.getEventSportId());
 
         if (request.getScheduledAt() == null) {
             throw ApiException.badRequest("scheduledAt is required");
@@ -491,11 +505,11 @@ public class MatchService {
             UUID matchId,
             Authentication authentication
     ) {
-        validateAdmin(authentication);
-
         Match match = matchRepository
                 .findById(matchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+
+        validateAdminOrOrganizerForSport(authentication, match.getEventSportId());
 
         if (match.getStatus() != MatchStatus.SCHEDULED) {
             throw ApiException.conflict(
@@ -536,11 +550,11 @@ public class MatchService {
             UpdateMatchScoreDTO request,
             Authentication authentication
     ) {
-        validateCanScoreMatch(authentication);
-
         Match match = matchRepository
                 .findById(matchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+
+        validateCanScoreMatchForSport(authentication, match.getEventSportId());
 
         if (match.getStatus() != MatchStatus.LIVE) {
             throw ApiException.conflict(
@@ -590,11 +604,11 @@ public class MatchService {
             SubmitMatchResultDTO request,
             Authentication authentication
     ) {
-        validateCanScoreMatch(authentication);
-
         Match match = matchRepository
                 .findById(matchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+
+        validateCanScoreMatchForSport(authentication, match.getEventSportId());
 
         if (match.getStatus() != MatchStatus.LIVE) {
             throw ApiException.conflict(
@@ -710,11 +724,11 @@ public class MatchService {
             UUID matchId,
             Authentication authentication
     ) {
-        validateCanScoreMatch(authentication);
-
         Match match = matchRepository
                 .findById(matchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+
+        validateCanScoreMatchForSport(authentication, match.getEventSportId());
 
         if (match.getStatus() != MatchStatus.LIVE) {
             throw ApiException.conflict(
@@ -797,11 +811,11 @@ public class MatchService {
             UUID matchId,
             Authentication authentication
     ) {
-        validateAdmin(authentication);
-
         Match match = matchRepository
                 .findById(matchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+
+        validateAdminOrOrganizerForSport(authentication, match.getEventSportId());
 
         if (match.getStatus() == MatchStatus.COMPLETED) {
             throw ApiException.conflict("Completed matches cannot be cancelled");
@@ -826,11 +840,11 @@ public class MatchService {
             UUID matchId,
             Authentication authentication
     ) {
-        validateAdmin(authentication);
-
         Match match = matchRepository
                 .findById(matchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+
+        validateAdminOrOrganizerForSport(authentication, match.getEventSportId());
 
         match.setDeletedAt(LocalDateTime.now());
         matchRepository.save(match);
@@ -1230,36 +1244,34 @@ public class MatchService {
     // =====================================================
 
     /**
-     * Match management: SUPER_ADMIN, ADMINISTRATOR, MANAGER, ORGANIZER, SUB_ORGANIZER.
-     * Used for: create, update, schedule, start, cancel, delete, generate bracket.
-     */
-    private void validateAdmin(Authentication authentication) {
-        UUID currentUserId = extractUserId(authentication);
-        boolean allowed = userRoleService.hasRole(currentUserId, AccountType.SUPER_ADMIN)
-                || userRoleService.hasRole(currentUserId, AccountType.ADMINISTRATOR)
-                || userRoleService.hasRole(currentUserId, AccountType.MANAGER)
-                || userRoleService.hasRole(currentUserId, AccountType.ORGANIZER)
-                || userRoleService.hasRole(currentUserId, AccountType.SUB_ORGANIZER);
-        if (!allowed) {
-            throw ApiException.forbidden("Insufficient role to manage matches");
-        }
-    }
-
-    /**
      * Score submission: all match-management roles PLUS JUDGE.
      * Used for: updateScore, submitMatchResult, completeMatch.
+     *
+     * JUDGE is intentionally NOT event-scoped here (judge-to-event assignment
+     * is out of scope for this change) — any JUDGE may score any match, matching
+     * prior behavior. ORGANIZER / SUB_ORGANIZER must be assigned to the event.
      */
-    private void validateCanScoreMatch(Authentication authentication) {
+    private void validateCanScoreMatchForSport(Authentication authentication, UUID eventSportId) {
         UUID currentUserId = extractUserId(authentication);
-        boolean allowed = userRoleService.hasRole(currentUserId, AccountType.SUPER_ADMIN)
+        if (userRoleService.hasRole(currentUserId, AccountType.SUPER_ADMIN)
                 || userRoleService.hasRole(currentUserId, AccountType.ADMINISTRATOR)
                 || userRoleService.hasRole(currentUserId, AccountType.MANAGER)
-                || userRoleService.hasRole(currentUserId, AccountType.ORGANIZER)
-                || userRoleService.hasRole(currentUserId, AccountType.SUB_ORGANIZER)
-                || userRoleService.hasRole(currentUserId, AccountType.JUDGE);
-        if (!allowed) {
-            throw ApiException.forbidden("Insufficient role to score matches");
+                || userRoleService.hasRole(currentUserId, AccountType.JUDGE)) {
+            return;
         }
+        if (userRoleService.hasRole(currentUserId, AccountType.ORGANIZER)
+                || userRoleService.hasRole(currentUserId, AccountType.SUB_ORGANIZER)) {
+            if (eventSportId != null) {
+                var sportOpt = eventSportsRepository.findById(eventSportId);
+                if (sportOpt.isPresent()) {
+                    UUID eventId = sportOpt.get().getEventId();
+                    if (eventAssignmentRepository.existsByUserIdAndEventId(currentUserId, eventId)) {
+                        return;
+                    }
+                }
+            }
+        }
+        throw ApiException.forbidden("Insufficient role or event assignment required");
     }
 
     /**

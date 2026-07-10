@@ -39,6 +39,19 @@ export interface OrganizerSport {
   prizeMoney?: number;
   formatType?: string;
   registrations?: OrganizerTeamRegistration[];
+
+  sportsDescription?: string | null;
+  competitionType?: string | null;
+  weightLimitKg?: number | null;
+  maxLengthCm?: number | null;
+  maxWidthCm?: number | null;
+  maxHeightCm?: number | null;
+  controlType?: string | null;
+  maxBotsPerTeam?: number | null;
+  extraRules?: Record<string, string> | null;
+  minTeamSize?: number;
+  maxTeamSize?: number;
+  createdAt?: string;
 }
 
 export interface OrganizerTeamRegistration {
@@ -79,6 +92,15 @@ export const getMyEvents = async (): Promise<OrganizerEvent[]> => {
 
 export const getMyEventById = async (eventId: string): Promise<OrganizerEvent> => {
   const res = await api.get(`/admin/events/${eventId}`);
+  return res.data;
+};
+
+// Backend ignores sportId and returns the parent event (with all its sports
+// nested) — same shape/endpoint the admin sport-detail page uses, scoped
+// server-side to the caller's assigned events. Callers pick the matching
+// sport out of the returned event's `sports` array.
+export const getEventSportDetail = async (eventId: string, sportId: string): Promise<OrganizerEvent> => {
+  const res = await api.get(`/admin/events/${eventId}/sports/${sportId}`);
   return res.data;
 };
 
@@ -548,6 +570,14 @@ export const createEventSport = async (
 ): Promise<OrganizerSport> => {
   const res = await api.post(`/events/${eventId}/sports`, request);
   return res.data;
+};
+
+export const updateEventSport = async (
+  eventId: string,
+  sportId: string,
+  request: CreateEventSportRequest
+): Promise<void> => {
+  await api.patch(`/events/${eventId}/sports/${sportId}`, request);
 };
 
 // ── Sport lifecycle ───────────────────────────────────────────────────────────

@@ -151,7 +151,7 @@ export default function OrganizerSportsPage() {
                   </td>
                   <td style={{ padding: "13px 14px", textAlign: "center" }}>
                     <button
-                      onClick={() => navigate(`/admin/events/${sp.eventId}/sports/${sp.id}`)}
+                      onClick={() => navigate(`/organizer/events/${sp.eventId}/sports/${sp.id}`)}
                       style={{ background: "rgba(140,108,255,0.1)", color: P, border: `1px solid rgba(140,108,255,0.25)`, borderRadius: "7px", padding: "5px 12px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}>
                       <ExternalLink size={11} /> Manage
                     </button>

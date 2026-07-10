@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -63,18 +65,20 @@ public class AdminController {
     @GetMapping("/events/{eventId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER','SUB_ORGANIZER')")
     public ResponseEntity<AdminAllEventResponse> getEventById(
-            @PathVariable UUID eventId
+            @PathVariable UUID eventId,
+            Authentication auth
     ) {
-        return ResponseEntity.ok(adminService.getEventById(eventId));
+        return ResponseEntity.ok(adminService.getEventById(eventId, extractUserId(auth), extractRoles(auth)));
     }
 
     @GetMapping("/events/{eventId}/sports/{sportsId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER','SUB_ORGANIZER')")
     public ResponseEntity<AdminAllEventResponse> getEventSportsById(
             @PathVariable UUID eventId,
-            @PathVariable UUID sportsId
+            @PathVariable UUID sportsId,
+            Authentication auth
     ) {
-        return ResponseEntity.ok(adminService.getEventById(eventId));
+        return ResponseEntity.ok(adminService.getEventById(eventId, extractUserId(auth), extractRoles(auth)));
     }
 
     // =====================================================
@@ -133,5 +137,20 @@ public class AdminController {
             @RequestParam(required = false) String reason
     ) {
         return ResponseEntity.ok(eventSportsService.rejectSport(sportId, reason));
+    }
+
+    // =====================================================
+    // HELPERS
+    // =====================================================
+
+    private UUID extractUserId(Authentication auth) {
+        return UUID.fromString((String) auth.getPrincipal());
+    }
+
+    private List<String> extractRoles(Authentication auth) {
+        return auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .map(a -> a.replace("ROLE_", ""))
+                .collect(java.util.stream.Collectors.toList());
     }
 }

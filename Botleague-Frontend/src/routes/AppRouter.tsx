@@ -90,6 +90,8 @@ import AdminRobotsPage from "../feature/Admin/pages/AdminRobotsPage";
 import AdminRobotDetailPage from "../feature/Admin/pages/AdminRobotDetailPage";
 import OrganizerEventsPage        from "../feature/Organizer/pages/OrganizerEventsPage";
 import OrganizerEventDetailPage   from "../feature/Organizer/pages/OrganizerEventDetailPage";
+import OrganizerSportDetailPage   from "../feature/Organizer/pages/OrganizerSportDetailPage";
+import OrganizerBracketPage       from "../feature/Organizer/pages/OrganizerBracketPage";
 import OrganizerSportsPage        from "../feature/Organizer/pages/OrganizerSportsPage";
 import OrganizerMatchesPage       from "../feature/Organizer/pages/OrganizerMatchesPage";
 import OrganizerRegistrationsPage from "../feature/Organizer/pages/OrganizerRegistrationsPage";
@@ -276,6 +278,14 @@ function AppRoutes() {
         {/* ── Organizer Portal ── */}
         <Route path="/organizer/events"          element={<RoleRoute roles={ORG_MIN}><OrganizerEventsPage /></RoleRoute>} />
         <Route path="/organizer/events/:eventId" element={<RoleRoute roles={ORG_MIN}><OrganizerEventDetailPage /></RoleRoute>} />
+        <Route
+          path="/organizer/events/:eventId/sports/:sportId"
+          element={<RoleRoute roles={SUB_ORG_ROLES}><OrganizerSportDetailPage /></RoleRoute>}
+        />
+        <Route
+          path="/organizer/events/:eventId/sports/:sportId/create-match"
+          element={<RoleRoute roles={SUB_ORG_ROLES}><OrganizerBracketPage /></RoleRoute>}
+        />
         <Route path="/organizer/sports"          element={<RoleRoute roles={ORG_MIN}><OrganizerSportsPage /></RoleRoute>} />
         <Route path="/organizer/matches"         element={<RoleRoute roles={SUB_ORG_ROLES}><OrganizerMatchesPage /></RoleRoute>} />
         <Route path="/organizer/registrations"   element={<RoleRoute roles={SUB_ORG_ROLES}><OrganizerRegistrationsPage /></RoleRoute>} />

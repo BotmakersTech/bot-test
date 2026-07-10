@@ -64,11 +64,12 @@ public class EventSportsController {
     public ResponseEntity<String> updateEventSport(
             @PathVariable UUID eventId,
             @PathVariable UUID sportId,
-            @Valid @RequestBody UpdateSportsDTO dto) {
+            @Valid @RequestBody UpdateSportsDTO dto,
+            Authentication auth) {
 
         dto.setEventId(eventId);
         dto.setSportId(sportId);
-        service.updateSports(dto);
+        service.updateSports(dto, extractUserId(auth), extractRoles(auth));
         return ResponseEntity.ok("Sport updated successfully");
     }
 
@@ -79,9 +80,10 @@ public class EventSportsController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
     public ResponseEntity<String> toggleRegistration(
             @PathVariable UUID eventId,
-            @PathVariable UUID sportId) {
+            @PathVariable UUID sportId,
+            Authentication auth) {
 
-        String status = service.updateSportsRegistration(sportId, eventId);
+        String status = service.updateSportsRegistration(sportId, eventId, extractUserId(auth), extractRoles(auth));
         return ResponseEntity.ok("Registration status updated to " + status);
     }
 
@@ -95,5 +97,20 @@ public class EventSportsController {
 
         List<GetEventSportsDTO> response = service.getEventSports(eventId);
         return ResponseEntity.ok(response);
+    }
+
+    // =========================
+    // HELPERS
+    // =========================
+
+    private UUID extractUserId(Authentication auth) {
+        return UUID.fromString((String) auth.getPrincipal());
+    }
+
+    private List<String> extractRoles(Authentication auth) {
+        return auth.getAuthorities().stream()
+                .map(a -> a.getAuthority())
+                .map(a -> a.replace("ROLE_", ""))
+                .collect(java.util.stream.Collectors.toList());
     }
 }

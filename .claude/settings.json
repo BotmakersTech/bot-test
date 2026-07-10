@@ -22,7 +22,14 @@
       "PowerShell(Stop-Process -Id 363524 -Force -ErrorAction SilentlyContinue)",
       "PowerShell(Get-NetTCPConnection -LocalPort 8081 -State Listen -ErrorAction SilentlyContinue)",
       "Bash(Get-Content -Tail 60 \"C:\\\\Users\\\\win\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\d--BotLeague\\\\5fbfdab0-f96b-4bcd-b256-d20ef55db338\\\\scratchpad\\\\backend-restart3.log\")",
-      "Bash(git check-ignore *)"
+      "Bash(git check-ignore *)",
+      "Bash(git commit -m ' *)",
+      "Bash(PGPASSWORD=admin123 \"/c/Program Files/PostgreSQL/18/bin/psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -c \"SELECT conname, pg_get_constraintdef\\(oid\\) FROM pg_constraint WHERE conname IN \\('notifications_type_check','notifications_target_type_check'\\);\")",
+      "Bash(PGPASSWORD=admin123 \"/c/Program Files/PostgreSQL/18/bin/psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -c \"SELECT conname, pg_get_constraintdef\\(oid\\) FROM pg_constraint WHERE conname = 'event_sports_status_check';\")",
+      "Bash(PGPASSWORD=admin123 '/c/Program Files/PostgreSQL/18/bin/psql.exe' -h localhost -p 5432 -U postgres -d BotLeague_Test -c ' *)",
+      "Bash(mvn compile *)",
+      "Bash(npx tsc *)",
+      "PowerShell(Stop-Process -Id 385576 -Force -ErrorAction SilentlyContinue)"
     ]
   }
 }

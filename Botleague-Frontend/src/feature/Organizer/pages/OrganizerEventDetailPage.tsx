@@ -436,8 +436,8 @@ function AddSportModal({ onAddSport, submitting, onClose }: {
 // SPORT CARD (view + on-page "submit for approval" — no navigation)
 // ─────────────────────────────────────────────────────────────
 
-function SportCard({ sport, index, onSubmitApproval, submittingId }: {
-  sport: OrganizerSport; index: number
+function SportCard({ sport, index, eventId, navigate, onSubmitApproval, submittingId }: {
+  sport: OrganizerSport; index: number; eventId: string; navigate: ReturnType<typeof useNavigate>
   onSubmitApproval: (sportId: string) => void; submittingId: string | null
 }) {
   const teamCount   = sport.registrations?.length ?? sport.registeredTeamsCount ?? 0
@@ -448,7 +448,10 @@ function SportCard({ sport, index, onSubmitApproval, submittingId }: {
   const submitting  = submittingId === sport.id
 
   return (
-    <div style={{ background: "rgba(0,0,0,0.28)", border: `1px solid rgba(255,255,255,0.09)`, borderRadius: "14px", overflow: "hidden" }}>
+    <div
+      onClick={() => navigate(`/organizer/events/${eventId}/sports/${sport.id}`)}
+      style={{ background: "rgba(0,0,0,0.28)", border: `1px solid rgba(255,255,255,0.09)`, borderRadius: "14px", overflow: "hidden", cursor: "pointer" }}
+    >
       <div style={{ height: "3px", background: `linear-gradient(90deg, ${ACCENT}, hsl(${hue},80%,55%))` }} />
 
       <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -512,7 +515,7 @@ function SportCard({ sport, index, onSubmitApproval, submittingId }: {
       </div>
 
       {canSubmit && (
-        <div style={{ padding: "0 18px 16px" }}>
+        <div style={{ padding: "0 18px 16px" }} onClick={e => e.stopPropagation()}>
           <button
             type="button"
             onClick={() => onSubmitApproval(sport.id)}
@@ -876,7 +879,7 @@ export default function OrganizerEventDetailPage() {
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "14px" }}>
               {sports.map((sport, i) => (
-                <SportCard key={sport.id} sport={sport} index={i} onSubmitApproval={handleSubmitApproval} submittingId={approvalSubmittingId} />
+                <SportCard key={sport.id} sport={sport} index={i} eventId={eventId ?? ""} navigate={navigate} onSubmitApproval={handleSubmitApproval} submittingId={approvalSubmittingId} />
               ))}
             </div>
           )}
