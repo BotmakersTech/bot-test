@@ -1,5 +1,7 @@
 package com.botleague.backend.sponsor.service;
 
+import com.botleague.backend.admin.repository.UserEventAssignmentRepository;
+import com.botleague.backend.common.exception.ApiException;
 import com.botleague.backend.sponsor.dto.EventSponsorRequest;
 import com.botleague.backend.sponsor.dto.EventSponsorResponse;
 import com.botleague.backend.sponsor.entity.EventSponsor;
@@ -8,16 +10,33 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 public class EventSponsorService {
 
-    private final EventSponsorRepository repo;
+    private static final Set<String> FULL_ACCESS_ROLES =
+            Set.of("SUPER_ADMIN", "ADMINISTRATOR");
 
-    public EventSponsorService(EventSponsorRepository repo) {
+    private final EventSponsorRepository repo;
+    private final UserEventAssignmentRepository eventAssignmentRepo;
+
+    public EventSponsorService(EventSponsorRepository repo, UserEventAssignmentRepository eventAssignmentRepo) {
         this.repo = repo;
+        this.eventAssignmentRepo = eventAssignmentRepo;
+    }
+
+    /** ADMINISTRATOR/SUPER_ADMIN can manage any event's sponsors; ORGANIZER only their assigned events. */
+    public void assertCanManage(UUID eventId, UUID callerId, List<String> callerRoles) {
+        boolean fullAccess = callerRoles.stream().anyMatch(FULL_ACCESS_ROLES::contains);
+        if (fullAccess) return;
+        boolean isAssignedOrganizer = callerRoles.contains("ORGANIZER")
+                && eventAssignmentRepo.existsByUserIdAndEventId(callerId, eventId);
+        if (!isAssignedOrganizer) {
+            throw ApiException.forbidden("You are not assigned to this event.");
+        }
     }
 
     public List<EventSponsorResponse> getSponsorsForEvent(UUID eventId) {
@@ -44,6 +63,13 @@ public class EventSponsorService {
         if (!repo.existsById(sponsorId))
             throw new NoSuchElementException("Event sponsor not found: " + sponsorId);
         repo.deleteById(sponsorId);
+    }
+
+    /** Resolves the eventId that owns a given sponsor row — needed for update/delete ownership checks. */
+    public UUID getEventIdForSponsor(UUID sponsorId) {
+        return repo.findById(sponsorId)
+                .orElseThrow(() -> new NoSuchElementException("Event sponsor not found: " + sponsorId))
+                .getEventId();
     }
 
     private void apply(EventSponsor s, EventSponsorRequest req) {

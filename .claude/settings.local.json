@@ -116,7 +116,9 @@
       "Bash(git checkout *)",
       "PowerShell(Get-CimInstance Win32_Process -Filter \"ProcessId=203612\")",
       "PowerShell(Stop-Process -Id 203612 -Force -ErrorAction SilentlyContinue)",
-      "PowerShell(Get-NetTCPConnection -LocalPort 8081 -ErrorAction SilentlyContinue)"
+      "PowerShell(Get-NetTCPConnection -LocalPort 8081 -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Id 364456 -Force -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 8081 -State Listen -ErrorAction SilentlyContinue)"
     ]
   }
 }

@@ -2,6 +2,7 @@ package com.botleague.backend.sponsor.controller;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import jakarta.validation.Valid;
 
@@ -9,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
 import com.botleague.backend.common.security.SecurityUtils;
@@ -42,33 +44,46 @@ public class EventSponsorController {
         return ResponseEntity.ok(service.getSponsorsForEvent(eventId));
     }
 
-    /** POST /api/event-sponsors/event/{eventId} — ADMINISTRATOR+ */
+    /** POST /api/event-sponsors/event/{eventId} — ADMINISTRATOR+, or ORGANIZER assigned to this event */
     @PostMapping("/event/{eventId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','ORGANIZER')")
     public ResponseEntity<EventSponsorResponse> addSponsor(
             @PathVariable UUID eventId,
             @Valid @RequestBody EventSponsorRequest request,
             Authentication auth) {
         UUID callerId = SecurityUtils.currentUserId(auth);
+        service.assertCanManage(eventId, callerId, extractRoles(auth));
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(service.addSponsor(eventId, callerId, request));
     }
 
-    /** PUT /api/event-sponsors/{sponsorId} — ADMINISTRATOR+ */
+    /** PUT /api/event-sponsors/{sponsorId} — ADMINISTRATOR+, or ORGANIZER assigned to this event */
     @PutMapping("/{sponsorId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','ORGANIZER')")
     public ResponseEntity<EventSponsorResponse> updateSponsor(
             @PathVariable UUID sponsorId,
-            @Valid @RequestBody EventSponsorRequest request) {
+            @Valid @RequestBody EventSponsorRequest request,
+            Authentication auth) {
+        UUID eventId = service.getEventIdForSponsor(sponsorId);
+        service.assertCanManage(eventId, SecurityUtils.currentUserId(auth), extractRoles(auth));
         return ResponseEntity.ok(service.updateSponsor(sponsorId, request));
     }
 
-    /** DELETE /api/event-sponsors/{sponsorId} — ADMINISTRATOR+ */
+    /** DELETE /api/event-sponsors/{sponsorId} — ADMINISTRATOR+, or ORGANIZER assigned to this event */
     @DeleteMapping("/{sponsorId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
-    public ResponseEntity<Void> deleteSponsor(@PathVariable UUID sponsorId) {
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','ORGANIZER')")
+    public ResponseEntity<Void> deleteSponsor(@PathVariable UUID sponsorId, Authentication auth) {
+        UUID eventId = service.getEventIdForSponsor(sponsorId);
+        service.assertCanManage(eventId, SecurityUtils.currentUserId(auth), extractRoles(auth));
         service.deleteSponsor(sponsorId);
         return ResponseEntity.noContent().build();
+    }
+
+    private List<String> extractRoles(Authentication auth) {
+        return auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .map(a -> a.replace("ROLE_", ""))
+                .collect(Collectors.toList());
     }
 
     /**
