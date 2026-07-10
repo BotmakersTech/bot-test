@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ArrowLeft, Plus, X, ChevronDown, Info, Calendar, Users, Trophy, Swords, Tag, Edit2, Trash2, UserPlus } from "lucide-react"
+import { ArrowLeft, Plus, X, ChevronDown, Info, Calendar, Users, Trophy, Swords, Tag, Edit2, Trash2, UserPlus, Check, Ban } from "lucide-react"
 import { useSelector } from "react-redux"
 import { useAdminEvents } from "../hooks/UseAdminEvent"
 import { useEventRealtime } from "../../../shared/realtime/useEventRealtime"
 import {
   searchUsers, getEventAssignments, assignOrganizerToEvent, unassignOrganizerFromEvent,
+  approveSport, rejectSport,
   type CreateEventSportRequest, type UpdateEventRequest, type UserSearchResult, type EventAssignment,
 } from "../api/admin.api"
 import type { RootState } from "../../../app/store"
@@ -507,18 +508,24 @@ function AddSportModal({ eventId: _eventId, onAddSport, submitting, onClose }: A
 // — reads `sport.sport` (the enum value from server)
 // ─────────────────────────────────────────────────────────────
 
-function SportCard({ sport, index, eventId, navigate }: { sport: EventSportItem; index: number; eventId: string; navigate: (path: string) => void }) {
+function SportCard({ sport, index, eventId, navigate, onApprove, onReject, busy }: {
+  sport: EventSportItem; index: number; eventId: string; navigate: (path: string) => void
+  onApprove: (sportId: string) => void; onReject: (sportId: string, reason: string) => void; busy: boolean
+}) {
   const teamCount   = sport.registrations?.length ?? sport.registeredTeamsCount ?? 0
   const playerCount = sport.registrations?.reduce((n, t) => n + ((t.lineup as any[])?.length ?? 0), 0) ?? 0
   const displayName = toLabel(sport.sport)   // ← uses sport.sport, not sport.sportName
   const hue         = (index * 47 + 11) % 360
+  const isPending   = sport.status?.toUpperCase() === "PENDING_APPROVAL"
+  const [rejecting, setRejecting] = useState(false)
+  const [reason, setReason]       = useState("")
 
   return (
     <div
       onClick={() => navigate(`/admin/events/${eventId}/sports/${sport.id}`)}
-      style={{ background: "rgba(0,0,0,0.28)", border: `1px solid rgba(255,255,255,0.09)`, borderRadius: "14px", overflow: "hidden", transition: "border-color 0.15s, transform 0.15s", position: "relative", cursor: "pointer" }}
+      style={{ background: "rgba(0,0,0,0.28)", border: `1px solid ${isPending ? "rgba(251,191,36,0.35)" : "rgba(255,255,255,0.09)"}`, borderRadius: "14px", overflow: "hidden", transition: "border-color 0.15s, transform 0.15s", position: "relative", cursor: "pointer" }}
       onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(250,71,21,0.38)"; (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)" }}
-      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.09)"; (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)" }}
+      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = isPending ? "rgba(251,191,36,0.35)" : "rgba(255,255,255,0.09)"; (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)" }}
     >
       {/* accent stripe */}
       <div style={{ height: "3px", background: `linear-gradient(90deg, ${ACCENT}, hsl(${hue},80%,55%))` }} />
@@ -601,6 +608,58 @@ function SportCard({ sport, index, eventId, navigate }: { sport: EventSportItem;
           </div>
         )}
       </div>
+
+      {/* ORGANIZER SUBMITTED THIS FOR APPROVAL — admin review actions */}
+      {isPending && (
+        <div onClick={e => e.stopPropagation()} style={{ padding: "0 18px 16px", display: "flex", flexDirection: "column", gap: "8px" }}>
+          {!rejecting ? (
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                type="button"
+                onClick={() => onApprove(sport.id)}
+                disabled={busy}
+                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", background: "rgba(74,222,128,0.12)", border: "1px solid rgba(74,222,128,0.35)", color: SUCCESS, borderRadius: "8px", padding: "8px 10px", fontSize: "0.78rem", fontWeight: 700, cursor: busy ? "not-allowed" : "pointer" }}
+              >
+                {busy ? <Spinner size={13} color={SUCCESS} /> : <Check size={13} />} Approve
+              </button>
+              <button
+                type="button"
+                onClick={() => setRejecting(true)}
+                disabled={busy}
+                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", color: DANGER, borderRadius: "8px", padding: "8px 10px", fontSize: "0.78rem", fontWeight: 700, cursor: busy ? "not-allowed" : "pointer" }}
+              >
+                <Ban size={13} /> Reject
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <input
+                autoFocus
+                placeholder="Reason for rejection (optional)…"
+                value={reason}
+                onChange={e => setReason(e.target.value)}
+                style={{ background: "rgba(0,0,0,0.35)", border: `1px solid ${BORDER}`, borderRadius: "7px", padding: "7px 10px", color: TEXT, fontSize: "0.76rem", outline: "none" }}
+              />
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  type="button"
+                  onClick={() => { setRejecting(false); setReason("") }}
+                  disabled={busy}
+                  style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "7px", padding: "7px 10px", fontSize: "0.76rem", fontWeight: 600, cursor: "pointer" }}
+                >Cancel</button>
+                <button
+                  type="button"
+                  onClick={() => onReject(sport.id, reason)}
+                  disabled={busy}
+                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", background: busy ? "rgba(248,113,113,0.2)" : DANGER, border: "none", color: "#fff", borderRadius: "7px", padding: "7px 10px", fontSize: "0.76rem", fontWeight: 700, cursor: busy ? "not-allowed" : "pointer" }}
+                >
+                  {busy ? <Spinner size={13} color="#fff" /> : <Ban size={13} />} Confirm Reject
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -609,7 +668,10 @@ function SportCard({ sport, index, eventId, navigate }: { sport: EventSportItem;
 // SPORTS LIST SECTION
 // ─────────────────────────────────────────────────────────────
 
-function SportsList({ sports, isDraft, eventId, onAddSport, navigate }: { sports: EventSportItem[]; isDraft: boolean; eventId: string; onAddSport: () => void; navigate: (p: string) => void }) {
+function SportsList({ sports, isDraft, eventId, onAddSport, navigate, onApproveSport, onRejectSport, busySportId }: {
+  sports: EventSportItem[]; isDraft: boolean; eventId: string; onAddSport: () => void; navigate: (p: string) => void
+  onApproveSport: (sportId: string) => void; onRejectSport: (sportId: string, reason: string) => void; busySportId: string | null
+}) {
   return (
     <div style={{ background: CARD2, border: "1px solid rgba(250,71,21,0.14)", borderRadius: "16px", overflow: "hidden", marginTop: "24px" }}>
       <div style={{ padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, background: "rgba(250,71,21,0.04)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -638,7 +700,10 @@ function SportsList({ sports, isDraft, eventId, onAddSport, navigate }: { sports
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "14px" }}>
             {sports.map((sport, i) => (
-              <SportCard key={sport.id} sport={sport} index={i} eventId={eventId} navigate={navigate} />
+              <SportCard
+                key={sport.id} sport={sport} index={i} eventId={eventId} navigate={navigate}
+                onApprove={onApproveSport} onReject={onRejectSport} busy={busySportId === sport.id}
+              />
             ))}
           </div>
         )}
@@ -971,6 +1036,33 @@ export default function AdminEventPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [actionError,    setActionError]    = useState<string | null>(null)
   const [actionLoading,  setActionLoading]  = useState(false)
+  const [busySportId,    setBusySportId]    = useState<string | null>(null)
+
+  const handleApproveSport = async (sportId: string) => {
+    setActionError(null)
+    setBusySportId(sportId)
+    try {
+      await approveSport(sportId)
+      await refetch()
+    } catch (err: any) {
+      setActionError(err?.response?.data?.message || "Failed to approve sport.")
+    } finally {
+      setBusySportId(null)
+    }
+  }
+
+  const handleRejectSport = async (sportId: string, reason: string) => {
+    setActionError(null)
+    setBusySportId(sportId)
+    try {
+      await rejectSport(sportId, reason || undefined)
+      await refetch()
+    } catch (err: any) {
+      setActionError(err?.response?.data?.message || "Failed to reject sport.")
+    } finally {
+      setBusySportId(null)
+    }
+  }
 
   // Real-time: when event/sport changes come in over WebSocket, re-fetch so
   // the admin view shows the latest data without a manual page refresh.
@@ -1215,6 +1307,9 @@ export default function AdminEventPage() {
           eventId={eventId}
           onAddSport={() => setShowAddSport(true)}
           navigate={navigate}
+          onApproveSport={handleApproveSport}
+          onRejectSport={handleRejectSport}
+          busySportId={busySportId}
         />
       )}
 

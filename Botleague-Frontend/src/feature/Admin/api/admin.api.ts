@@ -422,3 +422,19 @@ export const unassignOrganizerFromEvent = async (
   await api.delete("/admin/assignments/event", { params: { userId, eventId } })
 }
 
+// =====================================================
+// SPORT APPROVAL — organizer-submitted sports awaiting admin review
+// =====================================================
+
+export const approveSport = async (sportId: string): Promise<GetEventSportDTO> => {
+  const response = await api.patch<GetEventSportDTO>(`/admin/sports/${sportId}/approve`)
+  return response.data
+}
+
+export const rejectSport = async (sportId: string, reason?: string): Promise<GetEventSportDTO> => {
+  const response = await api.patch<GetEventSportDTO>(`/admin/sports/${sportId}/reject`, undefined, {
+    params: reason ? { reason } : undefined,
+  })
+  return response.data
+}
+

@@ -11,6 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.botleague.backend.chat.service.ChatService;
 import com.botleague.backend.matches.repository.MatchRepository;
+import com.botleague.backend.notification.enums.NotificationPriority;
+import com.botleague.backend.notification.enums.NotificationTargetType;
+import com.botleague.backend.notification.enums.NotificationType;
+import com.botleague.backend.notification.service.NotificationService;
 import com.botleague.backend.realtime.service.RealtimePublisher;
 import com.botleague.backend.events.dto.EventSportsRequestDTO;
 import com.botleague.backend.events.dto.GetEventSportsDTO;
@@ -32,17 +36,20 @@ public class EventSportsService {
     private final MatchRepository matchRepository;
     private final ChatService chatService;
     private final RealtimePublisher realtimePublisher;
+    private final NotificationService notificationService;
 
     public EventSportsService(EventSportsRepository eventSportsRepository,
                               EventRepository eventRepository,
                               MatchRepository matchRepository,
                               ChatService chatService,
-                              RealtimePublisher realtimePublisher) {
+                              RealtimePublisher realtimePublisher,
+                              NotificationService notificationService) {
         this.eventSportsRepository = eventSportsRepository;
         this.eventRepository = eventRepository;
         this.matchRepository = matchRepository;
         this.chatService = chatService;
         this.realtimePublisher = realtimePublisher;
+        this.notificationService = notificationService;
     }
 
     // =========================
@@ -181,6 +188,21 @@ public class EventSportsService {
         sport.setRejectionReason(null);
         EventSports saved = eventSportsRepository.save(sport);
         realtimePublisher.pushSportUpdate(saved.getId(), saved.getEventId(), mapToResponse(saved));
+
+        String eventName = eventRepository.findById(eventId)
+                .map(Event::getEventName)
+                .orElse("an event");
+        String sportLabel = saved.getSport() != null ? saved.getSport().replace("_", " ") : "A sport";
+        notificationService.systemNotify(
+                "Sport Submitted for Approval",
+                sportLabel + " for \"" + eventName + "\" is waiting for your approval.",
+                NotificationType.SPORT_SUBMITTED_FOR_APPROVAL,
+                NotificationPriority.HIGH,
+                NotificationTargetType.PLATFORM_ADMINS,
+                eventId,
+                "/admin/event/" + eventId
+        );
+
         return mapToResponse(saved);
     }
 

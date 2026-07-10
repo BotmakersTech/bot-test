@@ -16,6 +16,9 @@ import com.botleague.backend.notification.enums.NotificationTargetType;
 import com.botleague.backend.notification.enums.NotificationType;
 import com.botleague.backend.notification.repository.NotificationRecipientRepository;
 import com.botleague.backend.notification.repository.NotificationRepository;
+import com.botleague.backend.auth.enums.AccountType;
+import com.botleague.backend.role.entity.UserRole;
+import com.botleague.backend.role.repository.UserRoleRepository;
 import com.botleague.backend.team.entity.TeamMembership;
 import com.botleague.backend.team.enums.TeamMembershipStatus;
 import com.botleague.backend.realtime.service.RealtimePublisher;
@@ -43,6 +46,10 @@ public class NotificationService {
     private final EventSportsRepository eventSportsRepository;
     private final SportRegistrationRepository sportRegistrationRepository;
     private final RealtimePublisher realtimePublisher;
+    private final UserRoleRepository userRoleRepository;
+
+    private static final List<AccountType> PLATFORM_ADMIN_ROLES =
+            List.of(AccountType.SUPER_ADMIN, AccountType.ADMINISTRATOR, AccountType.MANAGER);
 
     public NotificationService(
             NotificationRepository notificationRepository,
@@ -51,7 +58,8 @@ public class NotificationService {
             TeamMembershipRepository teamMembershipRepository,
             EventSportsRepository eventSportsRepository,
             SportRegistrationRepository sportRegistrationRepository,
-            RealtimePublisher realtimePublisher) {
+            RealtimePublisher realtimePublisher,
+            UserRoleRepository userRoleRepository) {
         this.notificationRepository = notificationRepository;
         this.recipientRepository = recipientRepository;
         this.userRepository = userRepository;
@@ -59,6 +67,7 @@ public class NotificationService {
         this.eventSportsRepository = eventSportsRepository;
         this.sportRegistrationRepository = sportRegistrationRepository;
         this.realtimePublisher = realtimePublisher;
+        this.userRoleRepository = userRoleRepository;
     }
 
     /**
@@ -296,6 +305,12 @@ public class NotificationService {
             case EVENT -> resolveEventRecipients(targetId);
 
             case SPORT -> resolveSportRecipients(targetId);
+
+            case PLATFORM_ADMINS -> userRoleRepository.findByRoleTypeIn(PLATFORM_ADMIN_ROLES)
+                    .stream()
+                    .map(UserRole::getUserId)
+                    .distinct()
+                    .collect(Collectors.toList());
         };
     }
 

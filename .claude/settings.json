@@ -17,7 +17,12 @@
       "Bash(Get-ChildItem -Path \"d:\\\\BotLeague\" -Directory)",
       "Bash(Select-Object Name)",
       "PowerShell(Get-ChildItem -Path \"d:\\\\BotLeague\\\\botleague-backend\\\\src\\\\main\\\\java\\\\com\\\\botleague\\\\backend\\\\guardian\" -Recurse -Directory | ForEach-Object { $_.Name })",
-      "Bash(Get-ChildItem \"d:\\\\BotLeague\\\\botleague-backend\\\\target\\\\classes\\\\com\\\\botleague\\\\backend\\\\events\\\\service\\\\\" -Filter \"*.class\" | Select-Object Name, LastWriteTime | Sort-Object LastWriteTime -Descending)"
+      "Bash(Get-ChildItem \"d:\\\\BotLeague\\\\botleague-backend\\\\target\\\\classes\\\\com\\\\botleague\\\\backend\\\\events\\\\service\\\\\" -Filter \"*.class\" | Select-Object Name, LastWriteTime | Sort-Object LastWriteTime -Descending)",
+      "Bash(netstat -ano)",
+      "PowerShell(Stop-Process -Id 363524 -Force -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 8081 -State Listen -ErrorAction SilentlyContinue)",
+      "Bash(Get-Content -Tail 60 \"C:\\\\Users\\\\win\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\d--BotLeague\\\\5fbfdab0-f96b-4bcd-b256-d20ef55db338\\\\scratchpad\\\\backend-restart3.log\")",
+      "Bash(git check-ignore *)"
     ]
   }
 }

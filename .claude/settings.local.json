@@ -118,7 +118,9 @@
       "PowerShell(Stop-Process -Id 203612 -Force -ErrorAction SilentlyContinue)",
       "PowerShell(Get-NetTCPConnection -LocalPort 8081 -ErrorAction SilentlyContinue)",
       "PowerShell(Stop-Process -Id 364456 -Force -ErrorAction SilentlyContinue)",
-      "PowerShell(Get-NetTCPConnection -LocalPort 8081 -State Listen -ErrorAction SilentlyContinue)"
+      "PowerShell(Get-NetTCPConnection -LocalPort 8081 -State Listen -ErrorAction SilentlyContinue)",
+      "PowerShell($env:PGPASSWORD = \"admin123\"; & \"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -c \"SELECT conname, pg_get_constraintdef\\(oid\\) FROM pg_constraint WHERE conname LIKE '%target_type%' OR conname LIKE '%notification%';\")",
+      "Bash(grep -n \"showAddSport,\\\\|SportsList$\\\\|<SportsList\" \"d:/BotLeague/Botleague-Frontend/src/feature/Admin/pages/AdminEventDetail.tsx\")"
     ]
   }
 }
