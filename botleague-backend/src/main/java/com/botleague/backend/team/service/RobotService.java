@@ -181,7 +181,20 @@ public class RobotService {
         if (request.getHeightCm() != null)  robot.setHeightCm(request.getHeightCm());
         if (request.getAttributes() != null) robot.setAttributes(request.getAttributes());
         if (request.getDescription() != null) robot.setDescription(request.getDescription());
-        if (request.getStatus() != null)    robot.setStatus(request.getStatus());
+
+        // Disqualification is an administrative decision (see AdminRobotController's
+        // dedicated status endpoint) — a team must not be able to disqualify its own
+        // robot to dodge a match, nor reinstate one an admin has disqualified.
+        if (request.getStatus() != null) {
+            if (robot.getStatus() == RobotStatus.DISQUALIFIED) {
+                throw ApiException.forbidden(
+                        "This robot is disqualified; only an administrator can change its status");
+            }
+            if (request.getStatus() == RobotStatus.DISQUALIFIED) {
+                throw ApiException.forbidden("Only an administrator can disqualify a robot");
+            }
+            robot.setStatus(request.getStatus());
+        }
 
         // Keep weightClass in sync
         String sport = robot.getSport();

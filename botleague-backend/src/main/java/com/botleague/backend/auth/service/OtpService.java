@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -32,21 +33,23 @@ public class OtpService {
 
     private static final Logger log = LoggerFactory.getLogger(OtpService.class);
 
-    // TODO: move these to application.properties behind @Value
-    //   msg91.auth-key=...
-    //   msg91.template-id=...
-    private static final String AUTH_KEY = "492934AUjWZEhCwn69a928a4P1";
-    private static final String TEMPLATE_ID = "69ec6b32aa3109be70000682";
     private static final String COUNTRY_CODE = "91";
 
     private static final String SEND_URL   = "https://control.msg91.com/api/v5/otp";
     private static final String VERIFY_URL = "https://control.msg91.com/api/v5/otp/verify";
     private static final String RESEND_URL = "https://control.msg91.com/api/v5/otp/retry";
 
+    private final String authKey;
+    private final String templateId;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
-    public OtpService(RestTemplateBuilder restTemplateBuilder) {
+    public OtpService(
+            RestTemplateBuilder restTemplateBuilder,
+            @Value("${msg91.auth-key}") String authKey,
+            @Value("${msg91.template-id}") String templateId) {
+        this.authKey = authKey;
+        this.templateId = templateId;
         // 5s connect, 10s read — if MSG91 is slower than this, fail fast
         // rather than holding a Tomcat thread hostage.
         this.restTemplate = restTemplateBuilder
@@ -69,7 +72,7 @@ public class OtpService {
 
         Map<String, String> body = Map.of(
                 "mobile", COUNTRY_CODE + phone,
-                "template_id", TEMPLATE_ID);
+                "template_id", templateId);
 
         HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
 
@@ -142,7 +145,7 @@ public class OtpService {
     public boolean resendOtp(String phone) {
 
         HttpHeaders headers = new HttpHeaders();
-        headers.set("authkey", AUTH_KEY);
+        headers.set("authkey", authKey);
 
         String url = UriComponentsBuilder.fromHttpUrl(RESEND_URL)
                 .queryParam("mobile", COUNTRY_CODE + phone)
@@ -171,7 +174,7 @@ public class OtpService {
 
     private HttpHeaders msg91Headers() {
         HttpHeaders headers = new HttpHeaders();
-        headers.set("authkey", AUTH_KEY);
+        headers.set("authkey", authKey);
         headers.setContentType(MediaType.APPLICATION_JSON);
         return headers;
     }

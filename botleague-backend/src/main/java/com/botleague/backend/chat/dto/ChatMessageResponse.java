@@ -9,6 +9,7 @@ public class ChatMessageResponse {
     private UUID chatRoomId;
     private UUID senderId;
     private String senderName;
+    private String senderPhotoUrl;
     private String content;
     private LocalDateTime sentAt;
     private boolean isDeleted;
@@ -30,6 +31,9 @@ public class ChatMessageResponse {
 
     public String getSenderName() { return senderName; }
     public void setSenderName(String senderName) { this.senderName = senderName; }
+
+    public String getSenderPhotoUrl() { return senderPhotoUrl; }
+    public void setSenderPhotoUrl(String senderPhotoUrl) { this.senderPhotoUrl = senderPhotoUrl; }
 
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../../shared/api/Base";
 import ShareButton from "../../../shared/components/ShareButton";
+import { resolveAvatarSrc } from "../constants/avatars";
 
 const BG   = "#0d0d0f";
 const CARD = "#161618";
@@ -45,6 +46,7 @@ export default function UserPublicPage() {
 
   useEffect(() => {
     if (!code) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     api.get(`/profile/public/${code}`)
       .then(r => setProfile(r.data))
@@ -70,6 +72,7 @@ export default function UserPublicPage() {
   const displayName = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || profile.username || profile.botleagueId;
   const initials    = displayName.split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase();
   const location    = [profile.city, profile.state, profile.country].filter(Boolean).join(", ");
+  const avatarSrc   = resolveAvatarSrc(profile.profilePhotoUrl);
 
   return (
     <div style={{ minHeight: "100vh", background: BG, color: TEXT, fontFamily: "Inter, system-ui, sans-serif" }}>
@@ -90,8 +93,8 @@ export default function UserPublicPage() {
 
         {/* Hero */}
         <div style={{ display: "flex", alignItems: "center", gap: 24, marginBottom: 40, flexWrap: "wrap" }}>
-          {profile.profilePhotoUrl ? (
-            <img src={profile.profilePhotoUrl} alt={displayName}
+          {avatarSrc ? (
+            <img src={avatarSrc} alt={displayName}
               style={{ width: 100, height: 100, borderRadius: "50%", objectFit: "cover", border: `2px solid ${BORDER}`, flexShrink: 0 }} />
           ) : (
             <div style={{ width: 100, height: 100, borderRadius: "50%", background: "linear-gradient(135deg,#fa4715,#f97316)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.8rem", fontWeight: 800, color: "#fff", flexShrink: 0 }}>

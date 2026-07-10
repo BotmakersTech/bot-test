@@ -1,0 +1,965 @@
+/* ===================================================================
+   PAGE
+   NOTE: the app shell (top navbar + left sidebar) is already provided
+   by the surrounding layout, so this stylesheet only covers the page
+   content itself — starting from the "Welcome back, Team!" heading.
+   =================================================================== */
+
+.teamdash-page {
+  background: transparent;
+  padding: 46px 52px 70px;
+}
+
+.teamdash-state {
+  min-height: calc(100vh - 72px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 14px;
+  color: #3567cf;
+  text-align: center;
+}
+
+.teamdash-state h1 {
+  margin: 0;
+  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+  font-size: 34px;
+  font-weight: 800;
+}
+
+.teamdash-state p,
+.teamdash-state span {
+  max-width: 460px;
+  margin: 0;
+  color: #555555;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.teamdash-state-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.teamdash-state-actions button,
+.teamdash-error button,
+.teamdash-empty-machines button {
+  border: 0;
+  border-radius: 8px;
+  padding: 9px 18px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #4c8ee7, #8c6cff);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.teamdash-spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid rgba(53, 103, 207, 0.18);
+  border-top-color: #3567cf;
+  border-radius: 50%;
+  animation: teamdash-spin 0.8s linear infinite;
+}
+
+@keyframes teamdash-spin {
+  to { transform: rotate(360deg); }
+}
+
+.teamdash-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid #ffb5b5;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  color: #b42323;
+  background: #fff3f3;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.teamdash-error button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+}
+
+/* Kept for the footer's "BOT LEAGUE" wordmark, which reuses this class */
+.teamdash-logo {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.teamdash-logo-accent {
+  position: relative;
+}
+
+.teamdash-logo-accent::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 3px;
+  background: linear-gradient(90deg, #4c8ee7, #8c6cff);
+}
+
+.teamdash-content {
+  width: min(1294px, 100%);
+  margin: 0 auto;
+}
+
+.teamdash-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.teamdash-top-row h1 {
+  margin: 0;
+  color: #3567cf;
+  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 1px;
+}
+
+.teamdash-chat-btn {
+  border: 0;
+  min-width: 104px;
+  height: 36px;
+  border-radius: 8px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #4c8ee7, #8c6cff);
+  box-shadow: 0 3px 4px rgba(82, 71, 159, 0.28);
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* ===================================================================
+   FEATURED EVENT BANNER
+   =================================================================== */
+
+.teamdash-event-banner {
+  position: relative;
+  min-height: 226px;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 30px 40px;
+  margin-bottom: 30px;
+  background-size: cover;
+  background-position: center;
+  isolation: isolate;
+}
+
+.teamdash-event-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(100deg, rgba(10, 8, 30, 0.92) 0%, rgba(20, 16, 48, 0.75) 45%, rgba(35, 20, 70, 0.55) 100%);
+}
+
+.teamdash-event-copy {
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
+}
+
+.teamdash-event-badges {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.teamdash-event-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 14px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #6d5bff, #8c6cff);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.teamdash-event-subtitle {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.teamdash-event-copy h2 {
+  margin: 0 0 14px;
+  color: #ffffff;
+  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.teamdash-event-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  margin-bottom: 20px;
+}
+
+.teamdash-event-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.teamdash-event-cta {
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  background: transparent;
+  color: #ffffff;
+  height: 40px;
+  padding: 0 22px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.teamdash-event-cta:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.teamdash-countdown {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.teamdash-countdown-box {
+  min-width: 82px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 6px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.teamdash-countdown-box strong {
+  color: #ffffff;
+  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.teamdash-countdown-box span {
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.teamdash-countdown-sep {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+/* ===================================================================
+   TEAM PANEL + ACTIVE SQUAD
+   =================================================================== */
+
+.teamdash-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr);
+  gap: 24px;
+  align-items: stretch;
+  margin-bottom: 30px;
+}
+
+.teamdash-team-panel {
+  position: relative;
+  border: 1.5px solid #4b86e8;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  padding: 44px 40px 32px;
+}
+
+.teamdash-rank-pill {
+  position: absolute;
+  left: 30px;
+  top: 17px;
+  z-index: 3;
+  display: inline-flex;
+  height: 40px;
+  align-items: center;
+  gap: 9px;
+  border-radius: 6px;
+  padding: 0 18px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #5d91df, #8d70ff);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.teamdash-rank-pill svg {
+  color: #f4fb41;
+}
+
+.teamdash-team-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.teamdash-active-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #5277ee;
+  border-radius: 999px;
+  padding: 4px 10px;
+  color: #2f66ca;
+  background: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.teamdash-active-pill span {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #2f66ca;
+}
+
+.teamdash-team-copy h2 {
+  margin: 0;
+  color: #5b62ea;
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.teamdash-team-copy p {
+  margin: 6px 0 0;
+  color: #080808;
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.teamdash-team-copy p strong {
+  color: #3567cf;
+  font-weight: 800;
+}
+
+.teamdash-since {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 18px;
+}
+
+.teamdash-since span {
+  color: #4b4b4b;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.teamdash-since a {
+  color: #3567cf;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.teamdash-since a:hover {
+  text-decoration: underline;
+}
+
+.teamdash-team-image {
+  flex: 0 0 auto;
+  width: 340px;
+  height: 250px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1.5px solid #4b79df;
+  background: #111111;
+}
+
+.teamdash-team-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.teamdash-squad-panel {
+  border: 1.5px solid #4b86e8;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.teamdash-squad-panel h2 {
+  margin: 0;
+  padding: 16px 20px;
+  background: #eef1ff;
+  border-bottom: 1.5px solid #4b86e8;
+  color: #1a1a1a;
+  font-size: 19px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.teamdash-member-list {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 20px;
+}
+
+.teamdash-member {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid #eceffb;
+}
+
+.teamdash-member:last-child {
+  border-bottom: 0;
+}
+
+.teamdash-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.teamdash-avatar-fallback {
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background: linear-gradient(135deg, #4c8ee7, #8c6cff);
+  font-size: 14px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.teamdash-member-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.teamdash-member-info strong {
+  color: #0a0a0a;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.teamdash-member-info span {
+  color: #7c7c7c;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.teamdash-member em {
+  font-style: normal;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1.5px solid;
+  white-space: nowrap;
+}
+
+.teamdash-member em.active {
+  color: #1fa952;
+  border-color: #1fa952;
+  background: rgba(31, 169, 82, 0.06);
+}
+
+.teamdash-member em.offline {
+  color: #e04b4b;
+  border-color: #e04b4b;
+  background: rgba(224, 75, 75, 0.06);
+}
+
+.teamdash-manage-btn {
+  border: 0;
+  border-top: 1.5px solid #4b86e8;
+  background: #eef1ff;
+  color: #1a1a1a;
+  height: 46px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: auto;
+}
+
+.teamdash-manage-btn:hover {
+  background: #e2e6ff;
+}
+
+/* ===================================================================
+   BATTLE MACHINES
+   =================================================================== */
+
+.teamdash-machines {
+  margin-bottom: 10px;
+}
+
+.teamdash-machines-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.teamdash-machines-head h2 {
+  margin: 0;
+  color: #14142b;
+  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.teamdash-machines-head a {
+  color: #3567cf;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.teamdash-machines-head button {
+  border: 0;
+  color: #3567cf;
+  background: transparent;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.teamdash-machines-head a:hover,
+.teamdash-machines-head button:hover {
+  text-decoration: underline;
+}
+
+.teamdash-machine-strip {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr 1fr;
+  gap: 18px;
+}
+
+.teamdash-machine-feature,
+.teamdash-machine-thumb {
+  position: relative;
+  height: 210px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #111111;
+}
+
+.teamdash-machine-feature img,
+.teamdash-machine-thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.teamdash-machine-status {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 10px;
+  border-radius: 4px;
+  background: rgba(19, 122, 61, 0.9);
+  color: #d8ffe6;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.teamdash-machine-info {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  left: 42%;
+  clip-path: polygon(12% 0, 100% 0, 100% 100%, 0% 100%);
+  background: linear-gradient(135deg, rgba(140, 108, 255, 0.92), rgba(76, 142, 231, 0.92));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px 26px 24px 46px;
+  color: #ffffff;
+}
+
+.teamdash-machine-info h3 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.teamdash-machine-info p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  opacity: 0.9;
+}
+
+.teamdash-machine-stats {
+  display: flex;
+  gap: 34px;
+  margin-top: 20px;
+}
+
+.teamdash-machine-stats div {
+  display: flex;
+  flex-direction: column;
+}
+
+.teamdash-machine-stats strong {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.teamdash-machine-stats span {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  opacity: 0.85;
+}
+
+.teamdash-empty-list {
+  padding: 22px 0;
+  color: #777777;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.teamdash-empty-machines {
+  display: grid;
+  grid-template-columns: 140px 1fr auto;
+  align-items: center;
+  gap: 22px;
+  border: 1.5px solid #4b86e8;
+  border-radius: 12px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.teamdash-empty-machines img {
+  width: 140px;
+  height: 110px;
+  object-fit: contain;
+}
+
+.teamdash-empty-machines h3 {
+  margin: 0 0 6px;
+  color: #14142b;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.teamdash-empty-machines p {
+  margin: 0;
+  color: #666666;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* ===================================================================
+   NEWSLETTER STRIP
+   =================================================================== */
+
+.teamdash-newsletter {
+  background: linear-gradient(90deg, #7c6cff, #8f6cff);
+  padding: 34px 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.teamdash-newsletter p {
+  margin: 0;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.teamdash-newsletter form {
+  display: flex;
+  width: min(520px, 100%);
+}
+
+.teamdash-newsletter input {
+  flex: 1;
+  border: 0;
+  border-radius: 8px 0 0 8px;
+  padding: 0 20px;
+  height: 50px;
+  font-size: 14px;
+  color: #1a1a1a;
+  outline: none;
+  letter-spacing: 0.5px;
+}
+
+.teamdash-newsletter input::placeholder {
+  color: #8c8c8c;
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+.teamdash-newsletter button {
+  border: 0;
+  border-radius: 0 8px 8px 0;
+  padding: 0 34px;
+  height: 50px;
+  background: #14142b;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.teamdash-newsletter button:hover {
+  background: #21213f;
+}
+
+/* ===================================================================
+   FOOTER
+   =================================================================== */
+
+.teamdash-footer {
+  position: relative;
+  background: #100e24;
+  color: #d8d8e6;
+  padding: 60px 52px 40px;
+}
+
+.teamdash-scroll-top {
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 2px solid #14142b;
+  color: #8c6cff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.teamdash-footer-top {
+  width: min(1294px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr 1fr 1fr;
+  gap: 40px;
+}
+
+.teamdash-footer-brand .teamdash-logo {
+  color: #ffffff;
+  margin-bottom: 18px;
+}
+
+.teamdash-footer-brand p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #b9b9cc;
+}
+
+.teamdash-footer-brand p strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.teamdash-socials {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.teamdash-socials a {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.teamdash-socials a:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.teamdash-footer-cols {
+  grid-column: 2 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.teamdash-footer-col h4 {
+  margin: 0 0 18px;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.teamdash-footer-col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.teamdash-footer-col a {
+  color: #b1b1c4;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.teamdash-footer-col a:hover {
+  color: #ffffff;
+}
+
+/* ===================================================================
+   RESPONSIVE
+   =================================================================== */
+
+@media (max-width: 1180px) {
+  .teamdash-page {
+    padding: 36px 28px 56px;
+  }
+
+  .teamdash-event-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .teamdash-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .teamdash-team-panel {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .teamdash-team-image {
+    width: 100%;
+  }
+
+  .teamdash-machine-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .teamdash-footer-top {
+    grid-template-columns: 1fr;
+  }
+
+  .teamdash-footer-cols {
+    grid-column: 1;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .teamdash-top-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .teamdash-top-row h1 {
+    font-size: 30px;
+  }
+
+  .teamdash-newsletter {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .teamdash-footer-cols {
+    grid-template-columns: 1fr;
+  }
+}

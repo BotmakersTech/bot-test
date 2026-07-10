@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
 const inputClass =
-  "w-full font-inter text-[14px] md:text-[16px] text-[#5c5c5c] " +
-  "placeholder:text-[#999797] bg-[#bdbdbd2b] rounded-xl " +
+  " cna-input w-full font-inter text-[14px] md:text-[16px] text-[#5c5c5c] " +
+  " placeholder:text-[20px] placeholder:text-[#000000]/45 bg-[#bdbdbd2b] rounded-xl " +
   "border border-[#BDBDBD] py-2.5 pl-4 pr-11 md:py-4 md:pl-5 md:pr-12 " +
   "shadow-[inset_0_2px_4px_rgba(0,0,0,0.12)] focus:shadow-none " +
   "focus:outline-none focus:border-[#BDBDBD] " +
@@ -35,7 +35,7 @@ export default function PasswordSection({
   const match = confirmPassword === password;
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex flex-col w-full gap-5">
       {/* PASSWORD */}
       <div className="relative w-full">
         <input

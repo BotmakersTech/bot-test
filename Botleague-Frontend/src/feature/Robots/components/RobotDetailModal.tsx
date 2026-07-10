@@ -11,6 +11,8 @@ interface RobotDetailModalProps {
   canEdit?: boolean;
   /** Called with the updated robot after a successful save, so the list can refresh. */
   onUpdated?: (robot: Robot) => void;
+  /** Open directly into the edit form instead of the read-only view. */
+  startInEditing?: boolean;
 }
 
 const CONTROL_TYPES = ["MANUAL", "AUTONOMOUS", "HYBRID"];
@@ -477,11 +479,11 @@ function injectStyles() {
   document.head.appendChild(tag);
 }
 
-export default function RobotDetailModal({ robot, onClose, canEdit = false, onUpdated }: RobotDetailModalProps) {
+export default function RobotDetailModal({ robot, onClose, canEdit = false, onUpdated, startInEditing = false }: RobotDetailModalProps) {
   injectStyles();
 
   const overlayRef = useRef<HTMLDivElement>(null);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(startInEditing && canEdit);
   const [saving, setSaving]   = useState(false);
   const [err, setErr]         = useState<string | null>(null);
   const [form, setForm] = useState<UpdateRobotPayload>({

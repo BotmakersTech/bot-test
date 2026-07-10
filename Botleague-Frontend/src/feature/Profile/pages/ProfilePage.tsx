@@ -2,11 +2,9 @@ import React from "react";
 import ProfileLayout from "../../../layouts/ProfileLayout";
 import ProfileForm from "../components/ProfileForm";
 import useProfile from "../hooks/useProfile";
-import CategoryBadge from "../../../shared/components/CategoryBadge";
 import GuardianForm from "../../Eligibility/components/GuardianForm";
 import { useEligibility } from "../../Eligibility/hooks/useEligibility";
-import ShareButton from "../../../shared/components/ShareButton";
-import "../../../styles/profile.css";
+import "../../../styles/profile.css"
 
 const ProfilePage: React.FC = () => {
   const p = useProfile();
@@ -18,25 +16,20 @@ const ProfilePage: React.FC = () => {
     <div>
       <ProfileLayout
         avatarSrc={p.profilePhotoUrl}
+        rawAvatarValue={p.rawProfilePhotoValue}
         onAvatarChange={p.handleAvatarChange}
+        onSelectAvatar={p.handleSelectAvatar}
+        isAvatarModalOpen={p.isAvatarModalOpen}
+        onOpenAvatarModal={p.openAvatarModal}
+        onCloseAvatarModal={p.closeAvatarModal}
         username={p.username}
         onUsernameChange={p.setUsername}
         botleagueId={p.botleagueId}
       >
-        {/* Share public profile link */}
-        {p.botleagueId && (
-          <div style={{ marginBottom: "12px" }}>
-            <ShareButton
-              url={`${window.location.origin}/user/${p.botleagueId}`}
-              label="Share Profile"
-              size="sm"
-            />
-          </div>
-        )}
-
-        {/* Competition Category Badge */}
+        
+        {/* Competition Category Badge
         {eligibility?.category && (
-          <div style={{ marginBottom: "16px", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+          <div className="mb-4 flex flex-wrap items-center gap-2.5">
             <CategoryBadge category={eligibility.category} size="md" showAgeRange />
             {!eligibility.canRegister && eligibility.blockReason && (
               <span style={{ fontSize: "0.75rem", color: "#f87171", fontWeight: 500 }}>
@@ -44,42 +37,32 @@ const ProfilePage: React.FC = () => {
               </span>
             )}
           </div>
-        )}
+        )} */}
 
         <ProfileForm
           firstName={p.firstName}
           setFirstName={p.setFirstName}
-
           lastName={p.lastName}
           setLastName={p.setLastName}
-
-          teamName={p.teamName}
-
+          phone={p.phone}
+          setPhone={p.setPhone}
+          email={p.email}
+          pendingEmailInput={p.pendingEmailInput}
+          setPendingEmailInput={p.setPendingEmailInput}
+          saveEmail={p.saveEmail}
           dateOfBirth={p.dateOfBirth}
           setDateOfBirth={p.setDateOfBirth}
-
-          city={p.city || ""}
-          setCity={p.setCity}
-
-          state={p.state || ""}
-          setState={p.setState}
-
-          country={p.country || ""}
-          setCountry={p.setCountry}
-
           address={p.address}
           setAddress={p.setAddress}
-
           onSave={p.handleUpdate}
           isLoading={p.isLoading}
-
+          saveSuccess={p.saveSuccess}
           errors={p.errors}
-          clearError={p.clearError}
         />
 
         {/* Guardian Info — shown for users under 18 */}
         {(isMinor || (eligibility && eligibility.requiresGuardian)) && (
-          <div style={{ marginTop: "24px" }}>
+          <div className="mt-6">
             <GuardianForm onSaved={reloadEligibility} />
           </div>
         )}

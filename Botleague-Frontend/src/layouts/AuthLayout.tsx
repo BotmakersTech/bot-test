@@ -1,10 +1,11 @@
-import flight from ".././assets/Auth/flight.svg";
-import drone from ".././assets/Auth/drone.svg";
-import star1 from ".././assets/Auth/Star-18.svg";
-import star2 from ".././assets/Auth/Star-19.svg";
+import React from "react";
+import flight from "../assets/Auth/flight.svg";
+import drone from "../assets/Auth/drone.svg";
+import star1 from "../assets/Auth/Star-18.svg";
+import star2 from "../assets/Auth/Star-19.svg";
+import LOGO_URL from "../assets/logo.png";
 import "../styles/AuthLayout.css";
 
-const LOGO_URL = "https://botleague.in/logo/bot.png";
 
 interface Props {
   children: React.ReactNode;
@@ -13,7 +14,7 @@ interface Props {
 export default function AuthLayout({ children }: Props) {
   return (
     <div className="cna-root relative min-h-screen overflow-hidden bg-white">
-      {/* ---------- Background decorations (fixed corners, behind card) ---------- */}
+      {/* ---------- Background decorations ---------- */}
 
       {/* Plane — upper left */}
       <img
@@ -31,7 +32,7 @@ export default function AuthLayout({ children }: Props) {
         className="cna-bg cna-bg--star-tr"
       />
 
-      {/* Drone — right, vertically centered-ish */}
+      {/* Drone — right center */}
       <img
         src={drone}
         alt=""
@@ -47,23 +48,25 @@ export default function AuthLayout({ children }: Props) {
         className="cna-bg cna-bg--star-bl"
       />
 
-      {/* ---------- Foreground content ---------- */}
-      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-8">
+      {/* ---------- Main Content ---------- */}
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-8 ">
         {/* Logo */}
         <div className="flex justify-center pb-6">
           <img
             src={LOGO_URL}
             alt="BotLeague"
-            className="cna-logo h-10 md:h-14 object-contain"
+            className="cna-logo h-10 object-contain md:h-14"
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = "none";
             }}
           />
         </div>
 
-        {/* Card — gradient border, white body */}
-        <div className="cna-card w-full max-w-170">
-          <div className="cna-card-inner">{children}</div>
+        {/* Card */}
+        <div className="cna-card w-[692px] mx-auto px-72 rounded-xl! overflow-hidden">
+          <div className="cna-card-inner px-6 py-8 sm:px-10 md:px-14 lg:px-20">
+            {children}
+          </div>
         </div>
       </div>
     </div>

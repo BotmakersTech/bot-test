@@ -4,9 +4,9 @@ import OtpSection from "../components/OtpSection";
 import PasswordSection from "../components/PasswordSection";
 import TermsSection from "../components/TermsSection";
 import SocialAuth from "../components/SocialAuth";
-import '../../../styles/login.css' ;
+// import '../../../styles/login.css' ;
 import useRegister from "../hooks/useRegister";
-
+import "../../../styles/AuthLayout.css"
 export default function RegisterPage() {
   const register = useRegister();
 
@@ -14,7 +14,7 @@ export default function RegisterPage() {
     <AuthLayout >
       <AuthCard
         title="Create New Account"
-        subtitle="Start your journey in BotLeague"
+        subtitle="Start your journey"
       >
 
         {/* OTP SECTION */}
@@ -54,21 +54,18 @@ export default function RegisterPage() {
           </p>
         )}
 
-  <button
+<button
   onClick={register.handleRegister}
-  className="shadow-xs text-white tracking-wide cursor-pointer text-[14px] md:text-[18px] w-full bg-custom-gradient
-  px-1.5 py-2.5 md:py-4 md:px-2 font-poppins font-semibold rounded-xl transition-transform duration-150 active:scale-95
+  className="cna-btn shadow-xs text-white tracking-wide cursor-pointer text-[14px] md:text-[18px] w-full 
+  bg-linear-to-b from-[#3B82F6] to-[#8B7CF6]
+  px-3! py-2.5! md:py-4 md:px-2 font-poppins font-semibold rounded-xl transition-transform duration-150 active:scale-95
   disabled:opacity-60 disabled:cursor-not-allowed"
   disabled={register.isLoading}
 >
   {register.isLoading ? "Loading..." : "Create Account"}
 </button>
 
-{register.error && (
-  <p className="text-red-500 text-[10px] md:text-[12px] font-inter text-center">
-    {register.error}
-  </p>
-)}
+
         {/* SUBMIT */}
      
 

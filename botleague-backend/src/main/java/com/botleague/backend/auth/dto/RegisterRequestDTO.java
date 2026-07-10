@@ -10,9 +10,9 @@ public class RegisterRequestDTO {
     @Pattern(regexp = "^[0-9]{10}$", message = "Phone must be 10 digits")
     private String phone;
 
-//    @NotBlank(message = "OTP is required")
-//    @Pattern(regexp = "^[0-9]{6}$", message = "OTP must be 6 digits")
-//    private String otp;
+    @NotBlank(message = "OTP is required")
+    @Pattern(regexp = "^[0-9]{4}$", message = "OTP must be 4 digits")
+    private String otp;
 
     @NotBlank(message = "Password is required")
     @Size(min = 8, message = "Password must be at least 8 characters")
@@ -26,13 +26,13 @@ public class RegisterRequestDTO {
 		this.phone = phone;
 	}
 
-//	public String getOtp() {
-//		return otp;
-//	}
-//
-//	public void setOtp(String otp) {
-//		this.otp = otp;
-//	}
+	public String getOtp() {
+		return otp;
+	}
+
+	public void setOtp(String otp) {
+		this.otp = otp;
+	}
 
 	public String getPassword() {
 		return password;

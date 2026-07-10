@@ -14,6 +14,7 @@ import com.botleague.backend.auth.repository.UserRepository;
 import com.botleague.backend.chat.service.ChatService;
 import com.botleague.backend.common.exception.ApiException;
 import com.botleague.backend.common.service.BotleagueIdService;
+import com.botleague.backend.common.service.GetFileService;
 import com.botleague.backend.role.service.UserRoleService;
 import com.botleague.backend.team.dto.CreateTeamRequestDTO;
 import com.botleague.backend.team.dto.CreateTeamResponseDTO;
@@ -39,6 +40,7 @@ public class TeamService {
     private final TeamMembershipRepository teamMembershipRepository;
     private final UserRepository userRepository;
     private final ChatService chatService;
+    private final GetFileService getFileService;
 
     private static final String CDN_BASE_URL = "https://media.botleague.in/";
 
@@ -49,7 +51,8 @@ public class TeamService {
             TeamMembershipService teamMembershipService,
             TeamMembershipRepository teamMembershipRepository,
             UserRepository userRepository,
-            ChatService chatService) {
+            ChatService chatService,
+            GetFileService getFileService) {
 
         this.teamRepository = teamRepository;
         this.botleagueIdService = botleagueIdService;
@@ -58,6 +61,7 @@ public class TeamService {
         this.teamMembershipRepository = teamMembershipRepository;
         this.userRepository = userRepository;
         this.chatService = chatService;
+        this.getFileService = getFileService;
     }
 
     // ================= CREATE TEAM =================
@@ -238,7 +242,7 @@ public class TeamService {
                     dto.setFirstName(user.getFirstName());
                     dto.setLastName(user.getLastName());
                     dto.setDateOfBirth(user.getDateOfBirth());
-                    dto.setProfilePhotoUrl(user.getProfilePhotoUrl());
+                    dto.setProfilePhotoUrl(getFileService.resolveProfileImage(user.getProfilePhotoUrl()));
                     dto.setCountry(user.getCountry());
                     dto.setState(user.getState());
                     dto.setCity(user.getCity());
@@ -268,6 +272,10 @@ public class TeamService {
             Authentication authentication) {
 
         UUID userId = extractUserId(authentication);
+        
+        
+
+     
 
         // ============================================
         // FIND ACTIVE MEMBERSHIP

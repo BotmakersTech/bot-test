@@ -78,7 +78,7 @@ export default function OtpSection({
   };
 
   return (
-    <div>
+    <div className="flex flex-col w-full gap-5">
       {/* ---------- MOBILE + GET OTP ---------- */}
       <div className="flex items-stretch gap-3 md:gap-4">
         <input
@@ -91,23 +91,24 @@ export default function OtpSection({
             setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))
           }
           disabled={otpVerified}
-          className="w-full font-inter text-[14px] md:text-[16px] text-[#5c5c5c]
-            placeholder:text-[#999797] bg-[#bdbdbd2b] rounded-xl
+          className="w-full cna-input font-inter text-[14px] md:text-[16px] text-[#5c5c5c]
+            placeholder:text-[20px] placeholder:text-[#000000]/45 bg-[#bdbdbd2b] rounded-xl
             border border-[#BDBDBD] px-4 py-3 md:px-5 md:py-4
             shadow-[inset_0_2px_4px_rgba(0,0,0,0.12)] focus:shadow-none
             focus:outline-none focus:border-[#BDBDBD]
             transition-shadow duration-150 ease-in
-            disabled:opacity-60 disabled:cursor-not-allowed"
+            disabled:opacity-60 disabled:cursor-not-allowed
+            "
         />
 
         <button
           type="button"
           onClick={otpSent ? onResendOtp : onSendOtp}
           disabled={isLoading || otpVerified || (otpSent && resendTimer > 0)}
-          className="shrink-0 whitespace-nowrap font-poppins font-semibold tracking-wide
+          className="cna-btn cna-btn--otp shrink-0 whitespace-nowrap font-poppins font-semibold tracking-wide
             text-white text-[14px] md:text-[16px]
             bg-gradient-to-b from-[#3B82F6] to-[#8B7CF6]
-            rounded-xl px-4 py-3 md:px-6 md:py-4
+            flex items-center justify-center
             cursor-pointer transition-transform duration-150 active:scale-95
             disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100"
         >
@@ -136,7 +137,7 @@ export default function OtpSection({
             onPaste={handleOtpPaste}
             onFocus={(e) => e.target.select()}
             disabled={!otpSent || otpVerified}
-            className="w-11 h-11 md:w-14 md:h-14 text-center font-inter
+            className="w-11 h-11 md:w-14 md:h-14  text-center font-inter
               text-[16px] md:text-[18px] text-[#5c5c5c]
               bg-[#bdbdbd2b] rounded-lg border border-[#BDBDBD]
               shadow-[inset_0_2px_4px_rgba(0,0,0,0.12)] focus:shadow-none

@@ -14,7 +14,8 @@ import {
 } from "../api/profile.api";
 
 import { getMyTeam } from "../../Team/api/team.api";
-import { uploadProfileImage } from "../api/upload.api";
+import { uploadProfileImage, selectAvatar } from "../api/upload.api";
+import { resolveAvatarSrc } from "../constants/avatars";
 
 import {
   getTeamMemberships,
@@ -30,6 +31,8 @@ import {
   setTeam as setReduxTeam,
   clearTeam,
 } from "../../Team/store/TeamSlice";
+
+import { updateUser } from "../../Auth/store/authSlice";
 
 import {
   membershipFetchStart,
@@ -127,7 +130,13 @@ export interface UseProfileReturn {
   resendCooldownSeconds: number;
   isPollingEmailVerification: boolean;
   profilePhotoUrl: string | null;
+  /** Raw stored value (real URL or "avatar:<key>" sentinel) — for the picker modal only. */
+  rawProfilePhotoValue: string | null;
   handleAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
+  handleSelectAvatar: (avatarKey: string) => Promise<void>;
+  isAvatarModalOpen: boolean;
+  openAvatarModal: () => void;
+  closeAvatarModal: () => void;
   isEditingUsername: boolean;
   setIsEditingUsername: (v: boolean) => void;
   isEditingName: boolean;
@@ -488,14 +497,38 @@ const loadTeamMembership = useCallback(async (teamCode: string) => {
       try {
         const { fileUrl } = await uploadProfileImage(file);
         setAvatarSrc(fileUrl);
+        dispatch(updateUser({ profilePhotoUrl: fileUrl }));
         await loadProfile();
       } finally {
         URL.revokeObjectURL(previewUrl);
         stopLoading("avatar");
       }
     },
-    [loadProfile, startLoading, stopLoading]
+    [dispatch, loadProfile, startLoading, stopLoading]
   );
+
+  const handleSelectAvatar = useCallback(
+    async (avatarKey: string) => {
+      startLoading("avatar");
+      try {
+        const sentinel = await selectAvatar(avatarKey);
+        setAvatarSrc(sentinel);
+        dispatch(updateUser({ profilePhotoUrl: sentinel }));
+        await loadProfile();
+      } finally {
+        stopLoading("avatar");
+      }
+    },
+    [dispatch, loadProfile, startLoading, stopLoading]
+  );
+
+  // ───────────────────────────────────────────────────
+  // AVATAR PICKER MODAL
+  // ───────────────────────────────────────────────────
+
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const openAvatarModal = useCallback(() => setIsAvatarModalOpen(true), []);
+  const closeAvatarModal = useCallback(() => setIsAvatarModalOpen(false), []);
 
   // ───────────────────────────────────────────────────
   // USERNAME
@@ -623,8 +656,13 @@ const loadTeamMembership = useCallback(async (teamCode: string) => {
     pendingEmail,
     resendCooldownSeconds,
     isPollingEmailVerification,
-    profilePhotoUrl: avatarSrc,
+    profilePhotoUrl: resolveAvatarSrc(avatarSrc),
+    rawProfilePhotoValue: avatarSrc,
     handleAvatarChange,
+    handleSelectAvatar,
+    isAvatarModalOpen,
+    openAvatarModal,
+    closeAvatarModal,
     isEditingUsername, setIsEditingUsername,
     isEditingName,     setIsEditingName,
     isEditingEmail,    setIsEditingEmail,

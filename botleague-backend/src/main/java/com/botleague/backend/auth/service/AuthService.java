@@ -88,6 +88,13 @@ public class AuthService {
             throw ApiException.conflict("User already exists");
         }
 
+        // Prove phone ownership before creating the account — otherwise anyone
+        // could register with someone else's number and permanently squat it
+        // (existsByPhone above would then block the real owner from ever
+        // registering). This mirrors the OTP flow already required for
+        // resetPassword's phone branch.
+        otpService.verifyOtp(request.getPhone(), request.getOtp());
+
         String botleagueId = botleagueIdService.generateBotleagueUserId();
         // hashing is bounded so a registration burst can't pin both cores
         String hashedPassword = passwordHasher.hash(request.getPassword());
@@ -189,6 +196,7 @@ public class AuthService {
                     .orElseThrow(() -> ApiException.badRequest("Invalid request"));
 
             updatePassword(user, request.getNewPassword());
+            refreshTokenService.revokeAll(user.getId());
         }
         // ----- EMAIL TOKEN FLOW -----
         else if (request.getToken() != null) {
@@ -207,15 +215,13 @@ public class AuthService {
                     .orElseThrow(() -> ApiException.notFound("User not found"));
 
             updatePassword(user, request.getNewPassword());
+            refreshTokenService.revokeAll(user.getId());
 
             resetToken.setUsedAt(LocalDateTime.now());
             passwordResetTokenRepository.save(resetToken);
         } else {
             throw ApiException.badRequest("Invalid request");
         }
-
-        // Security: a password reset invalidates all existing sessions.
-        // (resolve userId in either branch; shown here for the email flow)
     }
 
     // ================= CHANGE PASSWORD =================

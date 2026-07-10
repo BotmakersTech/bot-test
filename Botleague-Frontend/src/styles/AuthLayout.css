@@ -1,79 +1,624 @@
-/* ============ AuthLayout — BotLeague ============ */
+@import url('https://fonts.googleapis.com/css2?family=Sarpanch:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
 
-.cna-root {
-  background: #ffffff;
+/* =========================================================
+   CreateNewAccount.css — BotLeague
+   Light / Purple theme  ·  Sarpanch + Inter + Poppins
+   ========================================================= */
+
+/* ── Tokens ──────────────────────────────────────────────── */
+:root {
+  --cna-bg:            #F4F3FF;
+  --cna-surface:       rgba(140, 108, 255, 0.06);
+  --cna-surface-hover: rgba(140, 108, 255, 0.10);
+  --cna-border:        #D8D2FF;
+  --cna-border-input:  #C4B5FD;
+
+  --cna-text-primary:  #111111;
+  --cna-text-secondary:#4B5563;
+  --cna-text-muted:    #9CA3AF;
+  --cna-text-dark:     #111111;
+  --cna-text-link:     #8C6CFF;
+
+  --cna-accent:        #8C6CFF;
+  --cna-accent-hover:  #7B5CE7;
+  --cna-accent-link:   #8C6CFF;
+
+  --cna-success:       #22C55E;
+  --cna-error:         #EF4444;
+  --cna-verified:      #22C55E;
+
+  --cna-radius-sm:     6px;
+  --cna-radius:        12px;
+  --cna-radius-lg:     80px;
+
+  --cna-transition:    0.18s ease;
+
+  --cna-font: 'Inter', system-ui, sans-serif;
 }
 
-/* ---- Background decorations ---- */
+/* ── Reset ───────────────────────────────────────────────── */
+.cna-root *,
+.cna-root *::before,
+.cna-root *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.login {
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem;
+}
+
+.login:hover {
+  background: #7B5CE7 !important;
+  color: #ffffff !important;
+}
+
+/* ── Root ────────────────────────────────────────────────── */
+.cna-root {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
+ 
+  font-family: var(--cna-font);
+}
+
+/* ── Background decorations ──────────────────────────────── */
 .cna-bg {
   position: absolute;
-  z-index: 0;
   pointer-events: none;
   user-select: none;
-  opacity: 0.9; /* the assets themselves look faded; raise/lower to taste */
+  z-index: 0;
 }
 
-/* Plane — upper left, slightly off-canvas, tilted like the mock */
+/* Plane — upper left */
 .cna-bg--flight {
-  top: 4%;
-  left: -2%;
-  width: clamp(160px, 18vw, 280px);
-  transform: rotate(-8deg);
+  top: 0;
+  left: 0;
+  width: 400px;
+  opacity: 0.9;
 }
 
-/* Big outlined star — top right */
+/* Big star — top right */
 .cna-bg--star-tr {
-  top: 6%;
-  right: 8%;
-  width: clamp(80px, 10vw, 160px);
+  top: 0;
+  right: 100px;
+  width: 150px;
+  opacity: 0.6;
 }
 
-/* Drone — right edge, middle/lower */
+/* Drone — right center */
 .cna-bg--drone {
-  top: 52%;
-  right: -3%;
-  width: clamp(200px, 22vw, 340px);
+  bottom: 0;
+  right: 100px;
+  width: 340px;
+  opacity: 0.9;
 }
 
-/* Small outlined star — bottom left */
+/* Small star — bottom left */
 .cna-bg--star-bl {
-  bottom: 18%;
-  left: 6%;
-  width: clamp(50px, 6vw, 90px);
+  bottom: 0;
+  left: 100px;
+  width: 120px;
+  opacity: 0.5;
 }
 
-/* Hide heavy decorations on small screens so the form stays clean */
-@media (max-width: 768px) {
-  .cna-bg--flight,
-  .cna-bg--drone {
-    display: none;
-  }
-  .cna-bg--star-tr {
-    right: 2%;
-    width: 70px;
-  }
-  .cna-bg--star-bl {
-    left: 2%;
-    width: 44px;
-  }
-}
-
-/* ---- Card with blue → purple gradient border ---- */
+/* ── Card ────────────────────────────────────────────────── */
 .cna-card {
-  border-radius: 24px;
-  padding: 3px; /* border thickness */
-  background: linear-gradient(180deg, #3b82f6 0%, #8b7cf6 100%);
-  box-shadow: 0 12px 40px rgba(59, 130, 246, 0.12);
+  position: relative;
+  padding: 20px 110px;
+  z-index: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 88px;
+  min-height: 560px;
+  border-radius: var(--cna-radius);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(140, 108, 255, 0.15);
+  box-shadow: 0 8px 40px rgba(140, 108, 255, 0.12);
+  overflow: hidden;
 }
 
-.cna-card-inner {
-  border-radius: 21px; /* outer radius - padding */
-  background: #ffffff;
-  padding: 32px 40px 40px;
+/* ── Panels ──────────────────────────────────────────────── */
+.cna-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-@media (max-width: 640px) {
-  .cna-card-inner {
-    padding: 24px 20px 28px;
+.cna-panel--left {
+  width: 484px;
+  flex-shrink: 0;
+  padding: 40px 24px;
+  background: linear-gradient(160deg, #0162D1 0%, #8C6CFF 100%);
+  border-radius: 0 var(--cna-radius-lg) 0 var(--cna-radius-lg);
+  gap: 36px;
+  box-shadow: 0 4px 24px rgba(140, 108, 255, 0.3);
+}
+
+.cna-logo {
+  width: 320px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.cna-mascot-wrapper {
+  width: 245px;
+  height: 370px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cna-mascot {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.cna-panel--right {
+  width: 560px;
+  flex-shrink: 0;
+  padding: 44px 48px;
+  justify-content: center;
+  overflow-y: auto;
+}
+
+/* ── Form header ─────────────────────────────────────────── */
+.cna-form-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.cna-title {
+  font-family: 'Sarpanch', sans-serif;
+  color: var(--cna-text-primary);
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.cna-subtitle {
+  color: var(--cna-text-secondary);
+  font-family: 'Inter', sans-serif;
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+/* ── Form ────────────────────────────────────────────────── */
+.cna-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.cna-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+/* ── Inputs ──────────────────────────────────────────────── */
+.cna-input {
+  width: 100%;
+  padding: 20px 16px 16px 8px;
+  background: #FFFFFF;
+  border: 1.5px solid var(--cna-border-input);
+  border-radius: var(--cna-radius);
+  color: var(--cna-text-primary);
+  font-size: 14px;
+  font-family: var(--cna-font);
+  outline: none;
+  transition: border-color var(--cna-transition), box-shadow var(--cna-transition);
+}
+
+.cna-input::placeholder {
+  color: var(--cna-text-muted);
+}
+
+.cna-input:focus {
+  border-color: var(--cna-accent);
+  box-shadow: 0 0 0 3px rgba(140, 108, 255, 0.15);
+}
+
+.cna-input--flex { flex: 1; }
+
+.cna-input--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #F4F3FF;
+}
+
+.cna-input--error  { border-color: var(--cna-error)   !important; }
+.cna-input--success { border-color: var(--cna-success) !important; }
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.cna-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  gap: 8px;
+  border: none;
+  border-radius: var(--cna-radius);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: background var(--cna-transition), opacity var(--cna-transition), transform var(--cna-transition);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.cna-btn:active:not(:disabled) { transform: scale(0.98); }
+
+.cna-btn--light {
+  background: linear-gradient(135deg, #8C6CFF, #0162D1);
+  color: #FFFFFF;
+  padding: 11px 18px;
+}
+
+.cna-btn--light:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7B5CE7, #0152B8);
+  opacity: 0.95;
+}
+
+.cna-btn--light:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cna-btn--full {
+  width: 100%;
+  padding: 13px;
+  font-size: 15px;
+  margin-top: 2px;
+}
+
+/* Get OTP button uses Poppins — add this class to that button's element */
+.cna-btn--otp {
+  font-family: 'Poppins', sans-serif;
+  min-width: 99px;
+  height: 48px;
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.cna-btn--verified {
+  background: rgba(34, 197, 94, 0.12);
+  color: #16A34A;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  cursor: default;
+}
+
+.cna-btn--loading { pointer-events: none; }
+
+/* ── Spinner ─────────────────────────────────────────────── */
+.cna-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(140, 108, 255, 0.2);
+  border-top-color: #8C6CFF;
+  border-radius: 50%;
+  animation: cna-spin 0.7s linear infinite;
+}
+
+@keyframes cna-spin { to { transform: rotate(360deg); } }
+
+/* ── OTP ─────────────────────────────────────────────────── */
+.cna-otp-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 25px;
+}
+
+.cna-otp-label {
+  font-size: 18px;
+  text-align: center;
+  color: var(--cna-text-secondary);
+  padding-left: 2px;
+}
+
+.cna-otp-boxes {
+  display: flex;
+  gap: 36px;
+  align-items: center;
+}
+
+.cna-field-success {
+  font-size: 0.85rem;
+  color: #16A34A;
+  margin-top: 4px;
+}
+
+.cna-otp-box {
+  width: 56px;
+  height: 44px;
+  text-align: center;
+  background: #FFFFFF;
+  border: 1.5px solid var(--cna-border-input);
+  border-radius: var(--cna-radius);
+  color: var(--cna-text-primary);
+  font-size: 18px;
+  font-weight: 600;
+  font-family: var(--cna-font);
+  outline: none;
+  transition: border-color var(--cna-transition), box-shadow var(--cna-transition);
+  caret-color: var(--cna-accent);
+}
+
+.cna-otp-box:focus {
+  border-color: var(--cna-accent);
+  box-shadow: 0 0 0 3px rgba(140, 108, 255, 0.15);
+}
+
+.cna-otp-box--verified {
+  border-color: var(--cna-verified);
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.cna-otp-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cna-resend-timer {
+  color: var(--cna-text-muted);
+  font-size: 13px;
+  min-height: 20px;
+}
+
+/* ── Password ────────────────────────────────────────────── */
+.cna-password-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cna-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cna-field-error {
+  color: var(--cna-error);
+  font-size: 12px;
+  padding-left: 2px;
+}
+
+.cna-hint {
+  color: var(--cna-text-muted);
+  font-size: 12px;
+  padding-left: 2px;
+}
+
+/* ── Terms ───────────────────────────────────────────────── */
+.cna-terms {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--cna-text-secondary);
+}
+
+.cna-checkbox {
+  margin-top: 2px;
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  accent-color: var(--cna-accent);
+  cursor: pointer;
+}
+
+.cna-terms-text { line-height: 1.5; }
+
+/* ── Links ───────────────────────────────────────────────── */
+.cna-link {
+  color: var(--cna-accent-link);
+  text-decoration: none;
+  transition: color var(--cna-transition);
+}
+
+.cna-link:hover {
+  color: var(--cna-accent-hover);
+  text-decoration: underline;
+}
+
+.cna-link--bold { font-weight: 600; }
+
+/* ── Login prompt ────────────────────────────────────────── */
+.cna-login-prompt {
+  text-align: center;
+  color: var(--cna-text-secondary);
+  font-size: 13px;
+}
+
+/* ── Divider ─────────────────────────────────────────────── */
+.cna-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--cna-text-muted);
+  font-size: 13px;
+}
+
+.cna-divider-line {
+  flex: 1;
+  height: 1px;
+  background: #D8D2FF;
+}
+
+.cna-divider-text { flex-shrink: 0; }
+
+/* ── Social buttons ──────────────────────────────────────── */
+.cna-social { display: flex; gap: 12px; }
+
+.cna-social-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #FFFFFF;
+  border: 1.5px solid var(--cna-border);
+  border-radius: var(--cna-radius);
+  padding: 10px;
+  color: var(--cna-text-primary);
+  font-size: 14px;
+  font-family: var(--cna-font);
+  cursor: pointer;
+  transition: background var(--cna-transition), border-color var(--cna-transition);
+}
+
+.cna-social-btn:hover {
+  background: var(--cna-surface-hover);
+  border-color: var(--cna-accent);
+}
+
+.cna-social-btn svg { flex-shrink: 0; }
+
+/* ── Scrollbar ───────────────────────────────────────────── */
+.cna-panel--right::-webkit-scrollbar { width: 4px; }
+.cna-panel--right::-webkit-scrollbar-track { background: transparent; }
+.cna-panel--right::-webkit-scrollbar-thumb {
+  background: rgba(140, 108, 255, 0.3);
+  border-radius: 4px;
+}
+
+/* ── Inline field messages ───────────────────────────────── */
+.cna-field-msg {
+  font-size: 14px;
+  font-family: var(--cna-font);
+  padding: 7px 12px;
+  border-radius: var(--cna-radius-sm);
+  line-height: 1.45;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: cna-msg-in 0.18s ease;
+}
+
+@keyframes cna-msg-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cna-field-msg--error {
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #DC2626;
+}
+
+.cna-field-msg--error::before {
+  content: "✕";
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-align: center;
+}
+
+.cna-field-msg--success {
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  color: #16A34A;
+}
+
+.cna-field-msg--success::before {
+  content: "✔";
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-align: center;
+}
+
+.cna-field-msg--info {
+  background: rgba(140, 108, 255, 0.07);
+  border: 1px solid rgba(140, 108, 255, 0.25);
+  color: #6944CC;
+}
+
+.cna-field-msg--info::before {
+  content: "i";
+  font-size: 10px;
+  font-weight: 700;
+  font-style: italic;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(140, 108, 255, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-align: center;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .cna-panel--left  { width: 360px; }
+  .cna-logo         { width: 240px; }
+  .cna-mascot-wrapper { width: 180px; height: 280px; }
+  .cna-panel--right { width: 400px; padding: 36px 32px; }
+}
+
+@media (max-width: 768px) {
+  .cna-card {
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    max-width: 420px;
+    width: calc(100vw - 32px);
+    min-height: unset;
   }
+  .cna-panel--left {
+    width: 100%;
+    border-radius: var(--cna-radius-lg);
+    padding: 28px 24px;
+    gap: 20px;
+  }
+  .cna-mascot-wrapper { width: 130px; height: 160px; }
+  .cna-logo           { width: 200px; }
+  .cna-panel--right {
+    width: 100%;
+    border-radius: var(--cna-radius-lg);
+    padding: 28px 20px;
+  }
+  .cna-otp-box { width: 38px; height: 38px; font-size: 16px; }
+  .cna-bg--flight  { width: 130px; opacity: 0.3; }
+  .cna-bg--star-tr { width: 180px; opacity: 0.3; }
+  .cna-bg--drone   { width: 160px; opacity: 0.3; }
+  .cna-bg--star-bl { width: 100px; opacity: 0.3; }
 }

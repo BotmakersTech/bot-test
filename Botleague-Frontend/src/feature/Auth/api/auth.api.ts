@@ -21,8 +21,8 @@ export const resendOTP = async (phone: string) => {
 
 // ================= REGISTER =================
 
-export const register = async (phone: string, password: string) => {
-  const res = await api.post("/auth/register", { phone, password });
+export const register = async (phone: string, otp: string, password: string) => {
+  const res = await api.post("/auth/register", { phone, otp, password });
 
   // Backend now returns { accessToken, botleagueId }
   // Refresh token is set automatically as httpOnly cookie

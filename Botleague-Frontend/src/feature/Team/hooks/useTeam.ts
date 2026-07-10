@@ -116,6 +116,28 @@ export default function useTeam() {
         await getMyTeam();
 
       // ======================================================
+      // NO TEAM: backend returns a 200 placeholder object
+      // (status: "NO_TEAM", every field null) instead of 404.
+      // Treat it as "no team" instead of rendering it as one.
+      // ======================================================
+
+      if (!data || data.status === "NO_TEAM" || !data.teamCode) {
+
+        setTeam(null);
+        setTeamName("");
+        setDescription("");
+        setInstitutionName("");
+        setCity("");
+        setState("");
+        setCountry("");
+        setStatus("NO_TEAM");
+
+        dispatch(clearTeam());
+
+        return;
+      }
+
+      // ======================================================
       // LOCAL STATE
       // ======================================================
 

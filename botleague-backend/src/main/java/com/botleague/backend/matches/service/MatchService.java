@@ -1,10 +1,11 @@
-ackage com.botleague.backend.matches.service;
+package com.botleague.backend.matches.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import com.botleague.backend.common.exception.ResourceNotFoundException;
+import com.botleague.backend.common.exception.ApiException;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -133,7 +134,7 @@ public class MatchService {
         validateAdmin(authentication);
 
         if (request.getEventSportId() == null) {
-            throw new RuntimeException("eventSportId is required");
+            throw ApiException.badRequest("eventSportId is required");
         }
 
         eventSportsRepository
@@ -146,18 +147,18 @@ public class MatchService {
                 );
 
         if (!existingMatches.isEmpty()) {
-            throw new RuntimeException("Bracket already exists for this event sport");
+            throw ApiException.conflict("Bracket already exists for this event sport");
         }
 
         if (request.getTeamRegistrationIds() == null
                 || request.getTeamRegistrationIds().isEmpty()) {
-            throw new RuntimeException("At least one team registration ID is required");
+            throw ApiException.badRequest("At least one team registration ID is required");
         }
 
         // tournamentFormat has a default of SINGLE_ELIMINATION in the DTO
         TournamentFormat tournamentFormat = request.getTournamentFormat();
         if (tournamentFormat == null) {
-            throw new RuntimeException("tournamentFormat is required");
+            throw ApiException.badRequest("tournamentFormat is required");
         }
 
         switch (tournamentFormat) {
@@ -165,14 +166,19 @@ public class MatchService {
                 return generateSingleElimination(request);
 
             case DOUBLE_ELIMINATION:
-                // Winners-bracket structure is identical to single elim.
-                // Loser routing (loserNextMatchId / loserNextMatchSlot) must
-                // be wired manually after generation, or via a dedicated
-                // DoubleEliminationBracketGenerator when available.
-                return generateSingleElimination(request);
+                // No DoubleEliminationBracketGenerator exists yet, so the losers-bracket
+                // routing (loserNextMatchId / loserNextMatchSlot) cannot be wired
+                // automatically. Silently falling back to a single-elimination bracket
+                // here would mislabel the tournament and eliminate teams with no
+                // second-chance bracket — refuse instead of generating something
+                // that doesn't match what was requested.
+                throw ApiException.badRequest(
+                        "Double-elimination bracket generation is not yet implemented. "
+                        + "Use SINGLE_ELIMINATION, or build the double-elimination bracket "
+                        + "manually via POST /v1/matches/bulk.");
 
             default:
-                throw new RuntimeException(
+                throw ApiException.badRequest(
                         "Tournament format not supported: " + tournamentFormat
                 );
         }
@@ -235,7 +241,7 @@ public class MatchService {
                 return created;
             }
             default:
-                throw new RuntimeException("Match type not supported: " + matchType);
+                throw ApiException.badRequest("Match type not supported: " + matchType);
         }
     }
 
@@ -255,7 +261,7 @@ public class MatchService {
         validateAdmin(authentication);
 
         if (requests == null || requests.isEmpty()) {
-            throw new RuntimeException("No matches provided");
+            throw ApiException.badRequest("No matches provided");
         }
 
         UUID eventSportId = requests.get(0).getEventSportId();
@@ -268,7 +274,7 @@ public class MatchService {
                 matchRepository.findByEventSportIdAndDeletedAtIsNull(eventSportId);
 
         if (!existingMatches.isEmpty()) {
-            throw new RuntimeException("Bracket already exists for this event sport");
+            throw ApiException.conflict("Bracket already exists for this event sport");
         }
 
         UUID currentUserId = extractUserId(authentication);
@@ -463,7 +469,7 @@ public class MatchService {
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
 
         if (request.getScheduledAt() == null) {
-            throw new RuntimeException("scheduledAt is required");
+            throw ApiException.badRequest("scheduledAt is required");
         }
 
         match.setScheduledAt(request.getScheduledAt());
@@ -492,7 +498,7 @@ public class MatchService {
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
 
         if (match.getStatus() != MatchStatus.SCHEDULED) {
-            throw new RuntimeException(
+            throw ApiException.conflict(
                     "Only SCHEDULED matches can be started; current status: "
                             + match.getStatus()
             );
@@ -537,7 +543,7 @@ public class MatchService {
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
 
         if (match.getStatus() != MatchStatus.LIVE) {
-            throw new RuntimeException(
+            throw ApiException.conflict(
                     "Score can only be updated on LIVE matches; current status: "
                             + match.getStatus()
             );
@@ -591,7 +597,7 @@ public class MatchService {
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
 
         if (match.getStatus() != MatchStatus.LIVE) {
-            throw new RuntimeException(
+            throw ApiException.conflict(
                     "Only LIVE matches can be completed; current status: "
                             + match.getStatus()
             );
@@ -617,6 +623,11 @@ public class MatchService {
         UUID winnerId = request.getWinnerRegistrationId();
         if (winnerId == null) {
             winnerId = inferWinner(match);
+        }
+        if (winnerId == null) {
+            throw ApiException.badRequest(
+                    "Cannot complete match: winner cannot be inferred from a tied score. "
+                    + "Submit an explicit winnerRegistrationId to resolve the tie.");
         }
         match.setWinnerRegistrationId(winnerId);
 
@@ -706,7 +717,7 @@ public class MatchService {
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
 
         if (match.getStatus() != MatchStatus.LIVE) {
-            throw new RuntimeException(
+            throw ApiException.conflict(
                     "Only LIVE matches can be completed; current status: "
                             + match.getStatus()
             );
@@ -714,7 +725,7 @@ public class MatchService {
 
         UUID winnerId = inferWinner(match);
         if (winnerId == null) {
-            throw new RuntimeException(
+            throw ApiException.badRequest(
                     "Cannot auto-complete: winner cannot be inferred from current scores. "
                     + "Use submitMatchResult with an explicit winnerRegistrationId."
             );
@@ -793,11 +804,11 @@ public class MatchService {
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
 
         if (match.getStatus() == MatchStatus.COMPLETED) {
-            throw new RuntimeException("Completed matches cannot be cancelled");
+            throw ApiException.conflict("Completed matches cannot be cancelled");
         }
 
         if (match.getStatus() == MatchStatus.CANCELLED) {
-            throw new RuntimeException("Match is already cancelled");
+            throw ApiException.conflict("Match is already cancelled");
         }
 
         match.setStatus(MatchStatus.CANCELLED);
@@ -1230,7 +1241,7 @@ public class MatchService {
                 || userRoleService.hasRole(currentUserId, AccountType.ORGANIZER)
                 || userRoleService.hasRole(currentUserId, AccountType.SUB_ORGANIZER);
         if (!allowed) {
-            throw new RuntimeException("Insufficient role to manage matches");
+            throw ApiException.forbidden("Insufficient role to manage matches");
         }
     }
 
@@ -1247,7 +1258,7 @@ public class MatchService {
                 || userRoleService.hasRole(currentUserId, AccountType.SUB_ORGANIZER)
                 || userRoleService.hasRole(currentUserId, AccountType.JUDGE);
         if (!allowed) {
-            throw new RuntimeException("Insufficient role to score matches");
+            throw ApiException.forbidden("Insufficient role to score matches");
         }
     }
 
@@ -1259,7 +1270,7 @@ public class MatchService {
         boolean allowed = userRoleService.hasRole(currentUserId, AccountType.SUPER_ADMIN)
                 || userRoleService.hasRole(currentUserId, AccountType.ADMINISTRATOR);
         if (!allowed) {
-            throw new RuntimeException("SUPER_ADMIN or ADMINISTRATOR role required");
+            throw ApiException.forbidden("SUPER_ADMIN or ADMINISTRATOR role required");
         }
     }
 
@@ -1287,7 +1298,7 @@ public class MatchService {
                 }
             }
         }
-        throw new RuntimeException("Insufficient role or event assignment required");
+        throw ApiException.forbidden("Insufficient role or event assignment required");
     }
 
     // =====================================================

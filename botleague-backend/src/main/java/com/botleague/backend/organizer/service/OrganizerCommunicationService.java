@@ -1,4 +1,4 @@
-ackage com.botleague.backend.organizer.service;
+package com.botleague.backend.organizer.service;
 
 import com.botleague.backend.organizer.dto.OrganizerDTOs.*;
 import com.botleague.backend.organizer.entity.EventAnnouncement;
@@ -64,7 +64,9 @@ public class OrganizerCommunicationService {
     }
 
     public void deleteAnnouncement(UUID announcementId) {
-        announcementRepo.deleteById(announcementId);
+        EventAnnouncement a = announcementRepo.findById(announcementId)
+                .orElseThrow(() -> new ResourceNotFoundException("Announcement not found"));
+        announcementRepo.delete(a);
     }
 
     // ── INCIDENTS ────────────────────────────────────────────────────────────
@@ -98,7 +100,9 @@ public class OrganizerCommunicationService {
     }
 
     public void deleteIncident(UUID incidentId) {
-        incidentRepo.deleteById(incidentId);
+        EventIncident i = incidentRepo.findById(incidentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Incident not found"));
+        incidentRepo.delete(i);
     }
 
     // ── MAPPERS ──────────────────────────────────────────────────────────────

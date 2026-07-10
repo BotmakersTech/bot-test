@@ -1,4 +1,21 @@
 import api from "../../../shared/api/Base";
+import { toAvatarSentinel } from "../constants/avatars";
+
+/**
+ * Selects a predefined avatar as the profile picture. Reuses the exact same
+ * save endpoint the upload flow's step 3 already calls — a predefined avatar
+ * isn't a file, so there's nothing to presign/upload, just persist the
+ * sentinel key ("avatar:<key>") in the same field a real upload's storage
+ * key would occupy.
+ */
+export const selectAvatar = async (avatarKey: string) => {
+  await api.post(
+    "/profile/photo",
+    { fileUrl: toAvatarSentinel(avatarKey) },
+    { withCredentials: true }
+  );
+  return toAvatarSentinel(avatarKey);
+};
 
 export const uploadProfileImage = async (file: File) => {
     

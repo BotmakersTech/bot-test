@@ -10,8 +10,8 @@ export default function AuthCard({ title, subtitle, children }: Props) {
       className="relative max-w-173 w-full mx-auto rounded-xl bg-white
       py-6 md:px-10 lg:px-20"
     >
-      <div className="text-center pt-3 md:pt-0">
-        <h2 className="text-[#0162D1] font-semibold font-orbitron text-[24px] md:text-[28px] lg:text-[36px]">
+      <div className="text-center pt-3 md:pt-0 mb-5 cna-form-header">
+        <h2 className="cna-title text-[#0162D1] font-semibold  text-[24px] md:text-[28px] lg:text-[36px]">
           {title}
         </h2>
         {subtitle && (

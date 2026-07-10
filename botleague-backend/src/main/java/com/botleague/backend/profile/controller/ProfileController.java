@@ -43,6 +43,7 @@ public class ProfileController {
     private final UserRepository        userRepository;
     private final TeamMembershipRepository teamMembershipRepository;
     private final TeamRepository        teamRepository;
+    private final com.botleague.backend.common.service.GetFileService getFileService;
 
     public ProfileController(UserProfileService userProfileService,
                              UploadService uploadService,
@@ -50,7 +51,8 @@ public class ProfileController {
                              FileKeyService fileKeyService,
                              UserRepository userRepository,
                              TeamMembershipRepository teamMembershipRepository,
-                             TeamRepository teamRepository) {
+                             TeamRepository teamRepository,
+                             com.botleague.backend.common.service.GetFileService getFileService) {
         this.userProfileService       = userProfileService;
         this.uploadService            = uploadService;
         this.publicProfileService     = publicProfileService;
@@ -58,6 +60,7 @@ public class ProfileController {
         this.userRepository           = userRepository;
         this.teamMembershipRepository = teamMembershipRepository;
         this.teamRepository           = teamRepository;
+        this.getFileService           = getFileService;
     }
 
     // =========================
@@ -179,7 +182,7 @@ public class ProfileController {
         profile.put("firstName",     user.getFirstName());
         profile.put("lastName",      user.getLastName());
         profile.put("username",      user.getUsername());
-        profile.put("profilePhotoUrl", user.getProfilePhotoUrl());
+        profile.put("profilePhotoUrl", getFileService.resolveProfileImage(user.getProfilePhotoUrl()));
         profile.put("city",          user.getCity());
         profile.put("state",         user.getState());
         profile.put("country",       user.getCountry());

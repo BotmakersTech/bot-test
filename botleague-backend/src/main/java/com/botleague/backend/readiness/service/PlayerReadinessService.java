@@ -1,14 +1,23 @@
 package com.botleague.backend.readiness.service;
 
+import com.botleague.backend.common.exception.ApiException;
+import com.botleague.backend.common.exception.ResourceNotFoundException;
+import com.botleague.backend.events.entity.SportRegistration;
+import com.botleague.backend.events.repository.SportRegistrationRepository;
+import com.botleague.backend.matches.entity.Match;
 import com.botleague.backend.matches.repository.MatchRepository;
 import com.botleague.backend.readiness.dto.ReadinessResponse;
 import com.botleague.backend.readiness.dto.UpdateReadinessRequest;
 import com.botleague.backend.readiness.entity.PlayerReadiness;
 import com.botleague.backend.readiness.repository.PlayerReadinessRepository;
+import com.botleague.backend.team.enums.TeamMembershipStatus;
+import com.botleague.backend.team.repository.TeamMembershipRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -18,17 +27,46 @@ public class PlayerReadinessService {
 
     private final PlayerReadinessRepository playerReadinessRepository;
     private final MatchRepository matchRepository;
+    private final SportRegistrationRepository sportRegistrationRepository;
+    private final TeamMembershipRepository teamMembershipRepository;
 
     public PlayerReadinessService(PlayerReadinessRepository playerReadinessRepository,
-                                  MatchRepository matchRepository) {
+                                  MatchRepository matchRepository,
+                                  SportRegistrationRepository sportRegistrationRepository,
+                                  TeamMembershipRepository teamMembershipRepository) {
         this.playerReadinessRepository = playerReadinessRepository;
         this.matchRepository = matchRepository;
+        this.sportRegistrationRepository = sportRegistrationRepository;
+        this.teamMembershipRepository = teamMembershipRepository;
     }
 
     public ReadinessResponse updateReadiness(UUID matchId, UUID userId, UUID registrationId, UpdateReadinessRequest req) {
-        if (!matchRepository.existsById(matchId)) {
-            throw new RuntimeException("Match not found: " + matchId);
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found: " + matchId));
+
+        // The registrationId is client-supplied — verify it's actually a
+        // participant in this match, and that the caller belongs to the team
+        // behind it, before letting them set readiness "on behalf of" it.
+        Set<UUID> participantIds = new HashSet<>();
+        if (match.getTeamARegistrationId() != null) participantIds.add(match.getTeamARegistrationId());
+        if (match.getTeamBRegistrationId() != null) participantIds.add(match.getTeamBRegistrationId());
+        if (match.getTeamCRegistrationId() != null) participantIds.add(match.getTeamCRegistrationId());
+        if (match.getTeamDRegistrationId() != null) participantIds.add(match.getTeamDRegistrationId());
+
+        if (!participantIds.contains(registrationId)) {
+            throw ApiException.badRequest("That registration is not part of this match");
         }
+
+        SportRegistration registration = sportRegistrationRepository.findById(registrationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Registration not found"));
+
+        boolean isTeamMember = teamMembershipRepository
+                .findByTeamIdAndUserIdAndStatus(registration.getTeamId(), userId, TeamMembershipStatus.ACTIVE)
+                .isPresent();
+        if (!isTeamMember) {
+            throw ApiException.forbidden("You are not a member of the team for this registration");
+        }
+
         PlayerReadiness pr = playerReadinessRepository
                 .findByMatchIdAndUserId(matchId, userId)
                 .orElseGet(() -> {

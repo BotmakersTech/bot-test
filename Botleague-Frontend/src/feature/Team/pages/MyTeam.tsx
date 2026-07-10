@@ -1,1261 +1,494 @@
-import { useState, useCallback, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { deleteRobot } from "../../Robots/api/robot.api";
-import { uploadTeamLogo } from "../CreateTeam/api/uploadTeamLogo.api";
-import {
-  Users, Bot, Sword, Trophy, Plus, UserPlus, Pencil, Share2,
-  MapPin, Globe, BadgeCheck, Building2, CalendarDays, Search,
-  CalendarOff, BotOff, Camera, Copy, Check, AlertTriangle,
-  Cpu, Hand, SlidersHorizontal, Crosshair, Radio,
-  Loader2, DoorOpen, CircleCheckBig, Crown, Eye, Lock, ShieldAlert,
-  UserX, Trash2, LogOut, Shield, UserCog, ChevronDown, X,
-} from "lucide-react";
+import { Calendar, MapPin, RefreshCw, Star } from "lucide-react";
 
-import useTeam from "../hooks/useTeam";
-import useRobots from "../../Robots/hooks/useRobots";
-import CreateRobotForm from "../../Robots/components/CreateRobotFrom";
 import { useAppSelector } from "../../../app/hooks";
-import Modal from "../../../shared/components/Modal";
-import InputField from "../../../shared/components/InputField";
-import LocationSelects from "../../../shared/components/LocationSelects";
-import PrimaryBtn from "../../../shared/components/PrimaryBtn";
-import ProfileIncompleteModal from "../../../shared/components/ProfileIncompleteModal";
-import { useProfileComplete } from "../../../shared/hooks/useProfileComplete";
-import ShareButton from "../../../shared/components/ShareButton";
-import InviteCard from "../TeamMembership/components/InviteCard";
-import useTeamMembership from "../../Team/TeamMembership/hooks/useTeamMembership";
-import RobotDetailModal from "../../Robots/components/RobotDetailModal";
-import type { TeamRole } from "../../Team/TeamMembership/api/teamMembership.api";
-import SponsorPanel from "../components/SponsorPanel";
+import eventBg from "../../../assets/Auth/drone.svg";
+import fallbackRobot from "../../../assets/robot.png";
+import useDashboard from "../../UserDashboard/hooks/useDashboardData";
+import {
+  getTeamMemberships,
+  type TeamMembershipsApiResponse,
+} from "../../UserDashboard/api/userMembership.api";
+import useTeam from "../hooks/useTeam";
+import { useSponsors } from "../hooks/useSponsors";
+import { resolveAvatarSrc } from "../../Profile/constants/avatars";
+import "../../../styles/teamDashboard.css";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-interface TeamMember {
-  id?: string;
-  userId: string;
-  botleagueId?: string;
-  username?: string;
-  userName?: string;
-  firstName?: string;
-  lastName?: string;
-  gender?: string;
-  dateOfBirth?: string;
-  profilePhotoUrl?: string;
-  country?: string;
-  state?: string;
-  city?: string;
-  address?: string;
-  membershipId?: string;
-  teamId?: string;
-  teamMemberId?: string;
-  teamRole?: string;
-  membershipStatus?: string;
+function useCountdown(targetDate?: string | null) {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0 });
+
+  useEffect(() => {
+    if (!targetDate) return;
+    const target = new Date(targetDate).getTime();
+
+    const tick = () => {
+      const diff = Math.max(target - Date.now(), 0);
+      setTimeLeft({
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+        mins: Math.floor((diff / (1000 * 60)) % 60),
+      });
+    };
+
+    tick();
+    const id = window.setInterval(tick, 30_000);
+    return () => window.clearInterval(id);
+  }, [targetDate]);
+
+  return timeLeft;
 }
 
-interface Robot {
-  id?: string;
-  robotId?: string;
-  robotName: string;
-  category?: string;
-  weightClass?: string;
-  controlType?: string;
-  description?: string;
-  robotCode?: string;
-  status?: string;
-  teamId?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  imageUrl?: string;
-  robotIMG?: string;
+function pad(n: number) {
+  return String(n).padStart(2, "0");
 }
 
-interface Team {
-  teamName?: string;
-  description?: string;
-  institutionName?: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  teamCode?: string;
-  status?: string;
-  logo_Url?: string;
-  logoUrl?: string;
-  createdBy?: string;
-  ownerId?: string;
-  captain?: string;
-  captainId?: string;
+function toLabel(value?: string | null) {
+  if (!value) return "Not available";
+  return value
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-
-// ─── API Error Parser ─────────────────────────────────────────────────────────
-interface ApiError {
-  status?: number;
-  error?: string;
-  path?: string;
-  timestamp?: string;
-  message?: string;
+function formatDateRange(start?: string | null, end?: string | null) {
+  if (!start && !end) return "Date not announced";
+  const fmt = new Intl.DateTimeFormat("en-US", { day: "2-digit", month: "long", year: "numeric" });
+  if (!start) return fmt.format(new Date(end as string));
+  if (!end || start === end) return fmt.format(new Date(start));
+  return `${fmt.format(new Date(start))} - ${fmt.format(new Date(end))}`;
 }
 
-function parseApiError(err: unknown): string {
-  if (!err) return "An unexpected error occurred.";
-
-  // Axios error with response data
-  const axiosErr = err as any;
-  if (axiosErr?.response?.data) {
-    const data: ApiError = axiosErr.response.data;
-    if (data.error) return data.error;
-    if (data.message) return data.message;
-  }
-
-  // Error instance with message
-  if (err instanceof Error) {
-    // Avoid leaking internal "Failed to X" wrappers; prefer the cause
-    const cause = (err as any).cause;
-    if (cause) return parseApiError(cause);
-    return err.message;
-  }
-
-  if (typeof err === "string") return err;
-
-  return "An unexpected error occurred.";
+function yearFrom(date?: string | null) {
+  if (!date) return "Not available";
+  const parsed = new Date(date);
+  return Number.isNaN(parsed.getTime()) ? "Not available" : String(parsed.getFullYear());
 }
 
-// ─── Role constants ───────────────────────────────────────────────────────────
-const ALL_ROLES: TeamRole[] = ["CAPTAIN", "VICE_CAPTAIN", "MEMBER", "MENTOR"];
-
-// ─── Error Alert ──────────────────────────────────────────────────────────────
-function ErrorAlert({ message, onDismiss }: { message: string; onDismiss?: () => void }) {
+function memberName(member: any) {
   return (
-    <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm font-semibold">
-      <AlertTriangle size={16} className="shrink-0" />
-      <span className="flex-1">{message}</span>
-      {onDismiss && (
-        <button onClick={onDismiss} className="shrink-0 hover:text-red-300 transition-colors">
-          <X size={14} />
-        </button>
-      )}
-    </div>
+    member.userName ||
+    member.username ||
+    [member.firstName, member.lastName].filter(Boolean).join(" ").trim() ||
+    member.botleagueId ||
+    member.userCode ||
+    "Team member"
   );
 }
 
-// ─── Spinner ──────────────────────────────────────────────────────────────────
-function Spinner({ size = 20 }: { size?: number }) {
-  return <Loader2 size={size} className="animate-spin text-[#fa4715] shrink-0" />;
+function memberInitials(name: string) {
+  const parts = name.trim().split(/\s+/);
+  return (parts[0]?.[0] ?? "T") + (parts[1]?.[0] ?? "");
 }
 
-// ─── RoleBadge ────────────────────────────────────────────────────────────────
-function RoleBadge({ myRole }: { myRole: string }) {
-  const cfg =
-    myRole === "CAPTAIN"
-      ? { cls: "bg-amber-500/14 border-amber-500/30 text-amber-400", icon: <Crown size={11} />, label: "CAPTAIN" }
-      : myRole === "VICE_CAPTAIN"
-      ? { cls: "bg-purple-500/14 border-purple-500/30 text-purple-400", icon: <Shield size={11} />, label: "VICE CAPTAIN" }
-      : myRole === "MENTOR"
-      ? { cls: "bg-blue-500/14 border-blue-500/30 text-blue-400", icon: <Eye size={11} />, label: "MENTOR" }
-      : { cls: "bg-[#fa4715]/12 border-[#fa4715]/28 text-[#fa4715]", icon: <Eye size={11} />, label: "MEMBER" };
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wider border ${cfg.cls}`}>
-      {cfg.icon}{cfg.label}
-    </span>
-  );
+function isMemberActive(member: any) {
+  const status = String(member.status ?? "").toUpperCase();
+  return member.isActive !== false && status !== "LEFT" && status !== "INACTIVE";
 }
 
-// ─── ReadOnlyBanner ───────────────────────────────────────────────────────────
-function ReadOnlyBanner() {
-  return (
-    <div className="flex items-center gap-2.5 bg-amber-400/12 border border-amber-400/28 rounded-xl px-4 py-3 mb-5">
-      <Eye size={16} className="text-amber-400 shrink-0" />
-      <span className="text-amber-400 text-sm font-semibold">
-        View-only access — only the team captain can edit team info, invite members, or manage robots.
-      </span>
-    </div>
-  );
+function isUsableTeamStatus(status?: string | null) {
+  const normalized = String(status ?? "ACTIVE").toUpperCase();
+  return !["LEFT", "REJECTED", "DECLINED", "CANCELLED", "REMOVED"].includes(normalized);
 }
 
-// ─── Field ────────────────────────────────────────────────────────────────────
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label className="block text-gray-400 text-xs font-semibold mb-1.5 tracking-wider uppercase">{label}</label>
-      {children}
-    </div>
-  );
+function memberKey(member: any) {
+  return member.membershipId || member.teamMemberId || member.userId || memberName(member);
 }
 
-// ─── inputCls ─────────────────────────────────────────────────────────────────
-const inputCls = "w-full bg-black/30 border border-white/9 rounded-xl px-4 py-3 text-white text-sm outline-none font-inherit transition-colors focus:border-[#fa4715]/28 box-border";
-
-// ─── Pill ─────────────────────────────────────────────────────────────────────
-function Pill({ children, accent = false }: { children: React.ReactNode; accent?: boolean }) {
-  return (
-    <span className={`inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-semibold border ${
-      accent
-        ? "bg-[#fa4715]/12 border-[#fa4715]/28 text-[#fa4715]"
-        : "bg-white/7 border-white/9 text-gray-300"
-    }`}>
-      {children}
-    </span>
-  );
+function memberRoleUpper(member: any) {
+  return String(member.teamRole || member.role || "").toUpperCase();
 }
 
-// ─── ActionBtn ────────────────────────────────────────────────────────────────
-function ActionBtn({
-  icon: Icon, label, onClick, accent = false, small = false, disabled = false,
-}: {
-  icon?: React.ElementType; label: string; onClick?: () => void;
-  accent?: boolean; small?: boolean; disabled?: boolean;
-}) {
-  return (
-    <button
-      onClick={disabled ? undefined : onClick}
-      disabled={disabled}
-      title={disabled ? "Only the captain can do this" : undefined}
-      className={`inline-flex items-center gap-1.5 font-semibold rounded-xl transition-all whitespace-nowrap leading-none border ${
-        small ? "px-3.5 py-1.5 text-xs" : "px-4 py-2.5 text-sm"
-      } ${
-        disabled
-          ? "bg-white/3 border-white/5 text-gray-500 cursor-not-allowed opacity-45"
-          : accent
-          ? "bg-[#fa4715] border-transparent text-white hover:bg-[#fa4715]/88 cursor-pointer"
-          : "bg-white/6 border-white/9 text-white hover:bg-white/10 cursor-pointer"
-      }`}
-    >
-      {disabled ? <Lock size={small ? 11 : 13} /> : Icon && <Icon size={small ? 13 : 15} />}
-      {label}
-    </button>
-  );
-}
-
-// ─── StatCard ─────────────────────────────────────────────────────────────────
-function StatCard({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
-  return (
-    <div className="bg-black/25 border border-white/9 rounded-[18px] p-5 hover:border-[#fa4715]/38 transition-colors">
-      <div className="text-gray-400 mb-1.5"><Icon size={18} /></div>
-      <div className="text-gray-400 text-xs font-semibold tracking-wider uppercase mb-1.5">{label}</div>
-      <div className="text-3xl font-bold text-white">{value}</div>
-    </div>
-  );
-}
-
-// ─── CATEGORY / CONTROL ICONS ─────────────────────────────────────────────────
-const CATEGORY_ICON: Record<string, React.ElementType> = { COMBAT: Sword, DRONE: Radio, RC: Crosshair, AUTONOMOUS: Bot };
-const CONTROL_ICON: Record<string, React.ElementType> = { MANUAL: Hand, AUTONOMOUS: Cpu, HYBRID: SlidersHorizontal };
-
-// ─── RobotCard ────────────────────────────────────────────────────────────────
-function RobotCard({ robot, onClick, isCaptain, onDelete }: {
-  robot: Robot; onClick: () => void; isCaptain: boolean; onDelete?: (robot: Robot) => void;
-}) {
-  const [hov, setHov] = useState(false);
-  const CatIcon = CATEGORY_ICON[robot.category ?? ""] || Bot;
-  const CtrlIcon = CONTROL_ICON[robot.controlType ?? ""] || Bot;
-
-  return (
-    <div
-      onClick={onClick}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      className={`relative overflow-hidden rounded-[18px] p-5 cursor-pointer transition-all border ${
-        hov ? "bg-[#fa4715]/6 border-[#fa4715]/38" : "bg-black/25 border-white/9"
-      }`}
-    >
-      <div className="absolute top-0 left-0 right-0 h-[3px] bg-[#fa4715]" />
-      {isCaptain && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete?.(robot); }}
-          title="Remove robot"
-          className={`absolute top-3.5 right-3.5 bg-red-500/12 border border-red-500/28 text-red-400 w-7 h-7 flex items-center justify-center rounded-lg cursor-pointer p-0 transition-opacity ${hov ? "opacity-100" : "opacity-0"}`}
-        >
-          <Trash2 size={13} />
-        </button>
-      )}
-      <div className="flex items-center gap-3.5 mb-3.5">
-        <div className="w-[52px] h-[52px] rounded-[14px] bg-[#fa4715]/12 border border-[#fa4715]/28 flex items-center justify-center shrink-0 text-[#fa4715]">
-          <CatIcon size={22} />
-        </div>
-        <div>
-          <h3 className="text-white m-0 text-base font-bold">{robot.robotName}</h3>
-          <p className="text-gray-400 m-0 mt-0.5 text-xs">{robot.category}</p>
-        </div>
-      </div>
-      <div className="flex flex-wrap gap-1.5">
-        {robot.weightClass && <Pill>{robot.weightClass}</Pill>}
-        {robot.controlType && <Pill><CtrlIcon size={12} /> {robot.controlType}</Pill>}
-      </div>
-      {robot.description && (
-        <p className="text-gray-500 text-xs mt-2.5 leading-relaxed line-clamp-2">{robot.description}</p>
-      )}
-    </div>
-  );
-}
-
-// ─── InfoRow ──────────────────────────────────────────────────────────────────
-function InfoRow({ icon: Icon, children, onClick }: { icon: React.ElementType; children: React.ReactNode; onClick?: () => void }) {
-  return (
-    <span
-      onClick={onClick}
-      className={`inline-flex items-center gap-1.5 text-sm ${onClick ? "text-[#fa4715] cursor-pointer" : "text-gray-300"}`}
-    >
-      <Icon size={14} className={onClick ? "text-[#fa4715]" : "text-gray-400"} />
-      {children}
-    </span>
-  );
-}
-
-// ─── Panel ────────────────────────────────────────────────────────────────────
-function Panel({ title, icon: Icon, action, children }: {
-  title: string; icon?: React.ElementType; action?: React.ReactNode; children: React.ReactNode;
-}) {
-  return (
-    <div className="bg-[#343434] rounded-[20px] p-6 border border-white/9">
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="text-lg font-bold m-0 flex items-center gap-2 text-white">
-          {Icon && <Icon size={18} className="text-gray-400" />}
-          {title}
-        </h3>
-        {action}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-// ─── EmptyState ───────────────────────────────────────────────────────────────
-function EmptyState({ icon: Icon, message, cta, onCta }: { icon: React.ElementType; message: string; cta?: string; onCta?: () => void }) {
-  return (
-    <div className="text-center py-8">
-      <div className="text-gray-500 mb-3 flex justify-center"><Icon size={40} /></div>
-      <p className="text-gray-400 mb-4 text-sm">{message}</p>
-      {cta && (
-        <button onClick={onCta} className="bg-[#fa4715] border-none text-white px-5 py-2.5 rounded-xl cursor-pointer font-bold text-sm hover:bg-[#fa4715]/88 transition-colors">
-          {cta}
-        </button>
-      )}
-    </div>
-  );
-}
-
-// ─── EditTeamModal ────────────────────────────────────────────────────────────
-function EditTeamModal({ team, onClose }: { team: Team; onClose: () => void }) {
-  const { handleUpdateTeam } = useTeam();
-  const [teamName, setTeamName] = useState(team?.teamName || "");
-  const [description, setDescription] = useState(team?.description || "");
-  const [institutionName, setInstitutionName] = useState(team?.institutionName || "");
-  const [city, setCity] = useState(team?.city || "");
-  const [state, setState] = useState(team?.state || "");
-  const [country, setCountry] = useState(team?.country || "");
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-
-  const handleSave = async () => {
-    setError(null);
-    setSaving(true);
-    try {
-      await handleUpdateTeam({ teamName, description, institutionName, city, state, country });
-      setSaved(true);
-      setTimeout(onClose, 1800);
-    } catch (err) {
-      setError(parseApiError(err));
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <Modal title="Edit Team Info" onClose={onClose}>
-      {saved ? (
-        <div className="text-center py-6 text-green-400 text-base font-semibold flex items-center justify-center gap-2">
-          <CircleCheckBig size={22} /> Team info updated!
-        </div>
-      ) : (
-        <div className="flex flex-col gap-5">
-          <InputField label="Team Name" placeholder="Team Name" value={teamName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTeamName(e.target.value)} />
-          <InputField label="Institution Name" placeholder="e.g. TechNova Institute" value={institutionName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInstitutionName(e.target.value)} />
-          <LocationSelects
-            country={country}
-            state={state}
-            city={city}
-            onCountry={setCountry}
-            onState={setState}
-            onCity={setCity}
-            gridStyle={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "14px" }}
-          />
-          <Field label="Description">
-            <textarea placeholder="Team description..." value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className={`${inputCls} resize-y min-h-[100px]`} />
-          </Field>
-          {error && <ErrorAlert message={error} onDismiss={() => setError(null)} />}
-          <PrimaryBtn onClick={handleSave} disabled={saving}>
-            {saving ? <span className="flex items-center gap-2"><Spinner size={15} /> Saving...</span> : "Save Changes"}
-          </PrimaryBtn>
-        </div>
-      )}
-    </Modal>
-  );
-}
-
-// ─── ShareCodeModal ───────────────────────────────────────────────────────────
-function ShareCodeModal({ teamCode, onClose }: { teamCode: string; onClose: () => void }) {
-  const [copied, setCopied] = useState(false);
-  const handleCopy = () => {
-    navigator.clipboard.writeText(teamCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-  return (
-    <Modal title="Share Team Code" onClose={onClose}>
-      <p className="text-gray-400 mb-5 text-sm">Share this code with others so they can join your team.</p>
-      <div className="bg-[#fa4715]/12 border border-dashed border-[#fa4715]/28 rounded-[14px] p-5 text-center mb-5">
-        <div className="text-3xl font-bold tracking-[0.15em] text-[#fa4715] font-mono">{teamCode}</div>
-      </div>
-      <PrimaryBtn onClick={handleCopy}>
-        {copied
-          ? <span className="flex items-center gap-1.5"><Check size={16} /> Copied!</span>
-          : <span className="flex items-center gap-1.5"><Copy size={16} /> Copy Code</span>
-        }
-      </PrimaryBtn>
-    </Modal>
-  );
-}
-
-// ─── RemoveMemberModal ────────────────────────────────────────────────────────
-function RemoveMemberModal({ member, onConfirm, onClose }: {
-  member: TeamMember;
-  onConfirm: (member: TeamMember) => Promise<void>;
-  onClose: () => void;
-}) {
-  const [removing, setRemoving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleConfirm = async () => {
-    if (!member?.userId && !member?.id) { setError("No member selected for removal"); return; }
-    try {
-      setError(null);
-      setRemoving(true);
-      await onConfirm(member);
-      onClose();
-    } catch (err) {
-      setError(parseApiError(err));
-    } finally {
-      setRemoving(false);
-    }
-  };
-
-  const displayName = member?.userName || member?.username ||
-    `${member?.firstName ?? ""} ${member?.lastName ?? ""}`.trim() || "this member";
-
-  return (
-    <Modal title="Remove Member" onClose={onClose}>
-      <div className="text-center pt-2 pb-5">
-        <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/28 flex items-center justify-center mx-auto mb-4 text-red-400">
-          <UserX size={28} />
-        </div>
-        <p className="text-gray-300 text-sm mb-2">
-          Remove <strong className="text-white">{displayName}</strong> from the team?
-        </p>
-        <p className="text-gray-500 text-xs mb-2">This action cannot be undone.</p>
-        {error && <div className="mb-4"><ErrorAlert message={error} onDismiss={() => setError(null)} /></div>}
-        <div className="flex gap-3 justify-center mt-4">
-          <button onClick={onClose} disabled={removing} className="bg-white/6 border border-white/9 text-gray-300 px-5 py-2.5 rounded-xl cursor-pointer font-semibold text-sm disabled:opacity-50">Cancel</button>
-          <button onClick={handleConfirm} disabled={removing} className="bg-red-400 border-none text-white px-5 py-2.5 rounded-xl cursor-pointer font-bold text-sm flex items-center gap-1.5 disabled:opacity-70">
-            <UserX size={15} />
-            {removing ? "Removing..." : "Remove Member"}
-          </button>
-        </div>
-      </div>
-    </Modal>
-  );
-}
-
-// ─── AssignRoleModal ──────────────────────────────────────────────────────────
-function AssignRoleModal({ member, onConfirm, onClose }: {
-  member: TeamMember;
-  onConfirm: (userId: string, role: TeamRole) => Promise<void>;
-  onClose: () => void;
-}) {
-  const [selectedRole, setSelectedRole] = useState<TeamRole>((member.teamRole as TeamRole) || "MEMBER");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-
-  const handleAssign = async () => {
-    const userId = member.userId || member.id;
-    if (!userId) { setError("Member ID not found"); return; }
-    try {
-      setError(null);
-      setLoading(true);
-      await onConfirm(userId, selectedRole);
-      setSuccess(true);
-      setTimeout(onClose, 1400);
-    } catch (err) {
-      setError(parseApiError(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const displayName = member?.userName || member?.username ||
-    `${member?.firstName ?? ""} ${member?.lastName ?? ""}`.trim() || "Member";
-
-  const roleLabels: Record<TeamRole, { label: string; desc: string }> = {
-    CAPTAIN:      { label: "Captain",      desc: "Full control over the team" },
-    VICE_CAPTAIN: { label: "Vice Captain", desc: "Assist captain, limited admin" },
-    MEMBER:       { label: "Member",       desc: "Standard team member" },
-    MENTOR:       { label: "Mentor",       desc: "Advisory role, read-only" },
-  };
-
-  return (
-    <Modal title="Assign Role" onClose={onClose}>
-      {success ? (
-        <div className="text-center py-6 text-green-400 font-semibold flex items-center justify-center gap-2">
-          <CircleCheckBig size={22} /> Role updated for {displayName}!
-        </div>
-      ) : (
-        <div className="flex flex-col gap-4">
-          <p className="text-gray-400 text-sm">
-            Assign a new role to <strong className="text-white">{displayName}</strong>
-          </p>
-          <div className="flex flex-col gap-2">
-            {ALL_ROLES.map((role) => (
-              <button
-                key={role}
-                onClick={() => setSelectedRole(role)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer ${
-                  selectedRole === role
-                    ? "bg-[#fa4715]/12 border-[#fa4715]/28 text-[#fa4715]"
-                    : "bg-white/4 border-white/9 text-gray-300 hover:bg-white/8"
-                }`}
-              >
-                <Shield size={16} className={selectedRole === role ? "text-[#fa4715]" : "text-gray-500"} />
-                <div>
-                  <div className="font-semibold text-sm">{roleLabels[role].label}</div>
-                  <div className="text-xs text-gray-500">{roleLabels[role].desc}</div>
-                </div>
-                {selectedRole === role && <Check size={14} className="ml-auto" />}
-              </button>
-            ))}
-          </div>
-          {error && <ErrorAlert message={error} onDismiss={() => setError(null)} />}
-          <button
-            onClick={handleAssign}
-            disabled={loading}
-            className="bg-[#fa4715] text-white border-none py-3 px-6 rounded-[14px] font-bold text-sm cursor-pointer hover:bg-[#fa4715]/88 transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
-          >
-            {loading ? <><Spinner size={15} /> Assigning...</> : <><Shield size={15} /> Assign Role</>}
-          </button>
-        </div>
-      )}
-    </Modal>
-  );
-}
-
-// ─── TransferCaptainModal ─────────────────────────────────────────────────────
-function TransferCaptainModal({ member, onConfirm, onClose }: {
-  member: TeamMember;
-  onConfirm: (userId: string) => Promise<void>;
-  onClose: () => void;
-}) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-
-  const handleTransfer = async () => {
-    const userId = member.userId || member.id;
-    if (!userId) { setError("Member ID not found"); return; }
-    try {
-      setError(null);
-      setLoading(true);
-      await onConfirm(userId);
-      setSuccess(true);
-      setTimeout(onClose, 1600);
-    } catch (err) {
-      setError(parseApiError(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const displayName = member?.userName || member?.username ||
-    `${member?.firstName ?? ""} ${member?.lastName ?? ""}`.trim() || "this member";
-
-  return (
-    <Modal title="Transfer Captaincy" onClose={onClose}>
-      {success ? (
-        <div className="text-center py-6 text-amber-400 font-semibold flex items-center justify-center gap-2">
-          <Crown size={22} /> Captaincy transferred to {displayName}!
-        </div>
-      ) : (
-        <div className="text-center pt-2 pb-5">
-          <div className="w-16 h-16 rounded-full bg-amber-500/14 border border-amber-500/30 flex items-center justify-center mx-auto mb-4 text-amber-400">
-            <Crown size={28} />
-          </div>
-          <p className="text-gray-300 text-sm mb-1">
-            Transfer captaincy to <strong className="text-white">{displayName}</strong>?
-          </p>
-          <p className="text-gray-500 text-xs mb-4">You will become a regular member after this transfer.</p>
-          {error && <div className="mb-4"><ErrorAlert message={error} onDismiss={() => setError(null)} /></div>}
-          <div className="flex gap-3 justify-center mt-4">
-            <button onClick={onClose} disabled={loading} className="bg-white/6 border border-white/9 text-gray-300 px-5 py-2.5 rounded-xl cursor-pointer font-semibold text-sm disabled:opacity-50">Cancel</button>
-            <button onClick={handleTransfer} disabled={loading} className="bg-amber-500 border-none text-white px-5 py-2.5 rounded-xl cursor-pointer font-bold text-sm flex items-center gap-1.5 disabled:opacity-70">
-              <Crown size={15} />
-              {loading ? "Transferring..." : "Transfer"}
-            </button>
-          </div>
-        </div>
-      )}
-    </Modal>
-  );
-}
-
-// ─── LeaveTeamModal ───────────────────────────────────────────────────────────
-function LeaveTeamModal({ onConfirm, onClose }: {
-  onConfirm: () => Promise<void>;
-  onClose: () => void;
-}) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleLeave = async () => {
-    try {
-      setError(null);
-      setLoading(true);
-      await onConfirm();
-      onClose();
-    } catch (err) {
-      setError(parseApiError(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Modal title="Leave Team" onClose={onClose}>
-      <div className="text-center pt-2 pb-5">
-        <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/28 flex items-center justify-center mx-auto mb-4 text-red-400">
-          <LogOut size={28} />
-        </div>
-        <p className="text-gray-300 text-sm mb-2">Are you sure you want to leave this team?</p>
-        <p className="text-gray-500 text-xs mb-4">You will lose access to all team resources.</p>
-        {error && <div className="mb-4"><ErrorAlert message={error} onDismiss={() => setError(null)} /></div>}
-        <div className="flex gap-3 justify-center mt-4">
-          <button onClick={onClose} disabled={loading} className="bg-white/6 border border-white/9 text-gray-300 px-5 py-2.5 rounded-xl cursor-pointer font-semibold text-sm disabled:opacity-50">Cancel</button>
-          <button onClick={handleLeave} disabled={loading} className="bg-red-400 border-none text-white px-5 py-2.5 rounded-xl cursor-pointer font-bold text-sm flex items-center gap-1.5 disabled:opacity-70">
-            <LogOut size={15} />
-            {loading ? "Leaving..." : "Leave Team"}
-          </button>
-        </div>
-      </div>
-    </Modal>
-  );
-}
-
-// ─── MemberActions dropdown ───────────────────────────────────────────────────
-function MemberActionsMenu({ member, isTeamAdmin, isStrictCaptain, onRemove, onAssignRole, onTransferCaptain }: {
-  member: TeamMember;
-  isTeamAdmin:     boolean;  // captain OR vice captain — can manage members
-  isStrictCaptain: boolean;  // captain only — can transfer captaincy
-  onRemove: (m: TeamMember) => void;
-  onAssignRole: (m: TeamMember) => void;
-  onTransferCaptain: (m: TeamMember) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const memberRole = member.teamRole?.toUpperCase() ?? "";
-  const isMemberCaptain    = memberRole === "CAPTAIN";
-  const isMemberViceCaptain = memberRole === "VICE_CAPTAIN";
-
-  // Hide if current user has no management access, or if target is the captain
-  if (!isTeamAdmin || isMemberCaptain) return null;
-  // Vice captains cannot manage other vice captains
-  if (!isStrictCaptain && isMemberViceCaptain) return null;
-
-  return (
-    <div className="relative">
-      <button
-        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
-        className="bg-white/6 border border-white/9 text-gray-400 w-7 h-7 flex items-center justify-center rounded-lg cursor-pointer p-0 hover:bg-white/10 transition-colors"
-      >
-        <ChevronDown size={13} />
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-8 z-20 bg-[#2e2e2e] border border-white/9 rounded-xl shadow-2xl py-1 min-w-[170px]">
-            <button
-              onClick={() => { setOpen(false); onAssignRole(member); }}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/7 cursor-pointer transition-colors"
-            >
-              <UserCog size={14} className="text-[#fa4715]" /> Assign Role
-            </button>
-            {isStrictCaptain && (
-              <button
-                onClick={() => { setOpen(false); onTransferCaptain(member); }}
-                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/7 cursor-pointer transition-colors"
-              >
-                <Crown size={14} className="text-amber-400" /> Transfer Captain
-              </button>
-            )}
-            <div className="h-px bg-white/9 mx-2 my-1" />
-            <button
-              onClick={() => { setOpen(false); onRemove(member); }}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/8 cursor-pointer transition-colors"
-            >
-              <UserX size={14} /> Remove
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// MAIN COMPONENT
-// ═══════════════════════════════════════════════════════════════════════════════
-export default function MyTeams() {
-  const team1 = useAppSelector((state: any) => state.team);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
-
+export default function MyTeam() {
   const navigate = useNavigate();
-  const { team, isLoading } = useTeam();
-
-  // Profile completion gate
-  const { isComplete: profileComplete, missingFields } = useProfileComplete();
-  const [showProfileGate, setShowProfileGate]   = useState(false);
-  const [gateAction,      setGateAction]         = useState<"create a team" | "join a team">("create a team");
-
-  const handleCreateTeamClick = () => {
-    if (!profileComplete) { setGateAction("create a team"); setShowProfileGate(true); return; }
-    navigate("/create-team");
-  };
-
-  const handleJoinTeamClick = () => {
-    if (!profileComplete) { setGateAction("join a team"); setShowProfileGate(true); return; }
-    navigate("/join-team");
-  };
-  const { robots, loading: robotsLoading, error: robotsError, fetchRobots } = useRobots(team1?.teamCode);
+  const reduxTeam = useAppSelector((state) => state.team);
+  const authUser = useAppSelector((state) => state.auth.user);
+  const [fallbackMemberships, setFallbackMemberships] = useState<TeamMembershipsApiResponse[]>([]);
+  const [fallbackMembersLoading, setFallbackMembersLoading] = useState(false);
+  const [fallbackMembersError, setFallbackMembersError] = useState<string | null>(null);
+  const {
+    team,
+    teamMemberships,
+    isLoading: teamLoading,
+    error: teamError,
+    loadTeam,
+    loadTeamMemberships,
+  } = useTeam();
 
   const {
-    members: teamMemberships,
-    removeMember: removeMemberFn,
-    assignRole: assignRoleFn,
-    transferCaptain: transferCaptainFn,
-    leaveTeam: leaveTeamFn,
-    reload: reloadMemberships,
-    actionLoading,
-    // These are already computed correctly in the hook using authUser.id
-    isCaptain:    isCaptainFromHook,
-    isViceCaptain: isViceCaptainFromHook,
-    isAdmin:      isAdminFromHook,
-    currentUserMembership,
-    loading: membershipsLoading,
-  } = useTeamMembership(team1?.teamCode);
+    activeTeam,
+    teams,
+    robots,
+    events,
+    stats,
+    isLoading: dashboardLoading,
+    error: dashboardError,
+    refresh,
+  } = useDashboard();
 
-  // ── Local state ───────────────────────────────────────────────────────────
-  const [activeModal, setActiveModal] = useState<string | null>(null);
-  const [selectedRobot, setSelectedRobot] = useState<Robot | null>(null);
-  const [removingMember, setRemovingMember] = useState<TeamMember | null>(null);
-  const [assigningRoleMember, setAssigningRoleMember] = useState<TeamMember | null>(null);
-  const [transferringCaptainMember, setTransferringCaptainMember] = useState<TeamMember | null>(null);
-  const [logoError,      setLogoError]      = useState(false);
-  const [globalError,    setGlobalError]    = useState<string | null>(null);
-  const [logoUploading,  setLogoUploading]  = useState(false);
-  const [logoSuccess,    setLogoSuccess]    = useState(false);
-  const logoInputRef = useRef<HTMLInputElement>(null);
+  const dashboardTeam = useMemo(
+    () => activeTeam ?? teams.find((item) => isUsableTeamStatus(item.status)) ?? teams[0] ?? null,
+    [activeTeam, teams]
+  );
 
-  const handleLogoChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !team1?.id) return;
-    // Reset input so same file can be re-selected
-    e.target.value = "";
-    setLogoUploading(true);
-    setLogoSuccess(false);
-    setGlobalError(null);
-    try {
-      await uploadTeamLogo(team1.id, file);
-      setLogoError(false);
-      setLogoSuccess(true);
-      setTimeout(() => setLogoSuccess(false), 3000);
-      // Reload team data to show new logo
-      await reloadMemberships();
-    } catch (err: any) {
-      setGlobalError(err?.message ?? "Logo upload failed");
-    } finally {
-      setLogoUploading(false);
+  const resolvedTeam = useMemo(() => {
+    if (team) return team;
+    if (dashboardTeam) {
+      return {
+        id: dashboardTeam.teamId,
+        teamCode: dashboardTeam.teamCode,
+        teamName: dashboardTeam.teamName,
+        logoUrl: dashboardTeam.teamLogo ?? undefined,
+        status: dashboardTeam.status,
+        memberRole: dashboardTeam.role,
+      };
     }
-  }, [team1?.id, reloadMemberships]);
-
-  // Use the hook's own computed roles — these correctly match authUser.id against member.userId
-  const isCaptain    = isCaptainFromHook;
-  const isViceCaptain = isViceCaptainFromHook;
-  const isTeamAdmin  = isAdminFromHook;  // captain || viceCaptain
-  const myRole       = currentUserMembership?.teamRole?.toUpperCase() ?? "MEMBER";
-  // Resolved once we've loaded memberships (even if empty = no team/loading done)
-  const roleResolved = !membershipsLoading;
-
-  // ── Action wrappers with error extraction ─────────────────────────────────
-  const handleRemoveMember = useCallback(async (member: TeamMember): Promise<void> => {
-    if (!isTeamAdmin) return;  // captain OR vice captain
-    const memberId = member.userId || member.id;
-    if (!memberId) throw new Error("Member ID not found");
-    try {
-      await removeMemberFn(memberId);
-      await reloadMemberships();
-    } catch (err) {
-      throw new Error(parseApiError(err), { cause: err });
+    if (reduxTeam.teamCode || reduxTeam.teamName) {
+      return {
+        id: reduxTeam.id ?? "",
+        teamCode: reduxTeam.teamCode ?? "",
+        teamName: reduxTeam.teamName ?? "Your Team",
+        logoUrl: reduxTeam.logoUrl ?? undefined,
+        institutionName: reduxTeam.institutionName ?? undefined,
+        city: reduxTeam.city ?? undefined,
+        state: reduxTeam.state ?? undefined,
+        country: reduxTeam.country ?? undefined,
+        status: reduxTeam.status ?? "ACTIVE",
+        createdAt: reduxTeam.createdAt ?? undefined,
+      };
     }
-  }, [isTeamAdmin, removeMemberFn, reloadMemberships]);
+    return null;
+  }, [dashboardTeam, reduxTeam, team]);
 
-  const handleAssignRole = useCallback(async (userId: string, role: TeamRole): Promise<void> => {
-    if (!isTeamAdmin) return;  // captain OR vice captain (backend validates further)
-    try {
-      await assignRoleFn(userId, role);
-      await reloadMemberships();
-    } catch (err) {
-      throw new Error(parseApiError(err), { cause: err });
+  const resolvedTeamCode = resolvedTeam?.teamCode || "";
+
+  // ── SPONSORS ─────────────────────────────────────────────
+  const {
+    sponsors,
+    loading: sponsorsLoading,
+    error: sponsorsError,
+  } = useSponsors(resolvedTeam?.id);
+
+  // Pick the sponsor to feature. If your API can flag one as
+  // primary/featured, prefer that over array position, e.g.:
+  //   sponsors.find((s) => s.isPrimary) ?? sponsors[0] ?? null
+  const primarySponsor = useMemo(() => sponsors[0] ?? null, [sponsors]);
+  // ─────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadFallbackMembers = async () => {
+      if (!resolvedTeamCode || teamMemberships.length > 0) {
+        setFallbackMemberships([]);
+        return;
+      }
+
+      try {
+        setFallbackMembersLoading(true);
+        setFallbackMembersError(null);
+        const data = await getTeamMemberships(resolvedTeamCode);
+        if (!cancelled) setFallbackMemberships(data);
+      } catch (err: any) {
+        if (!cancelled) {
+          setFallbackMembersError(err?.response?.data?.message || "Failed to load team members");
+        }
+      } finally {
+        if (!cancelled) setFallbackMembersLoading(false);
+      }
+    };
+
+    loadFallbackMembers();
+    return () => {
+      cancelled = true;
+    };
+  }, [resolvedTeamCode, teamMemberships.length]);
+
+  const effectiveMemberships = teamMemberships.length > 0 ? teamMemberships : fallbackMemberships;
+  const members = useMemo(
+    () => effectiveMemberships.flatMap((entry) => entry.members ?? []),
+    [effectiveMemberships]
+  );
+
+  // Squad panel always shows 3 people (when the team has that many): self,
+  // captain, vice-captain. If there's no vice-captain, or self/captain/VC
+  // collapse onto fewer distinct people (e.g. self IS the captain), backfill
+  // with any other member so the preview still has 3. The header count
+  // separately reflects the true active squad size.
+  const squadPreview = useMemo(() => {
+    const isSelf = (member: any) =>
+      (!!authUser?.id && member.userId === authUser.id) ||
+      (!!authUser?.botleagueId && member.botleagueId === authUser.botleagueId);
+
+    const self = members.find(isSelf);
+    const captain = members.find((m) => memberRoleUpper(m) === "CAPTAIN");
+    const viceCaptain = members.find((m) => memberRoleUpper(m) === "VICE_CAPTAIN");
+
+    const seen = new Set<string>();
+    const preview: any[] = [];
+
+    const tryAdd = (candidate: any) => {
+      if (!candidate || preview.length >= 3) return;
+      const key = memberKey(candidate);
+      if (seen.has(key)) return;
+      seen.add(key);
+      preview.push(candidate);
+    };
+
+    tryAdd(self);
+    tryAdd(captain);
+    tryAdd(viceCaptain);
+
+    // Backfill with other active members first, then anyone at all, until
+    // we reach 3 or run out of teammates.
+    if (preview.length < 3) {
+      members.filter(isMemberActive).forEach(tryAdd);
     }
-  }, [isTeamAdmin, assignRoleFn, reloadMemberships]);
-
-  const handleTransferCaptain = useCallback(async (userId: string): Promise<void> => {
-    if (!isCaptain) return;  // CAPTAIN only
-    try {
-      await transferCaptainFn(userId);
-      await reloadMemberships();
-    } catch (err) {
-      throw new Error(parseApiError(err), { cause: err });
+    if (preview.length < 3) {
+      members.forEach(tryAdd);
     }
-  }, [isCaptain, transferCaptainFn, reloadMemberships]);
 
-  const handleLeaveTeam = useCallback(async (): Promise<void> => {
-    try {
-      await leaveTeamFn();
-      navigate("/");
-    } catch (err) {
-      throw new Error(parseApiError(err), { cause: err });
+    return preview;
+  }, [members, authUser]);
+
+  const nextEvent = useMemo(() => {
+    const now = Date.now();
+    return [...events]
+      .filter((event) => event.startDate && new Date(event.startDate).getTime() >= now)
+      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())[0] ?? events[0] ?? null;
+  }, [events]);
+
+  const featuredImage = nextEvent?.logoURL || eventBg;
+  const countdown = useCountdown(nextEvent?.startDate);
+  const teamRobots = useMemo(() => {
+    const teamIds = new Set([resolvedTeam?.id, dashboardTeam?.teamId].filter(Boolean));
+    return teamIds.size > 0
+      ? robots.filter((robot) => !robot.teamId || teamIds.has(robot.teamId))
+      : robots;
+  }, [dashboardTeam?.teamId, resolvedTeam?.id, robots]);
+  const primaryRobot = teamRobots[0] ?? null;
+  const sideRobots = teamRobots.slice(1, 3);
+  const loading = teamLoading || dashboardLoading || fallbackMembersLoading || sponsorsLoading;
+  const error = teamError || dashboardError || fallbackMembersError || sponsorsError;
+  const currentTeamName = resolvedTeam?.teamName || "Your Team";
+  const currentTeamCode = resolvedTeam?.teamCode || "Not assigned";
+  const teamLogo = resolvedTeam?.logoUrl || eventBg;
+  const location = [resolvedTeam?.city, resolvedTeam?.state, resolvedTeam?.country].filter(Boolean).join(", ");
+  const isActive = isUsableTeamStatus(resolvedTeam?.status);
+
+  const handleRefresh = async () => {
+    refresh();
+    await loadTeam();
+    if (resolvedTeamCode) {
+      await loadTeamMemberships();
+      const data = await getTeamMemberships(resolvedTeamCode);
+      setFallbackMemberships(data);
     }
-  }, [leaveTeamFn, navigate]);
+  };
 
-  const handleDeleteRobot = useCallback(async (robot: Robot) => {
-    if (!isTeamAdmin) return;  // captain OR vice captain
-    const robotId = robot.id ?? robot.robotId;
-    if (!robotId) return;
-    try {
-      await deleteRobot(robotId);
-    } catch (err) {
-      setGlobalError(parseApiError(err));
-    }
-  }, [isTeamAdmin]);
-
-  // ── Loading ───────────────────────────────────────────────────────────────
-  if (isLoading) {
+  if (loading && !resolvedTeam) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#282727] text-white">
-        <div className="text-center">
-          <Spinner size={44} />
-          <span className="text-gray-400 text-sm block mt-4">Loading team...</span>
-        </div>
-      </div>
+      <main className="teamdash-page teamdash-state">
+        <div className="teamdash-spinner" />
+        <p>Loading your team...</p>
+      </main>
     );
   }
 
-  // ── No team ───────────────────────────────────────────────────────────────
-  if (team?.status === "NO_TEAM") {
+  if (!resolvedTeam) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#282727] text-white p-6">
-        <div className="w-24 h-24 rounded-[28px] bg-gradient-to-br from-[#434343] to-[#2a2a2a] flex items-center justify-center text-gray-400 mb-7 border border-white/9 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
-          <Users size={44} />
+      <main className="teamdash-page teamdash-state">
+        <h1>No active team found</h1>
+        <p>Create a team or accept an invitation to see your team dashboard.</p>
+        <div className="teamdash-state-actions">
+          <button type="button" onClick={() => navigate("/create-team")}>Create Team</button>
+          <button type="button" onClick={handleRefresh}>Refresh</button>
         </div>
-        <h1 className="text-3xl font-bold mb-2.5 tracking-wider">No Team Found</h1>
-        <p className="text-gray-400 mb-9 text-sm text-center max-w-sm leading-relaxed">
-          You're not part of any team yet. Create your own team or join an existing one to start competing.
-        </p>
-        {/* Profile gate modal */}
-        {showProfileGate && (
-          <ProfileIncompleteModal
-            missingFields={missingFields}
-            action={gateAction}
-            onClose={() => setShowProfileGate(false)}
-          />
-        )}
-
-        <div className="flex gap-4 flex-wrap justify-center">
-          <button onClick={handleCreateTeamClick} className="bg-[#fa4715] border-none text-white px-7 py-3.5 rounded-[18px] cursor-pointer font-bold text-sm inline-flex items-center gap-2 shadow-[0_4px_20px_rgba(250,71,21,0.35)] hover:opacity-88 transition-opacity">
-            <Plus size={18} /> Create Team
-          </button>
-          <button onClick={handleJoinTeamClick} className="bg-white/6 border border-white/9 text-white px-7 py-3.5 rounded-[18px] cursor-pointer font-bold text-sm inline-flex items-center gap-2 hover:bg-white/10 hover:border-[#fa4715]/38 transition-all">
-            <DoorOpen size={18} /> Join Team
-          </button>
-        </div>
-      </div>
+        {error && <span>{error}</span>}
+      </main>
     );
   }
 
-  if (!roleResolved || !team) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#282727] text-white">
-        <Spinner size={36} />
-      </div>
-    );
-  }
-
-  // ── Derived data ──────────────────────────────────────────────────────────
-  const typedTeam = team as Team;
-  const teamName = typedTeam.teamName || "Team Name";
-  const description = typedTeam.description || "No description provided.";
-  const institution = typedTeam.institutionName || "—";
-  const city = typedTeam.city || "—";
-  const state = typedTeam.state || "—";
-  const country = typedTeam.country || "—";
-  const teamCode = typedTeam.teamCode || "—";
-  const status = typedTeam.status || "ACTIVE";
-  const logoUrl = typedTeam.logoUrl || typedTeam.logo_Url || null;
-  const memberCount = teamMemberships.length;
-  const logoInitial = teamName.charAt(0).toUpperCase();
-
-  // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen text-white bg-[#282727] p-8 relative overflow-hidden">
-      {/* Ambient glow */}
-      <div className="absolute -top-44 -right-44 w-[480px] h-[480px] rounded-full bg-[radial-gradient(circle,rgba(250,71,21,0.1),transparent_70%)] pointer-events-none" />
+    <main className="teamdash-page">
+      <div className="teamdash-content">
+        <div className="teamdash-top-row">
+          <h1>Welcome back, {currentTeamName}!</h1>
+          <button type="button" className="teamdash-chat-btn" onClick={() => navigate("/messages")}>
+            Chats
+          </button>
+        </div>
 
-      <div className="relative z-10">
-
-        {/* ── GLOBAL ERROR ─────────────────────────────────────────────── */}
-        {globalError && (
-          <div className="mb-4">
-            <ErrorAlert message={globalError} onDismiss={() => setGlobalError(null)} />
+        {error && (
+          <div className="teamdash-error">
+            <span>{error}</span>
+            <button type="button" onClick={handleRefresh}>
+              <RefreshCw size={15} />
+              Retry
+            </button>
           </div>
         )}
 
-        {/* ── HEADER ───────────────────────────────────────────────────── */}
-        <div className="flex items-start justify-between flex-wrap gap-4 mb-6">
-          <div>
-            <div className="flex items-center gap-3.5 mb-2">
-              <h1 className="text-3xl font-bold tracking-wider m-0">TEAM DASHBOARD</h1>
-              <RoleBadge myRole={myRole} />
+        <section
+          className="teamdash-event-banner"
+          style={{ backgroundImage: `url(${featuredImage})` }}
+        >
+          <div className="teamdash-event-overlay" />
+          <div className="teamdash-event-copy">
+            <div className="teamdash-event-badges">
+              <span className="teamdash-event-badge">{nextEvent ? "FEATURED" : "TEAM"}</span>
+              <span className="teamdash-event-subtitle">{nextEvent ? "Next Arena" : "Team Overview"}</span>
             </div>
-            <p className="text-gray-400 text-sm m-0">
-              {isCaptain
-                ? "You have full captain access — manage your team, robots, and members."
-                : isViceCaptain
-                ? "You have vice captain access — invite members, manage robots, and edit team info."
-                : "Welcome back! You're viewing your team's information."}
-            </p>
+            <h2>{nextEvent?.eventName || currentTeamName}</h2>
+            <div className="teamdash-event-meta">
+              <span>
+                <MapPin size={14} /> {nextEvent ? [nextEvent.venueName, nextEvent.city, nextEvent.state].filter(Boolean).join(", ") : location || "Location not added"}
+              </span>
+              <span>
+                <Calendar size={14} /> {nextEvent ? formatDateRange(nextEvent.startDate, nextEvent.endDate) : `In league since ${yearFrom(team?.createdAt)}`}
+              </span>
+            </div>
+            <button type="button" className="teamdash-event-cta" onClick={() => navigate(nextEvent ? `/events/${nextEvent.eventId}` : "/events")}>
+              {nextEvent ? "View Details" : "Browse Events"}
+            </button>
           </div>
 
-          <div className="flex flex-wrap gap-2.5 items-center">
-            {isTeamAdmin ? (
-              <>
-                <ActionBtn icon={UserPlus} label="Invite Member" onClick={() => setActiveModal("invite")} accent />
-                <ActionBtn icon={Bot} label="Add Robot" onClick={() => setActiveModal("robot")} />
-                <ActionBtn icon={Pencil} label="Edit Team" onClick={() => setActiveModal("edit")} />
-                <ActionBtn icon={Share2} label="Share Code" onClick={() => setActiveModal("share")} />
-              </>
-            ) : (
-              <>
-                <ActionBtn icon={Share2} label="Share Code" onClick={() => setActiveModal("share")} />
-                <ActionBtn icon={LogOut} label="Leave Team" onClick={() => setActiveModal("leave")} />
-              </>
-            )}
-            {/* Share public team profile link */}
-            {typedTeam?.teamCode && (
-              <ShareButton
-                url={`${window.location.origin}/team/${typedTeam.teamCode}`}
-                label="Share Profile"
-                size="sm"
-              />
-            )}
+          <div className="teamdash-countdown">
+            <div className="teamdash-countdown-box">
+              <strong>{pad(countdown.days)}</strong>
+              <span>Days</span>
+            </div>
+            <span className="teamdash-countdown-sep">:</span>
+            <div className="teamdash-countdown-box">
+              <strong>{pad(countdown.hours)}</strong>
+              <span>Hours</span>
+            </div>
+            <span className="teamdash-countdown-sep">:</span>
+            <div className="teamdash-countdown-box">
+              <strong>{pad(countdown.mins)}</strong>
+              <span>Mins</span>
+            </div>
           </div>
-        </div>
+        </section>
 
-        {/* ── READ-ONLY NOTICE ─────────────────────────────────────────── */}
-        {!isTeamAdmin && <ReadOnlyBanner />}
+        <div className="teamdash-overview-grid">
+          <section className="teamdash-team-panel">
+            <div className="teamdash-rank-pill">
+              <Star size={16} fill="currentColor" />
+              Rank - {stats.rankNum || "Pending"}
+            </div>
 
-        {/* ── TEAM CARD ────────────────────────────────────────────────── */}
-        <div className="bg-gradient-to-br from-[#434343] to-[#262626] border border-white/9 rounded-[24px] p-8 mb-7 shadow-[0_10px_40px_rgba(0,0,0,0.35)]">
-          <div className="flex items-start flex-wrap gap-7">
-            {/* Logo */}
-            <div className="shrink-0">
-              {logoUrl && !logoError ? (
-                <img src={logoUrl} alt={teamName} onError={() => setLogoError(true)}
-                  className="w-[130px] h-[130px] rounded-[28px] object-cover border-2 border-[#fa4715]/28" />
+            <div className="teamdash-team-copy">
+              <span className="teamdash-active-pill">
+              <span /> {isActive ? "Active" : toLabel(resolvedTeam?.status)}
+              </span>
+              <h2>{currentTeamName}</h2>
+              <p>Team ID - {currentTeamCode}</p>
+              <p>
+                <strong>{stats.winRateNum || 0}%</strong> Win Rate
+              </p>
+
+              <div className="teamdash-since">
+                <span>In The League Since {yearFrom(resolvedTeam?.createdAt)}</span>
+                {primarySponsor ? (
+                  primarySponsor.website ? (
+                    <a href={primarySponsor.website} target="_blank" rel="noopener noreferrer">
+                      Sponsored By {primarySponsor.name}
+                    </a>
+                  ) : (
+                    <a href="#team-info">Sponsored By {primarySponsor.name}</a>
+                  )
+                ) : (
+                  <a href="#team-info">{resolvedTeam?.institutionName || location || resolvedTeam?.memberRole || "Team profile details pending"}</a>
+                )}
+              </div>
+            </div>
+
+            <div className="teamdash-team-image">
+              <img src={teamLogo} alt={currentTeamName} />
+            </div>
+          </section>
+
+          <aside className="teamdash-squad-panel">
+            <h2>Active Squad ({members.filter(isMemberActive).length})</h2>
+            <div className="teamdash-member-list">
+              {squadPreview.length > 0 ? (
+                squadPreview.map((member) => {
+                  const name = memberName(member);
+                  const photoSrc = resolveAvatarSrc(member.profilePhotoUrl);
+                  return (
+                    <div className="teamdash-member" key={member.membershipId || member.teamMemberId || member.userId || name}>
+                      {photoSrc ? (
+                        <img src={photoSrc} alt={name} className="teamdash-avatar" />
+                      ) : (
+                        <span className="teamdash-avatar teamdash-avatar-fallback">{memberInitials(name)}</span>
+                      )}
+                      <div className="teamdash-member-info">
+                        <strong>{name}</strong>
+                        <span>{toLabel(member.teamRole || member.role)}</span>
+                      </div>
+                      <em className={isMemberActive(member) ? "active" : "offline"}>
+                        {isMemberActive(member) ? "Active" : "Offline"}
+                      </em>
+                    </div>
+                  );
+                })
               ) : (
-                <div className="w-[130px] h-[130px] rounded-[28px] bg-[#fa4715] flex items-center justify-center text-5xl font-bold text-white">
-                  {logoInitial}
-                </div>
-              )}
-              {isTeamAdmin && (
-                <>
-                  {/* Hidden file input */}
-                  <input
-                    ref={logoInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleLogoChange}
-                  />
-                  <button
-                    onClick={() => logoInputRef.current?.click()}
-                    disabled={logoUploading}
-                    className="mt-2.5 w-[130px] border border-white/9 text-gray-400 py-1.5 rounded-[10px] cursor-pointer text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ background: logoSuccess ? "rgba(74,222,128,0.12)" : "rgba(255,255,255,0.06)" }}
-                  >
-                    {logoUploading ? (
-                      <><Loader2 size={13} className="animate-spin" /> Uploading…</>
-                    ) : logoSuccess ? (
-                      <><CircleCheckBig size={13} className="text-green-400" /> <span className="text-green-400">Uploaded!</span></>
-                    ) : (
-                      <><Camera size={13} /> Upload Logo</>
-                    )}
-                  </button>
-                </>
+                <div className="teamdash-empty-list">No members loaded yet.</div>
               )}
             </div>
+            <button type="button" className="teamdash-manage-btn" onClick={() => navigate("/my-team")}>
+              Member Management
+            </button>
+          </aside>
+        </div>
 
-            {/* Team Info */}
-            <div className="flex-1 min-w-[260px]">
-              <div className="flex items-center gap-3.5 flex-wrap">
-                <h2 className="text-4xl font-bold m-0">{teamName}</h2>
-                <span className="bg-green-400/14 text-green-400 px-3 py-1 rounded-full text-xs font-bold tracking-wider">{status}</span>
-                {isCaptain && (
-                  <span className="bg-amber-500/14 text-amber-400 px-3 py-1 rounded-full text-xs font-bold tracking-wider inline-flex items-center gap-1">
-                    <Crown size={11} /> Captain
-                  </span>
-                )}
-                {isViceCaptain && (
-                  <span className="bg-purple-500/14 text-purple-400 px-3 py-1 rounded-full text-xs font-bold tracking-wider inline-flex items-center gap-1">
-                    <Shield size={11} /> Vice Captain
-                  </span>
-                )}
-              </div>
-
-              <p className="text-[#c5c5c5] mt-3.5 leading-7 max-w-[780px] text-sm">{description}</p>
-
-              <div className="flex flex-wrap gap-4 mt-5">
-                <InfoRow icon={Building2}>{institution}</InfoRow>
-                <InfoRow icon={MapPin}>{city}, {state}</InfoRow>
-                <InfoRow icon={Globe}>{country}</InfoRow>
-                <InfoRow icon={BadgeCheck} onClick={() => setActiveModal("share")}>{teamCode}</InfoRow>
-              </div>
-
-              <div className="flex flex-wrap gap-2.5 mt-5">
-                <ActionBtn icon={CalendarDays} label="Register Event" onClick={() => navigate("/events")} />
-                {isTeamAdmin && <ActionBtn icon={Pencil} label="Edit Info" onClick={() => setActiveModal("edit")} />}
-                {!isTeamAdmin && <ActionBtn icon={LogOut} label="Leave Team" onClick={() => setActiveModal("leave")} />}
-              </div>
-            </div>
+        <section className="teamdash-machines" id="robots">
+          <div className="teamdash-machines-head">
+            <h2>Battle Machines</h2>
+            <button type="button" onClick={() => navigate("/robots")}>View all</button>
           </div>
-        </div>
 
-        {/* ── STAT CARDS ───────────────────────────────────────────────── */}
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3.5 mb-7">
-          <StatCard icon={Users} label="Members" value={String(memberCount).padStart(2, "0")} />
-          <StatCard icon={Bot} label="Robots" value={String(robots?.length || 0).padStart(2, "0")} />
-          <StatCard icon={Sword} label="Matches" value="00" />
-          <StatCard icon={Trophy} label="Win Rate" value="0%" />
-        </div>
-
-        {/* ── MEMBERS + EVENTS ─────────────────────────────────────────── */}
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5">
-          {/* Members panel */}
-          <Panel
-            title="Team Members"
-            icon={Users}
-            action={
-              isTeamAdmin ? (
-                <ActionBtn icon={UserPlus} label="Invite" small accent onClick={() => setActiveModal("invite")} />
-              ) : null
-            }
-          >
-            {teamMemberships.length ? (
-              teamMemberships.map((member) => {
-                const mRole = member.teamRole?.toUpperCase() ?? "";
-                const avatarColor = mRole === "CAPTAIN" ? "bg-amber-500" : mRole === "VICE_CAPTAIN" ? "bg-purple-500" : "bg-[#fa4715]";
-                const avatarIcon = mRole === "CAPTAIN" ? <Crown size={16} /> : mRole === "VICE_CAPTAIN" ? <Shield size={16} /> : (member.teamRole?.charAt(0)?.toUpperCase() || "T");
-                return (
-                <div key={member.userId} className="flex items-center justify-between py-3 border-b border-white/9 last:border-b-0">
-                  {/* Avatar + name */}
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-base text-white shrink-0 ${avatarColor}`}>
-                      {avatarIcon}
+          {primaryRobot ? (
+            <div className="teamdash-machine-strip">
+              <article className="teamdash-machine-feature">
+                <img src={primaryRobot.robotIMG || fallbackRobot} alt={primaryRobot.robotName} />
+                <span className="teamdash-machine-status">{toLabel(primaryRobot.status)}</span>
+                <div className="teamdash-machine-info">
+                  <h3>{primaryRobot.robotName}</h3>
+                  <p>{toLabel(primaryRobot.category)}</p>
+                  <div className="teamdash-machine-stats">
+                    <div>
+                      <strong>{stats.wins}</strong>
+                      <span>VICTORIES</span>
                     </div>
                     <div>
-                      <div className="font-semibold text-sm text-white">
-                        {member.username ||
-                          `${member.firstName ?? ""} ${member.lastName ?? ""}`.trim() || "Unknown"}
-                      </div>
-                      <div className="text-gray-400 text-xs">{member.teamRole?.replace("_", " ")}</div>
+                      <strong>{toLabel(primaryRobot.weightClass)}</strong>
+                      <span>CLASS</span>
                     </div>
                   </div>
-
-                  {/* Status + actions */}
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-green-400 text-xs font-semibold flex items-center gap-1">
-                      <BadgeCheck size={13} /> Active
-                    </span>
-                    {actionLoading ? (
-                      <Spinner size={16} />
-                    ) : (
-                      <MemberActionsMenu
-                        member={member}
-                        isTeamAdmin={isTeamAdmin}
-                        isStrictCaptain={isCaptain}
-                        onRemove={setRemovingMember}
-                        onAssignRole={setAssigningRoleMember}
-                        onTransferCaptain={setTransferringCaptainMember}
-                      />
-                    )}
-                  </div>
                 </div>
-              )})
-            ) : (
-              <EmptyState
-                icon={Users}
-                message="No members yet"
-                cta={isTeamAdmin ? "Invite Your First Member" : undefined}
-                onCta={isTeamAdmin ? () => setActiveModal("invite") : undefined}
-              />
-            )}
-          </Panel>
+              </article>
 
-          {/* Events panel */}
-          <Panel
-            title="Upcoming Events"
-            icon={CalendarDays}
-            action={<ActionBtn icon={Search} label="Browse" small onClick={() => navigate("/events")} />}
-          >
-            <EmptyState
-              icon={CalendarOff}
-              message="No upcoming events registered"
-              cta="Register for an Event"
-              onCta={() => navigate("/events")}
-            />
-          </Panel>
-        </div>
-
-        {/* ── ROBOTS PANEL ─────────────────────────────────────────────── */}
-        <div className="mt-5">
-          <Panel
-            title="Robots"
-            icon={Bot}
-            action={isTeamAdmin
-              ? <ActionBtn icon={Plus} label="Add Robot" small accent onClick={() => setActiveModal("robot")} />
-              : null}
-          >
-            {robotsLoading && (
-              <div className="text-center py-7 text-gray-400 flex flex-col items-center gap-3">
-                <Spinner size={30} />
-                <span className="text-sm">Loading robots...</span>
-              </div>
-            )}
-
-            {robotsError && !robotsLoading && (
-              <ErrorAlert message={parseApiError(robotsError)} />
-            )}
-
-            {!robotsLoading && !robotsError && robots?.length > 0 && (
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-3.5">
-                {robots.map((robot: Robot) => (
-                  <RobotCard
-                    key={robot.id ?? robot.robotId}
-                    robot={robot}
-                    isCaptain={isTeamAdmin}
-                    onClick={() => setSelectedRobot(robot as any)}
-                    onDelete={handleDeleteRobot}
-                  />
-                ))}
-              </div>
-            )}
-
-            {!robotsLoading && !robotsError && (!robots || robots.length === 0) && (
-              <EmptyState
-                icon={BotOff}
-                message="No robots registered yet"
-                cta={isTeamAdmin ? "Register Your First Robot" : undefined}
-                onCta={isTeamAdmin ? () => setActiveModal("robot") : undefined}
-              />
-            )}
-          </Panel>
-        </div>
-
-        {/* ── SPONSORS PANEL ───────────────────────────────────────────── */}
-        <SponsorPanel teamId={team1?.id ?? null} isCaptain={isTeamAdmin} />
-      </div>
-
-      {/* ── MODALS ─────────────────────────────────────────────────────────── */}
-
-      {/* Captain OR Vice Captain can invite, add robot, edit team */}
-      {activeModal === "invite" && isTeamAdmin && (
-        <InviteCard onClose={() => setActiveModal(null)} teamCode={typedTeam.teamCode ?? ""} />
-      )}
-
-      {activeModal === "robot" && isTeamAdmin && (
-        <div className="fixed inset-0 z-50 overflow-auto bg-black/80">
-          <button
-            onClick={() => setActiveModal(null)}
-            className="fixed top-4 right-4 z-60 bg-white/10 border border-white/20 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer"
-          >
-            <X size={18} />
-          </button>
-          <CreateRobotForm onSuccess={() => setActiveModal(null)} />
-        </div>
-      )}
-
-      {activeModal === "edit" && isTeamAdmin && (
-        <EditTeamModal team={typedTeam} onClose={() => setActiveModal(null)} />
-      )}
-
-      {activeModal === "share" && (
-        <ShareCodeModal teamCode={teamCode} onClose={() => setActiveModal(null)} />
-      )}
-
-      {activeModal === "leave" && !isTeamAdmin && (
-        <LeaveTeamModal onConfirm={handleLeaveTeam} onClose={() => setActiveModal(null)} />
-      )}
-
-      {/* Captain OR Vice Captain can remove members and assign roles */}
-      {removingMember && isTeamAdmin && (
-        <RemoveMemberModal
-          member={removingMember}
-          onConfirm={handleRemoveMember}
-          onClose={() => setRemovingMember(null)}
-        />
-      )}
-
-      {assigningRoleMember && isTeamAdmin && (
-        <AssignRoleModal
-          member={assigningRoleMember}
-          onConfirm={handleAssignRole}
-          onClose={() => setAssigningRoleMember(null)}
-        />
-      )}
-
-      {/* Transfer captain = CAPTAIN only */}
-      {transferringCaptainMember && isCaptain && (
-        <TransferCaptainModal
-          member={transferringCaptainMember}
-          onConfirm={handleTransferCaptain}
-          onClose={() => setTransferringCaptainMember(null)}
-        />
-      )}
-
-      {selectedRobot && (
-        <RobotDetailModal
-          robot={selectedRobot as any}
-          onClose={() => setSelectedRobot(null)}
-          canEdit={isTeamAdmin}
-          onUpdated={() => { fetchRobots(); setSelectedRobot(null); }}
-        />
-      )}
-
-      {/* Safety net — member-only restricted modal */}
-      {activeModal && !isTeamAdmin && !["share", "leave"].includes(activeModal) && (
-        <Modal title="Access Restricted" onClose={() => setActiveModal(null)}>
-          <div className="text-center pt-4 pb-6">
-            <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/28 flex items-center justify-center mx-auto mb-4 text-red-400">
-              <ShieldAlert size={28} />
+              {sideRobots.map((robot) => (
+                <article className="teamdash-machine-thumb" key={robot.id}>
+                  <img src={robot.robotIMG || fallbackRobot} alt={robot.robotName} />
+                  <span className="teamdash-machine-status">{toLabel(robot.status)}</span>
+                </article>
+              ))}
             </div>
-            <p className="text-gray-300 text-sm mb-1.5">Only the captain or vice captain can perform this action.</p>
-            <p className="text-gray-500 text-xs">Contact your team admin to make changes.</p>
-          </div>
-        </Modal>
-      )}
-    </div>
+          ) : (
+            <div className="teamdash-empty-machines">
+              <img src={fallbackRobot} alt="" />
+              <div>
+                <h3>No robots yet</h3>
+                <p>Add your first robot to connect it with this team.</p>
+              </div>
+              <button type="button" onClick={() => navigate("/robots")}>Add Robot</button>
+            </div>
+          )}
+        </section>
+      </div>
+    </main>
   );
 }

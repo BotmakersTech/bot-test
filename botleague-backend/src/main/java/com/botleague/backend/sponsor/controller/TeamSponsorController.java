@@ -88,6 +88,9 @@ public class TeamSponsorController {
             @RequestParam long fileSize,
             Authentication auth
     ) {
+        UUID callerId = SecurityUtils.currentUserId(auth);
+        sponsorService.assertCanManage(teamId, callerId, isAdminRole(auth));
+
         String key = fileKeyService.generateSponsorLogoKey(teamId, fileType);
         UploadResponse response = uploadService.generateUploadUrl(key, fileType, fileSize);
         return ResponseEntity.ok(response);

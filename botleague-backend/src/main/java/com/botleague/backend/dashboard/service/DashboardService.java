@@ -154,8 +154,12 @@ public class DashboardService {
 
             if (TeamMembershipStatus.ACTIVE.equals(membership.getStatus())) {
 
+                // A current member sees every robot the team currently has,
+                // not just ones built after they personally joined — that
+                // "createdAtAfter(joinedAt)" filter was wrongly excluding
+                // every robot a new member's team already owned.
                 robots = robotRepository
-                        .findByTeamIdAndCreatedAtAfterAndDeletedAtIsNull(teamId, joinedAt);
+                        .findByTeamIdAndDeletedAtIsNull(teamId);
 
             } else {
 

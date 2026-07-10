@@ -5,6 +5,7 @@ export interface ChatMessage {
   chatRoomId: string
   senderId: string | null
   senderName: string
+  senderPhotoUrl?: string | null
   content: string
   sentAt: string
   isDeleted: boolean

@@ -65,7 +65,7 @@ public class RobotController {
 		return ResponseEntity.ok(publicRobotService.getPublicProfileByCode(robotCode));
 	}
 	@PostMapping("/createRobots")
-	public ResponseEntity<CreateRobotResponseDTO> createRobot(Authentication authentication ,@RequestBody CreateRobotRequestDTO request) {
+	public ResponseEntity<CreateRobotResponseDTO> createRobot(Authentication authentication ,@Valid @RequestBody CreateRobotRequestDTO request) {
 		
 		
 		CreateRobotResponseDTO response = robotService.createRobot(authentication, request);

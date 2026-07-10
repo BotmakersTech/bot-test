@@ -93,8 +93,10 @@ public class UserManagementController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
     public ResponseEntity<Void> removeRole(
             @PathVariable UUID userId,
-            @PathVariable AccountType role) {
-        userManagementService.removeRole(userId, role);
+            @PathVariable AccountType role,
+            Authentication auth) {
+        UUID adminId = UUID.fromString((String) auth.getPrincipal());
+        userManagementService.removeRole(userId, role, adminId);
         return ResponseEntity.noContent().build();
     }
 

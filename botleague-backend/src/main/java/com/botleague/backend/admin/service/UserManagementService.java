@@ -110,6 +110,18 @@ public class UserManagementService {
             return;
         }
 
+        // Privilege-escalation guard: the controller's @PreAuthorize allows both
+        // SUPER_ADMIN and ADMINISTRATOR to call this endpoint, but only a
+        // SUPER_ADMIN may grant SUPER_ADMIN or ADMINISTRATOR — otherwise an
+        // ADMINISTRATOR could grant themselves (or anyone) SUPER_ADMIN.
+        if (role == AccountType.SUPER_ADMIN || role == AccountType.ADMINISTRATOR) {
+            boolean callerIsSuperAdmin = userRoleRepository.findByUserId(assignedBy).stream()
+                    .anyMatch(r -> r.getRoleType() == AccountType.SUPER_ADMIN);
+            if (!callerIsSuperAdmin) {
+                throw ApiException.forbidden("Only a Super Admin can assign the " + role + " role");
+            }
+        }
+
         UserRole userRole = new UserRole();
         userRole.setUserId(targetUserId);
         userRole.setRoleType(role);
@@ -120,7 +132,14 @@ public class UserManagementService {
 
     // ── Remove role ───────────────────────────────────────────────────────
 
-    public void removeRole(UUID targetUserId, AccountType role) {
+    public void removeRole(UUID targetUserId, AccountType role, UUID removedBy) {
+        if (role == AccountType.SUPER_ADMIN || role == AccountType.ADMINISTRATOR) {
+            boolean callerIsSuperAdmin = userRoleRepository.findByUserId(removedBy).stream()
+                    .anyMatch(r -> r.getRoleType() == AccountType.SUPER_ADMIN);
+            if (!callerIsSuperAdmin) {
+                throw ApiException.forbidden("Only a Super Admin can remove the " + role + " role");
+            }
+        }
         userRoleRepository.findByUserIdAndRoleType(targetUserId, role)
                 .ifPresent(userRoleRepository::delete);
     }

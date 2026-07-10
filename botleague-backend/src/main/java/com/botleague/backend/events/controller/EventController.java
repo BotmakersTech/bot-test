@@ -77,13 +77,15 @@ public class EventController {
 	) {
 
 	    // =====================================================
-	    // AUTH USER
+	    // AUTH + PERMISSION CHECK
 	    // =====================================================
 
 		UUID userId =
 		        UUID.fromString(
 		                (String) authentication.getPrincipal()
 		        );
+
+		eventService.assertCanManageEventMedia(eventId, authentication);
 
 	    // =====================================================
 	    // GENERATE EVENT IMAGE KEY
@@ -118,7 +120,9 @@ public class EventController {
 
 	        @PathVariable UUID eventId,
 
-	        @RequestBody MediaRequest request
+	        @RequestBody MediaRequest request,
+
+	        Authentication authentication
 	) {
 
 	    // =====================================================
@@ -137,7 +141,8 @@ public class EventController {
 	    eventService.saveMedia(
 	            eventId,
 	            request.getKey(),
-	            type
+	            type,
+	            authentication
 	    );
 
 	    return ResponseEntity.ok(

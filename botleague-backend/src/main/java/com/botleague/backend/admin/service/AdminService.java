@@ -1,4 +1,4 @@
-ackage com.botleague.backend.admin.service;
+package com.botleague.backend.admin.service;
 
 import java.util.ArrayList;
 import java.util.EnumMap;

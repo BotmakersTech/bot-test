@@ -1,242 +1,323 @@
-import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { useAppDispatch, useAppSelector } from "../../../app/hooks"
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import { useAppDispatch, useAppSelector } from "../../../app/hooks";
+import flightDecoration from "../../../assets/Auth/flight.svg";
+import "../../../styles/notifications.css";
+import type { NotificationResponse } from "../api/notification.api";
 import {
   fetchMyNotifications,
   fetchUnreadCount,
-  markNotificationRead,
   markAllNotificationsRead,
-  selectNotifications,
+  markNotificationRead,
   selectNotifLoading,
   selectNotifTotalPages,
-} from "../store/notificationSlice"
-import type { NotificationResponse } from "../api/notification.api"
+  selectNotifications,
+} from "../store/notificationSlice";
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-type TabKey = "all" | "unread" | "event" | "match" | "ranking"
+type TabKey = "all" | "team" | "join" | "sport" | "match";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "all", label: "All" },
-  { key: "unread", label: "Unread" },
-  { key: "event", label: "Event Updates" },
+  { key: "team", label: "Team Invites" },
+  { key: "join", label: "Join Requests" },
+  { key: "sport", label: "Sport Updates" },
   { key: "match", label: "Match Updates" },
-  { key: "ranking", label: "Rankings" },
-]
+];
 
-function filterNotifications(notifications: NotificationResponse[], tab: TabKey): NotificationResponse[] {
-  switch (tab) {
-    case "all":
-      return notifications
-    case "unread":
-      return notifications.filter((n) => !n.read)
-    case "event":
-      return notifications.filter(
-        (n) => n.type.includes("EVENT") || n.type.includes("REGISTRATION")
-      )
-    case "match":
-      return notifications.filter(
-        (n) => n.type.includes("MATCH") || n.type.includes("RESULT")
-      )
-    case "ranking":
-      return notifications.filter((n) => n.type.includes("RANKING"))
-    default:
-      return notifications
-  }
+const demoNotifications: NotificationResponse[] = [
+  {
+    id: "demo-message-week",
+    title: "Alex Morgan messaged you",
+    message: "How are you?",
+    type: "MESSAGE",
+    priority: "LOW",
+    targetType: "USER",
+    actionUrl: "/messages",
+    custom: false,
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    read: false,
+  },
+  {
+    id: "demo-join-week",
+    title: "Michael J wants to join your team.",
+    message: "",
+    type: "JOIN_REQUEST",
+    priority: "HIGH",
+    targetType: "TEAM",
+    actionUrl: "/my-team",
+    custom: false,
+    createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    read: false,
+  },
+  {
+    id: "demo-follow-month-a",
+    title: "Ajay Jadhav started following you.",
+    message: "",
+    type: "FOLLOW",
+    priority: "LOW",
+    targetType: "USER",
+    custom: false,
+    createdAt: new Date("2026-05-20T12:00:00").toISOString(),
+    read: true,
+  },
+  {
+    id: "demo-follow-month-b",
+    title: "Shreyash Patel started following you.",
+    message: "",
+    type: "FOLLOW",
+    priority: "LOW",
+    targetType: "USER",
+    custom: false,
+    createdAt: new Date("2026-05-18T12:00:00").toISOString(),
+    read: true,
+  },
+  {
+    id: "demo-message-month",
+    title: "Alex Morgan messaged you",
+    message: "Hello.",
+    type: "MESSAGE",
+    priority: "LOW",
+    targetType: "USER",
+    actionUrl: "/messages",
+    custom: false,
+    createdAt: new Date("2026-05-15T12:00:00").toISOString(),
+    read: true,
+  },
+];
+
+function notificationMatchesTab(notification: NotificationResponse, tab: TabKey) {
+  const type = notification.type.toUpperCase();
+  const text = `${notification.title} ${notification.message}`.toUpperCase();
+
+  if (tab === "all") return true;
+  if (tab === "team") return type.includes("INVITE") || text.includes("INVITE");
+  if (tab === "join") return type.includes("JOIN") || text.includes("JOIN");
+  if (tab === "sport") return type.includes("SPORT") || type.includes("EVENT") || type.includes("REGISTRATION");
+  if (tab === "match") return type.includes("MATCH") || type.includes("RESULT");
+  return true;
 }
 
-function priorityDotColor(priority: string): string {
-  switch (priority) {
-    case "HIGH":
-      return "bg-red-500"
-    case "MEDIUM":
-      return "bg-yellow-400"
-    default:
-      return "bg-neutral-500"
-  }
+function countForTab(notifications: NotificationResponse[], tab: TabKey) {
+  if (tab === "all" || tab === "team") return 0;
+  return notifications.filter((notification) => notificationMatchesTab(notification, tab)).length;
 }
 
-function relativeTime(dateStr: string): string {
-  const now = Date.now()
-  const then = new Date(dateStr).getTime()
-  const diffMs = now - then
-  const diffSec = Math.floor(diffMs / 1000)
-  const diffMin = Math.floor(diffSec / 60)
-  const diffHr = Math.floor(diffMin / 60)
-  const diffDay = Math.floor(diffHr / 24)
-
-  if (diffSec < 60) return "just now"
-  if (diffMin < 60) return `${diffMin}m ago`
-  if (diffHr < 24) return `${diffHr}h ago`
-  if (diffDay < 30) return `${diffDay}d ago`
-  return new Date(dateStr).toLocaleDateString()
+function isThisWeek(dateStr: string) {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  return diff >= 0 && diff <= 7 * 24 * 60 * 60 * 1000;
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+function relativeTime(dateStr: string) {
+  const then = new Date(dateStr);
+  const diffDays = Math.max(0, Math.floor((Date.now() - then.getTime()) / (24 * 60 * 60 * 1000)));
+
+  if (diffDays === 0) return "Today";
+  if (diffDays < 7) return `${diffDays}d`;
+
+  return then.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function initials(notification: NotificationResponse) {
+  const words = notification.title.replace(/[^\w\s]/g, "").trim().split(/\s+/).slice(0, 2);
+  return words.map((word) => word[0]).join("").toUpperCase() || "BL";
+}
+
+function avatarClass(notification: NotificationResponse) {
+  const type = notification.type.toUpperCase();
+  if (type.includes("JOIN") || type.includes("INVITE")) return "notif-avatar notif-avatar-warm";
+  if (type.includes("FOLLOW")) return "notif-avatar notif-avatar-sky";
+  if (type.includes("MATCH") || type.includes("SPORT")) return "notif-avatar notif-avatar-purple";
+  return "notif-avatar";
+}
+
+function getActionKind(notification: NotificationResponse) {
+  const type = notification.type.toUpperCase();
+  const text = `${notification.title} ${notification.message}`.toUpperCase();
+
+  if (type.includes("JOIN") || text.includes("JOIN YOUR TEAM")) return "join";
+  if (type.includes("FOLLOW") || text.includes("FOLLOWING")) return notification.read ? "following" : "follow";
+  if (type.includes("MESSAGE") || text.includes("MESSAGED")) return "reply";
+  return notification.actionUrl ? "view" : "none";
+}
+
+function NotificationText({ notification }: { notification: NotificationResponse }) {
+  return (
+    <p className="notif-row-text">
+      <strong>{notification.title}</strong>
+      {notification.message && (
+        <>
+          <span> : </span>
+          <span className="notif-message">{notification.message}</span>
+        </>
+      )}
+      <time>{relativeTime(notification.createdAt)}</time>
+    </p>
+  );
+}
 
 export default function NotificationsPage() {
-  const dispatch = useAppDispatch()
-  const navigate = useNavigate()
-  const notifications = useAppSelector(selectNotifications)
-  const loading = useAppSelector(selectNotifLoading)
-  const totalPages = useAppSelector(selectNotifTotalPages)
-  const [currentPage, setCurrentPage] = useState(0)
-  const [activeTab, setActiveTab] = useState<TabKey>("all")
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const notifications = useAppSelector(selectNotifications);
+  const loading = useAppSelector(selectNotifLoading);
+  const totalPages = useAppSelector(selectNotifTotalPages);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [activeTab, setActiveTab] = useState<TabKey>("all");
 
   useEffect(() => {
-    dispatch(fetchMyNotifications(0))
-    dispatch(fetchUnreadCount())
-  }, [dispatch])
+    dispatch(fetchMyNotifications(0));
+    dispatch(fetchUnreadCount());
+  }, [dispatch]);
 
-  const handleLoadMore = () => {
-    const nextPage = currentPage + 1
-    setCurrentPage(nextPage)
-    dispatch(fetchMyNotifications(nextPage))
-  }
+  const sourceNotifications = notifications.length > 0 ? notifications : demoNotifications;
+  const visibleNotifications = useMemo(
+    () => sourceNotifications.filter((notification) => notificationMatchesTab(notification, activeTab)),
+    [activeTab, sourceNotifications]
+  );
+
+  const thisWeek = visibleNotifications.filter((notification) => isThisWeek(notification.createdAt));
+  const thisMonth = visibleNotifications.filter((notification) => !isThisWeek(notification.createdAt));
 
   const handleNotificationClick = (notification: NotificationResponse) => {
-    if (!notification.read) {
-      dispatch(markNotificationRead(notification.id))
+    if (!notification.id.startsWith("demo-") && !notification.read) {
+      dispatch(markNotificationRead(notification.id));
     }
+
     if (notification.actionUrl) {
-      navigate(notification.actionUrl)
+      navigate(notification.actionUrl);
     }
-  }
+  };
+
+  const handleLoadMore = () => {
+    const nextPage = currentPage + 1;
+    setCurrentPage(nextPage);
+    dispatch(fetchMyNotifications(nextPage));
+  };
 
   const handleMarkAllRead = () => {
-    dispatch(markAllNotificationsRead())
-  }
+    dispatch(markAllNotificationsRead());
+  };
 
-  const filtered = filterNotifications(notifications, activeTab)
+  const renderActions = (notification: NotificationResponse) => {
+    const actionKind = getActionKind(notification);
+
+    if (actionKind === "join") {
+      return (
+        <div className="notif-actions notif-actions-pair">
+          <button type="button" className="notif-btn notif-btn-outline" onClick={() => handleNotificationClick(notification)}>
+            Decline
+          </button>
+          <button type="button" className="notif-btn notif-btn-blue" onClick={() => handleNotificationClick(notification)}>
+            Accept
+          </button>
+        </div>
+      );
+    }
+
+    if (actionKind === "following") {
+      return <button type="button" className="notif-btn notif-btn-plain">Following</button>;
+    }
+
+    if (actionKind === "follow") {
+      return <button type="button" className="notif-btn notif-btn-blue" onClick={() => handleNotificationClick(notification)}>Follow Back</button>;
+    }
+
+    if (actionKind === "reply") {
+      return <button type="button" className="notif-btn notif-btn-gradient" onClick={() => handleNotificationClick(notification)}>Reply</button>;
+    }
+
+    if (actionKind === "view") {
+      return <button type="button" className="notif-btn notif-btn-blue" onClick={() => handleNotificationClick(notification)}>View</button>;
+    }
+
+    return null;
+  };
+
+  const renderSection = (title: string, items: NotificationResponse[]) => {
+    if (items.length === 0) return null;
+
+    return (
+      <section className="notif-section">
+        <h2>{title}</h2>
+        <div className="notif-list">
+          {items.map((notification) => (
+            <article
+              key={notification.id}
+              className={["notif-row", !notification.read ? "notif-row-unread" : ""].join(" ")}
+            >
+              <button
+                type="button"
+                className="notif-row-main"
+                onClick={() => handleNotificationClick(notification)}
+              >
+                <span className={avatarClass(notification)}>{initials(notification)}</span>
+                <NotificationText notification={notification} />
+              </button>
+              {renderActions(notification)}
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  };
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-white">
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-white">Notifications</h1>
-          <button
-            type="button"
-            onClick={handleMarkAllRead}
-            className="text-sm text-[#fa7545] hover:text-orange-400 transition-colors font-medium"
-          >
-            Mark all as read
+    <div className="notif-page">
+      <img className="notif-plane notif-plane-mid" src={flightDecoration} alt="" aria-hidden="true" />
+      <span className="notif-outline-star notif-star-left" />
+      <span className="notif-outline-star notif-star-right" />
+      <span className="notif-outline-star notif-star-bottom" />
+
+      <div className="notif-shell">
+        <div className="notif-heading-row">
+          <h1>League Updates</h1>
+          <button type="button" className="notif-mark-read" onClick={handleMarkAllRead}>
+            Mark all read
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 mb-6 border-b border-white/[0.08] overflow-x-auto">
-          {TABS.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px ${
-                activeTab === tab.key
-                  ? "border-[#fa7545] text-[#fa7545]"
-                  : "border-transparent text-neutral-400 hover:text-white"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="notif-tabs" role="tablist" aria-label="Notification filters">
+          {TABS.map((tab) => {
+            const count = countForTab(sourceNotifications, tab.key);
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === tab.key}
+                className={activeTab === tab.key ? "notif-tab notif-tab-active" : "notif-tab"}
+                onClick={() => setActiveTab(tab.key)}
+              >
+                {tab.label}
+                {count > 0 && <span>{count}</span>}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Loading state */}
-        {loading && notifications.length === 0 && (
-          <div className="flex items-center justify-center py-16">
-            <div className="h-8 w-8 rounded-full border-2 border-[#fa7545] border-t-transparent animate-spin" />
-          </div>
+        {loading && notifications.length === 0 ? (
+          <div className="notif-state">Loading updates...</div>
+        ) : visibleNotifications.length === 0 ? (
+          <div className="notif-state">No league updates here yet.</div>
+        ) : (
+          <>
+            {renderSection("This week", thisWeek)}
+            {thisWeek.length > 0 && thisMonth.length > 0 && <div className="notif-divider" />}
+            {renderSection("This month", thisMonth)}
+          </>
         )}
 
-        {/* Empty state */}
-        {!loading && filtered.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-            <div className="text-4xl text-neutral-600">
-              <svg viewBox="0 0 24 24" className="h-12 w-12 mx-auto" fill="none" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-              </svg>
-            </div>
-            <p className="text-neutral-400 font-medium">No notifications yet</p>
-            <p className="text-neutral-600 text-sm max-w-xs">
-              {activeTab === "unread"
-                ? "You're all caught up! No unread notifications."
-                : "Notifications will appear here when there's activity."}
-            </p>
-          </div>
-        )}
-
-        {/* Notification List */}
-        {filtered.length > 0 && (
-          <div className="flex flex-col gap-2">
-            {filtered.map((notification) => (
-              <div
-                key={notification.id}
-                onClick={() => handleNotificationClick(notification)}
-                className={`
-                  relative flex items-start gap-3 p-4 rounded-lg cursor-pointer
-                  border transition-all
-                  ${
-                    notification.read
-                      ? "bg-white/[0.03] border-white/[0.06] hover:bg-white/[0.05]"
-                      : "bg-[#fa7545]/[0.06] border-[#fa7545]/20 hover:bg-[#fa7545]/[0.1]"
-                  }
-                `}
-              >
-                {/* Unread indicator bar */}
-                {!notification.read && (
-                  <span className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full bg-[#fa7545]" />
-                )}
-
-                {/* Priority dot */}
-                <div className="flex-shrink-0 mt-1">
-                  <span
-                    className={`block h-2 w-2 rounded-full ${priorityDotColor(notification.priority)}`}
-                  />
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <p
-                      className={`text-sm leading-snug truncate ${
-                        notification.read ? "text-neutral-300 font-normal" : "text-white font-semibold"
-                      }`}
-                    >
-                      {notification.title}
-                    </p>
-                    <span className="flex-shrink-0 text-xs text-neutral-500">
-                      {relativeTime(notification.createdAt)}
-                    </span>
-                  </div>
-                  <p className="mt-0.5 text-xs text-neutral-500 line-clamp-2 leading-relaxed">
-                    {notification.message}
-                  </p>
-                  <div className="mt-1.5 flex items-center gap-2">
-                    <span className="text-[10px] font-medium uppercase tracking-wide text-neutral-600 bg-white/[0.05] px-1.5 py-0.5 rounded">
-                      {notification.type.replace(/_/g, " ")}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Load More / Pagination */}
-        {filtered.length > 0 && currentPage < totalPages - 1 && (
-          <div className="mt-6 flex justify-center">
-            <button
-              type="button"
-              onClick={handleLoadMore}
-              disabled={loading}
-              className="px-6 py-2 text-sm font-medium text-white bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.12] rounded-lg transition-colors disabled:opacity-50"
-            >
+        {notifications.length > 0 && currentPage < totalPages - 1 && (
+          <div className="notif-load-wrap">
+            <button type="button" className="notif-btn notif-btn-gradient" disabled={loading} onClick={handleLoadMore}>
               {loading ? "Loading..." : "Load More"}
             </button>
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }

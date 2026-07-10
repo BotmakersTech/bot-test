@@ -1,0 +1,257 @@
+.app-footer {
+  position: relative;
+  width: 100%;
+  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+  color: #ffffff;
+  background: #171129;
+}
+
+.app-footer .footer_rpz {
+  display: none !important;
+}
+
+.footer_rpz {
+  display: none !important;
+}
+
+.app-footer-cta {
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  padding: 22px clamp(32px, 5vw, 82px);
+  background: linear-gradient(90deg, #835cf4 0%, #8e68ff 48%, #8871fb 100%);
+  border-bottom: 2px solid #2172df;
+}
+
+.app-footer-cta p {
+  margin: 0;
+  font-size: clamp(16px, 1.55vw, 24px);
+  font-weight: 500;
+  letter-spacing: 5px;
+  white-space: nowrap;
+}
+
+.app-footer-form {
+  width: min(450px, 42vw);
+  height: 52px;
+  display: grid;
+  grid-template-columns: 1fr 148px;
+  border: 4px solid #ffffff;
+  border-radius: 11px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.app-footer-form input {
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  padding: 0 28px;
+  color: #5c5a62;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 18px;
+  letter-spacing: 1.5px;
+  background: #ffffff;
+}
+
+.app-footer-form input::placeholder {
+  color: #8d8a8f;
+}
+
+.app-footer-form button {
+  border: 0;
+  cursor: pointer;
+  color: #ffffff;
+  font: 700 18px "Inter", system-ui, sans-serif;
+  letter-spacing: 0.7px;
+  background: linear-gradient(135deg, #4a98dc 0%, #7e6df7 100%);
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.app-footer-form button:hover {
+  filter: brightness(1.08);
+}
+
+.app-footer-form button:active {
+  transform: translateY(1px);
+}
+
+.app-footer-body {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(120deg, transparent 0 25%, rgba(92, 73, 156, 0.16) 25% 31%, transparent 31% 100%),
+    linear-gradient(120deg, transparent 73%, rgba(92, 73, 156, 0.18) 73% 77%, transparent 77% 79%, rgba(92, 73, 156, 0.18) 79% 83%, transparent 83%),
+    #171129;
+}
+
+.app-footer-body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(120deg, transparent 0 0, rgba(92, 73, 156, 0.1) 0 4%, transparent 4%),
+    linear-gradient(120deg, transparent 28%, rgba(92, 73, 156, 0.14) 28% 34%, transparent 34%);
+  pointer-events: none;
+}
+
+.app-footer-top {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  z-index: 2;
+  width: 64px;
+  height: 64px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  color: #8a68ff;
+  background: #ffffff;
+  transform: translateX(-50%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.app-footer-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(220px, 295px) 1fr;
+  gap: clamp(48px, 8vw, 128px);
+  padding: 62px clamp(32px, 5vw, 82px) 30px;
+}
+
+.app-footer-brand {
+  min-width: 0;
+}
+
+.app-footer-logo {
+  width: 170px;
+  height: auto;
+  display: block;
+  margin-bottom: 22px;
+}
+
+.app-footer-brand address,
+.app-footer-brand p {
+  margin: 0 0 18px;
+  color: rgba(255, 255, 255, 0.92);
+  font: 600 12px/1.45 "Inter", system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+.app-footer-brand address {
+  font-style: normal;
+}
+
+.app-footer-brand a {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.app-footer-socials {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  margin-top: 30px;
+}
+
+.app-footer-socials a {
+  display: inline-flex;
+  color: #ffffff;
+  font-size: 16px;
+  text-decoration: none;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.app-footer-socials a:hover {
+  color: #8a68ff;
+  transform: translateY(-2px);
+}
+
+.app-footer-links {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(130px, 1fr));
+  gap: clamp(28px, 5vw, 84px);
+}
+
+.app-footer-column {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}
+
+.app-footer-column h2 {
+  margin: 0 0 8px;
+  color: #ffffff;
+  font: 700 14px "Inter", system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+.app-footer-column a {
+  color: rgba(255, 255, 255, 0.66);
+  font: 500 12px "Inter", system-ui, sans-serif;
+  letter-spacing: 0;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.app-footer-column a:hover {
+  color: #ffffff;
+}
+
+@media (max-width: 1050px) {
+  .app-footer-cta {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .app-footer-form {
+    width: min(100%, 520px);
+  }
+
+  .app-footer-inner {
+    grid-template-columns: 1fr;
+    gap: 42px;
+  }
+
+  .app-footer-links {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .app-footer-cta {
+    padding: 26px 20px;
+  }
+
+  .app-footer-cta p {
+    white-space: normal;
+    line-height: 1.4;
+  }
+
+  .app-footer-form {
+    height: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .app-footer-form input {
+    height: 52px;
+  }
+
+  .app-footer-form button {
+    height: 48px;
+  }
+
+  .app-footer-inner {
+    padding: 58px 20px 28px;
+  }
+
+  .app-footer-links {
+    grid-template-columns: 1fr;
+  }
+}

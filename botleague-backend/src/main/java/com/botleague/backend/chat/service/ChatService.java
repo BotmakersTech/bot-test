@@ -41,6 +41,7 @@ public class ChatService {
     private final UserRepository userRepository;
     private final TeamMembershipRepository teamMembershipRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final com.botleague.backend.common.service.GetFileService getFileService;
 
     public ChatService(
             ChatRoomRepository chatRoomRepository,
@@ -48,13 +49,15 @@ public class ChatService {
             ChatMessageRepository chatMessageRepository,
             UserRepository userRepository,
             TeamMembershipRepository teamMembershipRepository,
-            SimpMessagingTemplate messagingTemplate) {
+            SimpMessagingTemplate messagingTemplate,
+            com.botleague.backend.common.service.GetFileService getFileService) {
         this.chatRoomRepository = chatRoomRepository;
         this.chatParticipantRepository = chatParticipantRepository;
         this.chatMessageRepository = chatMessageRepository;
         this.userRepository = userRepository;
         this.teamMembershipRepository = teamMembershipRepository;
         this.messagingTemplate = messagingTemplate;
+        this.getFileService = getFileService;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -328,6 +331,7 @@ public class ChatService {
         message.setChatRoomId(chatRoomId);
         message.setSenderId(senderId);
         message.setSenderName(buildDisplayName(sender));
+        message.setSenderPhotoUrl(getFileService.resolveProfileImage(sender.getProfilePhotoUrl()));
         message.setContent(content);
 
         ChatMessage saved = chatMessageRepository.save(message);
@@ -433,6 +437,7 @@ public class ChatService {
                     userRepository.findById(p.getUserId()).ifPresent(u -> {
                         entry.put("displayName", buildDisplayName(u));
                         entry.put("botleagueId", u.getBotleagueId());
+                        entry.put("profilePhotoUrl", getFileService.resolveProfileImage(u.getProfilePhotoUrl()));
                     });
                     return entry;
                 })
@@ -472,6 +477,7 @@ public class ChatService {
         response.setChatRoomId(message.getChatRoomId());
         response.setSenderId(message.getSenderId());
         response.setSenderName(message.getSenderName());
+        response.setSenderPhotoUrl(message.getSenderPhotoUrl());
         response.setContent(message.getContent());
         response.setSentAt(message.getSentAt());
         response.setDeleted(message.isDeleted());

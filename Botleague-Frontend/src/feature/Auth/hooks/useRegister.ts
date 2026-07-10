@@ -186,7 +186,7 @@ console.log("Resending OTP to:", mobile);
     try {
   setIsLoading(true);
 
-const res = await register(mobile, password);
+const res = await register(mobile, otp.join(""), password);
 
 console.log("User registered:", res);
 

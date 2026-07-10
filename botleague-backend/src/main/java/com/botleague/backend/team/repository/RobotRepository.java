@@ -41,8 +41,6 @@ public interface RobotRepository extends JpaRepository<Robot, UUID> {
 	List<Robot> findByTeamIdAndCreatedAtBetweenAndDeletedAtIsNull(UUID teamId, LocalDateTime joinedAt,
 			LocalDateTime leftAt);
 
-	List<Robot> findByTeamIdAndCreatedAtAfterAndDeletedAtIsNull(UUID teamId, LocalDateTime joinedAt);
-
     // ── Admin search ──────────────────────────────────────────────────────────
     // All params are optional (null = no filter). Supports name search, sport
     // filter, and status filter in a single query so the controller stays thin.

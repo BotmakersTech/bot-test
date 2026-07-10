@@ -89,6 +89,13 @@ public class TeamSponsorService {
         sponsorRepository.deleteById(sponsorId);
     }
 
+    /** Used to gate the presigned-upload-URL endpoint before any sponsor record exists. */
+    public void assertCanManage(UUID teamId, UUID callerId, boolean isAdmin) {
+        if (!isAdmin) {
+            requireCaptain(teamId, callerId);
+        }
+    }
+
     // ── helpers ─────────────────────────────────────────────────────────────
 
     private void requireCaptain(UUID teamId, UUID callerId) {

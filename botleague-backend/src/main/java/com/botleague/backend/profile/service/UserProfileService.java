@@ -214,9 +214,7 @@ public class UserProfileService {
         dto.setGender(user.getGender());
         dto.setDateOfBirth(user.getDateOfBirth());
 
-        String key = user.getProfilePhotoUrl();
-        String url = (key != null) ? getFileService.getPublicUrl(key) : null;
-        dto.setProfilePhotoUrl(url);
+        dto.setProfilePhotoUrl(getFileService.resolveProfileImage(user.getProfilePhotoUrl()));
 
         dto.setCountry(user.getCountry());
         dto.setState(user.getState());

@@ -6,7 +6,15 @@ import { hasRole } from "../shared/constants/roles";
 
 interface RoleRouteProps {
   children: React.ReactNode;
-  /** Minimum role required. Hierarchy is respected — SUPER_ADMIN passes any check. */
+  /**
+   * Roles allowed to view this route. BotLeague's role model is FLAT — there is
+   * no automatic hierarchy, on the frontend or the backend (see shared/constants/roles.ts).
+   * The user needs at least one role that literally appears in this list; a
+   * SUPER_ADMIN account does NOT get in unless SUPER_ADMIN is included here.
+   * Use one of the ADMIN_AND_UP / ORG_MIN / SUB_ORG_ROLES sets (which already
+   * enumerate every higher role) rather than a single role, unless the route
+   * really is meant to be exclusive to one role (e.g. Judge/Volunteer portals).
+   */
   roles: AppRoleType[];
   redirectTo?: string;
 }

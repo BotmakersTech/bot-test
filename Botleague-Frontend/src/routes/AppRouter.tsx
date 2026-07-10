@@ -1,9 +1,11 @@
 import { Routes, Route } from "react-router-dom";
+import type { ReactNode } from "react";
 
 // ============================
 // LAYOUT
 // ============================
 import Layout from "../feature/Navigation/pages/Layout";
+import AppFooter from "../shared/components/AppFooter";
 
 // ============================
 // AUTH PAGES
@@ -38,6 +40,7 @@ import CreateTeam from "../feature/Team/CreateTeam/pages/CreateTeamPage";
 // ============================
 import UserDashboard from "../feature/UserDashboard/pages/userDashboard";
 import RobotsPage from "../feature/Robots/pages/RobotsPages";
+import RobotProfilePage from "../feature/Robots/pages/RobotProfilePage";
 import UserEventPage from "../feature/Event/pages/UserEventPage";
 import UserEventDetail from "../feature/Event/pages/UserEventDetail";
 import UserSportDetail from "../feature/Event/pages/UserSportDetail";
@@ -143,6 +146,15 @@ import { AppRole, ADMIN_MIN, ORG_MIN, SUB_ORG_ROLES, type AppRoleType } from "..
 
 const ADMIN_AND_UP: AppRoleType[] = [AppRole.ADMINISTRATOR, AppRole.SUPER_ADMIN];
 
+function FooterShell({ children }: { children: ReactNode }) {
+  return (
+    <>
+      {children}
+      <AppFooter />
+    </>
+  );
+}
+
 // ======================================================
 // APP ROUTES
 // ======================================================
@@ -153,14 +165,14 @@ function AppRoutes() {
       {/* ========================================= */}
       {/* PUBLIC ROUTES */}
       {/* ========================================= */}
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<FooterShell><Home /></FooterShell>} />
       {/* Public profiles — accepts both UUID and BL-code (BLT.../BLR.../BLU...) */}
-      <Route path="/team/:teamId"    element={<TeamPublicPage />} />
-      <Route path="/robot/:robotId"  element={<RobotPublicPage />} />
-      <Route path="/user/:code"      element={<UserPublicPage />} />
-      <Route path="/about-us" element={<AboutUs />} />
-      <Route path="/contact-us" element={<ContactUs />} />
-      <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/team/:teamId"    element={<FooterShell><TeamPublicPage /></FooterShell>} />
+      <Route path="/robot/:robotId"  element={<FooterShell><RobotPublicPage /></FooterShell>} />
+      <Route path="/user/:code"      element={<FooterShell><UserPublicPage /></FooterShell>} />
+      <Route path="/about-us" element={<FooterShell><AboutUs /></FooterShell>} />
+      <Route path="/contact-us" element={<FooterShell><ContactUs /></FooterShell>} />
+      <Route path="/verify-email" element={<FooterShell><VerifyEmail /></FooterShell>} />
 
       {/* ========================================= */}
       {/* AUTH ROUTES */}
@@ -169,7 +181,7 @@ function AppRoutes() {
         path="/register"
         element={
           <PublicRoute>
-            <RegisterPage />
+            <FooterShell><RegisterPage /></FooterShell>
           </PublicRoute>
         }
       />
@@ -177,12 +189,12 @@ function AppRoutes() {
         path="/login"
         element={
           <PublicRoute>
-            <LoginPage />
+            <FooterShell><LoginPage /></FooterShell>
           </PublicRoute>
         }
       />
-      <Route path="/forgot-password" element={<ForgetPasswordPage />} />
-      <Route path="/reset-password"  element={<ResetPasswordPage />} />
+      <Route path="/forgot-password" element={<FooterShell><ForgetPasswordPage /></FooterShell>} />
+      <Route path="/reset-password"  element={<FooterShell><ResetPasswordPage /></FooterShell>} />
 
       {/* ========================================= */}
       {/* PROTECTED ROUTES (Navbar + Sidebar layout) */}
@@ -201,6 +213,7 @@ function AppRoutes() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/robots" element={<RobotsPage />} />
+        <Route path="/robots/:robotId" element={<RobotProfilePage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/messages" element={<MessagesPage />} />
 
@@ -315,9 +328,11 @@ function AppRoutes() {
       <Route
         path="*"
         element={
-          <div className="flex h-screen items-center justify-center bg-gray-950 text-white text-xl">
-            Page not found.
-          </div>
+          <FooterShell>
+            <div className="flex h-screen items-center justify-center bg-gray-950 text-white text-xl">
+              Page not found.
+            </div>
+          </FooterShell>
         }
       />
     </Routes>

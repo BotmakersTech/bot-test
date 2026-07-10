@@ -76,7 +76,7 @@ export const getMyTeam =
     const res = await api.get(
       "/teams/getTeam/my"
     );
-
+console.log("res.data", res.data);
     return {
       ...res.data,
 

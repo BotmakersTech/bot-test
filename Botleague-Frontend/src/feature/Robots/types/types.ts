@@ -57,6 +57,8 @@ export interface Robot {
   description: string;
   status: RobotStatus;
   teamId: string;
+  teamName?: string;
+  teamCode?: string;
   createdAt: string;
   updatedAt?: string;
   robotIMG?: string;

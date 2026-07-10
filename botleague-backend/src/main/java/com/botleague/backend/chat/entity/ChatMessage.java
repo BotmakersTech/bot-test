@@ -21,6 +21,16 @@ public class ChatMessage {
     @Column(name = "sender_name", nullable = false)
     private String senderName;
 
+    /**
+     * Snapshot of the sender's resolved profile photo at send time — same
+     * denormalization pattern as senderName, so reading a room's messages
+     * stays a single query (no per-message user lookup). Like senderName,
+     * this intentionally does NOT retroactively update on old messages if
+     * the sender later changes their avatar.
+     */
+    @Column(name = "sender_photo_url")
+    private String senderPhotoUrl;
+
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
@@ -52,6 +62,9 @@ public class ChatMessage {
 
     public String getSenderName() { return senderName; }
     public void setSenderName(String senderName) { this.senderName = senderName; }
+
+    public String getSenderPhotoUrl() { return senderPhotoUrl; }
+    public void setSenderPhotoUrl(String senderPhotoUrl) { this.senderPhotoUrl = senderPhotoUrl; }
 
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }

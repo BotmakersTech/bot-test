@@ -1,4 +1,4 @@
-ackage com.botleague.backend.organizer.service;
+package com.botleague.backend.organizer.service;
 
 import com.botleague.backend.admin.repository.UserEventAssignmentRepository;
 import com.botleague.backend.events.dto.CreateEventResponseDTO;
@@ -103,6 +103,11 @@ public class OrganizerService {
                                                   List<String> userRoles, UpdateEventInfoDTO dto) {
         Event event = eventRepository.findByIdAndDeletedAtIsNull(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+
+        if (!hasFullAccess(userRoles)
+                && !eventAssignmentRepository.existsByUserIdAndEventId(requestingUserId, eventId)) {
+            throw new IllegalStateException("You are not assigned to this event.");
+        }
 
         EventStatus status = event.getStatus();
 

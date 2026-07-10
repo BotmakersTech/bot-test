@@ -39,11 +39,6 @@ import {
   ParticipantsIcon,
 } from "./Icons/Icons";
 
-interface SidebarProps {
-  collapsed: boolean;
-  onToggle: () => void;
-}
-
 function getIcon(iconName: string) {
   switch (iconName) {
     case "dashboard":     return <DashboardIcon />;
@@ -79,66 +74,41 @@ function getIcon(iconName: string) {
 function SidebarItem({
   item,
   active,
-  collapsed,
   onClick,
 }: {
   item: NavItem;
   active: boolean;
-  collapsed: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      title={collapsed ? item.label : undefined}
+      title={item.label}
+      aria-label={item.label}
       aria-current={active ? "page" : undefined}
       className={[
-        "group relative flex w-full items-center rounded-xl py-2 transition-colors duration-150",
-        collapsed ? "justify-center px-2" : "gap-3 px-3",
-        active ? "bg-white/20" : "hover:bg-white/10",
+        "group relative flex h-11 w-11 items-center justify-center rounded-lg transition-colors duration-150",
+        active
+          ? "bg-[#3269d0] text-white shadow-[0_0_15px_rgba(72,113,219,0.38)]"
+          : "text-[#5e6065] hover:bg-[#e8ecff] hover:text-[#3269d0]",
       ].join(" ")}
     >
-      {/* Icon bubble */}
-      <span
-        className={[
-          "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors duration-150",
-          active
-            ? "bg-white/25 text-white shadow-[0_0_14px_-2px_rgba(255,255,255,0.35)]"
-            : "text-white/70 group-hover:text-white",
-        ].join(" ")}
-      >
+      <span className="flex h-7 w-7 items-center justify-center [&_svg]:h-[24px] [&_svg]:w-[24px]">
         {getIcon(item.iconName)}
       </span>
-
-      {/* Label */}
-      {!collapsed && (
-        <span
-          className={[
-            "truncate text-sm",
-            active ? "font-semibold text-white" : "font-medium text-white/80 group-hover:text-white",
-          ].join(" ")}
-        >
-          {item.label}
-        </span>
-      )}
-
-      {/* Collapsed tooltip */}
-      {collapsed && (
-        <span className="pointer-events-none absolute left-[calc(100%+12px)] z-50 whitespace-nowrap rounded-md bg-[#111111] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg ring-1 ring-white/10 transition-opacity duration-150 group-hover:opacity-100">
-          {item.label}
-        </span>
-      )}
+      <span className="pointer-events-none absolute left-[calc(100%+12px)] z-50 whitespace-nowrap rounded-md bg-[#111111] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+        {item.label}
+      </span>
     </button>
   );
 }
 
-export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export default function Sidebar() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const dispatch = useAppDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
-
   const [loggingOut, setLoggingOut] = useState(false);
 
   const userRoles = user?.allRoles ?? (user?.role ? [user.role] : []);
@@ -161,56 +131,31 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   };
 
   return (
-    <aside
-      onMouseEnter={() => { if (collapsed) onToggle(); }}
-      onMouseLeave={() => { if (!collapsed) onToggle(); }}
-      style={{ background: "linear-gradient(160deg, #0162D1 0%, #8C6CFF 100%)" }}
-      className={[
-        "flex h-full shrink-0 flex-col border-r border-white/10",
-        "transition-[width] duration-300 ease-in-out",
-        collapsed ? "w-[100px]" : "w-[300px]",
-      ].join(" ")}
-    >
-      <div className="h-4" />
-
-      <nav className="flex flex-1 flex-col justify-center space-y-1 px-3 py-2">
+    <aside className="sticky top-0 flex h-[calc(100vh-4.5rem)] w-[112px] shrink-0 flex-col items-center bg-[#eef1ff] py-8">
+      <nav className="flex min-h-0 flex-1 flex-col items-center gap-6 overflow-y-auto overflow-x-visible px-4">
         {navItems.map((item) => (
           <SidebarItem
             key={item.id}
             item={item}
             active={isActive(item.link)}
-            collapsed={collapsed}
             onClick={() => navigate(item.link)}
           />
         ))}
       </nav>
 
-      <div className="border-t border-white/20 p-3">
-        {collapsed ? (
-          <button
-            type="button"
-            onClick={handleLogout}
-            disabled={loggingOut}
-            title="Log out"
-            className="group relative flex w-full items-center justify-center rounded-xl p-2.5 text-white/80 transition-colors hover:bg-white/20 hover:text-white disabled:opacity-60"
-          >
-            <LogoutIcon className="h-[18px] w-[18px]" />
-            <span className="pointer-events-none absolute left-[calc(100%+12px)] z-50 whitespace-nowrap rounded-md bg-[#111111] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg ring-1 ring-white/10 transition-opacity duration-150 group-hover:opacity-100">
-              Log out
-            </span>
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={handleLogout}
-            disabled={loggingOut}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/20 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_4px_14px_-4px_rgba(0,0,0,0.25)] transition-colors hover:bg-white/30 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            <LogoutIcon className="h-[18px] w-[18px]" />
-            {loggingOut ? "Logging out..." : "Log out"}
-          </button>
-        )}
-      </div>
+      <button
+        type="button"
+        onClick={handleLogout}
+        disabled={loggingOut}
+        title="Log out"
+        aria-label="Log out"
+        className="group relative mt-8 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-[#3269d0] transition-colors hover:bg-[#e8ecff] disabled:opacity-60"
+      >
+        <LogoutIcon className="h-[27px] w-[27px]" />
+        <span className="pointer-events-none absolute left-[calc(100%+12px)] z-50 whitespace-nowrap rounded-md bg-[#111111] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+          {loggingOut ? "Logging out..." : "Log out"}
+        </span>
+      </button>
     </aside>
   );
 }

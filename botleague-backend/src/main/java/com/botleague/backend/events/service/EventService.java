@@ -1,4 +1,4 @@
-ackage com.botleague.backend.events.service;
+package com.botleague.backend.events.service;
 
 import java.util.List;
 import java.util.UUID;
@@ -9,7 +9,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import com.botleague.backend.common.exception.ResourceNotFoundException;
 
+import com.botleague.backend.admin.repository.UserEventAssignmentRepository;
+import com.botleague.backend.auth.enums.AccountType;
 import com.botleague.backend.chat.service.ChatService;
+import com.botleague.backend.common.exception.ApiException;
 import com.botleague.backend.common.service.BotleagueIdService;
 import com.botleague.backend.events.dto.CreateEventRequestDTO;
 import com.botleague.backend.events.dto.CreateEventResponseDTO;
@@ -43,6 +46,7 @@ public class EventService {
     private final NotificationService notificationService;
     private final AuditLogService auditLogService;
     private final ChatService chatService;
+    private final UserEventAssignmentRepository eventAssignmentRepository;
 
     // =====================================================
     // CONSTRUCTOR
@@ -54,7 +58,8 @@ public class EventService {
             UserRoleService userRoleService,
             NotificationService notificationService,
             AuditLogService auditLogService,
-            ChatService chatService
+            ChatService chatService,
+            UserEventAssignmentRepository eventAssignmentRepository
     ) {
 
         this.eventRepository = eventRepository;
@@ -63,6 +68,7 @@ public class EventService {
         this.notificationService = notificationService;
         this.auditLogService = auditLogService;
         this.chatService = chatService;
+        this.eventAssignmentRepository = eventAssignmentRepository;
     }
 
     // =====================================================
@@ -83,7 +89,7 @@ public class EventService {
                         request.getEventName()
                 )) {
 
-            throw new RuntimeException(
+            throw ApiException.conflict(
                     "Event name already exists"
             );
         }
@@ -266,8 +272,12 @@ public class EventService {
 
             String key,
 
-            MediaType mediaType
+            MediaType mediaType,
+
+            Authentication authentication
     ) {
+
+        assertCanManageEventMedia(eventId, authentication);
 
         // =====================================================
         // GET EVENT
@@ -277,7 +287,7 @@ public class EventService {
                 eventRepository
                         .findById(eventId)
                         .orElseThrow(() ->
-                                new RuntimeException(
+                                new ResourceNotFoundException(
                                         "Event not found"
                                 )
                         );
@@ -296,6 +306,32 @@ public class EventService {
     }
 
     // =====================================================
+    // AUTHORIZATION — EVENT MEDIA (logo/upload-url)
+    // -------------------------------------------------------
+    // SUPER_ADMIN / ADMINISTRATOR / MANAGER can manage any event's media.
+    // ORGANIZER / SUB_ORGANIZER can only manage media for events they are
+    // explicitly assigned to. Everyone else is rejected.
+    // =====================================================
+
+    public void assertCanManageEventMedia(UUID eventId, Authentication authentication) {
+        UUID userId = extractUserId(authentication);
+
+        if (userRoleService.hasRole(userId, AccountType.SUPER_ADMIN)
+                || userRoleService.hasRole(userId, AccountType.ADMINISTRATOR)
+                || userRoleService.hasRole(userId, AccountType.MANAGER)) {
+            return;
+        }
+
+        if ((userRoleService.hasRole(userId, AccountType.ORGANIZER)
+                || userRoleService.hasRole(userId, AccountType.SUB_ORGANIZER))
+                && eventAssignmentRepository.existsByUserIdAndEventId(userId, eventId)) {
+            return;
+        }
+
+        throw ApiException.forbidden("You do not have permission to manage media for this event");
+    }
+
+    // =====================================================
     // GET EVENT BY ID
     // =====================================================
 
@@ -306,7 +342,7 @@ public class EventService {
                 eventRepository
                         .findById(eventId)
                         .orElseThrow(() ->
-                                new RuntimeException(
+                                new ResourceNotFoundException(
                                         "Event not found"
                                 ));
 
