@@ -15,12 +15,19 @@ export interface ChatMessage {
 
 export interface ChatRoom {
   id: string
-  type: "TEAM" | "DIRECT" | "REGISTRATION" | "EVENT_ANNOUNCEMENT" | "SPORT_ANNOUNCEMENT"
+  type: "TEAM" | "DIRECT" | "REGISTRATION" | "EVENT_ANNOUNCEMENT" | "SPORT_ANNOUNCEMENT" | "EVENT_TEAM"
   name: string
   referenceId?: string
   unreadCount: number
   lastMessage?: ChatMessage
   canSend: boolean
+}
+
+export interface AddableMember {
+  userId: string
+  displayName?: string
+  botleagueId?: string
+  profilePhotoUrl?: string | null
 }
 
 export interface ChatRoomList {
@@ -52,4 +59,20 @@ export const getOrCreateDirect = async (otherUserId: string): Promise<ChatRoom> 
 
 export const markRoomRead = async (roomId: string): Promise<void> => {
   await api.post(`/chat/rooms/${roomId}/read`)
+}
+
+// "Delete for me" — hides the message from the caller's own view only.
+export const deleteMessageForMe = async (messageId: string): Promise<void> => {
+  await api.delete(`/chat/messages/${messageId}`)
+}
+
+// Captain-only: team roster members not yet in this event team chat.
+export const getAddableMembers = async (roomId: string): Promise<AddableMember[]> => {
+  const res = await api.get(`/chat/rooms/${roomId}/addable-members`)
+  return res.data
+}
+
+// Captain-only: add a non-lineup team roster member to the event team chat.
+export const addChatMember = async (roomId: string, userId: string): Promise<void> => {
+  await api.post(`/chat/rooms/${roomId}/members`, { userId })
 }

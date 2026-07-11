@@ -29,7 +29,10 @@
       "Bash(PGPASSWORD=admin123 '/c/Program Files/PostgreSQL/18/bin/psql.exe' -h localhost -p 5432 -U postgres -d BotLeague_Test -c ' *)",
       "Bash(mvn compile *)",
       "Bash(npx tsc *)",
-      "PowerShell(Stop-Process -Id 385576 -Force -ErrorAction SilentlyContinue)"
+      "PowerShell(Stop-Process -Id 385576 -Force -ErrorAction SilentlyContinue)",
+      "Bash(git config *)",
+      "Bash(PGPASSWORD=admin123 \"/c/Program Files/PostgreSQL/18/bin/psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -c \"SELECT conname, pg_get_constraintdef\\(oid\\) FROM pg_constraint WHERE conname LIKE '%chat_rooms%' OR conname LIKE '%chat_message%';\")",
+      "Bash(PGPASSWORD=admin123 \"/c/Program Files/PostgreSQL/18/bin/psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -c \"\\\\d chat_message_deletions\")"
     ]
   }
 }

@@ -16,6 +16,9 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, UUID> {
 
     Optional<ChatRoom> findByTypeAndReferenceId(ChatRoomType type, UUID referenceId);
 
+    Optional<ChatRoom> findByTypeAndReferenceIdAndSecondaryReferenceId(
+            ChatRoomType type, UUID referenceId, UUID secondaryReferenceId);
+
     /**
      * For DIRECT chats — stored with min(userId1, userId2) as referenceId and
      * max(...) as secondaryReferenceId. This query finds the normalised row.

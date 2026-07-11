@@ -120,6 +120,49 @@ public class ChatController {
         return ResponseEntity.ok(participants);
     }
 
+    /**
+     * DELETE /api/chat/messages/{messageId}
+     * "Delete for me" — hides the message from the caller's own view only.
+     */
+    @DeleteMapping("/messages/{messageId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteMessageForMe(
+            @PathVariable UUID messageId,
+            Authentication authentication) {
+        UUID userId = extractUserId(authentication);
+        chatService.deleteMessageForMe(messageId, userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * GET /api/chat/rooms/{roomId}/addable-members
+     * Captain-only: team roster members not yet in this event team chat.
+     */
+    @GetMapping("/rooms/{roomId}/addable-members")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<Map<String, Object>>> getAddableMembers(
+            @PathVariable UUID roomId,
+            Authentication authentication) {
+        UUID userId = extractUserId(authentication);
+        return ResponseEntity.ok(chatService.getAddableTeamMembers(roomId, userId));
+    }
+
+    /**
+     * POST /api/chat/rooms/{roomId}/members
+     * Captain-only: add a non-lineup team roster member to the event team chat.
+     */
+    @PostMapping("/rooms/{roomId}/members")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> addMember(
+            @PathVariable UUID roomId,
+            @RequestBody Map<String, String> body,
+            Authentication authentication) {
+        UUID userId = extractUserId(authentication);
+        UUID targetUserId = UUID.fromString(body.get("userId"));
+        chatService.addTeamMemberToEventTeamChat(roomId, userId, targetUserId);
+        return ResponseEntity.ok().build();
+    }
+
     // ─── Helper ───────────────────────────────────────────────────────────────
 
     private UUID extractUserId(Authentication authentication) {

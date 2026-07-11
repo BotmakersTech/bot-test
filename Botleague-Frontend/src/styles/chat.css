@@ -377,6 +377,10 @@
   background: #8a68ff;
 }
 
+.chat-bubble:hover .chat-bubble-delete {
+  opacity: 1 !important;
+}
+
 .chat-system-message,
 .chat-loading,
 .chat-empty-thread,

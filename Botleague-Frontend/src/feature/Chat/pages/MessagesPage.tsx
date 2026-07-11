@@ -6,17 +6,18 @@ import {
   type ChangeEvent,
   type KeyboardEvent,
 } from "react";
-import { ChevronDown, Download, FileText, Image, Paperclip, Plus, Send } from "lucide-react";
+import { ChevronDown, Download, FileText, Image, Paperclip, Plus, Send, Trash2, UserPlus, X } from "lucide-react";
 import { useSelector } from "react-redux";
 
 import { useAppDispatch } from "../../../app/hooks";
 import type { RootState } from "../../../app/store";
 import api from "../../../shared/api/Base";
 import "../../../styles/chat.css";
-import type { ChatMessage, ChatRoom } from "../api/chat.api";
+import { addChatMember, getAddableMembers, type AddableMember, type ChatMessage, type ChatRoom } from "../api/chat.api";
 import { useChatWebSocket } from "../hooks/useChatWebSocket";
 import { resolveAvatarSrc } from "../../Profile/constants/avatars";
 import {
+  deleteChatMessage,
   fetchChatRooms,
   fetchMessages,
   markChatRoomRead,
@@ -61,19 +62,19 @@ function getInitials(name: string): string {
 }
 
 function isTeamRoom(room: ChatRoom): boolean {
-  return room.type === "TEAM" || room.type === "REGISTRATION" || room.type.includes("ANNOUNCEMENT");
+  return room.type === "TEAM" || room.type === "REGISTRATION" || room.type === "EVENT_TEAM" || room.type.includes("ANNOUNCEMENT");
 }
 
 function roomTag(room: ChatRoom): string {
   if (room.type === "TEAM") return "Help wanted";
   if (room.type === "DIRECT") return "Question";
-  if (room.type === "REGISTRATION") return "Bug";
+  if (room.type === "REGISTRATION" || room.type === "EVENT_TEAM") return "Bug";
   return "Update";
 }
 
 function roomTagClass(room: ChatRoom): string {
   if (room.type === "TEAM") return "chat-tag chat-tag-green";
-  if (room.type === "REGISTRATION") return "chat-tag chat-tag-orange";
+  if (room.type === "REGISTRATION" || room.type === "EVENT_TEAM") return "chat-tag chat-tag-orange";
   if (room.type.includes("ANNOUNCEMENT")) return "chat-tag chat-tag-blue";
   return "chat-tag chat-tag-warm";
 }
@@ -176,7 +177,7 @@ function BubbleAvatar({ name, photoSrc }: { name: string; photoSrc: string | nul
   return <span className={avatarTone(name)}>{getInitials(name)}</span>;
 }
 
-function BubbleGroup({ group }: { group: MessageGroup }) {
+function BubbleGroup({ group, onDeleteMessage }: { group: MessageGroup; onDeleteMessage: (messageId: string) => void }) {
   if (group.isSystem) {
     return <div className="chat-system-message">{group.messages[0].content}</div>;
   }
@@ -189,8 +190,29 @@ function BubbleGroup({ group }: { group: MessageGroup }) {
 
       <div className="chat-bubble-stack">
         {group.messages.map((msg) => (
-          <div key={msg.id} className={group.isMine ? "chat-bubble chat-bubble-mine" : "chat-bubble"}>
+          <div key={msg.id} className={group.isMine ? "chat-bubble chat-bubble-mine" : "chat-bubble"} style={{ position: "relative" }}>
             {msg.content}
+            <button
+              type="button"
+              title="Delete for me"
+              aria-label="Delete for me"
+              onClick={() => {
+                if (confirm("Delete this message for you? Other participants will still see it.")) {
+                  onDeleteMessage(msg.id);
+                }
+              }}
+              style={{
+                position: "absolute", top: "-8px",
+                [group.isMine ? "left" : "right"]: "-8px",
+                width: "22px", height: "22px", borderRadius: "50%",
+                background: "rgba(0,0,0,0.55)", border: "none", color: "#fff",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", opacity: 0, transition: "opacity 0.12s",
+              }}
+              className="chat-bubble-delete"
+            >
+              <Trash2 size={12} />
+            </button>
           </div>
         ))}
       </div>
@@ -218,6 +240,10 @@ export default function MessagesPage() {
   const [messageText, setMessageText] = useState("");
   const [tab, setTab] = useState<"chats" | "teams">("chats");
   const [query, setQuery] = useState("");
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [addableMembers, setAddableMembers] = useState<AddableMember[]>([]);
+  const [addMemberLoading, setAddMemberLoading] = useState(false);
+  const [addMemberError, setAddMemberError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -272,6 +298,37 @@ export default function MessagesPage() {
     setMessageText("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     dispatch(sendChatMessage({ roomId: activeRoomId, content }));
+  }
+
+  function handleDeleteMessage(messageId: string) {
+    if (!activeRoomId) return;
+    dispatch(deleteChatMessage({ roomId: activeRoomId, messageId }));
+  }
+
+  async function handleOpenAddMember() {
+    if (!activeRoomId) return;
+    setShowAddMember(true);
+    setAddMemberError(null);
+    setAddMemberLoading(true);
+    try {
+      setAddableMembers(await getAddableMembers(activeRoomId));
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      setAddMemberError(e?.response?.data?.message ?? "Only the team captain can add members here.");
+    } finally {
+      setAddMemberLoading(false);
+    }
+  }
+
+  async function handleAddMember(userId: string) {
+    if (!activeRoomId) return;
+    try {
+      await addChatMember(activeRoomId, userId);
+      setAddableMembers((prev) => prev.filter((m) => m.userId !== userId));
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      setAddMemberError(e?.response?.data?.message ?? "Failed to add member.");
+    }
   }
 
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
@@ -356,7 +413,61 @@ export default function MessagesPage() {
                 <h2>{activeRoom.name}</h2>
                 <p><span /> Online</p>
               </div>
+              {activeRoom.type === "EVENT_TEAM" && (
+                <button
+                  type="button"
+                  onClick={handleOpenAddMember}
+                  title="Add a team member to this chat"
+                  style={{
+                    marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px",
+                    background: "rgba(140,108,255,0.1)", border: "1px solid rgba(140,108,255,0.3)",
+                    color: "#8C6CFF", borderRadius: "8px", padding: "6px 12px",
+                    fontSize: "0.8rem", fontWeight: 600, cursor: "pointer",
+                  }}
+                >
+                  <UserPlus size={15} /> Add Member
+                </button>
+              )}
             </header>
+
+            {showAddMember && (
+              <div
+                style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}
+                onClick={(e) => { if (e.target === e.currentTarget) setShowAddMember(false); }}
+              >
+                <div style={{ background: "#fff", borderRadius: "12px", width: "100%", maxWidth: "360px", padding: "18px", maxHeight: "70vh", overflowY: "auto" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+                    <strong style={{ fontSize: "0.95rem" }}>Add team member</strong>
+                    <button type="button" onClick={() => setShowAddMember(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#6B7280" }}>
+                      <X size={18} />
+                    </button>
+                  </div>
+                  {addMemberError && (
+                    <div style={{ background: "rgba(239,68,68,0.08)", color: "#ef4444", borderRadius: "8px", padding: "8px 12px", fontSize: "0.8rem", marginBottom: "10px" }}>
+                      {addMemberError}
+                    </div>
+                  )}
+                  {addMemberLoading ? (
+                    <div style={{ color: "#6B7280", fontSize: "0.85rem" }}>Loading…</div>
+                  ) : addableMembers.length === 0 ? (
+                    <div style={{ color: "#6B7280", fontSize: "0.85rem" }}>Everyone on the team is already in this chat.</div>
+                  ) : (
+                    addableMembers.map((m) => (
+                      <div key={m.userId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #E0D9FF" }}>
+                        <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>{m.displayName ?? m.userId}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleAddMember(m.userId)}
+                          style={{ background: "#8C6CFF", color: "#fff", border: "none", borderRadius: "6px", padding: "5px 12px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
+                        >
+                          Add
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
 
             <section className="chat-messages">
               {loading && activeRoomMessages.length === 0 ? (
@@ -364,7 +475,9 @@ export default function MessagesPage() {
               ) : activeRoomMessages.length === 0 ? (
                 <div className="chat-empty-thread">No messages yet. Start the conversation.</div>
               ) : (
-                groups.map((group) => <BubbleGroup key={group.key} group={group} />)
+                groups.map((group) => (
+                  <BubbleGroup key={group.key} group={group} onDeleteMessage={handleDeleteMessage} />
+                ))
               )}
               <div ref={messagesEndRef} />
             </section>

@@ -9,11 +9,11 @@ import com.botleague.backend.chat.entity.ChatMessage;
 import com.botleague.backend.chat.entity.ChatParticipant;
 import com.botleague.backend.chat.entity.ChatRoom;
 import com.botleague.backend.chat.enums.ChatRoomType;
+import com.botleague.backend.chat.repository.ChatMessageDeletionRepository;
 import com.botleague.backend.chat.repository.ChatMessageRepository;
 import com.botleague.backend.chat.repository.ChatParticipantRepository;
 import com.botleague.backend.chat.repository.ChatRoomRepository;
 import com.botleague.backend.common.exception.ApiException;
-import com.botleague.backend.events.entity.SportRegistration;
 import com.botleague.backend.team.entity.TeamMembership;
 import com.botleague.backend.team.enums.TeamMembershipStatus;
 import com.botleague.backend.team.repository.TeamMembershipRepository;
@@ -38,6 +38,7 @@ public class ChatService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatParticipantRepository chatParticipantRepository;
     private final ChatMessageRepository chatMessageRepository;
+    private final ChatMessageDeletionRepository chatMessageDeletionRepository;
     private final UserRepository userRepository;
     private final TeamMembershipRepository teamMembershipRepository;
     private final SimpMessagingTemplate messagingTemplate;
@@ -47,6 +48,7 @@ public class ChatService {
             ChatRoomRepository chatRoomRepository,
             ChatParticipantRepository chatParticipantRepository,
             ChatMessageRepository chatMessageRepository,
+            ChatMessageDeletionRepository chatMessageDeletionRepository,
             UserRepository userRepository,
             TeamMembershipRepository teamMembershipRepository,
             SimpMessagingTemplate messagingTemplate,
@@ -54,6 +56,7 @@ public class ChatService {
         this.chatRoomRepository = chatRoomRepository;
         this.chatParticipantRepository = chatParticipantRepository;
         this.chatMessageRepository = chatMessageRepository;
+        this.chatMessageDeletionRepository = chatMessageDeletionRepository;
         this.userRepository = userRepository;
         this.teamMembershipRepository = teamMembershipRepository;
         this.messagingTemplate = messagingTemplate;
@@ -124,40 +127,128 @@ public class ChatService {
                 });
     }
 
+    /**
+     * Find-or-create the one chat room shared by a team for a whole event —
+     * covers every sport that team registers for within it. Called every time
+     * a registration happens or a lineup member is assigned, so it's both
+     * idempotent (safe to call repeatedly) and self-healing (re-adds anyone
+     * who should be present but isn't yet, without duplicating or erroring).
+     *
+     * captainId is always (re-)added if present; lineupUserIds are the current
+     * lineup-assigned team members for this event; organizerUserId is the
+     * event creator. Any of these may be null/empty on a given call.
+     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public ChatRoom createRegistrationChat(
-            SportRegistration registration,
+    public ChatRoom getOrCreateEventTeamChat(
+            UUID teamId,
+            UUID eventId,
+            String teamName,
+            String eventName,
             UUID captainId,
+            List<UUID> lineupUserIds,
             UUID organizerUserId) {
 
-        UUID registrationId = registration.getId();
-        UUID teamId = registration.getTeamId();
-
-        return chatRoomRepository.findByTypeAndReferenceId(ChatRoomType.REGISTRATION, registrationId)
+        ChatRoom room = chatRoomRepository
+                .findByTypeAndReferenceIdAndSecondaryReferenceId(ChatRoomType.EVENT_TEAM, teamId, eventId)
                 .orElseGet(() -> {
-                    ChatRoom room = new ChatRoom();
-                    room.setType(ChatRoomType.REGISTRATION);
-                    room.setName("Registration: " + registration.getRobotName());
-                    room.setReferenceId(registrationId);
-                    room.setSecondaryReferenceId(teamId);
-                    ChatRoom saved = chatRoomRepository.save(room);
-
-                    List<TeamMembership> members = teamMembershipRepository
-                            .findByTeamIdAndStatus(teamId, TeamMembershipStatus.ACTIVE);
-                    for (TeamMembership m : members) {
-                        addParticipant(saved.getId(), m.getUserId(), true);
-                    }
-
-                    if (organizerUserId != null) {
-                        boolean alreadyIn = chatParticipantRepository
-                                .existsByChatRoomIdAndUserIdAndIsActiveTrue(saved.getId(), organizerUserId);
-                        if (!alreadyIn) {
-                            addParticipant(saved.getId(), organizerUserId, true);
-                        }
-                    }
-
-                    return saved;
+                    ChatRoom r = new ChatRoom();
+                    r.setType(ChatRoomType.EVENT_TEAM);
+                    r.setName((teamName != null ? teamName : "Team") + " @ " + (eventName != null ? eventName : "Event"));
+                    r.setReferenceId(teamId);
+                    r.setSecondaryReferenceId(eventId);
+                    return chatRoomRepository.save(r);
                 });
+
+        if (captainId != null) {
+            addParticipant(room.getId(), captainId, true);
+        }
+        if (lineupUserIds != null) {
+            for (UUID userId : lineupUserIds) {
+                addParticipant(room.getId(), userId, true);
+            }
+        }
+        if (organizerUserId != null) {
+            addParticipant(room.getId(), organizerUserId, true);
+        }
+
+        return room;
+    }
+
+    /**
+     * Captain-only: adds a team member who isn't in this event's lineup to the
+     * team's event chat room. Target must be an ACTIVE roster member of the
+     * same team the room belongs to — you cannot add outsiders.
+     */
+    public void addTeamMemberToEventTeamChat(UUID chatRoomId, UUID requesterId, UUID targetUserId) {
+        ChatRoom room = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> ApiException.notFound("Chat room not found"));
+
+        if (room.getType() != ChatRoomType.EVENT_TEAM) {
+            throw ApiException.badRequest("Members can only be added to an event team chat.");
+        }
+
+        UUID teamId = room.getReferenceId();
+        assertIsCaptain(teamId, requesterId);
+
+        boolean targetOnTeam = teamMembershipRepository
+                .findByTeamIdAndUserIdAndStatus(teamId, targetUserId, TeamMembershipStatus.ACTIVE)
+                .isPresent();
+        if (!targetOnTeam) {
+            throw ApiException.badRequest("Only active members of your team can be added to this chat.");
+        }
+
+        addParticipant(chatRoomId, targetUserId, true);
+        String displayName = resolveDisplayName(targetUserId);
+        sendSystemMessage(chatRoomId, displayName + " was added to the chat.");
+    }
+
+    /**
+     * Captain-only: team roster members who are NOT yet participants of this
+     * event team chat room — the candidate list for addTeamMemberToEventTeamChat.
+     */
+    @Transactional(readOnly = true)
+    public List<java.util.Map<String, Object>> getAddableTeamMembers(UUID chatRoomId, UUID requesterId) {
+        ChatRoom room = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> ApiException.notFound("Chat room not found"));
+
+        if (room.getType() != ChatRoomType.EVENT_TEAM) {
+            return List.of();
+        }
+
+        UUID teamId = room.getReferenceId();
+        assertIsCaptain(teamId, requesterId);
+
+        java.util.Set<UUID> activeParticipantIds = chatParticipantRepository
+                .findByChatRoomIdAndIsActiveTrue(chatRoomId)
+                .stream()
+                .map(ChatParticipant::getUserId)
+                .collect(Collectors.toSet());
+
+        return teamMembershipRepository.findByTeamIdAndStatus(teamId, TeamMembershipStatus.ACTIVE)
+                .stream()
+                .map(TeamMembership::getUserId)
+                .filter(uid -> !activeParticipantIds.contains(uid))
+                .distinct()
+                .map(uid -> {
+                    java.util.Map<String, Object> entry = new java.util.HashMap<>();
+                    entry.put("userId", uid);
+                    userRepository.findById(uid).ifPresent(u -> {
+                        entry.put("displayName", buildDisplayName(u));
+                        entry.put("botleagueId", u.getBotleagueId());
+                        entry.put("profilePhotoUrl", getFileService.resolveProfileImage(u.getProfilePhotoUrl()));
+                    });
+                    return entry;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private void assertIsCaptain(UUID teamId, UUID userId) {
+        boolean isCaptain = teamMembershipRepository
+                .existsByTeamIdAndUserIdAndRoleInTeamAndStatus(
+                        teamId, userId, com.botleague.backend.team.enums.TeamRole.CAPTAIN, TeamMembershipStatus.ACTIVE);
+        if (!isCaptain) {
+            throw ApiException.forbidden("Only the team captain can manage this chat's members.");
+        }
     }
 
     /**
@@ -396,7 +487,7 @@ public class ChatService {
                 switch (room.getType()) {
                     case TEAM -> teamChats.add(roomResponse);
                     case DIRECT -> directChats.add(roomResponse);
-                    case REGISTRATION -> registrationChats.add(roomResponse);
+                    case REGISTRATION, EVENT_TEAM -> registrationChats.add(roomResponse);
                     case EVENT_ANNOUNCEMENT, SPORT_ANNOUNCEMENT -> announcementChats.add(roomResponse);
                     case MATCH -> { /* match rooms not shown in main chat list */ }
                 }
@@ -413,11 +504,41 @@ public class ChatService {
         if (!isParticipant) {
             throw ApiException.forbidden("You are not a participant in this chat");
         }
-        return chatMessageRepository
-                .findTop50ByChatRoomIdAndIsDeletedFalseOrderBySentAtAsc(chatRoomId)
-                .stream()
+        List<ChatMessage> messages = chatMessageRepository
+                .findTop50ByChatRoomIdAndIsDeletedFalseOrderBySentAtAsc(chatRoomId);
+
+        java.util.Set<UUID> hiddenForMe = chatMessageDeletionRepository.findDeletedMessageIds(
+                userId, messages.stream().map(ChatMessage::getId).collect(Collectors.toList()));
+
+        return messages.stream()
+                .filter(m -> !hiddenForMe.contains(m.getId()))
                 .map(m -> toMessageResponse(m, userId))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * "Delete for me" — hides one message from the caller's own view only.
+     * Every other participant keeps seeing it normally. Idempotent.
+     */
+    public void deleteMessageForMe(UUID messageId, UUID userId) {
+        ChatMessage message = chatMessageRepository.findById(messageId)
+                .orElseThrow(() -> ApiException.notFound("Message not found"));
+
+        boolean isParticipant = chatParticipantRepository
+                .existsByChatRoomIdAndUserIdAndIsActiveTrue(message.getChatRoomId(), userId);
+        if (!isParticipant) {
+            throw ApiException.forbidden("You are not a participant in this chat");
+        }
+
+        if (chatMessageDeletionRepository.existsByMessageIdAndUserId(messageId, userId)) {
+            return;
+        }
+
+        com.botleague.backend.chat.entity.ChatMessageDeletion deletion =
+                new com.botleague.backend.chat.entity.ChatMessageDeletion();
+        deletion.setMessageId(messageId);
+        deletion.setUserId(userId);
+        chatMessageDeletionRepository.save(deletion);
     }
 
     @Transactional(readOnly = true)

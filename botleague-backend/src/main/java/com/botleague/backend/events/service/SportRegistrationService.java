@@ -389,13 +389,7 @@ public class SportRegistrationService {
                     ));
 
             try {
-                UUID captainId = teamMembershipRepository
-                        .findByTeamIdAndRoleInTeamAndStatus(team.getId(), TeamRole.CAPTAIN, TeamMembershipStatus.ACTIVE)
-                        .map(m -> m.getUserId())
-                        .orElse(team.getId());
-                UUID organizerUserId = eventRepository.findById(eventSport.getEventId())
-                        .map(e -> e.getCreatedBy()).orElse(null);
-                chatService.createRegistrationChat(reactivated, captainId, organizerUserId);
+                syncEventTeamChat(team, eventSport);
             } catch (Exception ignored) {}
 
             try {
@@ -512,18 +506,7 @@ public class SportRegistrationService {
         // =================================================
 
         try {
-            // Find team captain
-            UUID captainId = teamMembershipRepository
-                    .findByTeamIdAndRoleInTeamAndStatus(team.getId(), TeamRole.CAPTAIN, TeamMembershipStatus.ACTIVE)
-                    .map(m -> m.getUserId())
-                    .orElse(team.getId());
-
-            // Get organizer from the Event
-            UUID organizerUserId = eventRepository.findById(eventSport.getEventId())
-                    .map(e -> e.getCreatedBy())
-                    .orElse(null);
-
-            chatService.createRegistrationChat(saved, captainId, organizerUserId);
+            syncEventTeamChat(team, eventSport);
         } catch (Exception ignored) {
             // Chat creation failure must not roll back the registration
         }
@@ -816,5 +799,39 @@ public class SportRegistrationService {
     /** Normalise weight class strings so "1.5KG" == "1_5KG" == "1_5KG". */
     private static String normalizeWeightClass(String wc) {
         return wc.toUpperCase().replace('.', '_');
+    }
+
+    /**
+     * Find-or-create this team's event-wide chat room and (re-)sync its
+     * membership: captain, every lineup-assigned member for this team across
+     * the whole event, and the event's organizer. Safe to call repeatedly —
+     * addParticipant is idempotent, so this both creates the room on first
+     * registration and heals membership on every later registration too.
+     */
+    private void syncEventTeamChat(Team team, EventSports eventSport) {
+        UUID captainId = teamMembershipRepository
+                .findByTeamIdAndRoleInTeamAndStatus(team.getId(), TeamRole.CAPTAIN, TeamMembershipStatus.ACTIVE)
+                .map(m -> m.getUserId())
+                .orElse(null);
+
+        Event event = eventRepository.findById(eventSport.getEventId()).orElse(null);
+        UUID organizerUserId = event != null ? event.getCreatedBy() : null;
+        String eventName = event != null ? event.getEventName() : "Event";
+
+        List<UUID> lineupUserIds = lineupRepository
+                .findByEventIdAndTeamIdAndIsActive(eventSport.getEventId(), team.getId(), true)
+                .stream()
+                .map(EventRegistrationLineup::getTeamMembershipId)
+                .distinct()
+                .map(teamMembershipRepository::findById)
+                .filter(Optional::isPresent)
+                .map(o -> o.get().getUserId())
+                .collect(java.util.stream.Collectors.toList());
+
+        chatService.getOrCreateEventTeamChat(
+                team.getId(), eventSport.getEventId(),
+                team.getTeamName() != null ? team.getTeamName() : "Team",
+                eventName,
+                captainId, lineupUserIds, organizerUserId);
     }
 }

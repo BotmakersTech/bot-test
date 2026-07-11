@@ -5,6 +5,7 @@ import {
   getChatMessages,
   sendMessage,
   markRoomRead as apiMarkRoomRead,
+  deleteMessageForMe,
   type ChatMessage,
   type ChatRoomList,
 } from "../api/chat.api"
@@ -74,6 +75,18 @@ export const markChatRoomRead = createAsyncThunk(
       return roomId
     } catch {
       return rejectWithValue(roomId)
+    }
+  }
+)
+
+export const deleteChatMessage = createAsyncThunk(
+  "chat/deleteMessage",
+  async ({ roomId, messageId }: { roomId: string; messageId: string }, { rejectWithValue }) => {
+    try {
+      await deleteMessageForMe(messageId)
+      return { roomId, messageId }
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : "Failed to delete message")
     }
   }
 )
@@ -205,6 +218,13 @@ const chatSlice = createSlice({
     builder.addCase(markChatRoomRead.fulfilled, (state, action) => {
       if (state.rooms) {
         state.rooms = clearUnread(state.rooms, action.payload)
+      }
+    })
+
+    builder.addCase(deleteChatMessage.fulfilled, (state, action) => {
+      const { roomId, messageId } = action.payload
+      if (state.messages[roomId]) {
+        state.messages[roomId] = state.messages[roomId].filter((m) => m.id !== messageId)
       }
     })
   },

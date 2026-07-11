@@ -7,20 +7,26 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.botleague.backend.chat.service.ChatService;
+import com.botleague.backend.events.entity.Event;
 import com.botleague.backend.events.entity.EventRegistrationLineup;
 import com.botleague.backend.events.entity.EventSports;
 import com.botleague.backend.events.entity.SportRegistration;
 import com.botleague.backend.events.enums.LineupRole;
 import com.botleague.backend.events.enums.RegistrationStatus;
 import com.botleague.backend.events.repository.EventRegistrationLineupRepository;
+import com.botleague.backend.events.repository.EventRepository;
 import com.botleague.backend.events.repository.EventSportsRepository;
 import com.botleague.backend.events.repository.SportRegistrationRepository;
 import com.botleague.backend.team.entity.Robot;
+import com.botleague.backend.team.entity.Team;
 import com.botleague.backend.team.entity.TeamMembership;
 import com.botleague.backend.team.enums.RobotStatus;
 import com.botleague.backend.team.enums.TeamMembershipStatus;
+import com.botleague.backend.team.enums.TeamRole;
 import com.botleague.backend.team.repository.RobotRepository;
 import com.botleague.backend.team.repository.TeamMembershipRepository;
+import com.botleague.backend.team.repository.TeamRepository;
 
 /**
  * Manages the lineup of team members (people) for each robot registration.
@@ -57,6 +63,9 @@ public class SportRegistrationLineupService {
     private final EventSportsRepository             eventSportsRepository;
     private final RobotRepository                   robotRepository;
     private final TeamMembershipRepository          teamMembershipRepository;
+    private final ChatService                       chatService;
+    private final TeamRepository                    teamRepository;
+    private final EventRepository                   eventRepository;
 
     // =====================================================
     // CONSTRUCTOR
@@ -67,13 +76,19 @@ public class SportRegistrationLineupService {
             SportRegistrationRepository       sportRegistrationRepository,
             EventSportsRepository             eventSportsRepository,
             RobotRepository                   robotRepository,
-            TeamMembershipRepository          teamMembershipRepository
+            TeamMembershipRepository          teamMembershipRepository,
+            ChatService                       chatService,
+            TeamRepository                    teamRepository,
+            EventRepository                   eventRepository
     ) {
         this.lineupRepository            = lineupRepository;
         this.sportRegistrationRepository = sportRegistrationRepository;
         this.eventSportsRepository       = eventSportsRepository;
         this.robotRepository             = robotRepository;
         this.teamMembershipRepository    = teamMembershipRepository;
+        this.chatService                 = chatService;
+        this.teamRepository              = teamRepository;
+        this.eventRepository             = eventRepository;
     }
 
     // =====================================================
@@ -244,7 +259,11 @@ public class SportRegistrationLineupService {
             EventRegistrationLineup existing = inactiveOpt.get();
             existing.setLineupRole(role);
             existing.setIsActive(true);
-            return lineupRepository.save(existing);
+            EventRegistrationLineup savedExisting = lineupRepository.save(existing);
+            try {
+                syncEventTeamChatForMember(registration, membership);
+            } catch (Exception ignored) {}
+            return savedExisting;
         }
 
         // =================================================
@@ -268,7 +287,38 @@ public class SportRegistrationLineupService {
         lineup.setLineupRole(role);
         lineup.setIsActive(true);
 
-        return lineupRepository.save(lineup);
+        EventRegistrationLineup saved = lineupRepository.save(lineup);
+        try {
+            syncEventTeamChatForMember(registration, membership);
+        } catch (Exception ignored) {
+            // Chat sync failure must never roll back a lineup assignment
+        }
+        return saved;
+    }
+
+    /**
+     * Ensures the team's event chat room exists and this newly lineup-assigned
+     * member is a participant. Best-effort — callers wrap this in try/catch.
+     */
+    private void syncEventTeamChatForMember(SportRegistration registration, TeamMembership membership) {
+        UUID teamId = registration.getTeamId();
+        UUID eventId = registration.getEventId();
+
+        UUID captainId = teamMembershipRepository
+                .findByTeamIdAndRoleInTeamAndStatus(teamId, TeamRole.CAPTAIN, TeamMembershipStatus.ACTIVE)
+                .map(TeamMembership::getUserId)
+                .orElse(null);
+
+        Team team = teamRepository.findById(teamId).orElse(null);
+        Event event = eventRepository.findById(eventId).orElse(null);
+
+        chatService.getOrCreateEventTeamChat(
+                teamId, eventId,
+                team != null ? team.getTeamName() : "Team",
+                event != null ? event.getEventName() : "Event",
+                captainId,
+                List.of(membership.getUserId()),
+                event != null ? event.getCreatedBy() : null);
     }
 
     // =====================================================

@@ -131,4 +131,15 @@ public interface EventRegistrationLineupRepository
             UUID teamMembershipId,
             Boolean isActive
     );
+
+    // ----------------------------------------------------------
+    // USED BY: ChatService event-team room sync
+    //   All active lineup entries for one team across a whole event —
+    //   the set of people who should be in that team's event chat room.
+    // ----------------------------------------------------------
+    List<EventRegistrationLineup> findByEventIdAndTeamIdAndIsActive(
+            UUID eventId,
+            UUID teamId,
+            Boolean isActive
+    );
 }
