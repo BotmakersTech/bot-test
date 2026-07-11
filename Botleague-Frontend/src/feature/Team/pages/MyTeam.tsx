@@ -348,7 +348,7 @@ export default function MyTeam() {
                 <Calendar size={14} /> {nextEvent ? formatDateRange(nextEvent.startDate, nextEvent.endDate) : `In league since ${yearFrom(team?.createdAt)}`}
               </span>
             </div>
-            <button type="button" className="teamdash-event-cta" onClick={() => navigate(nextEvent ? `/events/${nextEvent.eventId}` : "/events")}>
+            <button type="button" className="teamdash-event-cta" onClick={() => navigate(nextEvent ? `/events/${nextEvent.eventId}` : "/browse-events")}>
               {nextEvent ? "View Details" : "Browse Events"}
             </button>
           </div>

@@ -254,6 +254,20 @@ public class EventService {
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
+
+    // =====================================================
+    // GET COMPLETED EVENTS (public "previous events" listing)
+    // =====================================================
+
+    public List<CreateEventResponseDTO> getCompletedEvents() {
+        return eventRepository
+                .findByStatusInAndDeletedAtIsNull(
+                        List.of(EventStatus.COMPLETED, EventStatus.ARCHIVED)
+                )
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
     
     public void saveMedia(
 

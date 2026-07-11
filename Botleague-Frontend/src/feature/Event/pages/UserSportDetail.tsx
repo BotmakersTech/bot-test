@@ -1600,7 +1600,7 @@ export default function UserSportDetail() {
         <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "12px", padding: "20px 28px", color: DANGER, fontSize: "0.85rem", fontWeight: 600, maxWidth: "400px", textAlign: "center" }}>
           ⚠️ {error || "Sport not found."}
           <br />
-          <button onClick={() => { clearError(); navigate(eventId ? `/events/${eventId}` : "/events"); }} style={{ marginTop: "12px", background: ACCENT, border: "none", color: "#fff", borderRadius: "8px", padding: "8px 18px", cursor: "pointer", fontSize: "0.8rem", fontWeight: 700 }}>← Back</button>
+          <button onClick={() => { clearError(); navigate(eventId ? `/events/${eventId}` : "/browse-events"); }} style={{ marginTop: "12px", background: ACCENT, border: "none", color: "#fff", borderRadius: "8px", padding: "8px 18px", cursor: "pointer", fontSize: "0.8rem", fontWeight: 700 }}>← Back</button>
         </div>
       </div>
     );
@@ -1632,7 +1632,7 @@ export default function UserSportDetail() {
 
       <div style={{ position: "relative", zIndex: 1, maxWidth: "1100px", margin: "0 auto" }}>
         <button
-          onClick={() => navigate(eventId ? `/events/${eventId}` : "/events")}
+          onClick={() => navigate(eventId ? `/events/${eventId}` : "/browse-events")}
           style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "8px", padding: "8px 14px", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", marginBottom: "28px" }}
         >
           ← Back to Event
@@ -1641,7 +1641,7 @@ export default function UserSportDetail() {
         <div style={{ marginBottom: "28px" }}>
           {event && (
             <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "10px", fontSize: "0.78rem", color: MUTED }}>
-              <span onClick={() => navigate("/events")} style={{ cursor: "pointer" }} onMouseEnter={e => (e.currentTarget.style.color = ACCENT)} onMouseLeave={e => (e.currentTarget.style.color = MUTED)}>Events</span>
+              <span onClick={() => navigate("/browse-events")} style={{ cursor: "pointer" }} onMouseEnter={e => (e.currentTarget.style.color = ACCENT)} onMouseLeave={e => (e.currentTarget.style.color = MUTED)}>Events</span>
               <span>›</span>
               <span onClick={() => navigate(`/events/${eventId}`)} style={{ cursor: "pointer" }} onMouseEnter={e => (e.currentTarget.style.color = ACCENT)} onMouseLeave={e => (e.currentTarget.style.color = MUTED)}>{event.eventName}</span>
               <span>›</span>

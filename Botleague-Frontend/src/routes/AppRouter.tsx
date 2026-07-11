@@ -28,6 +28,7 @@ import VerifyEmail from "../feature/Profile/components/VerifyEmail";
 import Home from "../temp/pages/Home";
 import ContactUs from "../temp/pages/ContactUs";
 import AboutUs from "../temp/pages/AboutUs";
+import EventsLandingPage from "../temp/pages/EventsLandingPage";
 
 // ============================
 // TEAM PAGES
@@ -174,6 +175,7 @@ function AppRoutes() {
       <Route path="/user/:code"      element={<FooterShell><UserPublicPage /></FooterShell>} />
       <Route path="/about-us" element={<FooterShell><AboutUs /></FooterShell>} />
       <Route path="/contact-us" element={<FooterShell><ContactUs /></FooterShell>} />
+      <Route path="/events" element={<FooterShell><EventsLandingPage /></FooterShell>} />
       <Route path="/verify-email" element={<FooterShell><VerifyEmail /></FooterShell>} />
 
       {/* ========================================= */}
@@ -220,7 +222,9 @@ function AppRoutes() {
         <Route path="/messages" element={<MessagesPage />} />
 
         {/* ── Competitor pages ── */}
-        <Route path="/events" element={<UserEventPage />} />
+        {/* NOTE: /events (no id) is the public marketing/events page above —
+            this is the logged-in "browse & search events" dashboard view. */}
+        <Route path="/browse-events" element={<UserEventPage />} />
         <Route path="/events/:eventId" element={<UserEventDetail />} />
         <Route path="/events/:eventId/sports/:sportId" element={<UserSportDetail />} />
         <Route path="/matches" element={<MatchesPage />} />

@@ -63,6 +63,16 @@ public class EventController {
 
 	    return ResponseEntity.ok(response);
 	}
+
+	@GetMapping("/completed")
+	public ResponseEntity<List<CreateEventResponseDTO>>
+	getCompletedEvents() {
+
+	    List<CreateEventResponseDTO> response =
+	            eventService.getCompletedEvents();
+
+	    return ResponseEntity.ok(response);
+	}
 	
 	@PostMapping("/{eventId}/upload-url")
 	public ResponseEntity<UploadResponse> getEventUploadUrl(

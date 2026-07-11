@@ -242,7 +242,7 @@ export default function UserEventDetail() {
           ⚠️ {error}
           <br />
           <button
-            onClick={() => { clearError(); navigate("/events"); }}
+            onClick={() => { clearError(); navigate("/browse-events"); }}
             style={{ marginTop: "12px", background: ACCENT, border: "none", color: "#fff", borderRadius: "8px", padding: "8px 18px", cursor: "pointer", fontSize: "0.8rem", fontWeight: 700 }}
           >← Back to Events</button>
         </div>
@@ -257,7 +257,7 @@ export default function UserEventDetail() {
         <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "12px", padding: "20px 28px", color: DANGER, fontSize: "0.85rem", fontWeight: 600, maxWidth: "400px", textAlign: "center" }}>
           ⚠️ Event not found.
           <br />
-          <button onClick={() => navigate("/events")} style={{ marginTop: "12px", background: ACCENT, border: "none", color: "#fff", borderRadius: "8px", padding: "8px 18px", cursor: "pointer", fontSize: "0.8rem", fontWeight: 700 }}>← Back to Events</button>
+          <button onClick={() => navigate("/browse-events")} style={{ marginTop: "12px", background: ACCENT, border: "none", color: "#fff", borderRadius: "8px", padding: "8px 18px", cursor: "pointer", fontSize: "0.8rem", fontWeight: 700 }}>← Back to Events</button>
         </div>
       </div>
     );
@@ -278,7 +278,7 @@ export default function UserEventDetail() {
 
         {/* BACK */}
         <button
-          onClick={() => navigate("/events")}
+          onClick={() => navigate("/browse-events")}
           style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "8px", padding: "8px 14px", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", marginBottom: "28px" }}
         >
           ← Back to Events

@@ -55,7 +55,9 @@
       "Bash(chromium-cli --help)",
       "Bash(npx --yes playwright --version)",
       "Bash(npm init *)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "PowerShell(Stop-Process -Id 494608 -Force -ErrorAction SilentlyContinue)",
+      "Bash(timeout 30 bash -c 'until curl -sf http://localhost:5173 >/dev/null 2>&1; do sleep 1; done')"
     ]
   }
 }
