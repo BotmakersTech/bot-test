@@ -1,9 +1,12 @@
 import React from "react"
 import { useParams, useNavigate } from "react-router-dom"
+import { useSelector } from "react-redux"
 import { ArrowLeft, Users, Trophy, Calendar, Tag, Swords, Weight, Zap, DollarSign, Award, Cpu, Ruler, Bot, Edit2, X } from "lucide-react"
 import { useOrganizerSportDetail } from "../hooks/useOrganizerSportDetail"
 import { type CreateEventSportRequest } from "../api/organizer.api"
-import { finalizeEventLeaderboard } from "../../Rankings/api/rankings.api"
+import { pushToGlobalRankings } from "../../Rankings/api/rankings.api"
+import type { RootState } from "../../../app/store"
+import { hasRole, AppRole } from "../../../shared/constants/roles"
 
 // ─────────────────────────────────────────────────────────────
 // DESIGN TOKENS — matches Admin's AdminSport.tsx / Creatematch.tsx
@@ -1000,6 +1003,10 @@ export default function OrganizerSportDetailPage() {
   const { eventId, sportId } = useParams<{ eventId: string; sportId: string }>()
   const navigate = useNavigate()
 
+  const user = useSelector((state: RootState) => state.auth.user)
+  const userRoles = user?.allRoles ?? (user?.role ? [user.role] : [])
+  const isAdmin = hasRole(userRoles, [AppRole.ADMIN, AppRole.SUPER_ADMIN])
+
   const [registrationLoading, setRegistrationLoading] = React.useState(false)
   const [showEditSport,       setShowEditSport]       = React.useState(false)
   const [finalizing,          setFinalizing]          = React.useState(false)
@@ -1024,13 +1031,13 @@ export default function OrganizerSportDetailPage() {
 
   const isOpen = sport?.status?.toUpperCase() === "REGISTRATION_OPEN"
 
-  // ── finalize handler — propagates event results to global rankings ──
+  // ── push-to-global-rankings handler — ADMIN/SUPER_ADMIN only, no exceptions ──
   const handleFinalize = async () => {
     if (!sportId) return
     setFinalizing(true)
     setFinalizeMsg(null)
     try {
-      await finalizeEventLeaderboard(sportId)
+      await pushToGlobalRankings(sportId)
       setFinalizeMsg("✓ Global rankings updated successfully!")
     } catch (e: any) {
       setFinalizeMsg("⚠️ " + (e?.response?.data?.message ?? "Finalization failed"))
@@ -1199,29 +1206,31 @@ export default function OrganizerSportDetailPage() {
             }
           </button>
 
-          {/* PUBLISH TO GLOBAL RANKINGS */}
-          <button
-            onClick={handleFinalize}
-            disabled={finalizing}
-            title="Recalculate and publish results to the Global Rankings page"
-            style={{
-              background: "rgba(250,71,21,0.12)",
-              border: "1px solid rgba(250,71,21,0.3)",
-              color: ACCENT,
-              borderRadius: "8px",
-              padding: "7px 14px",
-              fontSize: "0.74rem",
-              fontWeight: 700,
-              cursor: finalizing ? "not-allowed" : "pointer",
-              opacity: finalizing ? 0.7 : 1,
-              display: "flex",
-              alignItems: "center",
-              gap: "7px",
-              transition: "all 0.15s",
-            }}
-          >
-            {finalizing ? <><Spinner size={12} color={ACCENT} />Publishing…</> : "🌐 Publish to Global Rankings"}
-          </button>
+          {/* PUBLISH TO GLOBAL RANKINGS — ADMIN/SUPER_ADMIN only, no exceptions */}
+          {isAdmin && (
+            <button
+              onClick={handleFinalize}
+              disabled={finalizing}
+              title="Push finalized results to the Global Rankings pool"
+              style={{
+                background: "rgba(250,71,21,0.12)",
+                border: "1px solid rgba(250,71,21,0.3)",
+                color: ACCENT,
+                borderRadius: "8px",
+                padding: "7px 14px",
+                fontSize: "0.74rem",
+                fontWeight: 700,
+                cursor: finalizing ? "not-allowed" : "pointer",
+                opacity: finalizing ? 0.7 : 1,
+                display: "flex",
+                alignItems: "center",
+                gap: "7px",
+                transition: "all 0.15s",
+              }}
+            >
+              {finalizing ? <><Spinner size={12} color={ACCENT} />Publishing…</> : "🌐 Publish to Global Rankings"}
+            </button>
+          )}
         </div>
 
         {/* finalize feedback */}

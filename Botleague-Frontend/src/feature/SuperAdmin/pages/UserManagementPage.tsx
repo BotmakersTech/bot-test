@@ -12,7 +12,7 @@ import {
 } from "../store/userManagementSlice";
 import { createAdminUser } from "../api/userManagement.api";
 
-const ALL_ROLES = ["COMPETITOR","ORGANIZER","MANAGER","ADMINISTRATOR","SUPER_ADMIN","JUDGE","VOLUNTEER"];
+const ALL_ROLES = ["COMPETITOR","SPORT_HEAD","EVENT_HEAD","ORGANISER","ADMIN","SUPER_ADMIN","JUDGE","VOLUNTEER"];
 
 function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
   const [form, setForm] = useState({ firstName:"", lastName:"", phone:"", email:"", password:"", role:"COMPETITOR" });

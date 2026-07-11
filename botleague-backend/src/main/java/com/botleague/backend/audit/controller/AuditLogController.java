@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/audit-logs")
-@PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
 public class AuditLogController {
 
     private final AuditLogService auditLogService;

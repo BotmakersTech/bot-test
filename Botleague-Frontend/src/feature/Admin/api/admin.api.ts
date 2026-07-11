@@ -396,8 +396,14 @@ export interface EventAssignment {
   eventId: string
   eventName: string
   eventCode: string
+  eventSportId?: string
+  sportName?: string
   assignedBy: string
   assignedAt: string
+  roleType?: "EVENT_HEAD" | "SPORT_HEAD"
+  ownerChain?: "BOTLEAGUE" | "ORGANISER"
+  status?: "PENDING_APPROVAL" | "APPROVED" | "REJECTED"
+  rejectionReason?: string
 }
 
 export const getEventAssignments = async (
@@ -407,7 +413,7 @@ export const getEventAssignments = async (
   return response.data
 }
 
-export const assignOrganizerToEvent = async (
+export const assignEventHead = async (
   userId: string,
   eventId: string
 ): Promise<EventAssignment> => {
@@ -415,11 +421,48 @@ export const assignOrganizerToEvent = async (
   return response.data
 }
 
-export const unassignOrganizerFromEvent = async (
+export const unassignEventHead = async (
   userId: string,
   eventId: string
 ): Promise<void> => {
   await api.delete("/admin/assignments/event", { params: { userId, eventId } })
+}
+
+export const getSportAssignments = async (
+  eventSportId: string
+): Promise<EventAssignment[]> => {
+  const response = await api.get<EventAssignment[]>(`/admin/assignments/sport/${eventSportId}`)
+  return response.data
+}
+
+export const assignSportHead = async (
+  userId: string,
+  eventSportId: string
+): Promise<EventAssignment> => {
+  const response = await api.post<EventAssignment>("/admin/assignments/sport", { userId, eventSportId })
+  return response.data
+}
+
+export const unassignSportHead = async (
+  userId: string,
+  eventSportId: string
+): Promise<void> => {
+  await api.delete("/admin/assignments/sport", { params: { userId, eventSportId } })
+}
+
+export const approveSportHeadAssignment = async (
+  assignmentId: string
+): Promise<EventAssignment> => {
+  const response = await api.patch<EventAssignment>(`/admin/assignments/sport/${assignmentId}/approve`)
+  return response.data
+}
+
+export const rejectSportHeadAssignment = async (
+  assignmentId: string,
+  reason?: string
+): Promise<EventAssignment> => {
+  const response = await api.patch<EventAssignment>(`/admin/assignments/sport/${assignmentId}/reject`, { reason })
+  return response.data
 }
 
 // =====================================================

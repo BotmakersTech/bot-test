@@ -74,10 +74,12 @@ function getIcon(iconName: string) {
 function SidebarItem({
   item,
   active,
+  expanded,
   onClick,
 }: {
   item: NavItem;
   active: boolean;
+  expanded: boolean;
   onClick: () => void;
 }) {
   return (
@@ -88,16 +90,22 @@ function SidebarItem({
       aria-label={item.label}
       aria-current={active ? "page" : undefined}
       className={[
-        "group relative flex h-11 w-11 items-center justify-center rounded-lg transition-colors duration-150",
+        "flex h-11 shrink-0 items-center gap-3 rounded-lg transition-[background-color,color,width] duration-200",
+        expanded ? "w-full px-3" : "w-11 justify-center",
         active
           ? "bg-[#3269d0] text-white shadow-[0_0_15px_rgba(72,113,219,0.38)]"
           : "text-[#5e6065] hover:bg-[#e8ecff] hover:text-[#3269d0]",
       ].join(" ")}
     >
-      <span className="flex h-7 w-7 items-center justify-center [&_svg]:h-[24px] [&_svg]:w-[24px]">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center [&_svg]:h-[24px] [&_svg]:w-[24px]">
         {getIcon(item.iconName)}
       </span>
-      <span className="pointer-events-none absolute left-[calc(100%+12px)] z-50 whitespace-nowrap rounded-md bg-[#111111] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+      <span
+        className={[
+          "overflow-hidden whitespace-nowrap text-sm font-medium transition-all duration-200",
+          expanded ? "max-w-[160px] opacity-100" : "max-w-0 opacity-0",
+        ].join(" ")}
+      >
         {item.label}
       </span>
     </button>
@@ -110,6 +118,7 @@ export default function Sidebar() {
   const dispatch = useAppDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const userRoles = user?.allRoles ?? (user?.role ? [user.role] : []);
   const navItems = getNavItemsForRoles(userRoles);
@@ -131,31 +140,52 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="sticky top-0 flex h-[calc(100vh-4.5rem)] w-[112px] shrink-0 flex-col items-center bg-[#eef1ff] py-8">
-      <nav className="flex min-h-0 flex-1 flex-col items-center gap-6 overflow-y-auto overflow-x-visible px-4">
-        {navItems.map((item) => (
-          <SidebarItem
-            key={item.id}
-            item={item}
-            active={isActive(item.link)}
-            onClick={() => navigate(item.link)}
-          />
-        ))}
-      </nav>
-
-      <button
-        type="button"
-        onClick={handleLogout}
-        disabled={loggingOut}
-        title="Log out"
-        aria-label="Log out"
-        className="group relative mt-8 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-[#3269d0] transition-colors hover:bg-[#e8ecff] disabled:opacity-60"
+    // Fixed-width placeholder — reserves layout space so the page content
+    // never reflows. The actual visible sidebar is an overlay positioned
+    // on top of it that grows wider on hover, YouTube-mini-sidebar style.
+    <aside className="sticky top-0 h-[calc(100vh-4.5rem)] w-[112px] shrink-0">
+      <div
+        onMouseEnter={() => setExpanded(true)}
+        onMouseLeave={() => setExpanded(false)}
+        className={[
+          "absolute left-0 top-0 z-40 flex h-full flex-col items-center overflow-hidden bg-[#eef1ff] py-8 transition-[width] duration-200 ease-out",
+          expanded ? "w-[248px] items-stretch px-4 shadow-[6px_0_24px_rgba(17,17,17,0.12)]" : "w-[112px]",
+        ].join(" ")}
       >
-        <LogoutIcon className="h-[27px] w-[27px]" />
-        <span className="pointer-events-none absolute left-[calc(100%+12px)] z-50 whitespace-nowrap rounded-md bg-[#111111] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
-          {loggingOut ? "Logging out..." : "Log out"}
-        </span>
-      </button>
+        <nav className="flex min-h-0 flex-1 w-full flex-col items-center gap-6 overflow-y-auto overflow-x-hidden px-4">
+          {navItems.map((item) => (
+            <SidebarItem
+              key={item.id}
+              item={item}
+              active={isActive(item.link)}
+              expanded={expanded}
+              onClick={() => navigate(item.link)}
+            />
+          ))}
+        </nav>
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={loggingOut}
+          title="Log out"
+          aria-label="Log out"
+          className={[
+            "mt-8 flex h-11 shrink-0 items-center gap-3 rounded-lg text-[#3269d0] transition-[background-color,width] duration-200 hover:bg-[#e8ecff] disabled:opacity-60",
+            expanded ? "w-full px-3" : "w-11 justify-center",
+          ].join(" ")}
+        >
+          <LogoutIcon className="h-[27px] w-[27px] shrink-0" />
+          <span
+            className={[
+              "overflow-hidden whitespace-nowrap text-sm font-medium transition-all duration-200",
+              expanded ? "max-w-[160px] opacity-100" : "max-w-0 opacity-0",
+            ].join(" ")}
+          >
+            {loggingOut ? "Logging out..." : "Log out"}
+          </span>
+        </button>
+      </div>
     </aside>
   );
 }

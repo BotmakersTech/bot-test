@@ -1,7 +1,6 @@
 package com.botleague.backend.sponsor.service;
 
-import com.botleague.backend.admin.repository.UserEventAssignmentRepository;
-import com.botleague.backend.common.exception.ApiException;
+import com.botleague.backend.common.security.AuthorizationService;
 import com.botleague.backend.sponsor.dto.EventSponsorRequest;
 import com.botleague.backend.sponsor.dto.EventSponsorResponse;
 import com.botleague.backend.sponsor.entity.EventSponsor;
@@ -10,33 +9,23 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 public class EventSponsorService {
 
-    private static final Set<String> FULL_ACCESS_ROLES =
-            Set.of("SUPER_ADMIN", "ADMINISTRATOR");
-
     private final EventSponsorRepository repo;
-    private final UserEventAssignmentRepository eventAssignmentRepo;
+    private final AuthorizationService authorizationService;
 
-    public EventSponsorService(EventSponsorRepository repo, UserEventAssignmentRepository eventAssignmentRepo) {
+    public EventSponsorService(EventSponsorRepository repo, AuthorizationService authorizationService) {
         this.repo = repo;
-        this.eventAssignmentRepo = eventAssignmentRepo;
+        this.authorizationService = authorizationService;
     }
 
-    /** ADMINISTRATOR/SUPER_ADMIN can manage any event's sponsors; ORGANIZER only their assigned events. */
+    /** Platform admins/organiser owner can manage any of their events' sponsors; EVENT_HEAD only their assigned events. */
     public void assertCanManage(UUID eventId, UUID callerId, List<String> callerRoles) {
-        boolean fullAccess = callerRoles.stream().anyMatch(FULL_ACCESS_ROLES::contains);
-        if (fullAccess) return;
-        boolean isAssignedOrganizer = callerRoles.contains("ORGANIZER")
-                && eventAssignmentRepo.existsByUserIdAndEventId(callerId, eventId);
-        if (!isAssignedOrganizer) {
-            throw ApiException.forbidden("You are not assigned to this event.");
-        }
+        authorizationService.assertCanManageEvent(callerId, eventId);
     }
 
     public List<EventSponsorResponse> getSponsorsForEvent(UUID eventId) {

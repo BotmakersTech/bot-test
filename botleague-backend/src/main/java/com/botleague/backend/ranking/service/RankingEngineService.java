@@ -183,7 +183,9 @@ public class RankingEngineService {
             return;
         }
 
-        // Final sort + rank assignment
+        // Final sort + rank assignment. Deliberately does NOT touch the global
+        // Ranking table — see pushToGlobalRankings(), the sole, ADMIN-gated
+        // gateway to the global pool.
         entries.sort(this::compareLeaderboardEntries);
         for (int i = 0; i < entries.size(); i++) {
             entries.get(i).setEventRank(i + 1);
@@ -191,13 +193,35 @@ public class RankingEngineService {
         }
         leaderboardEntryRepository.saveAll(entries);
 
-        // Award medals based on final rank
+        log.info("[RankingEngine] Finalized leaderboard for eventSportId={}", eventSportId);
+    }
+
+    // =========================================================================
+    // STEP 3.5 — Push a finalized event leaderboard to the GLOBAL ranking pool.
+    // This is the one and only path that writes to the global Ranking table —
+    // callers must be ADMIN/SUPER_ADMIN, enforced at the controller.
+    // =========================================================================
+
+    public void pushToGlobalRankings(UUID eventSportId) {
         EventSports sport = eventSportsRepository.findById(eventSportId).orElse(null);
-        if (sport != null) {
-            updateGlobalRankings(sport, entries);
+        if (sport == null) {
+            log.warn("[RankingEngine] Cannot push to global rankings — eventSportId={} not found", eventSportId);
+            return;
         }
 
-        log.info("[RankingEngine] Finalized leaderboard for eventSportId={}", eventSportId);
+        List<EventLeaderboardEntry> entries =
+                leaderboardEntryRepository.findByEventSportIdOrderByPointsEarnedDescWinsDescMatchesPlayedDesc(eventSportId)
+                        .stream()
+                        .filter(e -> Boolean.TRUE.equals(e.getIsFinalized()))
+                        .collect(Collectors.toList());
+
+        if (entries.isEmpty()) {
+            log.warn("[RankingEngine] No finalized leaderboard entries for eventSportId={} — finalize before pushing to global rankings", eventSportId);
+            return;
+        }
+
+        updateGlobalRankings(sport, entries);
+        log.info("[RankingEngine] Pushed eventSportId={} to global rankings", eventSportId);
     }
 
     // =========================================================================

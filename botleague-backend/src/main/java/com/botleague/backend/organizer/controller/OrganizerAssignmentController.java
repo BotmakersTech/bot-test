@@ -15,8 +15,11 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Admin-facing APIs for assigning / unassigning organizers to events and sports.
- * Requires MANAGER role minimum (so MANAGER, ADMINISTRATOR, SUPER_ADMIN can call these).
+ * Admin-facing APIs for assigning / unassigning EVENT_HEAD and SPORT_HEAD to
+ * events and sports. Initiating an assignment requires ADMIN, SUPER_ADMIN, or
+ * ORGANISER — EVENT_HEAD cannot assign SPORT_HEAD directly. Sport assignments
+ * go through a PENDING_APPROVAL step approved by the event's EVENT_HEAD (or
+ * ADMIN/ORGANISER) via the /sport/{id}/approve and /reject endpoints below.
  */
 @RestController
 @RequestMapping("/api/admin/assignments")
@@ -31,7 +34,7 @@ public class OrganizerAssignmentController {
     // ── Event assignments ──────────────────────────────────────────────────────
 
     @PostMapping("/event")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER')")
     public ResponseEntity<AssignmentResponse> assignToEvent(
             Authentication authentication,
             @Valid @RequestBody EventAssignmentRequest request) {
@@ -42,7 +45,7 @@ public class OrganizerAssignmentController {
     }
 
     @DeleteMapping("/event")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER')")
     public ResponseEntity<Void> unassignFromEvent(
             @RequestParam UUID userId,
             @RequestParam UUID eventId) {
@@ -52,7 +55,7 @@ public class OrganizerAssignmentController {
     }
 
     @GetMapping("/event/{eventId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER')")
     public ResponseEntity<List<AssignmentResponse>> getEventAssignments(
             @PathVariable UUID eventId) {
 
@@ -60,7 +63,7 @@ public class OrganizerAssignmentController {
     }
 
     @GetMapping("/user/{userId}/events")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER')")
     public ResponseEntity<List<AssignmentResponse>> getUserEventAssignments(
             @PathVariable UUID userId) {
 
@@ -70,7 +73,7 @@ public class OrganizerAssignmentController {
     // ── Sport assignments ──────────────────────────────────────────────────────
 
     @PostMapping("/sport")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER')")
     public ResponseEntity<AssignmentResponse> assignToSport(
             Authentication authentication,
             @Valid @RequestBody SportAssignmentRequest request) {
@@ -81,7 +84,7 @@ public class OrganizerAssignmentController {
     }
 
     @DeleteMapping("/sport")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER')")
     public ResponseEntity<Void> unassignFromSport(
             @RequestParam UUID userId,
             @RequestParam UUID eventSportId) {
@@ -91,7 +94,7 @@ public class OrganizerAssignmentController {
     }
 
     @GetMapping("/sport/{eventSportId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER')")
     public ResponseEntity<List<AssignmentResponse>> getSportAssignments(
             @PathVariable UUID eventSportId) {
 

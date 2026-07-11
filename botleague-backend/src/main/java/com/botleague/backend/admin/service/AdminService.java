@@ -14,8 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import com.botleague.backend.admin.repository.UserEventAssignmentRepository;
-import com.botleague.backend.common.exception.ApiException;
+import com.botleague.backend.common.security.AuthorizationService;
 import com.botleague.backend.admin.dto.AdminAllEventResponse;
 import com.botleague.backend.admin.dto.AdminEventSportResponse;
 import com.botleague.backend.admin.dto.AdminRegisteredTeamResponse;
@@ -49,10 +48,6 @@ import com.botleague.backend.team.repository.TeamRepository;
 @Service
 public class AdminService {
 
-    // ── Roles that bypass event-assignment scoping ──────────────────────────────
-    private static final Set<String> FULL_ACCESS_ROLES =
-            Set.of("SUPER_ADMIN", "ADMINISTRATOR", "MANAGER");
-
     // ── Allowed lifecycle transitions ─────────────────────────────────────────
     private static final Map<EventStatus, Set<EventStatus>> ALLOWED_TRANSITIONS;
     static {
@@ -79,7 +74,7 @@ public class AdminService {
     private final NotificationService               notificationService;
     private final AuditLogService                   auditLogService;
     private final RealtimePublisher                 realtimePublisher;
-    private final UserEventAssignmentRepository     eventAssignmentRepository;
+    private final AuthorizationService               authorizationService;
 
     // =====================================================
     // CONSTRUCTOR
@@ -97,7 +92,7 @@ public class AdminService {
             NotificationService               notificationService,
             AuditLogService                   auditLogService,
             RealtimePublisher                 realtimePublisher,
-            UserEventAssignmentRepository     eventAssignmentRepository
+            AuthorizationService              authorizationService
     ) {
         this.eventRepository             = eventRepository;
         this.eventSportRepository        = eventSportRepository;
@@ -110,18 +105,17 @@ public class AdminService {
         this.notificationService         = notificationService;
         this.auditLogService             = auditLogService;
         this.realtimePublisher           = realtimePublisher;
-        this.eventAssignmentRepository   = eventAssignmentRepository;
+        this.authorizationService        = authorizationService;
     }
 
     /**
-     * Organizer-scoped read: SUPER_ADMIN / ADMINISTRATOR / MANAGER may view any
-     * event; ORGANIZER / SUB_ORGANIZER only events they are explicitly assigned to.
+     * Organizer-scoped read: platform admins/organiser owner may view any
+     * event; EVENT_HEAD/SPORT_HEAD only events they're explicitly assigned to.
+     * callerRoles is unused now (AuthorizationService resolves roles itself)
+     * but kept in the signature to avoid touching every call site.
      */
     public AdminAllEventResponse getEventById(UUID eventId, UUID callerId, List<String> callerRoles) {
-        boolean fullAccess = callerRoles.stream().anyMatch(FULL_ACCESS_ROLES::contains);
-        if (!fullAccess && !eventAssignmentRepository.existsByUserIdAndEventId(callerId, eventId)) {
-            throw ApiException.forbidden("You are not assigned to this event.");
-        }
+        authorizationService.assertCanManageEvent(callerId, eventId);
         return getEventById(eventId);
     }
 
@@ -424,7 +418,7 @@ public class AdminService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) return false;
         return auth.getAuthorities().stream().anyMatch(a ->
-            "ROLE_ADMINISTRATOR".equals(a.getAuthority()) ||
+            "ROLE_ADMIN".equals(a.getAuthority()) ||
             "ROLE_SUPER_ADMIN".equals(a.getAuthority())
         );
     }

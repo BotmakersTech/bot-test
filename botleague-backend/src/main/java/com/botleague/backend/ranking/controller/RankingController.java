@@ -1,5 +1,6 @@
 package com.botleague.backend.ranking.controller;
 
+import com.botleague.backend.audit.service.AuditLogService;
 import com.botleague.backend.ranking.dto.RankingDTOs.*;
 import java.util.Map;
 import com.botleague.backend.ranking.dto.RankingResponse;
@@ -44,14 +45,17 @@ public class RankingController {
     private final RankingService       rankingService;
     private final RankingQueryService  queryService;
     private final RankingEngineService engineService;
+    private final AuditLogService      auditLogService;
 
     public RankingController(
             RankingService rankingService,
             RankingQueryService queryService,
-            RankingEngineService engineService) {
+            RankingEngineService engineService,
+            AuditLogService auditLogService) {
         this.rankingService = rankingService;
         this.queryService   = queryService;
         this.engineService  = engineService;
+        this.auditLogService = auditLogService;
     }
 
     // =========================================================================
@@ -78,7 +82,7 @@ public class RankingController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<RankingResponse> upsertRanking(
             @RequestBody RankingUpdateRequest request, Authentication auth) {
         return ResponseEntity.ok(rankingService.upsert(request));
@@ -223,7 +227,7 @@ public class RankingController {
      * Use after score corrections or data fixes.
      */
     @PostMapping("/recalculate")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<String> recalculate(@RequestBody RecalculateRequest request) {
         engineService.fullRecalculate(request.sport, request.ageGroup, request.weightClass);
         return ResponseEntity.ok("Recalculation complete for " + request.sport
@@ -233,14 +237,32 @@ public class RankingController {
     /**
      * POST /api/rankings/finalize/{eventSportId}
      *
-     * Manually finalize an event sport leaderboard and propagate to global rankings.
-     * Called automatically by the engine after the last match, but exposed here
-     * for admin override (e.g. after bracket correction).
+     * Finalize an event sport's own leaderboard (sort, assign ranks, mark
+     * finalized). Does NOT touch the global ranking pool — see
+     * /global/push/{eventSportId} for that, which is ADMIN-exclusive with no
+     * exceptions. Called automatically by the match engine once every match
+     * in the sport is approved; exposed here for admin override (e.g. after
+     * a bracket correction).
      */
     @PostMapping("/finalize/{eventSportId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<String> finalizeLeaderboard(@PathVariable UUID eventSportId) {
         engineService.finalizeEventLeaderboard(eventSportId);
         return ResponseEntity.ok("Leaderboard finalized for eventSportId=" + eventSportId);
+    }
+
+    /**
+     * POST /api/rankings/global/push/{eventSportId}
+     *
+     * The sole gateway to the global ranking pool. ADMIN/SUPER_ADMIN only —
+     * no exceptions, not even for an event's own EVENT_HEAD/ORGANISER owner.
+     * Requires the event sport's leaderboard to already be finalized.
+     */
+    @PostMapping("/global/push/{eventSportId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
+    public ResponseEntity<String> pushToGlobalRankings(@PathVariable UUID eventSportId, Authentication auth) {
+        engineService.pushToGlobalRankings(eventSportId);
+        auditLogService.log("GLOBAL_RANKINGS_PUSHED", "EVENT_SPORT", eventSportId, null, null, "PUSHED");
+        return ResponseEntity.ok("Pushed to global rankings for eventSportId=" + eventSportId);
     }
 }

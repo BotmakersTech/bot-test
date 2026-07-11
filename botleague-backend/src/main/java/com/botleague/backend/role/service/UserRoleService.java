@@ -31,17 +31,27 @@ public class UserRoleService {
         userRoleRepository.save(role);
     }
 
+    // ── Generic role revocation ────────────────────────────────────────────
+    public void revokeRole(UUID userId, AccountType roleType) {
+        userRoleRepository.findByUserIdAndRoleType(userId, roleType)
+                .ifPresent(userRoleRepository::delete);
+    }
+
     // ── Convenience shortcuts ─────────────────────────────────────────────
     public void ensureUserRole(UUID userId) {
         assignRole(userId, AccountType.COMPETITOR);
     }
 
-    public void ensureOrganiserRole(UUID userId) {
-        assignRole(userId, AccountType.ORGANIZER);
+    public void ensureEventHeadRole(UUID userId) {
+        assignRole(userId, AccountType.EVENT_HEAD);
+    }
+
+    public void ensureSportHeadRole(UUID userId) {
+        assignRole(userId, AccountType.SPORT_HEAD);
     }
 
     public void ensureAdminRole(UUID userId) {
-        assignRole(userId, AccountType.ADMINISTRATOR);
+        assignRole(userId, AccountType.ADMIN);
     }
 
     // ── Role check ────────────────────────────────────────────────────────

@@ -28,7 +28,7 @@ public class AdminNotificationController {
      * Create and dispatch a new notification.
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<NotificationResponse> dispatch(
             @RequestBody CreateNotificationRequest req,
             Authentication auth) {
@@ -43,7 +43,7 @@ public class AdminNotificationController {
      * List all notifications (paginated, newest first).
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<Map<String, Object>> listAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -66,7 +66,7 @@ public class AdminNotificationController {
      * Delete a notification and all its recipient rows.
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<Void> delete(
             @PathVariable UUID id,
             Authentication auth) {

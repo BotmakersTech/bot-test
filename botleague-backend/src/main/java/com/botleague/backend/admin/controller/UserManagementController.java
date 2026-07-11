@@ -1,8 +1,6 @@
 package com.botleague.backend.admin.controller;
 
-import com.botleague.backend.admin.dto.AssignEventRequest;
 import com.botleague.backend.admin.dto.AssignRoleRequest;
-import com.botleague.backend.admin.dto.AssignSportRequest;
 import com.botleague.backend.admin.dto.CreateAdminUserRequest;
 import com.botleague.backend.admin.dto.PagedResponse;
 import com.botleague.backend.admin.dto.UpdateUserProfileRequest;
@@ -53,7 +51,7 @@ public class UserManagementController {
     // ── List / Search ─────────────────────────────────────────────────────
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<PagedResponse<UserSummaryResponse>> listUsers(
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "0") int page,
@@ -62,13 +60,13 @@ public class UserManagementController {
     }
 
     @GetMapping("/{userId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<UserSummaryResponse> getUser(@PathVariable UUID userId) {
         return ResponseEntity.ok(userManagementService.getUserDetail(userId));
     }
 
     @PatchMapping("/{userId}/profile")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<UserSummaryResponse> updateUserProfile(
             @PathVariable UUID userId,
             @RequestBody UpdateUserProfileRequest request) {
@@ -78,7 +76,7 @@ public class UserManagementController {
     // ── Role management ───────────────────────────────────────────────────
 
     @PostMapping("/{userId}/role")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<Void> assignRole(
             @PathVariable UUID userId,
             @Valid @RequestBody AssignRoleRequest request,
@@ -90,7 +88,7 @@ public class UserManagementController {
     }
 
     @DeleteMapping("/{userId}/role/{role}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<Void> removeRole(
             @PathVariable UUID userId,
             @PathVariable AccountType role,
@@ -103,7 +101,7 @@ public class UserManagementController {
     // ── Account status ────────────────────────────────────────────────────
 
     @PatchMapping("/{userId}/status")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<Void> updateStatus(
             @PathVariable UUID userId,
             @RequestParam AccountStatus status) {
@@ -111,48 +109,9 @@ public class UserManagementController {
         return ResponseEntity.noContent().build();
     }
 
-    // ── Event assignments ─────────────────────────────────────────────────
-    // MANAGER and above
-
-    @PostMapping("/{userId}/assignments/events")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
-    public ResponseEntity<Void> assignEvent(
-            @PathVariable UUID userId,
-            @Valid @RequestBody AssignEventRequest request,
-            Authentication auth) {
-        UUID adminId = UUID.fromString((String) auth.getPrincipal());
-        userManagementService.assignEvent(userId, request.getEventId(), adminId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @DeleteMapping("/{userId}/assignments/events/{eventId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
-    public ResponseEntity<Void> removeEventAssignment(
-            @PathVariable UUID userId,
-            @PathVariable UUID eventId) {
-        userManagementService.removeEventAssignment(userId, eventId);
-        return ResponseEntity.noContent().build();
-    }
-
-    // ── Sport assignments ─────────────────────────────────────────────────
-
-    @PostMapping("/{userId}/assignments/sports")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
-    public ResponseEntity<Void> assignSport(
-            @PathVariable UUID userId,
-            @Valid @RequestBody AssignSportRequest request,
-            Authentication auth) {
-        UUID adminId = UUID.fromString((String) auth.getPrincipal());
-        userManagementService.assignSport(userId, request.getEventSportId(), request.getEventId(), adminId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @DeleteMapping("/{userId}/assignments/sports/{sportId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
-    public ResponseEntity<Void> removeSportAssignment(
-            @PathVariable UUID userId,
-            @PathVariable UUID sportId) {
-        userManagementService.removeSportAssignment(userId, sportId);
-        return ResponseEntity.noContent().build();
-    }
+    // ── Event/sport assignments ───────────────────────────────────────────
+    // Moved to OrganizerAssignmentController (/api/admin/assignments/event,
+    // /api/admin/assignments/sport) — that was the only write path that also
+    // granted the underlying EVENT_HEAD/SPORT_HEAD role; this controller's
+    // equivalents used to skip that side effect, leaving the two out of sync.
 }

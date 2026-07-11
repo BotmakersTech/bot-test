@@ -34,6 +34,7 @@ export type BracketSide =
 export type MatchStatus =
     | "SCHEDULED"
     | "LIVE"
+    | "PENDING_APPROVAL"
     | "COMPLETED"
     | "CANCELLED"
 
@@ -676,6 +677,52 @@ export const completeMatch =
         const response =
             await api.patch<MatchDTO>(
                 `/v1/matches/${matchId}/complete`
+            )
+
+        return response.data
+    }
+
+// =====================================================
+// APPROVE MATCH RESULT
+// PATCH /v1/matches/:matchId/approve
+//
+// Only for PENDING_APPROVAL matches. Only an EVENT_HEAD /
+// ORGANISER(owner) / ADMIN / SUPER_ADMIN for the parent
+// event may approve — SPORT_HEAD and JUDGE cannot self-approve.
+// This is the point ranking points get awarded.
+// =====================================================
+
+export const approveMatchResult =
+    async (
+        matchId: string
+    ): Promise<MatchDTO> => {
+
+        const response =
+            await api.patch<MatchDTO>(
+                `/v1/matches/${matchId}/approve`
+            )
+
+        return response.data
+    }
+
+// =====================================================
+// REJECT MATCH RESULT
+// PATCH /v1/matches/:matchId/reject
+//
+// Only for PENDING_APPROVAL matches. Reverts to LIVE so
+// the result can be resubmitted.
+// =====================================================
+
+export const rejectMatchResult =
+    async (
+        matchId: string,
+        reason?: string
+    ): Promise<MatchDTO> => {
+
+        const response =
+            await api.patch<MatchDTO>(
+                `/v1/matches/${matchId}/reject`,
+                { reason }
             )
 
         return response.data

@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +27,7 @@ import com.botleague.backend.matches.service.MatchService;
 
 @RestController
 @RequestMapping("/api/v1/matches")
+@PreAuthorize("isAuthenticated()")
 public class MatchesController {
 
     private final MatchService matchService;
@@ -236,6 +238,33 @@ public class MatchesController {
             Authentication authentication
     ) {
         return ResponseEntity.ok(matchService.completeMatch(matchId, authentication));
+    }
+
+    // =====================================================
+    // STATUS — APPROVE RESULT
+    // PATCH /api/v1/matches/{matchId}/approve
+    // =====================================================
+
+    @PatchMapping("/{matchId}/approve")
+    public ResponseEntity<MatchResponseDTO> approveMatchResult(
+            @PathVariable UUID matchId,
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(matchService.approveMatchResult(matchId, authentication));
+    }
+
+    // =====================================================
+    // STATUS — REJECT RESULT
+    // PATCH /api/v1/matches/{matchId}/reject
+    // =====================================================
+
+    @PatchMapping("/{matchId}/reject")
+    public ResponseEntity<MatchResponseDTO> rejectMatchResult(
+            @PathVariable UUID matchId,
+            @RequestBody com.botleague.backend.matches.dto.RejectMatchResultDTO request,
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(matchService.rejectMatchResult(matchId, request.getReason(), authentication));
     }
 
     // =====================================================

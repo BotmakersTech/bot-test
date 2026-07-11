@@ -8,11 +8,12 @@ import { AppRole } from "../../../shared/constants/roles";
 import { getPrimaryRole } from "../../../shared/config/sidebarConfig";
 
 const ROLE_HOME: Record<string, string> = {
-  [AppRole.SUPER_ADMIN]:   "/super-admin-dashboard",
-  [AppRole.ADMINISTRATOR]: "/admin-dashboard",
-  [AppRole.MANAGER]:       "/admin-dashboard",
-  [AppRole.ORGANIZER]:     "/organizer-dashboard",
-  [AppRole.COMPETITOR]:    "/user-dashboard",
+  [AppRole.SUPER_ADMIN]: "/super-admin-dashboard",
+  [AppRole.ADMIN]:       "/admin-dashboard",
+  [AppRole.ORGANISER]:   "/organizer-dashboard",
+  [AppRole.EVENT_HEAD]:  "/organizer-dashboard",
+  [AppRole.SPORT_HEAD]:  "/organizer-dashboard",
+  [AppRole.COMPETITOR]:  "/user-dashboard",
 };
 
 export default function useLogin() {

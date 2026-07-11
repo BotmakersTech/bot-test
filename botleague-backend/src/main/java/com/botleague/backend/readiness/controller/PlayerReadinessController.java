@@ -39,7 +39,7 @@ public class PlayerReadinessController {
                 playerReadinessService.updateReadiness(matchId, userId, request.getRegistrationId(), request));
     }
 
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER','SUB_ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD','SPORT_HEAD')")
     @GetMapping
     public ResponseEntity<List<ReadinessResponse>> getMatchReadiness(
             @PathVariable UUID matchId,

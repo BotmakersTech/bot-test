@@ -5,9 +5,13 @@ import { useSelector } from "react-redux"
 import { useAdminEvents } from "../hooks/UseAdminEvent"
 import { useEventRealtime } from "../../../shared/realtime/useEventRealtime"
 import {
-  searchUsers, getEventAssignments, assignOrganizerToEvent, unassignOrganizerFromEvent,
+  searchUsers, getEventAssignments, assignEventHead, unassignEventHead,
+  getSportAssignments, assignSportHead, unassignSportHead,
+  approveSportHeadAssignment, rejectSportHeadAssignment,
+  getEventSports,
   approveSport, rejectSport,
   type CreateEventSportRequest, type UpdateEventRequest, type UserSearchResult, type EventAssignment,
+  type GetEventSportDTO,
 } from "../api/admin.api"
 import type { RootState } from "../../../app/store"
 import { hasRole, AppRole } from "../../../shared/constants/roles"
@@ -839,24 +843,35 @@ function EditEventModal({ event, onSave, saving, onClose, limitedEdit = false }:
 
 // ─────────────────────────────────────────────────────────────
 // ASSIGN ORGANIZER PANEL
-// — search a user, assign them to this event (grants ORGANIZER role
-//   if they don't already have it), list/remove current assignees.
+// — search a user, choose EVENT_HEAD or SPORT_HEAD, assign them to this
+//   event (or a specific sport within it). Sport-head assignments start
+//   PENDING_APPROVAL and need an EVENT_HEAD/ORGANISER/ADMIN to approve.
 // ─────────────────────────────────────────────────────────────
 
-function AssignOrganizerPanel({ eventId }: { eventId: string }) {
+function AssignOrganizerPanel({ eventId, ownerChain }: { eventId: string; ownerChain?: string }) {
   const [assignments, setAssignments] = useState<EventAssignment[]>([])
+  const [sports, setSports]           = useState<GetEventSportDTO[]>([])
   const [loading, setLoading]         = useState(true)
+  const [roleType, setRoleType]       = useState<"EVENT_HEAD" | "SPORT_HEAD">("EVENT_HEAD")
+  const [sportId, setSportId]         = useState("")
   const [query, setQuery]             = useState("")
   const [results, setResults]         = useState<UserSearchResult[]>([])
   const [searching, setSearching]     = useState(false)
   const [assigning, setAssigning]     = useState<string | null>(null)
   const [removing, setRemoving]       = useState<string | null>(null)
+  const [deciding, setDeciding]       = useState<string | null>(null)
   const [error, setError]             = useState<string | null>(null)
 
   const loadAssignments = useCallback(() => {
     setLoading(true)
-    getEventAssignments(eventId)
-      .then(setAssignments)
+    Promise.all([
+      getEventAssignments(eventId),
+      getEventSports(eventId).then(list => {
+        setSports(list)
+        return Promise.all(list.map(s => getSportAssignments(s.id)))
+      }).then(lists => lists.flat()),
+    ])
+      .then(([eventAssignments, sportAssignments]) => setAssignments([...eventAssignments, ...sportAssignments]))
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [eventId])
@@ -876,44 +891,136 @@ function AssignOrganizerPanel({ eventId }: { eventId: string }) {
   }, [query])
 
   const handleAssign = async (userId: string) => {
+    if (roleType === "SPORT_HEAD" && !sportId) {
+      setError("Choose a sport before assigning a sport head.")
+      return
+    }
     setAssigning(userId)
     setError(null)
     try {
-      await assignOrganizerToEvent(userId, eventId)
+      if (roleType === "EVENT_HEAD") {
+        await assignEventHead(userId, eventId)
+      } else {
+        await assignSportHead(userId, sportId)
+      }
       setQuery("")
       setResults([])
       loadAssignments()
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Failed to assign organizer.")
+      setError(err?.response?.data?.message || "Failed to assign.")
     } finally {
       setAssigning(null)
     }
   }
 
-  const handleRemove = async (userId: string) => {
-    setRemoving(userId)
+  const handleRemove = async (a: EventAssignment) => {
+    setRemoving(a.id)
     setError(null)
     try {
-      await unassignOrganizerFromEvent(userId, eventId)
+      if (a.roleType === "SPORT_HEAD" && a.eventSportId) {
+        await unassignSportHead(a.userId, a.eventSportId)
+      } else {
+        await unassignEventHead(a.userId, eventId)
+      }
       loadAssignments()
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Failed to remove organizer.")
+      setError(err?.response?.data?.message || "Failed to remove.")
     } finally {
       setRemoving(null)
     }
   }
 
-  const assignedUserIds = new Set(assignments.map(a => a.userId))
+  const handleApprove = async (assignmentId: string) => {
+    setDeciding(assignmentId)
+    setError(null)
+    try {
+      await approveSportHeadAssignment(assignmentId)
+      loadAssignments()
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Failed to approve.")
+    } finally {
+      setDeciding(null)
+    }
+  }
+
+  const handleReject = async (assignmentId: string) => {
+    const reason = window.prompt("Reason for rejecting this sport-head assignment (optional):") || undefined
+    setDeciding(assignmentId)
+    setError(null)
+    try {
+      await rejectSportHeadAssignment(assignmentId, reason)
+      loadAssignments()
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Failed to reject.")
+    } finally {
+      setDeciding(null)
+    }
+  }
+
+  const assignedUserIds = new Set(
+    assignments
+      .filter(a => a.status !== "REJECTED" && (roleType === "EVENT_HEAD" ? a.roleType !== "SPORT_HEAD" : a.eventSportId === sportId))
+      .map(a => a.userId)
+  )
+
+  const roleBadgeStyle = (r?: string) => ({
+    background: r === "SPORT_HEAD" ? "rgba(96,165,250,0.14)" : "rgba(52,211,153,0.14)",
+    border: `1px solid ${r === "SPORT_HEAD" ? "rgba(96,165,250,0.35)" : "rgba(52,211,153,0.35)"}`,
+    color: r === "SPORT_HEAD" ? "#60a5fa" : "#34d399",
+    borderRadius: "999px", fontSize: "0.62rem", fontWeight: 800, padding: "2px 8px",
+  })
+
+  const statusBadgeStyle = (s?: string) => ({
+    background: s === "PENDING_APPROVAL" ? "rgba(251,191,36,0.14)" : s === "REJECTED" ? "rgba(248,113,113,0.14)" : "rgba(74,222,128,0.14)",
+    border: `1px solid ${s === "PENDING_APPROVAL" ? "rgba(251,191,36,0.35)" : s === "REJECTED" ? "rgba(248,113,113,0.35)" : "rgba(74,222,128,0.35)"}`,
+    color: s === "PENDING_APPROVAL" ? WARNING : s === "REJECTED" ? DANGER : SUCCESS,
+    borderRadius: "999px", fontSize: "0.62rem", fontWeight: 800, padding: "2px 8px",
+  })
 
   return (
     <div style={{ background: CARD2, border: "1px solid rgba(250,71,21,0.14)", borderRadius: "16px", overflow: "hidden", marginTop: "24px" }}>
       <div style={{ padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, background: "rgba(250,71,21,0.04)", display: "flex", alignItems: "center", gap: "10px" }}>
         <UserPlus size={15} style={{ color: ACCENT }} />
-        <span style={{ fontWeight: 700, letterSpacing: "0.06em", fontSize: "0.85rem" }}>ASSIGNED ORGANIZERS</span>
+        <span style={{ fontWeight: 700, letterSpacing: "0.06em", fontSize: "0.85rem" }}>EVENT & SPORT HEADS</span>
         <span style={{ background: "rgba(250,71,21,0.13)", border: "1px solid rgba(250,71,21,0.28)", color: ACCENT, borderRadius: "999px", fontSize: "0.65rem", fontWeight: 800, padding: "1px 9px" }}>{assignments.length}</span>
+        {ownerChain === "ORGANISER" && (
+          <span style={{ marginLeft: "auto", background: "rgba(96,165,250,0.14)", border: "1px solid rgba(96,165,250,0.35)", color: "#60a5fa", borderRadius: "999px", fontSize: "0.65rem", fontWeight: 800, padding: "2px 10px" }}>ORGANISER-OWNED EVENT</span>
+        )}
       </div>
 
       <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: "14px" }}>
+        {/* role-type picker */}
+        <div style={{ display: "flex", gap: "8px" }}>
+          {(["EVENT_HEAD", "SPORT_HEAD"] as const).map(rt => (
+            <button
+              key={rt}
+              type="button"
+              onClick={() => setRoleType(rt)}
+              style={{
+                flex: 1, padding: "8px 12px", borderRadius: "8px", fontSize: "0.78rem", fontWeight: 700,
+                cursor: "pointer", border: `1px solid ${roleType === rt ? ACCENT : BORDER}`,
+                background: roleType === rt ? "rgba(250,71,21,0.14)" : "transparent",
+                color: roleType === rt ? ACCENT : MUTED,
+              }}
+            >
+              {rt === "EVENT_HEAD" ? "Event Head (whole event)" : "Sport Head (one sport)"}
+            </button>
+          ))}
+        </div>
+
+        {roleType === "SPORT_HEAD" && (
+          <select
+            style={inputStyle}
+            value={sportId}
+            onChange={e => setSportId(e.target.value)}
+          >
+            <option value="">Select a sport…</option>
+            {sports.map(s => (
+              <option key={s.id} value={s.id}>{s.sport}{s.weightClass ? ` (${s.weightClass})` : ""}</option>
+            ))}
+          </select>
+        )}
+
         {/* search */}
         <div style={{ position: "relative" }}>
           <input
@@ -964,23 +1071,52 @@ function AssignOrganizerPanel({ eventId }: { eventId: string }) {
         {loading ? (
           <div style={{ color: MUTED, fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "8px" }}><Spinner size={14} />Loading…</div>
         ) : assignments.length === 0 ? (
-          <div style={{ color: MUTED, fontSize: "0.82rem" }}>No organizers assigned yet — search above to assign one.</div>
+          <div style={{ color: MUTED, fontSize: "0.82rem" }}>No event/sport heads assigned yet — search above to assign one.</div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {assignments.map(a => (
               <div key={a.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}`, borderRadius: "9px", padding: "10px 14px" }}>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: "0.85rem" }}>{a.userDisplayName || a.username}</div>
+                  <div style={{ fontWeight: 700, fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "8px" }}>
+                    {a.userDisplayName || a.username}
+                    <span style={roleBadgeStyle(a.roleType)}>{a.roleType === "SPORT_HEAD" ? `SPORT HEAD${a.sportName ? " · " + a.sportName : ""}` : "EVENT HEAD"}</span>
+                    {a.status && a.status !== "APPROVED" && <span style={statusBadgeStyle(a.status)}>{a.status.replace("_", " ")}</span>}
+                  </div>
                   <div style={{ color: MUTED, fontSize: "0.72rem" }}>{a.userEmail}</div>
+                  {a.status === "REJECTED" && a.rejectionReason && (
+                    <div style={{ color: DANGER, fontSize: "0.7rem", marginTop: "2px" }}>Rejected: {a.rejectionReason}</div>
+                  )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleRemove(a.userId)}
-                  disabled={removing === a.userId}
-                  style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", color: DANGER, borderRadius: "7px", padding: "6px 12px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
-                >
-                  {removing === a.userId ? <Spinner size={12} color={DANGER} /> : <X size={12} />} Remove
-                </button>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  {a.status === "PENDING_APPROVAL" && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleApprove(a.id)}
+                        disabled={deciding === a.id}
+                        style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.3)", color: SUCCESS, borderRadius: "7px", padding: "6px 10px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                      >
+                        {deciding === a.id ? <Spinner size={12} color={SUCCESS} /> : <Check size={12} />} Approve
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleReject(a.id)}
+                        disabled={deciding === a.id}
+                        style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", color: DANGER, borderRadius: "7px", padding: "6px 10px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                      >
+                        <Ban size={12} /> Reject
+                      </button>
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleRemove(a)}
+                    disabled={removing === a.id}
+                    style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", color: DANGER, borderRadius: "7px", padding: "6px 12px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                  >
+                    {removing === a.id ? <Spinner size={12} color={DANGER} /> : <X size={12} />} Remove
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -1020,8 +1156,8 @@ export default function AdminEventPage() {
   const { user } = useSelector((state: RootState) => state.auth)
   const userRoles = user?.allRoles ?? (user?.role ? [user.role] : [])
 
-  const isAdmin           = hasRole(userRoles, [AppRole.ADMINISTRATOR, AppRole.SUPER_ADMIN])
-  const canDelete         = hasRole(userRoles, [AppRole.MANAGER])
+  const isAdmin           = hasRole(userRoles, [AppRole.ADMIN, AppRole.SUPER_ADMIN])
+  const canDelete         = hasRole(userRoles, [AppRole.ADMIN])
   const canManageSponsors = isAdmin
 
   const {

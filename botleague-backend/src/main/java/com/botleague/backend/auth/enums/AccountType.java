@@ -5,17 +5,17 @@ public enum AccountType {
     /** Platform-wide super administrator — unrestricted access to everything. */
     SUPER_ADMIN,
 
-    /** Platform administrator — user management, event creation, sport-spec changes. */
-    ADMINISTRATOR,
+    /** Platform administrator — user management, event creation, sport-spec changes, event operations (absorbs the retired MANAGER role). */
+    ADMIN,
 
-    /** Event manager — event operations, registrations, matches, reports (no user mgmt). */
-    MANAGER,
+    /** External partner who owns their own events — top of the organiser-owned ownership chain (ORGANISER -> EVENT_HEAD -> SPORT_HEAD). */
+    ORGANISER,
 
-    /** Event organiser — manages their assigned events (info, teams, volunteers, judges, staff, venue). */
-    ORGANIZER,
+    /** Manages their assigned event (info, teams, volunteers, judges, staff, venue). Shared appointee layer under both the BotLeague and Organiser ownership chains. */
+    EVENT_HEAD,
 
-    /** Sport-level organiser — manages their assigned sport within an event (registrations, matches, scores). */
-    SUB_ORGANIZER,
+    /** Manages their assigned sport within an event (registrations, matches, scores). Shared appointee layer under both ownership chains. */
+    SPORT_HEAD,
 
     /** Regular platform competitor — registers teams, views events, tracks their matches. */
     COMPETITOR,

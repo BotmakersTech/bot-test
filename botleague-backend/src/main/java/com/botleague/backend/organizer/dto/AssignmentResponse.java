@@ -24,6 +24,11 @@ public class AssignmentResponse {
     private UUID          assignedBy;
     private LocalDateTime assignedAt;
 
+    private String roleType;    // "EVENT_HEAD" or "SPORT_HEAD"
+    private String ownerChain;  // "BOTLEAGUE" or "ORGANISER"
+    private String status;      // "PENDING_APPROVAL" | "APPROVED" | "REJECTED"
+    private String rejectionReason;
+
     public UUID   getId()              { return id; }
     public void   setId(UUID id)       { this.id = id; }
 
@@ -62,4 +67,16 @@ public class AssignmentResponse {
 
     public LocalDateTime getAssignedAt()            { return assignedAt; }
     public void          setAssignedAt(LocalDateTime v) { this.assignedAt = v; }
+
+    public String getRoleType()          { return roleType; }
+    public void   setRoleType(String v)  { this.roleType = v; }
+
+    public String getOwnerChain()          { return ownerChain; }
+    public void   setOwnerChain(String v)  { this.ownerChain = v; }
+
+    public String getStatus()          { return status; }
+    public void   setStatus(String v)  { this.status = v; }
+
+    public String getRejectionReason()          { return rejectionReason; }
+    public void   setRejectionReason(String v)  { this.rejectionReason = v; }
 }

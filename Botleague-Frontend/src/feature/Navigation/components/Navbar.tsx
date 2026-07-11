@@ -215,7 +215,7 @@ export default function Navbar() {
   }, [dispatch])
 
   useEffect(() => {
-    if (primaryRole !== AppRole.COMPETITOR && primaryRole !== AppRole.ORGANIZER) return
+    if (primaryRole !== AppRole.COMPETITOR && primaryRole !== AppRole.EVENT_HEAD) return
     const load = () => {
       myInvitations()
         .then(invites => setPendingInvites(invites.length))
@@ -247,7 +247,7 @@ export default function Navbar() {
 
       {primaryRole === AppRole.SUPER_ADMIN ? (
         <SuperAdminNavActions unreadCount={unreadCount} />
-      ) : primaryRole === AppRole.ADMINISTRATOR || primaryRole === AppRole.MANAGER ? (
+      ) : primaryRole === AppRole.ADMIN ? (
         <AdminNavActions unreadCount={unreadCount} />
       ) : (
         <CompetitorNavActions

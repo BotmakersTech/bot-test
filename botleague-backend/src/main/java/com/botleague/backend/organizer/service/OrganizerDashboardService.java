@@ -1,6 +1,7 @@
 package com.botleague.backend.organizer.service;
 
-import com.botleague.backend.admin.repository.UserEventAssignmentRepository;
+import com.botleague.backend.admin.entity.ResourceRoleAssignment;
+import com.botleague.backend.admin.repository.ResourceRoleAssignmentRepository;
 import com.botleague.backend.events.entity.EventSports;
 import com.botleague.backend.events.enums.EventStatus;
 import com.botleague.backend.events.repository.EventRepository;
@@ -25,11 +26,11 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class OrganizerDashboardService {
 
-    private static final Set<String> FULL_ACCESS_ROLES = Set.of("SUPER_ADMIN", "ADMINISTRATOR", "MANAGER");
+    private static final Set<String> FULL_ACCESS_ROLES = Set.of("SUPER_ADMIN", "ADMIN");
 
     private final EventRepository                  eventRepository;
     private final EventSportsRepository            eventSportsRepository;
-    private final UserEventAssignmentRepository    assignmentRepository;
+    private final ResourceRoleAssignmentRepository assignmentRepository;
     private final SportRegistrationRepository      registrationRepository;
     private final MatchRepository                  matchRepository;
     private final EventVolunteerRepository         volunteerRepository;
@@ -40,7 +41,7 @@ public class OrganizerDashboardService {
     public OrganizerDashboardService(
             EventRepository eventRepository,
             EventSportsRepository eventSportsRepository,
-            UserEventAssignmentRepository assignmentRepository,
+            ResourceRoleAssignmentRepository assignmentRepository,
             SportRegistrationRepository registrationRepository,
             MatchRepository matchRepository,
             EventVolunteerRepository volunteerRepository,
@@ -106,6 +107,8 @@ public class OrganizerDashboardService {
                     .map(e -> e.getId()).collect(Collectors.toList());
         }
         return assignmentRepository.findByUserId(userId).stream()
+                .filter(a -> ResourceRoleAssignment.SCOPE_EVENT.equals(a.getScopeType())
+                        && ResourceRoleAssignment.STATUS_APPROVED.equals(a.getStatus()))
                 .map(a -> a.getEventId()).collect(Collectors.toList());
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import com.botleague.backend.common.security.AuthorizationService;
 import com.botleague.backend.events.dto.EventSportsRequestDTO;
 import com.botleague.backend.events.dto.GetEventSportsDTO;
 import com.botleague.backend.events.dto.UpdateSportsDTO;
@@ -23,16 +24,18 @@ import com.botleague.backend.events.service.EventSportsService;
 public class EventSportsController {
 
     private final EventSportsService service;
+    private final AuthorizationService authorizationService;
 
-    public EventSportsController(EventSportsService service) {
+    public EventSportsController(EventSportsService service, AuthorizationService authorizationService) {
         this.service = service;
+        this.authorizationService = authorizationService;
     }
 
     // =========================
     // CREATE SPORT
     // =========================
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<EventSports> createEventSport(
             @PathVariable UUID eventId,
             @Valid @RequestBody EventSportsRequestDTO dto,
@@ -40,13 +43,14 @@ public class EventSportsController {
 
         dto.setEventId(eventId);
 
-        // Privileged roles (admin/manager) get immediate approval;
-        // organizers go through the approval workflow starting at DRAFT.
+        // Privileged roles (platform admins, or the organiser who owns this
+        // event) get immediate approval; EVENT_HEAD goes through the approval
+        // workflow starting at DRAFT.
+        UUID currentUserId = extractUserId(auth);
         boolean isPrivileged = auth.getAuthorities().stream()
                 .map(a -> a.getAuthority())
-                .anyMatch(r -> r.equals("ROLE_SUPER_ADMIN")
-                            || r.equals("ROLE_ADMINISTRATOR")
-                            || r.equals("ROLE_MANAGER"));
+                .anyMatch(r -> r.equals("ROLE_SUPER_ADMIN") || r.equals("ROLE_ADMIN"))
+                || authorizationService.isOrganiserOwner(currentUserId, eventId);
 
         SportEventStatus initialStatus = isPrivileged
                 ? SportEventStatus.APPROVED
@@ -60,7 +64,7 @@ public class EventSportsController {
     // UPDATE SPORT
     // =========================
     @PatchMapping("/{sportId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<String> updateEventSport(
             @PathVariable UUID eventId,
             @PathVariable UUID sportId,
@@ -77,7 +81,7 @@ public class EventSportsController {
     // TOGGLE REGISTRATION OPEN/CLOSED
     // =========================
     @PatchMapping("/{sportId}/registration")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<String> toggleRegistration(
             @PathVariable UUID eventId,
             @PathVariable UUID sportId,

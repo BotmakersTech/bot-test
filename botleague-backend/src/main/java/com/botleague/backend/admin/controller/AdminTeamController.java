@@ -45,7 +45,7 @@ public class AdminTeamController {
     // ── List / search teams ───────────────────────────────────────────────────
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<PagedResponse<AdminTeamSummary>> listTeams(
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "0") int page,
@@ -57,7 +57,7 @@ public class AdminTeamController {
     // ── Team detail with members ──────────────────────────────────────────────
 
     @GetMapping("/{teamId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<AdminTeamDetail> getTeamDetail(@PathVariable UUID teamId) {
         return ResponseEntity.ok(adminTeamService.getTeamDetail(teamId));
     }
@@ -65,7 +65,7 @@ public class AdminTeamController {
     // ── Update team info ──────────────────────────────────────────────────────
 
     @PutMapping("/{teamId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<AdminTeamDetail> updateTeam(
             @PathVariable UUID teamId,
             @RequestBody UpdateTeamRequest request
@@ -76,7 +76,7 @@ public class AdminTeamController {
     // ── Change team status (PENDING / ACTIVE / REJECTED) ─────────────────────
 
     @PatchMapping("/{teamId}/status")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<AdminTeamDetail> changeTeamStatus(
             @PathVariable UUID teamId,
             @RequestBody ChangeTeamStatusRequest request
@@ -87,7 +87,7 @@ public class AdminTeamController {
     // ── Remove a member from a team ───────────────────────────────────────────
 
     @DeleteMapping("/{teamId}/members/{userId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<Void> removeMember(
             @PathVariable UUID teamId,
             @PathVariable UUID userId
@@ -99,7 +99,7 @@ public class AdminTeamController {
     // ── Delete a team ─────────────────────────────────────────────────────────
 
     @DeleteMapping("/{teamId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<Void> deleteTeam(@PathVariable UUID teamId) {
         adminTeamService.deleteTeam(teamId);
         return ResponseEntity.noContent().build();

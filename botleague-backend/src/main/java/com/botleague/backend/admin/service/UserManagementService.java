@@ -3,10 +3,8 @@ package com.botleague.backend.admin.service;
 import com.botleague.backend.admin.dto.PagedResponse;
 import com.botleague.backend.admin.dto.UpdateUserProfileRequest;
 import com.botleague.backend.admin.dto.UserSummaryResponse;
-import com.botleague.backend.admin.entity.UserEventAssignment;
-import com.botleague.backend.admin.entity.UserSportAssignment;
-import com.botleague.backend.admin.repository.UserEventAssignmentRepository;
-import com.botleague.backend.admin.repository.UserSportAssignmentRepository;
+import com.botleague.backend.admin.entity.ResourceRoleAssignment;
+import com.botleague.backend.admin.repository.ResourceRoleAssignmentRepository;
 import com.botleague.backend.auth.entity.User;
 import com.botleague.backend.auth.enums.AccountStatus;
 import com.botleague.backend.auth.enums.AccountType;
@@ -38,15 +36,14 @@ import java.util.stream.Collectors;
 public class UserManagementService {
 
     private static final List<AccountType> ROLE_PRIORITY = List.of(
-            AccountType.SUPER_ADMIN, AccountType.ADMINISTRATOR, AccountType.MANAGER,
-            AccountType.ORGANIZER, AccountType.SUB_ORGANIZER,
+            AccountType.SUPER_ADMIN, AccountType.ADMIN, AccountType.ORGANISER,
+            AccountType.EVENT_HEAD, AccountType.SPORT_HEAD,
             AccountType.JUDGE, AccountType.VOLUNTEER, AccountType.COMPETITOR
     );
 
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
-    private final UserEventAssignmentRepository eventAssignmentRepository;
-    private final UserSportAssignmentRepository sportAssignmentRepository;
+    private final ResourceRoleAssignmentRepository resourceRoleAssignmentRepository;
     private final EventRepository eventRepository;
     private final EventSportsRepository eventSportsRepository;
     private final BotleagueIdService botleagueIdService;
@@ -56,8 +53,7 @@ public class UserManagementService {
     public UserManagementService(
             UserRepository userRepository,
             UserRoleRepository userRoleRepository,
-            UserEventAssignmentRepository eventAssignmentRepository,
-            UserSportAssignmentRepository sportAssignmentRepository,
+            ResourceRoleAssignmentRepository resourceRoleAssignmentRepository,
             EventRepository eventRepository,
             EventSportsRepository eventSportsRepository,
             BotleagueIdService botleagueIdService,
@@ -65,8 +61,7 @@ public class UserManagementService {
             TeamMembershipRepository teamMembershipRepository) {
         this.userRepository = userRepository;
         this.userRoleRepository = userRoleRepository;
-        this.eventAssignmentRepository = eventAssignmentRepository;
-        this.sportAssignmentRepository = sportAssignmentRepository;
+        this.resourceRoleAssignmentRepository = resourceRoleAssignmentRepository;
         this.eventRepository = eventRepository;
         this.eventSportsRepository = eventSportsRepository;
         this.botleagueIdService = botleagueIdService;
@@ -111,10 +106,13 @@ public class UserManagementService {
         }
 
         // Privilege-escalation guard: the controller's @PreAuthorize allows both
-        // SUPER_ADMIN and ADMINISTRATOR to call this endpoint, but only a
-        // SUPER_ADMIN may grant SUPER_ADMIN or ADMINISTRATOR — otherwise an
-        // ADMINISTRATOR could grant themselves (or anyone) SUPER_ADMIN.
-        if (role == AccountType.SUPER_ADMIN || role == AccountType.ADMINISTRATOR) {
+        // SUPER_ADMIN and ADMIN to call this endpoint, but only a SUPER_ADMIN
+        // may grant SUPER_ADMIN or ADMIN — otherwise an ADMIN could grant
+        // themselves (or anyone) SUPER_ADMIN. This same guard is what enforces
+        // "ORGANISER accounts are provisioned only by ADMIN/SUPER_ADMIN" —
+        // ORGANISER itself isn't escalation-guarded since no other role can
+        // reach this endpoint at all.
+        if (role == AccountType.SUPER_ADMIN || role == AccountType.ADMIN) {
             boolean callerIsSuperAdmin = userRoleRepository.findByUserId(assignedBy).stream()
                     .anyMatch(r -> r.getRoleType() == AccountType.SUPER_ADMIN);
             if (!callerIsSuperAdmin) {
@@ -133,7 +131,7 @@ public class UserManagementService {
     // ── Remove role ───────────────────────────────────────────────────────
 
     public void removeRole(UUID targetUserId, AccountType role, UUID removedBy) {
-        if (role == AccountType.SUPER_ADMIN || role == AccountType.ADMINISTRATOR) {
+        if (role == AccountType.SUPER_ADMIN || role == AccountType.ADMIN) {
             boolean callerIsSuperAdmin = userRoleRepository.findByUserId(removedBy).stream()
                     .anyMatch(r -> r.getRoleType() == AccountType.SUPER_ADMIN);
             if (!callerIsSuperAdmin) {
@@ -173,58 +171,9 @@ public class UserManagementService {
         userRepository.save(user);
     }
 
-    // ── Assign event ──────────────────────────────────────────────────────
-
-    public void assignEvent(UUID targetUserId, UUID eventId, UUID assignedBy) {
-        userRepository.findById(targetUserId)
-                .orElseThrow(() -> ApiException.notFound("User not found"));
-        eventRepository.findById(eventId)
-                .orElseThrow(() -> ApiException.notFound("Event not found"));
-
-        if (eventAssignmentRepository.existsByUserIdAndEventId(targetUserId, eventId)) {
-            return;
-        }
-
-        UserEventAssignment assignment = new UserEventAssignment();
-        assignment.setUserId(targetUserId);
-        assignment.setEventId(eventId);
-        assignment.setAssignedBy(assignedBy);
-        eventAssignmentRepository.save(assignment);
-    }
-
-    // ── Remove event assignment ───────────────────────────────────────────
-
-    public void removeEventAssignment(UUID targetUserId, UUID eventId) {
-        eventAssignmentRepository.deleteByUserIdAndEventId(targetUserId, eventId);
-    }
-
-    // ── Assign sport ──────────────────────────────────────────────────────
-
-    public void assignSport(UUID targetUserId, UUID eventSportId, UUID eventId, UUID assignedBy) {
-        userRepository.findById(targetUserId)
-                .orElseThrow(() -> ApiException.notFound("User not found"));
-        eventSportsRepository.findById(eventSportId)
-                .orElseThrow(() -> ApiException.notFound("Sport not found"));
-
-        if (sportAssignmentRepository.existsByUserIdAndEventSportId(targetUserId, eventSportId)) {
-            return;
-        }
-
-        UserSportAssignment assignment = new UserSportAssignment();
-        assignment.setUserId(targetUserId);
-        assignment.setEventSportId(eventSportId);
-        assignment.setEventId(eventId);
-        assignment.setAssignedBy(assignedBy);
-        sportAssignmentRepository.save(assignment);
-    }
-
-    // ── Remove sport assignment ───────────────────────────────────────────
-
-    public void removeSportAssignment(UUID targetUserId, UUID eventSportId) {
-        sportAssignmentRepository.deleteByUserIdAndEventSportId(targetUserId, eventSportId);
-    }
-
     // ── Mapping helpers ───────────────────────────────────────────────────
+    // Event/sport assignment writes now live entirely in OrganizerAssignmentService
+    // (one write path instead of two out-of-sync ones — see /api/admin/assignments/*).
 
     private UserSummaryResponse toSummary(User user, boolean includeAssignments) {
         List<UserRole> roles = userRoleRepository.findByUserId(user.getId());
@@ -269,11 +218,13 @@ public class UserManagementService {
 
     /** Batch-fetches all events in one query instead of one query per assignment. */
     private List<UserSummaryResponse.AssignedEventDTO> buildEventAssignmentsBatch(UUID userId) {
-        List<UserEventAssignment> assignments = eventAssignmentRepository.findByUserId(userId);
+        List<ResourceRoleAssignment> assignments = resourceRoleAssignmentRepository.findByUserId(userId).stream()
+                .filter(a -> ResourceRoleAssignment.SCOPE_EVENT.equals(a.getScopeType()))
+                .collect(Collectors.toList());
         if (assignments.isEmpty()) return Collections.emptyList();
 
         Set<UUID> eventIds = assignments.stream()
-                .map(UserEventAssignment::getEventId).collect(Collectors.toSet());
+                .map(ResourceRoleAssignment::getEventId).collect(Collectors.toSet());
         Map<UUID, Event> eventMap = eventRepository.findAllById(eventIds).stream()
                 .collect(Collectors.toMap(Event::getId, Function.identity()));
 
@@ -292,13 +243,15 @@ public class UserManagementService {
 
     /** Batch-fetches all event sports + events in two queries instead of 2N queries. */
     private List<UserSummaryResponse.AssignedSportDTO> buildSportAssignmentsBatch(UUID userId) {
-        List<UserSportAssignment> assignments = sportAssignmentRepository.findByUserId(userId);
+        List<ResourceRoleAssignment> assignments = resourceRoleAssignmentRepository.findByUserId(userId).stream()
+                .filter(a -> ResourceRoleAssignment.SCOPE_SPORT.equals(a.getScopeType()))
+                .collect(Collectors.toList());
         if (assignments.isEmpty()) return Collections.emptyList();
 
         Set<UUID> sportIds = assignments.stream()
-                .map(UserSportAssignment::getEventSportId).collect(Collectors.toSet());
+                .map(ResourceRoleAssignment::getScopeId).collect(Collectors.toSet());
         Set<UUID> eventIds = assignments.stream()
-                .map(UserSportAssignment::getEventId).collect(Collectors.toSet());
+                .map(ResourceRoleAssignment::getEventId).collect(Collectors.toSet());
 
         Map<UUID, EventSports> sportMap = eventSportsRepository.findAllById(sportIds).stream()
                 .collect(Collectors.toMap(EventSports::getId, Function.identity()));
@@ -307,10 +260,10 @@ public class UserManagementService {
 
         return assignments.stream().map(a -> {
             UserSummaryResponse.AssignedSportDTO dto = new UserSummaryResponse.AssignedSportDTO();
-            dto.setEventSportId(a.getEventSportId());
+            dto.setEventSportId(a.getScopeId());
             dto.setEventId(a.getEventId());
             dto.setAssignedAt(a.getAssignedAt());
-            EventSports es = sportMap.get(a.getEventSportId());
+            EventSports es = sportMap.get(a.getScopeId());
             if (es != null) dto.setSport(es.getSport());
             Event ev = eventMap.get(a.getEventId());
             if (ev != null) dto.setEventName(ev.getEventName());

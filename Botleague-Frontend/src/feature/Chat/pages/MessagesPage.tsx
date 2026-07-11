@@ -6,7 +6,7 @@ import {
   type ChangeEvent,
   type KeyboardEvent,
 } from "react";
-import { ChevronDown, Download, FileText, Image, Paperclip, Plus, Send, Trash2, UserPlus, X } from "lucide-react";
+import { ChevronDown, Paperclip, Plus, Send, Trash2, UserPlus, X } from "lucide-react";
 import { useSelector } from "react-redux";
 
 import { useAppDispatch } from "../../../app/hooks";
@@ -69,10 +69,6 @@ function getInitials(name: string): string {
   const parts = name.trim().split(" ").filter(Boolean);
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
   return name.slice(0, 2).toUpperCase() || "BL";
-}
-
-function isTeamRoom(room: ChatRoom): boolean {
-  return room.type === "TEAM" || room.type === "REGISTRATION" || room.type === "EVENT_TEAM" || room.type.includes("ANNOUNCEMENT");
 }
 
 function roomTag(room: ChatRoom): string {
@@ -238,12 +234,6 @@ function BubbleGroup({ group, onDeleteMessage }: { group: MessageGroup; onDelete
   );
 }
 
-const importantFiles = [
-  { name: "ISO9.pdf", meta: "PDF  9mb", tone: "red", icon: FileText },
-  { name: "Screenshot-3817.png", meta: "PNG  4mb", tone: "green", icon: Image },
-  { name: "Sharefile.docx", meta: "DOC  555kb", tone: "blue", icon: FileText },
-];
-
 export default function MessagesPage() {
   const dispatch = useAppDispatch();
   const rooms = useSelector(selectChatRooms);
@@ -254,7 +244,6 @@ export default function MessagesPage() {
   const activeRoomMessages = useSelector(selectMessages(activeRoomId ?? ""));
 
   const [messageText, setMessageText] = useState("");
-  const [tab, setTab] = useState<"chats" | "teams">("chats");
   const [query, setQuery] = useState("");
   const [showAddMember, setShowAddMember] = useState(false);
   const [addableMembers, setAddableMembers] = useState<AddableMember[]>([]);
@@ -290,11 +279,9 @@ export default function MessagesPage() {
   }, [activeRoomMessages]);
 
   const activeRoom = allRooms.find((room) => room.id === activeRoomId);
-  const visibleRooms = allRooms.filter((room) => {
-    const matchesTab = tab === "teams" ? isTeamRoom(room) : !isTeamRoom(room);
-    const matchesQuery = room.name.toLowerCase().includes(query.trim().toLowerCase());
-    return matchesTab && matchesQuery;
-  });
+  const visibleRooms = allRooms.filter((room) =>
+    room.name.toLowerCase().includes(query.trim().toLowerCase())
+  );
   const groups = buildGroups(activeRoomMessages, currentUserId);
 
   function handleRoomSelect(roomId: string) {
@@ -376,11 +363,6 @@ export default function MessagesPage() {
           onChange={(event) => setQuery(event.target.value)}
         />
 
-        <div className="chat-tabs">
-          <button type="button" className={tab === "chats" ? "active" : ""} onClick={() => setTab("chats")}>Chats</button>
-          <button type="button" className={tab === "teams" ? "active" : ""} onClick={() => setTab("teams")}>Teams</button>
-        </div>
-
         <div className="chat-room-list">
           {loading && !rooms ? (
             <div className="chat-loading">Loading chats...</div>
@@ -397,27 +379,6 @@ export default function MessagesPage() {
             <div className="chat-empty-list">No conversations here yet.</div>
           )}
         </div>
-
-        <section className="chat-files">
-          <h2>Important Files</h2>
-          {importantFiles.map((file) => {
-            const Icon = file.icon;
-            return (
-              <div className="chat-file-row" key={file.name}>
-                <span className={`chat-file-icon chat-file-${file.tone}`}>
-                  <Icon size={22} />
-                </span>
-                <span className="chat-file-copy">
-                  <strong>{file.name}</strong>
-                  <em>{file.meta}</em>
-                </span>
-                <button type="button" aria-label={`Download ${file.name}`}>
-                  <Download size={19} />
-                </button>
-              </div>
-            );
-          })}
-        </section>
       </aside>
 
       <main className="chat-thread">

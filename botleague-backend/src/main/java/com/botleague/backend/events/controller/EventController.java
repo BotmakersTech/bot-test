@@ -43,13 +43,13 @@ public class EventController {
 	}
 	
 	@PostMapping("/create-event")
-	@PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+	@PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
 	public ResponseEntity<CreateEventResponseDTO> createEvents(@RequestBody CreateEventRequestDTO request, Authentication authentication) {
 		return ResponseEntity.ok(eventService.createEvent(request, authentication));
 	}
 
 	@PatchMapping("/{eventId}/PublishEvent")
-	@PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+	@PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
 	public ResponseEntity<CreateEventResponseDTO> publishEvent(@PathVariable UUID eventId) {
 		return ResponseEntity.ok(eventService.makeEventLive(eventId));
 	}

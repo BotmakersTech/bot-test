@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from "react"
 import { useParams } from "react-router-dom"
+import { useSelector } from "react-redux"
 import { useMatches } from "../../Admin/hooks/useMatches"
 import { useOrganizerSportDetail } from "../hooks/useOrganizerSportDetail"
+import type { RootState } from "../../../app/store"
+import { hasRole, AppRole } from "../../../shared/constants/roles"
 import {
   Trophy, X, Zap, CheckCircle2, Play,
   Clock, Swords, Shuffle, ChevronRight,
@@ -174,6 +177,7 @@ function getBracketLayout(matches: MatchDTO[]) {
 function statusColor(status?: string) {
   if (status === "COMPLETED") return T.green
   if (status === "LIVE") return T.accent
+  if (status === "PENDING_APPROVAL") return T.gold
   if (status === "CANCELLED") return T.textMuted
   return T.blue
 }
@@ -181,6 +185,7 @@ function statusColor(status?: string) {
 function statusLabel(status?: string) {
   if (status === "COMPLETED") return "Done"
   if (status === "LIVE") return "Live"
+  if (status === "PENDING_APPROVAL") return "Pending Approval"
   if (status === "CANCELLED") return "Cancelled"
   if (status === "SCHEDULED") return "Scheduled"
   return status || "—"
@@ -248,11 +253,19 @@ export default function OrganizerBracketPage() {
     updateMatchScore,
     submitMatchResult,
     completeMatch,
+    approveMatchResult,
+    rejectMatchResult,
     cancelMatch,
     fetchMatches,
     generateBracket,
     scheduleMatch,
   } = useMatches(sportId)
+
+  // SPORT_HEAD/JUDGE can submit results but shouldn't self-approve — this is
+  // a UI-level hint only, the backend is the actual enforcement.
+  const user = useSelector((state: RootState) => state.auth.user)
+  const userRoles = user?.allRoles ?? (user?.role ? [user.role] : [])
+  const canApprove = hasRole(userRoles, [AppRole.ADMIN, AppRole.SUPER_ADMIN, AppRole.ORGANISER, AppRole.EVENT_HEAD])
 
   // ── Bracket generation state ──
   const [view, setView] = useState<"bracket" | "setup">("bracket")
@@ -463,6 +476,23 @@ export default function OrganizerBracketPage() {
       }
       await submitMatchResult(selectedMatchId, payload)
     }
+    await refreshMatches()
+  }
+
+  // =====================================================
+  // APPROVE / REJECT PENDING RESULT
+  // =====================================================
+
+  const handleApprove = async () => {
+    if (!selectedMatchId) return
+    await approveMatchResult(selectedMatchId)
+    await refreshMatches()
+  }
+
+  const handleReject = async () => {
+    if (!selectedMatchId) return
+    const reason = window.prompt("Reason for rejecting this result (optional):") || undefined
+    await rejectMatchResult(selectedMatchId, reason)
     await refreshMatches()
   }
 
@@ -1377,6 +1407,42 @@ export default function OrganizerBracketPage() {
                   </button>
                 </div>
               </>
+            )}
+
+            {/* ── PENDING APPROVAL — result submitted, waiting on EVENT_HEAD/ORGANISER/ADMIN ── */}
+            {selectedMatch.status === "PENDING_APPROVAL" && (
+              <div style={{
+                display: "flex", flexDirection: "column", gap: 10,
+                background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)",
+                borderRadius: 10, padding: "12px 14px", marginBottom: 14,
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, color: T.gold, fontWeight: 700, fontSize: "0.85rem" }}>
+                  <Clock size={15} /> Result pending approval
+                  {selectedMatch.winnerRegistrationId && (
+                    <span style={{ color: T.textSub, fontWeight: 500 }}>— {resolveWinnerName(selectedMatch)} currently winning</span>
+                  )}
+                </div>
+                {canApprove ? (
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button
+                      style={{ ...styles.actionBtn, background: "rgba(34,197,94,0.12)", borderColor: "rgba(34,197,94,0.3)", color: T.green, opacity: updateLoading ? 0.5 : 1 }}
+                      onClick={handleApprove}
+                      disabled={updateLoading}
+                    >
+                      <CheckCircle2 size={14} /> Approve Result
+                    </button>
+                    <button
+                      style={{ ...styles.actionBtn, background: "rgba(239,68,68,0.1)", borderColor: "rgba(239,68,68,0.3)", color: "#f87171", opacity: updateLoading ? 0.5 : 1 }}
+                      onClick={handleReject}
+                      disabled={updateLoading}
+                    >
+                      <Ban size={14} /> Reject
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ color: T.textSub, fontSize: "0.78rem" }}>Waiting for an event head or admin to approve.</div>
+                )}
+              </div>
             )}
 
             {/* ── READ-ONLY SCORES (COMPLETED multi-team) ── */}

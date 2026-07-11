@@ -9,10 +9,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import com.botleague.backend.common.exception.ResourceNotFoundException;
 
-import com.botleague.backend.admin.repository.UserEventAssignmentRepository;
-import com.botleague.backend.auth.enums.AccountType;
 import com.botleague.backend.chat.service.ChatService;
 import com.botleague.backend.common.exception.ApiException;
+import com.botleague.backend.common.security.AuthorizationService;
 import com.botleague.backend.common.service.BotleagueIdService;
 import com.botleague.backend.events.dto.CreateEventRequestDTO;
 import com.botleague.backend.events.dto.CreateEventResponseDTO;
@@ -45,7 +44,7 @@ public class EventService {
     private final NotificationService notificationService;
     private final AuditLogService auditLogService;
     private final ChatService chatService;
-    private final UserEventAssignmentRepository eventAssignmentRepository;
+    private final AuthorizationService authorizationService;
 
     // =====================================================
     // CONSTRUCTOR
@@ -58,7 +57,7 @@ public class EventService {
             NotificationService notificationService,
             AuditLogService auditLogService,
             ChatService chatService,
-            UserEventAssignmentRepository eventAssignmentRepository
+            AuthorizationService authorizationService
     ) {
 
         this.eventRepository = eventRepository;
@@ -67,7 +66,7 @@ public class EventService {
         this.notificationService = notificationService;
         this.auditLogService = auditLogService;
         this.chatService = chatService;
-        this.eventAssignmentRepository = eventAssignmentRepository;
+        this.authorizationService = authorizationService;
     }
 
     // =====================================================
@@ -185,7 +184,7 @@ public class EventService {
         // ENSURE ORGANISER ROLE
         // =============================================
 
-        userRoleService.ensureOrganiserRole(
+        userRoleService.ensureEventHeadRole(
                 userId
         );
 
@@ -311,27 +310,13 @@ public class EventService {
     // =====================================================
     // AUTHORIZATION — EVENT MEDIA (logo/upload-url)
     // -------------------------------------------------------
-    // SUPER_ADMIN / ADMINISTRATOR / MANAGER can manage any event's media.
-    // ORGANIZER / SUB_ORGANIZER can only manage media for events they are
-    // explicitly assigned to. Everyone else is rejected.
+    // Delegates to the centralized AuthorizationService: platform admins,
+    // the organiser owner, or an approved EVENT_HEAD assignment on this event.
     // =====================================================
 
     public void assertCanManageEventMedia(UUID eventId, Authentication authentication) {
         UUID userId = extractUserId(authentication);
-
-        if (userRoleService.hasRole(userId, AccountType.SUPER_ADMIN)
-                || userRoleService.hasRole(userId, AccountType.ADMINISTRATOR)
-                || userRoleService.hasRole(userId, AccountType.MANAGER)) {
-            return;
-        }
-
-        if ((userRoleService.hasRole(userId, AccountType.ORGANIZER)
-                || userRoleService.hasRole(userId, AccountType.SUB_ORGANIZER))
-                && eventAssignmentRepository.existsByUserIdAndEventId(userId, eventId)) {
-            return;
-        }
-
-        throw ApiException.forbidden("You do not have permission to manage media for this event");
+        authorizationService.assertCanManageEvent(userId, eventId);
     }
 
     // =====================================================

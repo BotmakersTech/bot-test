@@ -1,10 +1,9 @@
 package com.botleague.backend.organizer.controller;
 
-import com.botleague.backend.admin.repository.UserEventAssignmentRepository;
-import com.botleague.backend.auth.enums.AccountType;
 import com.botleague.backend.chat.entity.ChatRoom;
 import com.botleague.backend.chat.service.ChatService;
 import com.botleague.backend.common.exception.ApiException;
+import com.botleague.backend.common.security.AuthorizationService;
 import com.botleague.backend.events.entity.Event;
 import com.botleague.backend.events.repository.EventRepository;
 import com.botleague.backend.notification.enums.NotificationPriority;
@@ -12,7 +11,6 @@ import com.botleague.backend.notification.enums.NotificationType;
 import com.botleague.backend.notification.enums.NotificationTargetType;
 import com.botleague.backend.notification.service.NotificationService;
 import com.botleague.backend.organizer.dto.BroadcastAnnounceRequest;
-import com.botleague.backend.role.service.UserRoleService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,20 +31,17 @@ public class OrganizerCommunicationController {
     private final EventRepository eventRepository;
     private final ChatService chatService;
     private final NotificationService notificationService;
-    private final UserEventAssignmentRepository eventAssignmentRepo;
-    private final UserRoleService userRoleService;
+    private final AuthorizationService authorizationService;
 
     public OrganizerCommunicationController(
             EventRepository eventRepository,
             ChatService chatService,
             NotificationService notificationService,
-            UserEventAssignmentRepository eventAssignmentRepo,
-            UserRoleService userRoleService) {
+            AuthorizationService authorizationService) {
         this.eventRepository     = eventRepository;
         this.chatService         = chatService;
         this.notificationService = notificationService;
-        this.eventAssignmentRepo = eventAssignmentRepo;
-        this.userRoleService     = userRoleService;
+        this.authorizationService = authorizationService;
     }
 
     /**
@@ -54,7 +49,7 @@ public class OrganizerCommunicationController {
      * Organizer is automatically added as a participant.
      */
     @PostMapping("/{eventId}/chat-room")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<UUID> ensureAnnouncementRoom(
             Authentication authentication,
             @PathVariable UUID eventId) {
@@ -77,7 +72,7 @@ public class OrganizerCommunicationController {
      *  2. Optionally posts a message in the event announcement chat room
      */
     @PostMapping("/{eventId}/announce")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<Void> broadcastAnnouncement(
             Authentication authentication,
             @PathVariable UUID eventId,
@@ -116,15 +111,6 @@ public class OrganizerCommunicationController {
     }
 
     private void validateEventAccess(UUID userId, UUID eventId) {
-        // SUPER_ADMIN, ADMINISTRATOR, MANAGER have unrestricted event access — no assignment needed.
-        // ORGANIZER must be explicitly assigned to the event.
-        boolean isHigherRole = userRoleService.hasRole(userId, AccountType.SUPER_ADMIN)
-                || userRoleService.hasRole(userId, AccountType.ADMINISTRATOR)
-                || userRoleService.hasRole(userId, AccountType.MANAGER);
-        if (isHigherRole) return;
-
-        if (!eventAssignmentRepo.existsByUserIdAndEventId(userId, eventId)) {
-            throw ApiException.forbidden("You are not assigned to this event");
-        }
+        authorizationService.assertCanManageEvent(userId, eventId);
     }
 }

@@ -101,6 +101,6 @@ public class TeamSponsorController {
     private boolean isAdminRole(Authentication auth) {
         return auth.getAuthorities().stream().anyMatch(a ->
                 a.getAuthority().equals("ROLE_SUPER_ADMIN") ||
-                a.getAuthority().equals("ROLE_ADMINISTRATOR"));
+                a.getAuthority().equals("ROLE_ADMIN"));
     }
 }

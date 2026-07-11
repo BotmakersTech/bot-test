@@ -50,6 +50,15 @@ public class Event {
     private UUID createdBy;
 
     // =========================
+    // Ownership Chain
+    // =========================
+    @Column(name = "owner_type", nullable = false, length = 10)
+    private String ownerType = "BOTLEAGUE";
+
+    @Column(name = "owner_id")
+    private UUID ownerId;
+
+    // =========================
     // Location
     // =========================
     @Column(name = "venue_name")
@@ -181,6 +190,22 @@ public class Event {
 
     public void setCreatedBy(UUID createdBy) {
         this.createdBy = createdBy;
+    }
+
+    public String getOwnerType() {
+        return ownerType;
+    }
+
+    public void setOwnerType(String ownerType) {
+        this.ownerType = ownerType;
+    }
+
+    public UUID getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(UUID ownerId) {
+        this.ownerId = ownerId;
     }
 
     public String getVenueName() {

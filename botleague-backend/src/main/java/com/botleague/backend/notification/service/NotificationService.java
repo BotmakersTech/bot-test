@@ -49,7 +49,7 @@ public class NotificationService {
     private final UserRoleRepository userRoleRepository;
 
     private static final List<AccountType> PLATFORM_ADMIN_ROLES =
-            List.of(AccountType.SUPER_ADMIN, AccountType.ADMINISTRATOR, AccountType.MANAGER);
+            List.of(AccountType.SUPER_ADMIN, AccountType.ADMIN);
 
     public NotificationService(
             NotificationRepository notificationRepository,

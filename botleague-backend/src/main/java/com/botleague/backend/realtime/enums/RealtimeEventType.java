@@ -12,6 +12,9 @@ public enum RealtimeEventType {
     MATCH_STARTED,
     MATCH_SCORE_UPDATED,
     MATCH_RESULT_SUBMITTED,
+    MATCH_RESULT_PENDING_APPROVAL,
+    MATCH_RESULT_APPROVED,
+    MATCH_RESULT_REJECTED,
     MATCH_COMPLETED,
     MATCH_UPDATED,   // participant slots filled after winner advancement
     BRACKET_CREATED, // admin just generated a full bracket

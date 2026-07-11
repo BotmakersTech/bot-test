@@ -44,7 +44,7 @@ public class SportSponsorController {
 
     /** POST /api/sport-sponsors/sport/{sportId} — ADMINISTRATOR+ */
     @PostMapping("/sport/{sportId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<SportSponsorResponse> addSponsor(
             @PathVariable UUID sportId,
             @Valid @RequestBody SportSponsorRequest request,
@@ -56,7 +56,7 @@ public class SportSponsorController {
 
     /** PUT /api/sport-sponsors/{sponsorId} — ADMINISTRATOR+ */
     @PutMapping("/{sponsorId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<SportSponsorResponse> updateSponsor(
             @PathVariable UUID sponsorId,
             @Valid @RequestBody SportSponsorRequest request) {
@@ -65,7 +65,7 @@ public class SportSponsorController {
 
     /** DELETE /api/sport-sponsors/{sponsorId} — ADMINISTRATOR+ */
     @DeleteMapping("/{sponsorId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<Void> deleteSponsor(@PathVariable UUID sponsorId) {
         service.deleteSponsor(sponsorId);
         return ResponseEntity.noContent().build();

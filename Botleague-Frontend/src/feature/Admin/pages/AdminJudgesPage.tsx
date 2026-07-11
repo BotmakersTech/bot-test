@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { listUsers, type UserSummary } from "../../SuperAdmin/api/userManagement.api"
 
-const JUDGE_ROLES = ["MANAGER", "ADMINISTRATOR", "SUPER_ADMIN"]
+const JUDGE_ROLES = ["ADMIN", "SUPER_ADMIN"]
 
 export default function AdminJudgesPage() {
   const navigate = useNavigate()

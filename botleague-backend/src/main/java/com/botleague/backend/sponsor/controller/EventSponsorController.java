@@ -46,7 +46,7 @@ public class EventSponsorController {
 
     /** POST /api/event-sponsors/event/{eventId} — ADMINISTRATOR+, or ORGANIZER assigned to this event */
     @PostMapping("/event/{eventId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<EventSponsorResponse> addSponsor(
             @PathVariable UUID eventId,
             @Valid @RequestBody EventSponsorRequest request,
@@ -59,7 +59,7 @@ public class EventSponsorController {
 
     /** PUT /api/event-sponsors/{sponsorId} — ADMINISTRATOR+, or ORGANIZER assigned to this event */
     @PutMapping("/{sponsorId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<EventSponsorResponse> updateSponsor(
             @PathVariable UUID sponsorId,
             @Valid @RequestBody EventSponsorRequest request,
@@ -71,7 +71,7 @@ public class EventSponsorController {
 
     /** DELETE /api/event-sponsors/{sponsorId} — ADMINISTRATOR+, or ORGANIZER assigned to this event */
     @DeleteMapping("/{sponsorId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<Void> deleteSponsor(@PathVariable UUID sponsorId, Authentication auth) {
         UUID eventId = service.getEventIdForSponsor(sponsorId);
         service.assertCanManage(eventId, SecurityUtils.currentUserId(auth), extractRoles(auth));

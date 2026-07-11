@@ -47,7 +47,7 @@ public class OrganizerController {
     // =========================================================================
 
     @GetMapping("/dashboard")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<DashboardStatsResponse> getDashboard(Authentication auth) {
         return ResponseEntity.ok(
             dashboardService.getStats(extractUserId(auth), extractRoles(auth)));
@@ -58,14 +58,14 @@ public class OrganizerController {
     // =========================================================================
 
     @GetMapping("/my-events")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<List<CreateEventResponseDTO>> getMyEvents(Authentication auth) {
         return ResponseEntity.ok(
             organizerService.getMyEvents(extractUserId(auth), extractRoles(auth)));
     }
 
     @GetMapping("/my-sports")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<List<GetEventSportsDTO>> getMySports(Authentication auth) {
         return ResponseEntity.ok(
             organizerService.getMySports(extractUserId(auth), extractRoles(auth)));
@@ -73,7 +73,7 @@ public class OrganizerController {
 
     /** Organiser-safe event info update (no sport spec changes) */
     @PatchMapping("/events/{eventId}/info")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<CreateEventResponseDTO> updateEventInfo(
             @PathVariable UUID eventId,
             @RequestBody UpdateEventInfoDTO request,
@@ -87,7 +87,7 @@ public class OrganizerController {
     // =========================================================================
 
     @PostMapping("/events/{eventId}/sports/{sportId}/submit-approval")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<GetEventSportsDTO> submitSportForApproval(
             @PathVariable UUID eventId,
             @PathVariable UUID sportId) {
@@ -99,13 +99,13 @@ public class OrganizerController {
     // =========================================================================
 
     @GetMapping("/admin/events")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<List<CreateEventResponseDTO>> getAllEventsForAdmin() {
         return ResponseEntity.ok(organizerService.getAllEventsForAdmin());
     }
 
     @GetMapping("/admin/events/{eventId}/sports")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<List<GetEventSportsDTO>> getSportsByEvent(@PathVariable UUID eventId) {
         return ResponseEntity.ok(organizerService.getSportsByEvent(eventId));
     }
@@ -115,27 +115,27 @@ public class OrganizerController {
     // =========================================================================
 
     @GetMapping("/events/{eventId}/arenas")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<List<ArenaResponse>> getArenas(@PathVariable UUID eventId) {
         return ResponseEntity.ok(peopleService.getArenas(eventId));
     }
 
     @PostMapping("/events/{eventId}/arenas")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<ArenaResponse> createArena(
             @PathVariable UUID eventId, @RequestBody ArenaRequest req) {
         return ResponseEntity.ok(peopleService.createArena(eventId, req));
     }
 
     @PutMapping("/events/{eventId}/arenas/{arenaId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<ArenaResponse> updateArena(
             @PathVariable UUID eventId, @PathVariable UUID arenaId, @RequestBody ArenaRequest req) {
         return ResponseEntity.ok(peopleService.updateArena(arenaId, req));
     }
 
     @DeleteMapping("/events/{eventId}/arenas/{arenaId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<Void> deleteArena(
             @PathVariable UUID eventId, @PathVariable UUID arenaId) {
         peopleService.deleteArena(arenaId);
@@ -147,20 +147,20 @@ public class OrganizerController {
     // =========================================================================
 
     @GetMapping("/events/{eventId}/volunteers")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<List<VolunteerResponse>> getVolunteers(@PathVariable UUID eventId) {
         return ResponseEntity.ok(peopleService.getVolunteers(eventId));
     }
 
     @PostMapping("/events/{eventId}/volunteers")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<VolunteerResponse> createVolunteer(
             @PathVariable UUID eventId, @RequestBody VolunteerRequest req) {
         return ResponseEntity.ok(peopleService.createVolunteer(eventId, req));
     }
 
     @PutMapping("/events/{eventId}/volunteers/{volunteerId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<VolunteerResponse> updateVolunteer(
             @PathVariable UUID eventId,
             @PathVariable UUID volunteerId,
@@ -169,21 +169,21 @@ public class OrganizerController {
     }
 
     @PatchMapping("/events/{eventId}/volunteers/{volunteerId}/checkin")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<VolunteerResponse> checkInVolunteer(
             @PathVariable UUID eventId, @PathVariable UUID volunteerId) {
         return ResponseEntity.ok(peopleService.checkInVolunteer(volunteerId));
     }
 
     @PatchMapping("/events/{eventId}/volunteers/{volunteerId}/checkout")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<VolunteerResponse> checkOutVolunteer(
             @PathVariable UUID eventId, @PathVariable UUID volunteerId) {
         return ResponseEntity.ok(peopleService.checkOutVolunteer(volunteerId));
     }
 
     @DeleteMapping("/events/{eventId}/volunteers/{volunteerId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<Void> deleteVolunteer(
             @PathVariable UUID eventId, @PathVariable UUID volunteerId) {
         peopleService.deleteVolunteer(volunteerId);
@@ -195,20 +195,20 @@ public class OrganizerController {
     // =========================================================================
 
     @GetMapping("/events/{eventId}/judges")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<List<JudgeResponse>> getJudges(@PathVariable UUID eventId) {
         return ResponseEntity.ok(peopleService.getJudges(eventId));
     }
 
     @PostMapping("/events/{eventId}/judges")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<JudgeResponse> createJudge(
             @PathVariable UUID eventId, @RequestBody JudgeRequest req) {
         return ResponseEntity.ok(peopleService.createJudge(eventId, req));
     }
 
     @PutMapping("/events/{eventId}/judges/{judgeId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<JudgeResponse> updateJudge(
             @PathVariable UUID eventId,
             @PathVariable UUID judgeId,
@@ -217,7 +217,7 @@ public class OrganizerController {
     }
 
     @DeleteMapping("/events/{eventId}/judges/{judgeId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<Void> deleteJudge(
             @PathVariable UUID eventId, @PathVariable UUID judgeId) {
         peopleService.deleteJudge(judgeId);
@@ -229,20 +229,20 @@ public class OrganizerController {
     // =========================================================================
 
     @GetMapping("/events/{eventId}/staff")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<List<StaffResponse>> getStaff(@PathVariable UUID eventId) {
         return ResponseEntity.ok(peopleService.getStaff(eventId));
     }
 
     @PostMapping("/events/{eventId}/staff")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<StaffResponse> createStaff(
             @PathVariable UUID eventId, @RequestBody StaffRequest req) {
         return ResponseEntity.ok(peopleService.createStaff(eventId, req));
     }
 
     @PutMapping("/events/{eventId}/staff/{staffId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<StaffResponse> updateStaff(
             @PathVariable UUID eventId,
             @PathVariable UUID staffId,
@@ -251,21 +251,21 @@ public class OrganizerController {
     }
 
     @PatchMapping("/events/{eventId}/staff/{staffId}/checkin")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<StaffResponse> checkInStaff(
             @PathVariable UUID eventId, @PathVariable UUID staffId) {
         return ResponseEntity.ok(peopleService.checkInStaff(staffId));
     }
 
     @PatchMapping("/events/{eventId}/staff/{staffId}/checkout")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<StaffResponse> checkOutStaff(
             @PathVariable UUID eventId, @PathVariable UUID staffId) {
         return ResponseEntity.ok(peopleService.checkOutStaff(staffId));
     }
 
     @DeleteMapping("/events/{eventId}/staff/{staffId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<Void> deleteStaff(
             @PathVariable UUID eventId, @PathVariable UUID staffId) {
         peopleService.deleteStaff(staffId);
@@ -277,13 +277,13 @@ public class OrganizerController {
     // =========================================================================
 
     @GetMapping("/events/{eventId}/announcements")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<List<AnnouncementResponse>> getAnnouncements(@PathVariable UUID eventId) {
         return ResponseEntity.ok(communicationService.getAnnouncements(eventId));
     }
 
     @PostMapping("/events/{eventId}/announcements")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<AnnouncementResponse> createAnnouncement(
             @PathVariable UUID eventId,
             @RequestBody AnnouncementRequest req,
@@ -293,7 +293,7 @@ public class OrganizerController {
     }
 
     @PutMapping("/events/{eventId}/announcements/{announcementId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<AnnouncementResponse> updateAnnouncement(
             @PathVariable UUID eventId,
             @PathVariable UUID announcementId,
@@ -302,7 +302,7 @@ public class OrganizerController {
     }
 
     @DeleteMapping("/events/{eventId}/announcements/{announcementId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<Void> deleteAnnouncement(
             @PathVariable UUID eventId, @PathVariable UUID announcementId) {
         communicationService.deleteAnnouncement(announcementId);
@@ -314,13 +314,13 @@ public class OrganizerController {
     // =========================================================================
 
     @GetMapping("/events/{eventId}/incidents")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<List<IncidentResponse>> getIncidents(@PathVariable UUID eventId) {
         return ResponseEntity.ok(communicationService.getIncidents(eventId));
     }
 
     @PostMapping("/events/{eventId}/incidents")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<IncidentResponse> createIncident(
             @PathVariable UUID eventId,
             @RequestBody IncidentRequest req,
@@ -330,7 +330,7 @@ public class OrganizerController {
     }
 
     @PatchMapping("/events/{eventId}/incidents/{incidentId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<IncidentResponse> updateIncident(
             @PathVariable UUID eventId,
             @PathVariable UUID incidentId,
@@ -339,7 +339,7 @@ public class OrganizerController {
     }
 
     @DeleteMapping("/events/{eventId}/incidents/{incidentId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<Void> deleteIncident(
             @PathVariable UUID eventId, @PathVariable UUID incidentId) {
         communicationService.deleteIncident(incidentId);
@@ -351,13 +351,13 @@ public class OrganizerController {
     // =========================================================================
 
     @GetMapping("/events/{eventId}/venue")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<VenueDetailResponse> getVenueDetail(@PathVariable UUID eventId) {
         return ResponseEntity.ok(venueAndCertService.getVenueDetail(eventId));
     }
 
     @PutMapping("/events/{eventId}/venue")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<VenueDetailResponse> upsertVenueDetail(
             @PathVariable UUID eventId, @RequestBody VenueDetailRequest req) {
         return ResponseEntity.ok(venueAndCertService.upsertVenueDetail(eventId, req));
@@ -368,20 +368,20 @@ public class OrganizerController {
     // =========================================================================
 
     @GetMapping("/events/{eventId}/certificates")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<List<CertificateResponse>> getCertificates(@PathVariable UUID eventId) {
         return ResponseEntity.ok(venueAndCertService.getCertificates(eventId));
     }
 
     @PostMapping("/events/{eventId}/certificates")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<CertificateResponse> issueCertificate(
             @PathVariable UUID eventId, @RequestBody CertificateRequest req) {
         return ResponseEntity.ok(venueAndCertService.issueCertificate(eventId, req));
     }
 
     @DeleteMapping("/events/{eventId}/certificates/{certId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<Void> deleteCertificate(
             @PathVariable UUID eventId, @PathVariable UUID certId) {
         venueAndCertService.deleteCertificate(certId);

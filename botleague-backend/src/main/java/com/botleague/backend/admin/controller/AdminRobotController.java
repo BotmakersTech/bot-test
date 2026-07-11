@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/admin/robots")
-@PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
 public class AdminRobotController {
 
     private final RobotService robotService;

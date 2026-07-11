@@ -59,9 +59,10 @@ function RoleBar({ role, count, total }: { role: string; count: number; total: n
   const pct = total > 0 ? Math.round((count / total) * 100) : 0
   const colors: Record<string, string> = {
     SUPER_ADMIN: "#f43f5e",
-    ADMINISTRATOR: "#fb923c",
-    MANAGER: "#facc15",
-    ORGANIZER: "#34d399",
+    ADMIN: "#fb923c",
+    ORGANISER: "#10b981",
+    EVENT_HEAD: "#34d399",
+    SPORT_HEAD: "#60a5fa",
     USER: "#a78bfa",
   }
   const color = colors[role] ?? "#94a3b8"
@@ -86,9 +87,10 @@ function RoleBar({ role, count, total }: { role: string; count: number; total: n
 function UserRow({ user }: { user: UserSummary }) {
   const roleColor: Record<string, string> = {
     SUPER_ADMIN: "#f43f5e",
-    ADMINISTRATOR: "#fb923c",
-    MANAGER: "#facc15",
-    ORGANIZER: "#34d399",
+    ADMIN: "#fb923c",
+    ORGANISER: "#10b981",
+    EVENT_HEAD: "#34d399",
+    SPORT_HEAD: "#60a5fa",
     USER: "#a78bfa",
   }
   const color = roleColor[user.primaryRole] ?? "#94a3b8"

@@ -9,14 +9,14 @@ export interface NavItem {
   roles: AppRoleType[];
 }
 
-const SA  = AppRole.SUPER_ADMIN;
-const ADM = AppRole.ADMINISTRATOR;
-const MGR = AppRole.MANAGER;
-const ORG = AppRole.ORGANIZER;
-const SUB = AppRole.SUB_ORGANIZER;
-const CMP = AppRole.COMPETITOR;
-const JDG = AppRole.JUDGE;
-const VOL = AppRole.VOLUNTEER;
+const SA   = AppRole.SUPER_ADMIN;
+const ADM  = AppRole.ADMIN;
+const ORGR = AppRole.ORGANISER;
+const ORG  = AppRole.EVENT_HEAD;
+const SUB  = AppRole.SPORT_HEAD;
+const CMP  = AppRole.COMPETITOR;
+const JDG  = AppRole.JUDGE;
+const VOL  = AppRole.VOLUNTEER;
 
 export const NAV_CONFIG: NavItem[] = [
 
@@ -35,13 +35,17 @@ export const NAV_CONFIG: NavItem[] = [
   { id: "s-audit",    label: "Audit Logs",           link: "/admin/audit-logs",      iconName: "audit",      roles: [SA] },
 
   // ══════════════════════════════════════════════════════════════════════════
-  // ADMINISTRATOR  — platform + user + event management
+  // ADMIN  — platform + user + event management + event operations
   // ══════════════════════════════════════════════════════════════════════════
   { id: "a-dash",     label: "Dashboard",           link: "/admin-dashboard",        iconName: "dashboard",  roles: [ADM] },
   { id: "a-teams",    label: "All Teams",           link: "/admin/teams",            iconName: "teams",      roles: [ADM] },
   { id: "a-robots",   label: "All Robots",          link: "/admin/robots",           iconName: "robot",      roles: [ADM] },
   { id: "a-events",   label: "All Events",          link: "/admin/user",             iconName: "calendar",   roles: [ADM] },
   { id: "a-create",   label: "Create Event",        link: "/admin/events/create",    iconName: "add",        roles: [ADM] },
+  { id: "a-sports",   label: "All Sports",          link: "/admin/sports",           iconName: "sports",     roles: [ADM] },
+  { id: "a-reg",      label: "Registrations",       link: "/admin/registrations",    iconName: "users",      roles: [ADM] },
+  { id: "a-matches",  label: "Matches",             link: "/admin/matches",          iconName: "matches",    roles: [ADM] },
+  { id: "a-rank",     label: "Rankings",            link: "/rankings",               iconName: "rankings",   roles: [ADM] },
   { id: "a-judges",   label: "Judges",              link: "/admin/judges",           iconName: "judge",      roles: [ADM] },
   { id: "a-sponsors", label: "Sponsors",            link: "/admin/sponsors",         iconName: "star",       roles: [ADM] },
   { id: "a-analytics",label: "Analytics",           link: "/admin/analytics",        iconName: "analytics",  roles: [ADM] },
@@ -49,19 +53,30 @@ export const NAV_CONFIG: NavItem[] = [
   { id: "a-audit",    label: "Audit Logs",          link: "/admin/audit-logs",       iconName: "audit",      roles: [ADM] },
 
   // ══════════════════════════════════════════════════════════════════════════
-  // MANAGER  — event operations, registrations, matches, reports
+  // ORGANISER — external partner, owns their events
   // ══════════════════════════════════════════════════════════════════════════
-  { id: "m-dash",     label: "Dashboard",           link: "/admin-dashboard",        iconName: "dashboard",  roles: [MGR] },
-  { id: "m-events",   label: "All Events",          link: "/admin/user",             iconName: "calendar",   roles: [MGR] },
-  { id: "m-sports",   label: "All Sports",          link: "/admin/sports",           iconName: "sports",     roles: [MGR] },
-  { id: "m-reg",      label: "Registrations",       link: "/admin/registrations",    iconName: "users",      roles: [MGR] },
-  { id: "m-matches",  label: "Matches",             link: "/admin/matches",          iconName: "matches",    roles: [MGR] },
-  { id: "m-rank",     label: "Rankings",            link: "/rankings",               iconName: "rankings",   roles: [MGR] },
-  { id: "m-reports",  label: "Reports",             link: "/admin/reports",          iconName: "reports",    roles: [MGR] },
-  { id: "m-audit",    label: "Audit Logs",          link: "/admin/audit-logs",       iconName: "audit",      roles: [MGR] },
+  { id: "og-dash",       label: "Dashboard",          link: "/organizer-dashboard",      iconName: "dashboard",     roles: [ORGR] },
+  { id: "og-events",     label: "Event Management",   link: "/organizer/events",         iconName: "calendar",      roles: [ORGR] },
+  { id: "og-sports",     label: "All Sports",         link: "/organizer/sports",         iconName: "sports",        roles: [ORGR] },
+  { id: "og-reg",        label: "Registrations",      link: "/organizer/registrations",  iconName: "users",         roles: [ORGR] },
+  { id: "og-matches",    label: "Matches",            link: "/organizer/matches",        iconName: "matches",       roles: [ORGR] },
+  { id: "og-sched",      label: "Schedule",           link: "/organizer/schedule",       iconName: "schedule",      roles: [ORGR] },
+  { id: "og-monitor",    label: "Monitoring",         link: "/organizer/monitoring",     iconName: "analytics",     roles: [ORGR] },
+  { id: "og-volunteers", label: "Volunteers",         link: "/organizer/volunteers",     iconName: "users",         roles: [ORGR] },
+  { id: "og-judges",     label: "Judges",             link: "/organizer/judges",         iconName: "judge",         roles: [ORGR] },
+  { id: "og-staff",      label: "Staff",              link: "/organizer/staff",          iconName: "teams",         roles: [ORGR] },
+  { id: "og-venue",      label: "Venue & Logistics",  link: "/organizer/venue",          iconName: "venue",         roles: [ORGR] },
+  { id: "og-comm",       label: "Communication",      link: "/organizer/communication",  iconName: "communication", roles: [ORGR] },
+  { id: "og-announce",   label: "Announcements",      link: "/organizer/announcements",  iconName: "bell",          roles: [ORGR] },
+  { id: "og-reports",    label: "Reports",            link: "/organizer/reports",        iconName: "reports",       roles: [ORGR] },
+  { id: "og-analytics",  label: "Analytics",          link: "/organizer/analytics",      iconName: "analytics",     roles: [ORGR] },
+  { id: "og-cert",       label: "Certificates",       link: "/organizer/certificates",   iconName: "certificate",   roles: [ORGR] },
+  { id: "og-closure",    label: "Event Closure",      link: "/organizer/closure",        iconName: "audit",         roles: [ORGR] },
+  { id: "og-notif",      label: "Notifications",      link: "/notifications",            iconName: "bell",          roles: [ORGR] },
+  { id: "og-settings",   label: "Settings",           link: "/organizer/settings",       iconName: "settings",      roles: [ORGR] },
 
   // ══════════════════════════════════════════════════════════════════════════
-  // ORGANIZER  — assigned event management
+  // EVENT_HEAD  — assigned event management
   // ══════════════════════════════════════════════════════════════════════════
   { id: "o-dash",       label: "Dashboard",          link: "/organizer-dashboard",      iconName: "dashboard",     roles: [ORG] },
   { id: "o-events",     label: "Event Management",   link: "/organizer/events",         iconName: "calendar",      roles: [ORG] },
@@ -84,7 +99,7 @@ export const NAV_CONFIG: NavItem[] = [
   { id: "o-settings",   label: "Settings",           link: "/organizer/settings",       iconName: "settings",      roles: [ORG] },
 
   // ══════════════════════════════════════════════════════════════════════════
-  // SUB_ORGANIZER  — sport-level management within an event
+  // SPORT_HEAD  — sport-level management within an event
   // ══════════════════════════════════════════════════════════════════════════
   { id: "sub-dash",    label: "Dashboard",           link: "/organizer-dashboard",      iconName: "dashboard",  roles: [SUB] },
   { id: "sub-sports",  label: "My Sports",           link: "/organizer/my-sports",      iconName: "sports",     roles: [SUB] },
@@ -129,7 +144,7 @@ export const NAV_CONFIG: NavItem[] = [
 ];
 
 // ── Role priority for primary-role resolution ────────────────────────────────
-const ROLE_PRIORITY: AppRoleType[] = [SA, ADM, MGR, ORG, SUB, JDG, VOL, CMP];
+const ROLE_PRIORITY: AppRoleType[] = [SA, ADM, ORGR, ORG, SUB, JDG, VOL, CMP];
 
 export function getPrimaryRole(userRoles: string[]): AppRoleType {
   return ROLE_PRIORITY.find(r => userRoles.includes(r)) ?? CMP;

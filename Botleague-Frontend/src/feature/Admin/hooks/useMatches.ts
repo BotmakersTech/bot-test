@@ -6,6 +6,8 @@ import {
 } from "react"
 
 import {
+    approveMatchResult,
+    rejectMatchResult,
     cancelMatch,
     completeMatch,
     createMatch,
@@ -653,6 +655,71 @@ export const useMatches = (
         }, [])
 
     // =====================================================
+    // APPROVE MATCH RESULT
+    // PATCH /v1/matches/:matchId/approve
+    // =====================================================
+
+    const handleApproveMatchResult =
+        useCallback(async (
+            matchId: string
+        ) => {
+
+            try {
+
+                setUpdateLoading(true)
+                setError(null)
+
+                return await approveMatchResult(matchId)
+
+            } catch (err: any) {
+
+                const message =
+                    extractError(err, "Failed to approve match result")
+
+                setError(message)
+                throw err
+
+            } finally {
+
+                setUpdateLoading(false)
+            }
+
+        }, [])
+
+    // =====================================================
+    // REJECT MATCH RESULT
+    // PATCH /v1/matches/:matchId/reject
+    // =====================================================
+
+    const handleRejectMatchResult =
+        useCallback(async (
+            matchId: string,
+            reason?: string
+        ) => {
+
+            try {
+
+                setUpdateLoading(true)
+                setError(null)
+
+                return await rejectMatchResult(matchId, reason)
+
+            } catch (err: any) {
+
+                const message =
+                    extractError(err, "Failed to reject match result")
+
+                setError(message)
+                throw err
+
+            } finally {
+
+                setUpdateLoading(false)
+            }
+
+        }, [])
+
+    // =====================================================
     // CANCEL MATCH
     // PATCH /v1/matches/:matchId/cancel
     // Not allowed on COMPLETED matches.
@@ -777,6 +844,8 @@ export const useMatches = (
         updateMatchScore:         handleUpdateScore,
         submitMatchResult:        handleSubmitMatchResult,
         completeMatch:            handleCompleteMatch,
+        approveMatchResult:       handleApproveMatchResult,
+        rejectMatchResult:        handleRejectMatchResult,
         cancelMatch:              handleCancelMatch,
         deleteMatch:              handleDeleteMatch,
     }

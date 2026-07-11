@@ -14,8 +14,8 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import com.botleague.backend.auth.dto.*;
 import com.botleague.backend.auth.entity.PasswordResetToken;
 import com.botleague.backend.auth.entity.User;
-import com.botleague.backend.admin.repository.UserEventAssignmentRepository;
-import com.botleague.backend.admin.repository.UserSportAssignmentRepository;
+import com.botleague.backend.admin.entity.ResourceRoleAssignment;
+import com.botleague.backend.admin.repository.ResourceRoleAssignmentRepository;
 import com.botleague.backend.auth.enums.AccountStatus;
 import com.botleague.backend.auth.enums.AccountType;
 import com.botleague.backend.auth.enums.LoginType;
@@ -44,12 +44,11 @@ public class AuthService {
     private final OtpService otpService;
     private final EmailService emailService;
     private final UserRoleRepository userRoleRepository;
-    private final UserEventAssignmentRepository eventAssignmentRepository;
-    private final UserSportAssignmentRepository sportAssignmentRepository;
+    private final ResourceRoleAssignmentRepository resourceRoleAssignmentRepository;
 
     private static final List<AccountType> ROLE_PRIORITY = List.of(
-            AccountType.SUPER_ADMIN, AccountType.ADMINISTRATOR, AccountType.MANAGER,
-            AccountType.ORGANIZER, AccountType.SUB_ORGANIZER,
+            AccountType.SUPER_ADMIN, AccountType.ADMIN, AccountType.ORGANISER,
+            AccountType.EVENT_HEAD, AccountType.SPORT_HEAD,
             AccountType.JUDGE, AccountType.VOLUNTEER, AccountType.COMPETITOR
     );
 
@@ -63,8 +62,7 @@ public class AuthService {
             OtpService otpService,
             EmailService emailService,
             UserRoleRepository userRoleRepository,
-            UserEventAssignmentRepository eventAssignmentRepository,
-            UserSportAssignmentRepository sportAssignmentRepository) {
+            ResourceRoleAssignmentRepository resourceRoleAssignmentRepository) {
         this.userRepository = userRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.botleagueIdService = botleagueIdService;
@@ -74,8 +72,7 @@ public class AuthService {
         this.otpService = otpService;
         this.emailService = emailService;
         this.userRoleRepository = userRoleRepository;
-        this.eventAssignmentRepository = eventAssignmentRepository;
-        this.sportAssignmentRepository = sportAssignmentRepository;
+        this.resourceRoleAssignmentRepository = resourceRoleAssignmentRepository;
     }
 
     // ================= REGISTER =================
@@ -295,12 +292,17 @@ public class AuthService {
                 .map(AccountType::name)
                 .orElse(user.getAccountType() != null ? user.getAccountType().name() : AccountType.COMPETITOR.name());
 
-        List<String> eventIds = eventAssignmentRepository.findByUserId(uid).stream()
-                .map(a -> a.getEventId().toString())
+        List<ResourceRoleAssignment> approvedAssignments = resourceRoleAssignmentRepository
+                .findByUserIdAndStatus(uid, ResourceRoleAssignment.STATUS_APPROVED);
+
+        List<String> eventIds = approvedAssignments.stream()
+                .filter(a -> ResourceRoleAssignment.SCOPE_EVENT.equals(a.getScopeType()))
+                .map(a -> a.getScopeId().toString())
                 .collect(Collectors.toList());
 
-        List<String> sportIds = sportAssignmentRepository.findByUserId(uid).stream()
-                .map(a -> a.getEventSportId().toString())
+        List<String> sportIds = approvedAssignments.stream()
+                .filter(a -> ResourceRoleAssignment.SCOPE_SPORT.equals(a.getScopeType()))
+                .map(a -> a.getScopeId().toString())
                 .collect(Collectors.toList());
 
         MeResponseDTO response = new MeResponseDTO();

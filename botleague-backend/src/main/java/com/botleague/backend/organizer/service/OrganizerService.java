@@ -1,6 +1,7 @@
 package com.botleague.backend.organizer.service;
 
-import com.botleague.backend.admin.repository.UserEventAssignmentRepository;
+import com.botleague.backend.admin.entity.ResourceRoleAssignment;
+import com.botleague.backend.admin.repository.ResourceRoleAssignmentRepository;
 import com.botleague.backend.events.dto.CreateEventResponseDTO;
 import com.botleague.backend.events.dto.GetEventSportsDTO;
 import com.botleague.backend.events.entity.Event;
@@ -26,27 +27,40 @@ import com.botleague.backend.common.exception.ResourceNotFoundException;
 public class OrganizerService {
 
     private static final Set<String> FULL_ACCESS_ROLES =
-            Set.of("SUPER_ADMIN", "ADMINISTRATOR", "MANAGER");
+            Set.of("SUPER_ADMIN", "ADMIN");
 
-    private final UserEventAssignmentRepository eventAssignmentRepository;
+    private final ResourceRoleAssignmentRepository assignmentRepository;
     private final EventRepository eventRepository;
     private final EventSportsRepository eventSportsRepository;
     private final RealtimePublisher realtimePublisher;
 
     public OrganizerService(
-            UserEventAssignmentRepository eventAssignmentRepository,
+            ResourceRoleAssignmentRepository assignmentRepository,
             EventRepository eventRepository,
             EventSportsRepository eventSportsRepository,
             RealtimePublisher realtimePublisher) {
-        this.eventAssignmentRepository = eventAssignmentRepository;
+        this.assignmentRepository = assignmentRepository;
         this.eventRepository = eventRepository;
         this.eventSportsRepository = eventSportsRepository;
         this.realtimePublisher = realtimePublisher;
     }
 
+    /** Every event this user has an approved EVENT_HEAD assignment on, or owns as ORGANISER. */
+    private Set<UUID> myAssignedOrOwnedEventIds(UUID userId) {
+        Set<UUID> ids = assignmentRepository.findByUserId(userId).stream()
+                .filter(a -> ResourceRoleAssignment.SCOPE_EVENT.equals(a.getScopeType())
+                        && ResourceRoleAssignment.STATUS_APPROVED.equals(a.getStatus()))
+                .map(ResourceRoleAssignment::getEventId)
+                .collect(Collectors.toCollection(HashSet::new));
+        eventRepository.findAllByDeletedAtIsNull().stream()
+                .filter(e -> "ORGANISER".equals(e.getOwnerType()) && userId.equals(e.getOwnerId()))
+                .forEach(e -> ids.add(e.getId()));
+        return ids;
+    }
+
     /**
-     * SUPER_ADMIN / ADMINISTRATOR / MANAGER → ALL events.
-     * ORGANIZER → only explicitly assigned events.
+     * Platform admins → ALL events.
+     * EVENT_HEAD/ORGANISER → only their assigned/owned events.
      */
     public List<CreateEventResponseDTO> getMyEvents(UUID userId, List<String> userRoles) {
         if (hasFullAccess(userRoles)) {
@@ -55,8 +69,8 @@ public class OrganizerService {
                     .map(this::toEventResponse)
                     .collect(Collectors.toList());
         }
-        return eventAssignmentRepository.findByUserId(userId).stream()
-                .map(a -> eventRepository.findById(a.getEventId()))
+        return myAssignedOrOwnedEventIds(userId).stream()
+                .map(eventRepository::findById)
                 .filter(java.util.Optional::isPresent)
                 .map(java.util.Optional::get)
                 .map(this::toEventResponse)
@@ -64,8 +78,9 @@ public class OrganizerService {
     }
 
     /**
-     * SUPER_ADMIN / ADMINISTRATOR / MANAGER → ALL sports.
-     * ORGANIZER → sports within their assigned events only.
+     * Platform admins → ALL sports.
+     * EVENT_HEAD/ORGANISER → sports within their assigned/owned events, plus
+     * any individual sport they hold an approved SPORT_HEAD assignment on.
      */
     public List<GetEventSportsDTO> getMySports(UUID userId, List<String> userRoles) {
         if (hasFullAccess(userRoles)) {
@@ -74,12 +89,15 @@ public class OrganizerService {
                     .map(this::toSportResponse)
                     .collect(Collectors.toList());
         }
-        // ORGANIZER — sports within assigned events only
-        Set<UUID> assignedEventIds = new HashSet<>(
-                eventAssignmentRepository.findByUserId(userId).stream()
-                        .map(a -> a.getEventId())
-                        .collect(Collectors.toList()));
-        return eventSportsRepository.findByEventIdIn(assignedEventIds).stream()
+        Set<UUID> assignedEventIds = myAssignedOrOwnedEventIds(userId);
+        Set<UUID> sportIds = eventSportsRepository.findByEventIdIn(assignedEventIds).stream()
+                .map(EventSports::getId)
+                .collect(Collectors.toCollection(HashSet::new));
+        assignmentRepository.findByUserId(userId).stream()
+                .filter(a -> ResourceRoleAssignment.SCOPE_SPORT.equals(a.getScopeType())
+                        && ResourceRoleAssignment.STATUS_APPROVED.equals(a.getStatus()))
+                .forEach(a -> sportIds.add(a.getScopeId()));
+        return eventSportsRepository.findAllById(sportIds).stream()
                 .map(this::toSportResponse)
                 .collect(Collectors.toList());
     }
@@ -105,7 +123,7 @@ public class OrganizerService {
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
 
         if (!hasFullAccess(userRoles)
-                && !eventAssignmentRepository.existsByUserIdAndEventId(requestingUserId, eventId)) {
+                && !myAssignedOrOwnedEventIds(requestingUserId).contains(eventId)) {
             throw new IllegalStateException("You are not assigned to this event.");
         }
 

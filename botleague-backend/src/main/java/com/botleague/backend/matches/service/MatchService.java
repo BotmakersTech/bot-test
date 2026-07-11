@@ -12,14 +12,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.botleague.backend.common.exception.ResourceNotFoundException;
 
-import com.botleague.backend.admin.repository.UserEventAssignmentRepository;
-import com.botleague.backend.auth.enums.AccountType;
+import com.botleague.backend.admin.entity.ResourceRoleAssignment;
+import com.botleague.backend.admin.repository.ResourceRoleAssignmentRepository;
+import com.botleague.backend.audit.service.AuditLogService;
+import com.botleague.backend.common.security.AuthorizationService;
 import com.botleague.backend.common.exception.ResourceNotFoundException;
 
+import com.botleague.backend.events.entity.Event;
 import com.botleague.backend.events.entity.EventSports;
 import com.botleague.backend.events.enums.SportEventStatus;
+import com.botleague.backend.events.repository.EventRepository;
 import com.botleague.backend.events.repository.EventSportsRepository;
 import com.botleague.backend.events.repository.SportRegistrationRepository;
+import com.botleague.backend.notification.enums.NotificationPriority;
+import com.botleague.backend.notification.enums.NotificationTargetType;
+import com.botleague.backend.notification.enums.NotificationType;
+import com.botleague.backend.notification.service.NotificationService;
 import com.botleague.backend.team.repository.TeamRepository;
 import com.botleague.backend.matches.dto.CreateMatchRequestDTO;
 import com.botleague.backend.matches.dto.GenerateBracketRequestDTO;
@@ -57,7 +65,11 @@ public class MatchService {
     private final UserRoleService userRoleService;
     private final SingleEliminationBracketGenerator singleEliminationBracketGenerator;
     private final RealtimePublisher realtimePublisher;
-    private final UserEventAssignmentRepository eventAssignmentRepository;
+    private final AuthorizationService authorizationService;
+    private final EventRepository eventRepository;
+    private final ResourceRoleAssignmentRepository resourceRoleAssignmentRepository;
+    private final NotificationService notificationService;
+    private final AuditLogService auditLogService;
     private TournamentNotificationService tournamentNotificationService;
     private com.botleague.backend.ranking.service.RankingEngineService rankingEngineService;
 
@@ -73,7 +85,11 @@ public class MatchService {
             UserRoleService userRoleService,
             SingleEliminationBracketGenerator singleEliminationBracketGenerator,
             RealtimePublisher realtimePublisher,
-            UserEventAssignmentRepository eventAssignmentRepository
+            AuthorizationService authorizationService,
+            EventRepository eventRepository,
+            ResourceRoleAssignmentRepository resourceRoleAssignmentRepository,
+            NotificationService notificationService,
+            AuditLogService auditLogService
     ) {
         this.matchRepository = matchRepository;
         this.eventSportsRepository = eventSportsRepository;
@@ -82,7 +98,11 @@ public class MatchService {
         this.userRoleService = userRoleService;
         this.singleEliminationBracketGenerator = singleEliminationBracketGenerator;
         this.realtimePublisher = realtimePublisher;
-        this.eventAssignmentRepository = eventAssignmentRepository;
+        this.authorizationService = authorizationService;
+        this.eventRepository = eventRepository;
+        this.resourceRoleAssignmentRepository = resourceRoleAssignmentRepository;
+        this.notificationService = notificationService;
+        this.auditLogService = auditLogService;
     }
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
@@ -645,23 +665,18 @@ public class MatchService {
         }
         match.setWinnerRegistrationId(winnerId);
 
-        // ── 4. Record win method + mark completed ──────────────────
+        // ── 4. Record win method + mark pending approval ────────────
+        // Ranking points and finalization wait for an EVENT_HEAD/ORGANISER/
+        // ADMIN to approve the result (approveMatchResult). Bracket advancement
+        // below stays optimistic — it fires immediately so live tournaments
+        // don't stall on approval latency.
         if (request.getWinMethod() != null) match.setWinMethod(request.getWinMethod());
-        match.setStatus(MatchStatus.COMPLETED);
+        match.setStatus(MatchStatus.PENDING_APPROVAL);
         match.setEndedAt(
                 request.getEndedAt() != null ? request.getEndedAt() : LocalDateTime.now()
         );
 
         Match savedMatch = matchRepository.save(match);
-
-        // ── Award ranking points immediately after result ───────────
-        if (rankingEngineService != null) {
-            try {
-                rankingEngineService.awardMatchPoints(savedMatch);
-                autoFinalizeIfLastMatch(savedMatch.getEventSportId());
-            }
-            catch (Exception ignored) { /* ranking failure must never roll back match result */ }
-        }
 
         // ── 5. Advance winner ──────────────────────────────────────
         Match nextMatch = advanceWinner(savedMatch);
@@ -676,6 +691,7 @@ public class MatchService {
         MatchResponseDTO result = mapToResponseDTO(savedMatch);
         realtimePublisher.pushMatchUpdate(savedMatch.getId(), savedMatch.getEventSportId(),
                 RealtimeEventType.MATCH_RESULT_SUBMITTED, result);
+        notifyPendingApproval(savedMatch);
 
         // Push the matches that received a new participant so spectators see bracket fill in realtime
         if (nextMatch != null)
@@ -746,19 +762,12 @@ public class MatchService {
         }
 
         match.setWinnerRegistrationId(winnerId);
-        match.setStatus(MatchStatus.COMPLETED);
+        // Pending approval, not COMPLETED — ranking points/finalization wait
+        // for approveMatchResult; bracket advancement below stays optimistic.
+        match.setStatus(MatchStatus.PENDING_APPROVAL);
         match.setEndedAt(LocalDateTime.now());
 
         Match savedMatch = matchRepository.save(match);
-
-        // ── Award ranking points ────────────────────────────────────
-        if (rankingEngineService != null) {
-            try {
-                rankingEngineService.awardMatchPoints(savedMatch);
-                autoFinalizeIfLastMatch(savedMatch.getEventSportId());
-            }
-            catch (Exception ignored) {}
-        }
 
         Match nextMatch2       = advanceWinner(savedMatch);
         Match thirdPlaceMatch2 = advanceRunnerUpToThirdPlace(savedMatch);
@@ -767,7 +776,8 @@ public class MatchService {
 
         MatchResponseDTO completed = mapToResponseDTO(savedMatch);
         realtimePublisher.pushMatchUpdate(savedMatch.getId(), savedMatch.getEventSportId(),
-                RealtimeEventType.MATCH_COMPLETED, completed);
+                RealtimeEventType.MATCH_RESULT_PENDING_APPROVAL, completed);
+        notifyPendingApproval(savedMatch);
 
         if (nextMatch2 != null)
             realtimePublisher.pushMatchUpdate(nextMatch2.getId(), nextMatch2.getEventSportId(),
@@ -799,6 +809,115 @@ public class MatchService {
         }
 
         return completed;
+    }
+
+    // =====================================================
+    // APPROVE MATCH RESULT
+    // PATCH /v1/matches/:matchId/approve
+    //
+    // Only an EVENT_HEAD/ORGANISER(owner)/ADMIN/SUPER_ADMIN for the parent
+    // event may approve — deliberately excludes SPORT_HEAD and JUDGE, since
+    // the submitter shouldn't be able to self-approve. Approval is the only
+    // point at which ranking points are awarded and the sport's leaderboard
+    // can auto-finalize.
+    // =====================================================
+
+    @Transactional
+    public MatchResponseDTO approveMatchResult(
+            UUID matchId,
+            Authentication authentication
+    ) {
+        Match match = matchRepository
+                .findById(matchId)
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+
+        UUID currentUserId = extractUserId(authentication);
+        authorizationService.assertCanApproveMatchResult(currentUserId, match.getEventSportId());
+
+        if (match.getStatus() != MatchStatus.PENDING_APPROVAL) {
+            throw ApiException.conflict(
+                    "Only PENDING_APPROVAL matches can be approved; current status: "
+                            + match.getStatus()
+            );
+        }
+
+        match.setStatus(MatchStatus.COMPLETED);
+        match.setApprovedBy(currentUserId);
+        match.setApprovedAt(LocalDateTime.now());
+        match.setRejectionReason(null);
+
+        Match savedMatch = matchRepository.save(match);
+
+        if (rankingEngineService != null) {
+            try {
+                rankingEngineService.awardMatchPoints(savedMatch);
+                autoFinalizeIfLastMatch(savedMatch.getEventSportId());
+            }
+            catch (Exception ignored) { /* ranking failure must never roll back the approval */ }
+        }
+
+        auditLogService.log("MATCH_RESULT_APPROVED", "MATCH", savedMatch.getId(), null,
+                "PENDING_APPROVAL", "COMPLETED");
+
+        MatchResponseDTO approved = mapToResponseDTO(savedMatch);
+        realtimePublisher.pushMatchUpdate(savedMatch.getId(), savedMatch.getEventSportId(),
+                RealtimeEventType.MATCH_RESULT_APPROVED, approved);
+        realtimePublisher.pushRankingsUpdated(savedMatch.getEventSportId());
+
+        if (tournamentNotificationService != null) {
+            if (savedMatch.getNextMatchId() == null) {
+                tournamentNotificationService.onTournamentWinner(savedMatch, savedMatch.getEventSportId());
+            } else {
+                tournamentNotificationService.onMatchCompleted(savedMatch);
+            }
+        }
+
+        return approved;
+    }
+
+    // =====================================================
+    // REJECT MATCH RESULT
+    // PATCH /v1/matches/:matchId/reject
+    //
+    // Reverts to LIVE (not a dead-end state) so the result can be
+    // resubmitted, mirroring the existing sport-approval precedent.
+    // Does not unwind any optimistic bracket advancement that already
+    // happened at submit time — that stays a manual-correction path via
+    // updateMatch/updateMatchTeams.
+    // =====================================================
+
+    @Transactional
+    public MatchResponseDTO rejectMatchResult(
+            UUID matchId,
+            String reason,
+            Authentication authentication
+    ) {
+        Match match = matchRepository
+                .findById(matchId)
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+
+        UUID currentUserId = extractUserId(authentication);
+        authorizationService.assertCanApproveMatchResult(currentUserId, match.getEventSportId());
+
+        if (match.getStatus() != MatchStatus.PENDING_APPROVAL) {
+            throw ApiException.conflict(
+                    "Only PENDING_APPROVAL matches can be rejected; current status: "
+                            + match.getStatus()
+            );
+        }
+
+        match.setStatus(MatchStatus.LIVE);
+        match.setRejectionReason(reason);
+
+        Match savedMatch = matchRepository.save(match);
+
+        auditLogService.log("MATCH_RESULT_REJECTED", "MATCH", savedMatch.getId(), null,
+                "PENDING_APPROVAL", "LIVE", reason);
+
+        MatchResponseDTO rejected = mapToResponseDTO(savedMatch);
+        realtimePublisher.pushMatchUpdate(savedMatch.getId(), savedMatch.getEventSportId(),
+                RealtimeEventType.MATCH_RESULT_REJECTED, rejected);
+        return rejected;
     }
 
     // =====================================================
@@ -1176,6 +1295,39 @@ public class MatchService {
      * finished. If so, trigger the full ranking finalization so that global rankings
      * are populated without requiring an admin to manually hit /rankings/finalize.
      */
+    /**
+     * Notifies everyone who can approve this match's result (the event's
+     * EVENT_HEADs, or the ORGANISER owner) that a result is waiting on them.
+     */
+    private void notifyPendingApproval(Match match) {
+        try {
+            EventSports sport = eventSportsRepository.findById(match.getEventSportId()).orElse(null);
+            if (sport == null) return;
+            Event event = eventRepository.findById(sport.getEventId()).orElse(null);
+            if (event == null) return;
+
+            java.util.Set<UUID> approverIds = resourceRoleAssignmentRepository
+                    .findByEventIdAndScopeType(event.getId(), ResourceRoleAssignment.SCOPE_EVENT)
+                    .stream()
+                    .filter(a -> ResourceRoleAssignment.STATUS_APPROVED.equals(a.getStatus()))
+                    .map(ResourceRoleAssignment::getUserId)
+                    .collect(java.util.stream.Collectors.toCollection(java.util.HashSet::new));
+            if ("ORGANISER".equals(event.getOwnerType()) && event.getOwnerId() != null) {
+                approverIds.add(event.getOwnerId());
+            }
+
+            for (UUID approverId : approverIds) {
+                notificationService.systemNotify(
+                        "Match result pending approval",
+                        sport.getSport() + " in \"" + event.getEventName() + "\" has a result waiting for your approval.",
+                        NotificationType.MATCH_RESULT_PENDING_APPROVAL, NotificationPriority.HIGH,
+                        NotificationTargetType.USER, approverId,
+                        "/organizer/events/" + event.getId() + "/sports/" + sport.getId()
+                );
+            }
+        } catch (Exception ignored) { /* notification failure must never roll back the match result */ }
+    }
+
     private void autoFinalizeIfLastMatch(UUID eventSportId) {
         if (rankingEngineService == null) return;
 
@@ -1244,73 +1396,30 @@ public class MatchService {
     // =====================================================
 
     /**
-     * Score submission: all match-management roles PLUS JUDGE.
-     * Used for: updateScore, submitMatchResult, completeMatch.
-     *
-     * JUDGE is intentionally NOT event-scoped here (judge-to-event assignment
-     * is out of scope for this change) — any JUDGE may score any match, matching
-     * prior behavior. ORGANIZER / SUB_ORGANIZER must be assigned to the event.
+     * Score submission: JUDGE (any match, unscoped) or anyone who can manage
+     * the sport (platform admin, organiser owner, or an approved EVENT_HEAD/
+     * SPORT_HEAD assignment). Delegates to the centralized AuthorizationService.
      */
     private void validateCanScoreMatchForSport(Authentication authentication, UUID eventSportId) {
         UUID currentUserId = extractUserId(authentication);
-        if (userRoleService.hasRole(currentUserId, AccountType.SUPER_ADMIN)
-                || userRoleService.hasRole(currentUserId, AccountType.ADMINISTRATOR)
-                || userRoleService.hasRole(currentUserId, AccountType.MANAGER)
-                || userRoleService.hasRole(currentUserId, AccountType.JUDGE)) {
-            return;
-        }
-        if (userRoleService.hasRole(currentUserId, AccountType.ORGANIZER)
-                || userRoleService.hasRole(currentUserId, AccountType.SUB_ORGANIZER)) {
-            if (eventSportId != null) {
-                var sportOpt = eventSportsRepository.findById(eventSportId);
-                if (sportOpt.isPresent()) {
-                    UUID eventId = sportOpt.get().getEventId();
-                    if (eventAssignmentRepository.existsByUserIdAndEventId(currentUserId, eventId)) {
-                        return;
-                    }
-                }
-            }
-        }
-        throw ApiException.forbidden("Insufficient role or event assignment required");
+        authorizationService.assertCanScoreMatch(currentUserId, eventSportId);
     }
 
     /**
-     * Hard-delete / data-destructive ops: SUPER_ADMIN and ADMINISTRATOR only.
+     * Hard-delete / data-destructive ops: platform admins only.
      */
     private void validateSuperOrAdmin(Authentication authentication) {
         UUID currentUserId = extractUserId(authentication);
-        boolean allowed = userRoleService.hasRole(currentUserId, AccountType.SUPER_ADMIN)
-                || userRoleService.hasRole(currentUserId, AccountType.ADMINISTRATOR);
-        if (!allowed) {
-            throw ApiException.forbidden("SUPER_ADMIN or ADMINISTRATOR role required");
-        }
+        authorizationService.assertIsPlatformAdmin(currentUserId);
     }
 
     /**
-     * Accepts match-management roles OR an ORGANIZER/SUB_ORGANIZER assigned
-     * to the event containing the given eventSportId.
+     * Match/bracket management: anyone who can manage the sport (platform
+     * admin, organiser owner, or an approved EVENT_HEAD/SPORT_HEAD assignment).
      */
     private void validateAdminOrOrganizerForSport(Authentication authentication, UUID eventSportId) {
         UUID currentUserId = extractUserId(authentication);
-        if (userRoleService.hasRole(currentUserId, AccountType.SUPER_ADMIN)
-                || userRoleService.hasRole(currentUserId, AccountType.ADMINISTRATOR)
-                || userRoleService.hasRole(currentUserId, AccountType.MANAGER)) {
-            return;
-        }
-        // ORGANIZER / SUB_ORGANIZER — check event assignment
-        if (userRoleService.hasRole(currentUserId, AccountType.ORGANIZER)
-                || userRoleService.hasRole(currentUserId, AccountType.SUB_ORGANIZER)) {
-            if (eventSportId != null) {
-                var sportOpt = eventSportsRepository.findById(eventSportId);
-                if (sportOpt.isPresent()) {
-                    UUID eventId = sportOpt.get().getEventId();
-                    if (eventAssignmentRepository.existsByUserIdAndEventId(currentUserId, eventId)) {
-                        return;
-                    }
-                }
-            }
-        }
-        throw ApiException.forbidden("Insufficient role or event assignment required");
+        authorizationService.assertCanManageSport(currentUserId, eventSportId);
     }
 
     // =====================================================

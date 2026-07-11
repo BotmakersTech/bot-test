@@ -9,9 +9,9 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.botleague.backend.admin.repository.UserEventAssignmentRepository;
 import com.botleague.backend.chat.service.ChatService;
 import com.botleague.backend.common.exception.ApiException;
+import com.botleague.backend.common.security.AuthorizationService;
 import com.botleague.backend.matches.repository.MatchRepository;
 import com.botleague.backend.notification.enums.NotificationPriority;
 import com.botleague.backend.notification.enums.NotificationTargetType;
@@ -33,16 +33,13 @@ import com.botleague.backend.team.enums.ControlMode;
 @Service
 public class EventSportsService {
 
-    private static final java.util.Set<String> FULL_ACCESS_ROLES =
-            java.util.Set.of("SUPER_ADMIN", "ADMINISTRATOR", "MANAGER");
-
     private final EventSportsRepository eventSportsRepository;
     private final EventRepository eventRepository;
     private final MatchRepository matchRepository;
     private final ChatService chatService;
     private final RealtimePublisher realtimePublisher;
     private final NotificationService notificationService;
-    private final UserEventAssignmentRepository eventAssignmentRepository;
+    private final AuthorizationService authorizationService;
 
     public EventSportsService(EventSportsRepository eventSportsRepository,
                               EventRepository eventRepository,
@@ -50,25 +47,19 @@ public class EventSportsService {
                               ChatService chatService,
                               RealtimePublisher realtimePublisher,
                               NotificationService notificationService,
-                              UserEventAssignmentRepository eventAssignmentRepository) {
+                              AuthorizationService authorizationService) {
         this.eventSportsRepository = eventSportsRepository;
         this.eventRepository = eventRepository;
         this.matchRepository = matchRepository;
         this.chatService = chatService;
         this.realtimePublisher = realtimePublisher;
         this.notificationService = notificationService;
-        this.eventAssignmentRepository = eventAssignmentRepository;
+        this.authorizationService = authorizationService;
     }
 
-    /** ADMINISTRATOR+ can manage any event's sports; ORGANIZER only their assigned events. */
+    /** Platform admins/organiser owner can manage any of their events' sports; EVENT_HEAD only their assigned events. */
     private void assertCanManage(UUID eventId, UUID callerId, List<String> callerRoles) {
-        boolean fullAccess = callerRoles.stream().anyMatch(FULL_ACCESS_ROLES::contains);
-        if (fullAccess) return;
-        boolean isAssignedOrganizer = (callerRoles.contains("ORGANIZER") || callerRoles.contains("SUB_ORGANIZER"))
-                && eventAssignmentRepository.existsByUserIdAndEventId(callerId, eventId);
-        if (!isAssignedOrganizer) {
-            throw ApiException.forbidden("You are not assigned to this event.");
-        }
+        authorizationService.assertCanManageEvent(callerId, eventId);
     }
 
     // =========================

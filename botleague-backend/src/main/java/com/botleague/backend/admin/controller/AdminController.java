@@ -58,7 +58,7 @@ public class AdminController {
     // =====================================================
 
     @GetMapping("/events")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<List<AdminAllEventResponse>> getAllEvents() {
         return ResponseEntity.ok(adminService.getAllEvents());
     }
@@ -68,7 +68,7 @@ public class AdminController {
     // =====================================================
 
     @GetMapping("/events/{eventId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER','SUB_ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD','SPORT_HEAD')")
     public ResponseEntity<AdminAllEventResponse> getEventById(
             @PathVariable UUID eventId,
             Authentication auth
@@ -77,7 +77,7 @@ public class AdminController {
     }
 
     @GetMapping("/events/{eventId}/sports/{sportsId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER','SUB_ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD','SPORT_HEAD')")
     public ResponseEntity<AdminAllEventResponse> getEventSportsById(
             @PathVariable UUID eventId,
             @PathVariable UUID sportsId,
@@ -93,7 +93,7 @@ public class AdminController {
     // =====================================================
 
     @PutMapping("/events/{eventId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<AdminAllEventResponse> updateEvent(
             @PathVariable UUID eventId,
             @RequestBody UpdateEventRequest request
@@ -106,7 +106,7 @@ public class AdminController {
     // =====================================================
 
     @PatchMapping("/events/{eventId}/status")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<AdminAllEventResponse> changeEventStatus(
             @PathVariable UUID eventId,
             @RequestBody ChangeEventStatusRequest request
@@ -119,7 +119,7 @@ public class AdminController {
     // =====================================================
 
     @DeleteMapping("/events/{eventId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<Void> deleteEvent(@PathVariable UUID eventId) {
         adminService.softDeleteEvent(eventId);
         return ResponseEntity.noContent().build();
@@ -130,13 +130,13 @@ public class AdminController {
     // =====================================================
 
     @PatchMapping("/sports/{sportId}/approve")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<GetEventSportsDTO> approveSport(@PathVariable UUID sportId) {
         return ResponseEntity.ok(eventSportsService.approveSport(sportId));
     }
 
     @PatchMapping("/sports/{sportId}/reject")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<GetEventSportsDTO> rejectSport(
             @PathVariable UUID sportId,
             @RequestParam(required = false) String reason
@@ -151,7 +151,7 @@ public class AdminController {
     // =====================================================
 
     @PostMapping("/chat/backfill-event-team-rooms")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<java.util.Map<String, Object>> backfillEventTeamChats() {
         int synced = sportRegistrationService.backfillEventTeamChats();
         return ResponseEntity.ok(java.util.Map.of("registrationsSynced", synced));

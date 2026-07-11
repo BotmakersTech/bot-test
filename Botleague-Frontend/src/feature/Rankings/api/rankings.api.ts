@@ -116,10 +116,18 @@ export const getWeightClasses = async (sport: string): Promise<string[]> => {
   return res.data ?? [];
 };
 
-// ── Finalize event leaderboard (admin — propagates to global rankings) ────────
+// ── Finalize event leaderboard (event-tier only — sort, assign ranks, mark
+//    finalized. Does NOT touch the global ranking pool.) ─────────────────────
 
 export const finalizeEventLeaderboard = async (eventSportId: string): Promise<string> => {
   const res = await api.post(`/rankings/finalize/${eventSportId}`);
+  return res.data;
+};
+
+// ── Push to GLOBAL rankings — ADMIN/SUPER_ADMIN only, no exceptions ───────────
+
+export const pushToGlobalRankings = async (eventSportId: string): Promise<string> => {
+  const res = await api.post(`/rankings/global/push/${eventSportId}`);
   return res.data;
 };
 

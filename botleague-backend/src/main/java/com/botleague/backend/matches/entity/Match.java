@@ -381,6 +381,21 @@ public class Match {
     private MatchStatus status = MatchStatus.SCHEDULED;
 
     // =====================================================
+    // RESULT APPROVAL
+    // Populated when a submitted result is approved/rejected
+    // by an EVENT_HEAD/ORGANISER(owner)/ADMIN/SUPER_ADMIN.
+    // =====================================================
+
+    @Column(name = "approved_by")
+    private UUID approvedBy;
+
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
+
+    @Column(name = "rejection_reason", length = 500)
+    private String rejectionReason;
+
+    // =====================================================
     // TIMINGS
     // =====================================================
 
@@ -760,6 +775,30 @@ public class Match {
 
     public void setStatus(MatchStatus status) {
         this.status = status;
+    }
+
+    public UUID getApprovedBy() {
+        return approvedBy;
+    }
+
+    public void setApprovedBy(UUID approvedBy) {
+        this.approvedBy = approvedBy;
+    }
+
+    public LocalDateTime getApprovedAt() {
+        return approvedAt;
+    }
+
+    public void setApprovedAt(LocalDateTime approvedAt) {
+        this.approvedAt = approvedAt;
+    }
+
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
     }
 
     public LocalDateTime getScheduledAt() {
