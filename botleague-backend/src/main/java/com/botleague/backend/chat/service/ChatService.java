@@ -138,7 +138,6 @@ public class ChatService {
     public ChatRoom getOrCreateEventTeamChat(
             UUID teamId,
             UUID eventId,
-            String teamName,
             String eventName,
             UUID captainId,
             List<UUID> lineupUserIds,
@@ -149,7 +148,7 @@ public class ChatService {
                 .orElseGet(() -> {
                     ChatRoom r = new ChatRoom();
                     r.setType(ChatRoomType.EVENT_TEAM);
-                    r.setName((teamName != null ? teamName : "Team") + " @ " + (eventName != null ? eventName : "Event"));
+                    r.setName(eventName != null ? eventName : "Event");
                     r.setReferenceId(teamId);
                     r.setSecondaryReferenceId(eventId);
                     return chatRoomRepository.save(r);

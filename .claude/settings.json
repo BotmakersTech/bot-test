@@ -35,7 +35,17 @@
       "Bash(PGPASSWORD=admin123 \"/c/Program Files/PostgreSQL/18/bin/psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -c \"\\\\d chat_message_deletions\")",
       "Bash(PGPASSWORD=admin123 \"/c/Program Files/PostgreSQL/18/bin/psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -c \"DROP TABLE IF EXISTS chat_message_deletions;\")",
       "Bash(grep -n \"export const { setActiveRoom, addIncomingMessage }\" \"d:\\\\BotLeague\\\\Botleague-Frontend\\\\src\\\\feature\\\\Chat\\\\store\\\\chatSlice.ts\")",
-      "PowerShell(Stop-Process -Id 485428 -Force -ErrorAction SilentlyContinue)"
+      "PowerShell(Stop-Process -Id 485428 -Force -ErrorAction SilentlyContinue)",
+      "Bash(PGPASSWORD=admin123 \"/c/Program Files/PostgreSQL/18/bin/psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -c \"SELECT id, type, name, reference_id, secondary_reference_id, created_at FROM chat_rooms WHERE type IN \\('EVENT_TEAM','REGISTRATION'\\) ORDER BY created_at DESC LIMIT 10;\")",
+      "Bash(PGPASSWORD=admin123 \"/c/Program Files/PostgreSQL/18/bin/psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -c \"SELECT id, event_id, team_id, robot_name, status, registered_at FROM sport_registrations ORDER BY registered_at DESC LIMIT 10;\")",
+      "PowerShell(Stop-Process -Id 485416 -Force -ErrorAction SilentlyContinue)",
+      "Bash(PGPASSWORD=admin123 \"/c/Program Files/PostgreSQL/18/bin/psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -c \"SELECT email, account_type FROM users u JOIN user_roles ur ON ur.user_id = u.id WHERE ur.role_type IN \\('SUPER_ADMIN','ADMINISTRATOR'\\) LIMIT 5;\")",
+      "Bash(PGPASSWORD=admin123 \"/c/Program Files/PostgreSQL/18/bin/psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -t -c \"SELECT id FROM users WHERE email = 'superadmin@botleague.test';\")",
+      "Bash(python3 -c ' *)",
+      "Bash(node -e ' *)",
+      "Bash(curl -s -X POST http://localhost:8081/api/admin/chat/backfill-event-team-rooms -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhYTAwMDAwMS0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJyb2xlcyI6WyJTVVBFUl9BRE1JTiJdLCJpYXQiOjE3ODM3NTMzMTMsImV4cCI6MTc4Mzc1NDIxM30.-jHPcPYyJbmMB7oS9C7glRkr1qdE62oBFt4d6wjljjY')",
+      "Bash(PGPASSWORD=admin123 \"/c/Program Files/PostgreSQL/18/bin/psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -c \"SELECT id, type, name, reference_id AS team_id, secondary_reference_id AS event_id FROM chat_rooms WHERE type = 'EVENT_TEAM';\")",
+      "Bash(PGPASSWORD=admin123 \"/c/Program Files/PostgreSQL/18/bin/psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -c \"SELECT cr.name AS room, cp.user_id, cp.can_send, cp.is_active FROM chat_participants cp JOIN chat_rooms cr ON cr.id = cp.chat_room_id WHERE cr.type = 'EVENT_TEAM';\")"
     ]
   }
 }

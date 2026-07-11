@@ -830,8 +830,34 @@ public class SportRegistrationService {
 
         chatService.getOrCreateEventTeamChat(
                 team.getId(), eventSport.getEventId(),
-                team.getTeamName() != null ? team.getTeamName() : "Team",
                 eventName,
                 captainId, lineupUserIds, organizerUserId);
+    }
+
+    /**
+     * One-off backfill for registrations that happened before the event-team
+     * chat feature existed — retroactively creates/syncs each team's event
+     * chat room from its existing REGISTERED sport_registrations. Idempotent
+     * and safe to re-run (delegates to the same self-healing sync used by
+     * every live registration/lineup action).
+     */
+    @Transactional
+    public int backfillEventTeamChats() {
+        List<SportRegistration> registrations =
+                sportRegistrationRepository.findByStatus(RegistrationStatus.REGISTERED);
+
+        int synced = 0;
+        for (SportRegistration registration : registrations) {
+            try {
+                Team team = teamRepository.findById(registration.getTeamId()).orElse(null);
+                EventSports eventSport = eventSportsRepository.findById(registration.getEventSportId()).orElse(null);
+                if (team == null || eventSport == null) continue;
+                syncEventTeamChat(team, eventSport);
+                synced++;
+            } catch (Exception ignored) {
+                // One bad row must not abort the rest of the backfill
+            }
+        }
+        return synced;
     }
 }

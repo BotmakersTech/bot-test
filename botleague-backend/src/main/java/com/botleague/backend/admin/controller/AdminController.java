@@ -22,6 +22,8 @@ import com.botleague.backend.admin.dto.UpdateEventRequest;
 import com.botleague.backend.admin.service.AdminService;
 import com.botleague.backend.events.dto.GetEventSportsDTO;
 import com.botleague.backend.events.service.EventSportsService;
+import com.botleague.backend.events.service.SportRegistrationService;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
@@ -35,6 +37,7 @@ public class AdminController {
 
     private final AdminService adminService;
     private final EventSportsService eventSportsService;
+    private final SportRegistrationService sportRegistrationService;
 
     // =====================================================
     // CONSTRUCTOR
@@ -42,10 +45,12 @@ public class AdminController {
 
     public AdminController(
             AdminService adminService,
-            EventSportsService eventSportsService
+            EventSportsService eventSportsService,
+            SportRegistrationService sportRegistrationService
     ) {
         this.adminService = adminService;
         this.eventSportsService = eventSportsService;
+        this.sportRegistrationService = sportRegistrationService;
     }
 
     // =====================================================
@@ -137,6 +142,19 @@ public class AdminController {
             @RequestParam(required = false) String reason
     ) {
         return ResponseEntity.ok(eventSportsService.rejectSport(sportId, reason));
+    }
+
+    // =====================================================
+    // ONE-OFF: backfill event-team chat rooms for registrations
+    // that happened before that feature existed. Idempotent —
+    // safe to call more than once (e.g. once per environment).
+    // =====================================================
+
+    @PostMapping("/chat/backfill-event-team-rooms")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')")
+    public ResponseEntity<java.util.Map<String, Object>> backfillEventTeamChats() {
+        int synced = sportRegistrationService.backfillEventTeamChats();
+        return ResponseEntity.ok(java.util.Map.of("registrationsSynced", synced));
     }
 
     // =====================================================

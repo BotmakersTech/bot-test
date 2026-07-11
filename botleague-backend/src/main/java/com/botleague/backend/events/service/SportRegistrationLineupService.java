@@ -19,14 +19,12 @@ import com.botleague.backend.events.repository.EventRepository;
 import com.botleague.backend.events.repository.EventSportsRepository;
 import com.botleague.backend.events.repository.SportRegistrationRepository;
 import com.botleague.backend.team.entity.Robot;
-import com.botleague.backend.team.entity.Team;
 import com.botleague.backend.team.entity.TeamMembership;
 import com.botleague.backend.team.enums.RobotStatus;
 import com.botleague.backend.team.enums.TeamMembershipStatus;
 import com.botleague.backend.team.enums.TeamRole;
 import com.botleague.backend.team.repository.RobotRepository;
 import com.botleague.backend.team.repository.TeamMembershipRepository;
-import com.botleague.backend.team.repository.TeamRepository;
 
 /**
  * Manages the lineup of team members (people) for each robot registration.
@@ -64,7 +62,6 @@ public class SportRegistrationLineupService {
     private final RobotRepository                   robotRepository;
     private final TeamMembershipRepository          teamMembershipRepository;
     private final ChatService                       chatService;
-    private final TeamRepository                    teamRepository;
     private final EventRepository                   eventRepository;
 
     // =====================================================
@@ -78,7 +75,6 @@ public class SportRegistrationLineupService {
             RobotRepository                   robotRepository,
             TeamMembershipRepository          teamMembershipRepository,
             ChatService                       chatService,
-            TeamRepository                    teamRepository,
             EventRepository                   eventRepository
     ) {
         this.lineupRepository            = lineupRepository;
@@ -87,7 +83,6 @@ public class SportRegistrationLineupService {
         this.robotRepository             = robotRepository;
         this.teamMembershipRepository    = teamMembershipRepository;
         this.chatService                 = chatService;
-        this.teamRepository              = teamRepository;
         this.eventRepository             = eventRepository;
     }
 
@@ -309,12 +304,10 @@ public class SportRegistrationLineupService {
                 .map(TeamMembership::getUserId)
                 .orElse(null);
 
-        Team team = teamRepository.findById(teamId).orElse(null);
         Event event = eventRepository.findById(eventId).orElse(null);
 
         chatService.getOrCreateEventTeamChat(
                 teamId, eventId,
-                team != null ? team.getTeamName() : "Team",
                 event != null ? event.getEventName() : "Event",
                 captainId,
                 List.of(membership.getUserId()),
