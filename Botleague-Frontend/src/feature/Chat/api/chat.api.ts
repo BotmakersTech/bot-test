@@ -61,8 +61,9 @@ export const markRoomRead = async (roomId: string): Promise<void> => {
   await api.post(`/chat/rooms/${roomId}/read`)
 }
 
-// "Delete for me" — hides the message from the caller's own view only.
-export const deleteMessageForMe = async (messageId: string): Promise<void> => {
+// Permanent delete — only the sender may delete their own message, and it
+// disappears for every participant.
+export const deleteMessage = async (messageId: string): Promise<void> => {
   await api.delete(`/chat/messages/${messageId}`)
 }
 

@@ -32,7 +32,10 @@
       "PowerShell(Stop-Process -Id 385576 -Force -ErrorAction SilentlyContinue)",
       "Bash(git config *)",
       "Bash(PGPASSWORD=admin123 \"/c/Program Files/PostgreSQL/18/bin/psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -c \"SELECT conname, pg_get_constraintdef\\(oid\\) FROM pg_constraint WHERE conname LIKE '%chat_rooms%' OR conname LIKE '%chat_message%';\")",
-      "Bash(PGPASSWORD=admin123 \"/c/Program Files/PostgreSQL/18/bin/psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -c \"\\\\d chat_message_deletions\")"
+      "Bash(PGPASSWORD=admin123 \"/c/Program Files/PostgreSQL/18/bin/psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -c \"\\\\d chat_message_deletions\")",
+      "Bash(PGPASSWORD=admin123 \"/c/Program Files/PostgreSQL/18/bin/psql.exe\" -h localhost -p 5432 -U postgres -d BotLeague_Test -c \"DROP TABLE IF EXISTS chat_message_deletions;\")",
+      "Bash(grep -n \"export const { setActiveRoom, addIncomingMessage }\" \"d:\\\\BotLeague\\\\Botleague-Frontend\\\\src\\\\feature\\\\Chat\\\\store\\\\chatSlice.ts\")",
+      "PowerShell(Stop-Process -Id 485428 -Force -ErrorAction SilentlyContinue)"
     ]
   }
 }

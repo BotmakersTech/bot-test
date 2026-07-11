@@ -55,6 +55,16 @@ function formatRelativeTime(dateString: string): string {
   return `${d}d`;
 }
 
+function formatMessageTime(dateString: string): string {
+  const d = toUTC(dateString);
+  const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  const now = new Date();
+  const isToday = d.toDateString() === now.toDateString();
+  if (isToday) return time;
+  const date = d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  return `${date}, ${time}`;
+}
+
 function getInitials(name: string): string {
   const parts = name.trim().split(" ").filter(Boolean);
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
@@ -190,29 +200,35 @@ function BubbleGroup({ group, onDeleteMessage }: { group: MessageGroup; onDelete
 
       <div className="chat-bubble-stack">
         {group.messages.map((msg) => (
-          <div key={msg.id} className={group.isMine ? "chat-bubble chat-bubble-mine" : "chat-bubble"} style={{ position: "relative" }}>
-            {msg.content}
-            <button
-              type="button"
-              title="Delete for me"
-              aria-label="Delete for me"
-              onClick={() => {
-                if (confirm("Delete this message for you? Other participants will still see it.")) {
-                  onDeleteMessage(msg.id);
-                }
-              }}
-              style={{
-                position: "absolute", top: "-8px",
-                [group.isMine ? "left" : "right"]: "-8px",
-                width: "22px", height: "22px", borderRadius: "50%",
-                background: "rgba(0,0,0,0.55)", border: "none", color: "#fff",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", opacity: 0, transition: "opacity 0.12s",
-              }}
-              className="chat-bubble-delete"
-            >
-              <Trash2 size={12} />
-            </button>
+          <div key={msg.id} style={{ display: "flex", flexDirection: "column", alignItems: group.isMine ? "flex-end" : "flex-start" }}>
+            <div className={group.isMine ? "chat-bubble chat-bubble-mine" : "chat-bubble"} style={{ position: "relative" }}>
+              {msg.content}
+              {group.isMine && (
+                <button
+                  type="button"
+                  title="Delete message"
+                  aria-label="Delete message"
+                  onClick={() => {
+                    if (confirm("Delete this message for everyone? This cannot be undone.")) {
+                      onDeleteMessage(msg.id);
+                    }
+                  }}
+                  style={{
+                    position: "absolute", top: "-8px", left: "-8px",
+                    width: "22px", height: "22px", borderRadius: "50%",
+                    background: "rgba(0,0,0,0.55)", border: "none", color: "#fff",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", opacity: 0, transition: "opacity 0.12s",
+                  }}
+                  className="chat-bubble-delete"
+                >
+                  <Trash2 size={12} />
+                </button>
+              )}
+            </div>
+            <span style={{ fontSize: "0.68rem", color: "#9ca3af", marginTop: "3px", padding: "0 4px" }}>
+              {formatMessageTime(msg.sentAt)}
+            </span>
           </div>
         ))}
       </div>

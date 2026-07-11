@@ -5,7 +5,7 @@ import {
   getChatMessages,
   sendMessage,
   markRoomRead as apiMarkRoomRead,
-  deleteMessageForMe,
+  deleteMessage as apiDeleteMessage,
   type ChatMessage,
   type ChatRoomList,
 } from "../api/chat.api"
@@ -83,7 +83,7 @@ export const deleteChatMessage = createAsyncThunk(
   "chat/deleteMessage",
   async ({ roomId, messageId }: { roomId: string; messageId: string }, { rejectWithValue }) => {
     try {
-      await deleteMessageForMe(messageId)
+      await apiDeleteMessage(messageId)
       return { roomId, messageId }
     } catch (err: unknown) {
       return rejectWithValue(err instanceof Error ? err.message : "Failed to delete message")
@@ -140,6 +140,14 @@ const chatSlice = createSlice({
       // Clear unread badge immediately when room is selected
       if (action.payload && state.rooms) {
         state.rooms = clearUnread(state.rooms, action.payload)
+      }
+    },
+    // Fired when a realtime broadcast arrives for a message someone ELSE just
+    // permanently deleted — removes it from every currently-open view live.
+    removeMessage(state, action: PayloadAction<{ roomId: string; messageId: string }>) {
+      const { roomId, messageId } = action.payload
+      if (state.messages[roomId]) {
+        state.messages[roomId] = state.messages[roomId].filter((m) => m.id !== messageId)
       }
     },
     addIncomingMessage(state, action: PayloadAction<ChatMessage>) {
@@ -230,7 +238,7 @@ const chatSlice = createSlice({
   },
 })
 
-export const { setActiveRoom, addIncomingMessage } = chatSlice.actions
+export const { setActiveRoom, addIncomingMessage, removeMessage } = chatSlice.actions
 
 // ─── Selectors ───────────────────────────────────────────────────────────────
 

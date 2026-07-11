@@ -122,15 +122,16 @@ public class ChatController {
 
     /**
      * DELETE /api/chat/messages/{messageId}
-     * "Delete for me" — hides the message from the caller's own view only.
+     * Permanent delete — only the sender may delete their own message, and it
+     * disappears for every participant.
      */
     @DeleteMapping("/messages/{messageId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> deleteMessageForMe(
+    public ResponseEntity<Void> deleteMessage(
             @PathVariable UUID messageId,
             Authentication authentication) {
         UUID userId = extractUserId(authentication);
-        chatService.deleteMessageForMe(messageId, userId);
+        chatService.deleteMessage(messageId, userId);
         return ResponseEntity.noContent().build();
     }
 

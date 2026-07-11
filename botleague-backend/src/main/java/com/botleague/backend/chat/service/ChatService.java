@@ -9,7 +9,6 @@ import com.botleague.backend.chat.entity.ChatMessage;
 import com.botleague.backend.chat.entity.ChatParticipant;
 import com.botleague.backend.chat.entity.ChatRoom;
 import com.botleague.backend.chat.enums.ChatRoomType;
-import com.botleague.backend.chat.repository.ChatMessageDeletionRepository;
 import com.botleague.backend.chat.repository.ChatMessageRepository;
 import com.botleague.backend.chat.repository.ChatParticipantRepository;
 import com.botleague.backend.chat.repository.ChatRoomRepository;
@@ -38,7 +37,6 @@ public class ChatService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatParticipantRepository chatParticipantRepository;
     private final ChatMessageRepository chatMessageRepository;
-    private final ChatMessageDeletionRepository chatMessageDeletionRepository;
     private final UserRepository userRepository;
     private final TeamMembershipRepository teamMembershipRepository;
     private final SimpMessagingTemplate messagingTemplate;
@@ -48,7 +46,6 @@ public class ChatService {
             ChatRoomRepository chatRoomRepository,
             ChatParticipantRepository chatParticipantRepository,
             ChatMessageRepository chatMessageRepository,
-            ChatMessageDeletionRepository chatMessageDeletionRepository,
             UserRepository userRepository,
             TeamMembershipRepository teamMembershipRepository,
             SimpMessagingTemplate messagingTemplate,
@@ -56,7 +53,6 @@ public class ChatService {
         this.chatRoomRepository = chatRoomRepository;
         this.chatParticipantRepository = chatParticipantRepository;
         this.chatMessageRepository = chatMessageRepository;
-        this.chatMessageDeletionRepository = chatMessageDeletionRepository;
         this.userRepository = userRepository;
         this.teamMembershipRepository = teamMembershipRepository;
         this.messagingTemplate = messagingTemplate;
@@ -504,41 +500,36 @@ public class ChatService {
         if (!isParticipant) {
             throw ApiException.forbidden("You are not a participant in this chat");
         }
-        List<ChatMessage> messages = chatMessageRepository
-                .findTop50ByChatRoomIdAndIsDeletedFalseOrderBySentAtAsc(chatRoomId);
-
-        java.util.Set<UUID> hiddenForMe = chatMessageDeletionRepository.findDeletedMessageIds(
-                userId, messages.stream().map(ChatMessage::getId).collect(Collectors.toList()));
-
-        return messages.stream()
-                .filter(m -> !hiddenForMe.contains(m.getId()))
+        return chatMessageRepository
+                .findTop50ByChatRoomIdAndIsDeletedFalseOrderBySentAtAsc(chatRoomId)
+                .stream()
                 .map(m -> toMessageResponse(m, userId))
                 .collect(Collectors.toList());
     }
 
     /**
-     * "Delete for me" — hides one message from the caller's own view only.
-     * Every other participant keeps seeing it normally. Idempotent.
+     * Permanently deletes a message — only the original sender may do this,
+     * and it disappears for every participant, not just the caller. Broadcasts
+     * the removal so anyone with the room open live sees it vanish too.
      */
-    public void deleteMessageForMe(UUID messageId, UUID userId) {
+    public void deleteMessage(UUID messageId, UUID userId) {
         ChatMessage message = chatMessageRepository.findById(messageId)
                 .orElseThrow(() -> ApiException.notFound("Message not found"));
 
-        boolean isParticipant = chatParticipantRepository
-                .existsByChatRoomIdAndUserIdAndIsActiveTrue(message.getChatRoomId(), userId);
-        if (!isParticipant) {
-            throw ApiException.forbidden("You are not a participant in this chat");
+        if (!userId.equals(message.getSenderId())) {
+            throw ApiException.forbidden("Only the sender can delete this message.");
         }
 
-        if (chatMessageDeletionRepository.existsByMessageIdAndUserId(messageId, userId)) {
+        if (message.isDeleted()) {
             return;
         }
 
-        com.botleague.backend.chat.entity.ChatMessageDeletion deletion =
-                new com.botleague.backend.chat.entity.ChatMessageDeletion();
-        deletion.setMessageId(messageId);
-        deletion.setUserId(userId);
-        chatMessageDeletionRepository.save(deletion);
+        message.setDeleted(true);
+        message.setContent("");
+        ChatMessage saved = chatMessageRepository.save(message);
+
+        ChatMessageResponse response = toMessageResponse(saved, null);
+        messagingTemplate.convertAndSend("/topic/chat/" + saved.getChatRoomId(), response);
     }
 
     @Transactional(readOnly = true)

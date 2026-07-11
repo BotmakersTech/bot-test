@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react"
 import { useSelector } from "react-redux"
 import { Client } from "@stomp/stompjs"
 import { useAppDispatch } from "../../../app/hooks"
-import { addIncomingMessage } from "../store/chatSlice"
+import { addIncomingMessage, removeMessage } from "../store/chatSlice"
 import type { ChatMessage } from "../api/chat.api"
 import type { RootState } from "../../../app/store"
 
@@ -39,6 +39,12 @@ export function useChatWebSocket(
           client.subscribe(`/topic/chat/${roomId}`, (frame) => {
             try {
               const msg: ChatMessage = JSON.parse(frame.body)
+              // A permanent delete re-broadcasts the same message id with
+              // isDeleted=true — remove it live rather than showing a blank bubble.
+              if (msg.isDeleted) {
+                dispatch(removeMessage({ roomId: msg.chatRoomId, messageId: msg.id }))
+                return
+              }
               // Server broadcasts the same payload to every subscriber so the
               // `mine` field from the server is unreliable for real-time events.
               // Patch it client-side using the authenticated user's ID.
