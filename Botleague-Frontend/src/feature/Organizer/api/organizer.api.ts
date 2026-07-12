@@ -8,6 +8,9 @@ export interface OrganizerEvent {
   eventName: string;
   eventDescription: string | null;
   eventLogoUrl: string | null;
+  eventThumbnailUrl?: string | null;
+  teaserVideo1Url?: string | null;
+  teaserVideo2Url?: string | null;
   organizationName: string | null;
   organizationUrl?: string | null;
   venueName: string | null;
@@ -41,6 +44,8 @@ export interface OrganizerSport {
   registrations?: OrganizerTeamRegistration[];
 
   sportsDescription?: string | null;
+  sportThumbnailUrl?: string | null;
+  sportTeaserVideoUrl?: string | null;
   competitionType?: string | null;
   weightLimitKg?: number | null;
   maxLengthCm?: number | null;

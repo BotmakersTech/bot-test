@@ -43,6 +43,22 @@ public class FileKeyService {
     }
 
     // =========================
+    // EVENT - THUMBNAIL / TEASER VIDEOS
+    // =========================
+    public String generateEventMediaKey(UUID eventId, String slot, String contentType) {
+        return "events/" + eventId + "/media/" + slot.toLowerCase() + "/" +
+                UUID.randomUUID() + getExtension(contentType);
+    }
+
+    // =========================
+    // SPORT - THUMBNAIL / TEASER VIDEO
+    // =========================
+    public String generateSportMediaKey(UUID eventSportId, String slot, String contentType) {
+        return "sports/" + eventSportId + "/media/" + slot.toLowerCase() + "/" +
+                UUID.randomUUID() + getExtension(contentType);
+    }
+
+    // =========================
     // SPONSOR - LOGO (TEAM)
     // =========================
     public String generateSponsorLogoKey(UUID teamId, String contentType) {
@@ -94,6 +110,11 @@ public class FileKeyService {
                 // Generic fallback: image/xyz → .xyz
                 if (type.startsWith("image/")) {
                     String sub = type.substring("image/".length())
+                                     .replaceAll("[^a-zA-Z0-9]", "");
+                    return sub.isEmpty() ? "" : "." + sub;
+                }
+                if (type.startsWith("video/")) {
+                    String sub = type.substring("video/".length())
                                      .replaceAll("[^a-zA-Z0-9]", "");
                     return sub.isEmpty() ? "" : "." + sub;
                 }

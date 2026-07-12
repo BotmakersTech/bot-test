@@ -5,6 +5,7 @@ import {
   getMyEventById, updateEventInfo, changeEventStatus, createEventSport, submitSportForApproval,
   type OrganizerEvent, type OrganizerSport, type UpdateEventInfoRequest, type CreateEventSportRequest,
 } from "../api/organizer.api"
+import { uploadEventMedia, clearEventMedia, type EventMediaSlot } from "../api/eventMedia.api"
 import SponsorManager from "../../Admin/components/SponsorManager"
 
 // ─────────────────────────────────────────────────────────────
@@ -546,11 +547,99 @@ const STATUS_TRANSITIONS: Record<string, { value: string; label: string; color: 
 // EDIT EVENT MODAL
 // ─────────────────────────────────────────────────────────────
 
-function EditEventModal({ event, onSave, saving, onClose }: {
+// Single thumbnail/video slot: pick a file, upload immediately (independent
+// of the modal's Save button), preview, and allow removal.
+function EventMediaField({
+  eventId,
+  slot,
+  kind,
+  label,
+  currentUrl,
+  onMediaChange,
+}: {
+  eventId: string
+  slot: EventMediaSlot
+  kind: "image" | "video"
+  label: string
+  currentUrl?: string | null
+  onMediaChange: () => void
+}) {
+  const [uploading, setUploading] = useState(false)
+  const [fieldError, setFieldError] = useState<string | null>(null)
+
+  const handleFile = async (file: File | null) => {
+    if (!file) return
+    setFieldError(null)
+    setUploading(true)
+    try {
+      await uploadEventMedia(eventId, slot, file)
+      onMediaChange()
+    } catch (err: any) {
+      setFieldError(err?.message || "Upload failed.")
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleRemove = async () => {
+    setFieldError(null)
+    setUploading(true)
+    try {
+      await clearEventMedia(eventId, slot)
+      onMediaChange()
+    } catch (err: any) {
+      setFieldError(err?.message || "Failed to remove.")
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <FormField label={label}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        {currentUrl && (
+          kind === "image"
+            ? <img src={currentUrl} alt={label} style={{ width: "100%", maxHeight: "160px", objectFit: "cover", borderRadius: "8px", border: `1px solid ${BORDER}` }} />
+            : <video src={currentUrl} controls style={{ width: "100%", maxHeight: "200px", borderRadius: "8px", border: `1px solid ${BORDER}` }} />
+        )}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <label style={{
+            display: "flex", alignItems: "center", gap: "6px", cursor: uploading ? "not-allowed" : "pointer",
+            background: "rgba(255,255,255,0.06)", border: `1px solid ${BORDER}`, borderRadius: "8px",
+            padding: "7px 14px", fontSize: "0.76rem", fontWeight: 600, color: MUTED, opacity: uploading ? 0.6 : 1,
+          }}>
+            {uploading ? <Spinner size={12} color={ACCENT} /> : null}
+            {uploading ? "Uploading…" : currentUrl ? "Replace" : "Upload"}
+            <input
+              type="file"
+              accept={kind === "image" ? "image/*" : "video/*"}
+              disabled={uploading}
+              style={{ display: "none" }}
+              onChange={e => handleFile(e.target.files?.[0] ?? null)}
+            />
+          </label>
+          {currentUrl && (
+            <button type="button" onClick={handleRemove} disabled={uploading} style={{
+              background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)", color: DANGER,
+              borderRadius: "8px", padding: "7px 12px", fontSize: "0.76rem", fontWeight: 600,
+              cursor: uploading ? "not-allowed" : "pointer",
+            }}>
+              Remove
+            </button>
+          )}
+        </div>
+        {fieldError && <div style={{ fontSize: "0.74rem", color: DANGER }}>{fieldError}</div>}
+      </div>
+    </FormField>
+  )
+}
+
+function EditEventModal({ event, onSave, saving, onClose, onMediaChange }: {
   event: OrganizerEvent
   onSave: (req: UpdateEventInfoRequest) => Promise<unknown>
   saving: boolean
   onClose: () => void
+  onMediaChange: () => void
 }) {
   const fmt = (d?: string | null) => d ? d.slice(0, 10) : ""
   const [form, setForm] = useState<UpdateEventInfoRequest>({
@@ -598,6 +687,11 @@ function EditEventModal({ event, onSave, saving, onClose }: {
           <FormField label="Logo URL">
             <input style={inputStyle} placeholder="https://…" value={form.eventLogoUrl ?? ""} onChange={e => set("eventLogoUrl", e.target.value)} />
           </FormField>
+
+          <EventMediaField eventId={event.id} slot="THUMBNAIL" kind="image" label="Thumbnail Image" currentUrl={event.eventThumbnailUrl} onMediaChange={onMediaChange} />
+          <EventMediaField eventId={event.id} slot="TEASER_1" kind="video" label="Teaser Video 1" currentUrl={event.teaserVideo1Url} onMediaChange={onMediaChange} />
+          <EventMediaField eventId={event.id} slot="TEASER_2" kind="video" label="Teaser Video 2" currentUrl={event.teaserVideo2Url} onMediaChange={onMediaChange} />
+
           <FormField label="Organization Name">
             <input style={inputStyle} value={form.organizationName} onChange={e => set("organizationName", e.target.value)} />
           </FormField>
@@ -778,7 +872,7 @@ export default function OrganizerEventDetailPage() {
       )}
 
       {showEditEvent && (
-        <EditEventModal event={event} onSave={handleSaveEdit} saving={savingEdit} onClose={() => setShowEditEvent(false)} />
+        <EditEventModal event={event} onSave={handleSaveEdit} saving={savingEdit} onClose={() => setShowEditEvent(false)} onMediaChange={load} />
       )}
 
       {/* BACK — stays within /organizer */}

@@ -28,8 +28,8 @@ function EventCard({ event, completed, onClick }: { event: EventResponse; comple
   return (
     <button type="button" className="event-card" onClick={onClick}>
       <div className="event-card-image">
-        {event.eventLogoUrl ? (
-          <img src={event.eventLogoUrl} alt={event.eventName} />
+        {event.eventThumbnailUrl || event.eventLogoUrl ? (
+          <img src={event.eventThumbnailUrl ?? event.eventLogoUrl} alt={event.eventName} />
         ) : (
           <div className="event-card-image-fallback">{event.eventName.charAt(0).toUpperCase()}</div>
         )}

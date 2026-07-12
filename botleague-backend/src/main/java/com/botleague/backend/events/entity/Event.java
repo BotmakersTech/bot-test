@@ -37,6 +37,15 @@ public class Event {
     @Column(name = "event_logo_url")
     private String eventLogoUrl;
 
+    @Column(name = "event_thumbnail_url")
+    private String eventThumbnailUrl;
+
+    @Column(name = "teaser_video_1_url")
+    private String teaserVideo1Url;
+
+    @Column(name = "teaser_video_2_url")
+    private String teaserVideo2Url;
+
     // =========================
     // Organizer Info
     // =========================
@@ -166,6 +175,30 @@ public class Event {
 
     public void setEventLogoUrl(String eventLogoUrl) {
         this.eventLogoUrl = eventLogoUrl;
+    }
+
+    public String getEventThumbnailUrl() {
+        return eventThumbnailUrl;
+    }
+
+    public void setEventThumbnailUrl(String eventThumbnailUrl) {
+        this.eventThumbnailUrl = eventThumbnailUrl;
+    }
+
+    public String getTeaserVideo1Url() {
+        return teaserVideo1Url;
+    }
+
+    public void setTeaserVideo1Url(String teaserVideo1Url) {
+        this.teaserVideo1Url = teaserVideo1Url;
+    }
+
+    public String getTeaserVideo2Url() {
+        return teaserVideo2Url;
+    }
+
+    public void setTeaserVideo2Url(String teaserVideo2Url) {
+        this.teaserVideo2Url = teaserVideo2Url;
     }
 
     public String getOrganizationName() {

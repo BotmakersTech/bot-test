@@ -26,6 +26,7 @@ import com.botleague.backend.events.entity.EventSports;
 import com.botleague.backend.events.enums.AgeCategory;
 import com.botleague.backend.events.enums.CompetitionType;
 import com.botleague.backend.events.enums.SportEventStatus;
+import com.botleague.backend.events.enums.SportMediaSlot;
 import com.botleague.backend.events.repository.EventRepository;
 import com.botleague.backend.events.repository.EventSportsRepository;
 import com.botleague.backend.team.enums.ControlMode;
@@ -182,6 +183,57 @@ public class EventSportsService {
         }
 
         return saved.getStatus().name();
+    }
+
+    // =========================
+    // SPORT MEDIA — thumbnail + teaser video
+    // SPORT_HEAD must be able to manage media for their own assigned sport,
+    // so this asserts via assertCanManageSport directly (not the private
+    // assertCanManage helper above, which only checks event-level access and
+    // would incorrectly exclude SPORT_HEAD).
+    // =========================
+    @Transactional
+    public void saveSportMediaSlot(UUID eventId, UUID sportId, SportMediaSlot slot, String key, String fileType, UUID callerId) {
+        authorizationService.assertCanManageSport(callerId, sportId);
+        validateSlotContentType(slot, fileType);
+
+        EventSports sport = eventSportsRepository
+                .findByIdAndEventId(sportId, eventId)
+                .orElseThrow(() -> new IllegalArgumentException("Sport not found"));
+
+        applySportSlot(sport, slot, key);
+        EventSports saved = eventSportsRepository.save(sport);
+        realtimePublisher.pushSportUpdate(saved.getId(), saved.getEventId(), mapToResponse(saved));
+    }
+
+    @Transactional
+    public void clearSportMediaSlot(UUID eventId, UUID sportId, SportMediaSlot slot, UUID callerId) {
+        authorizationService.assertCanManageSport(callerId, sportId);
+
+        EventSports sport = eventSportsRepository
+                .findByIdAndEventId(sportId, eventId)
+                .orElseThrow(() -> new IllegalArgumentException("Sport not found"));
+
+        applySportSlot(sport, slot, null);
+        EventSports saved = eventSportsRepository.save(sport);
+        realtimePublisher.pushSportUpdate(saved.getId(), saved.getEventId(), mapToResponse(saved));
+    }
+
+    private void applySportSlot(EventSports sport, SportMediaSlot slot, String key) {
+        switch (slot) {
+            case THUMBNAIL -> sport.setSportThumbnailUrl(key);
+            case TEASER -> sport.setSportTeaserVideoUrl(key);
+        }
+    }
+
+    private void validateSlotContentType(SportMediaSlot slot, String fileType) {
+        if (fileType == null) return;
+        boolean expectsVideo = slot == SportMediaSlot.TEASER;
+        boolean isVideo = fileType.startsWith("video");
+        if (expectsVideo != isVideo) {
+            throw ApiException.badRequest(
+                    expectsVideo ? "Teaser slot requires a video file" : "Thumbnail slot requires an image file");
+        }
     }
 
     // =========================
@@ -402,6 +454,8 @@ public class EventSportsService {
         response.setEventId(sport.getEventId());
         response.setSport(sport.getSport());
         response.setSportsDescription(sport.getSportsDescription());
+        response.setSportThumbnailUrl(sport.getSportThumbnailUrl());
+        response.setSportTeaserVideoUrl(sport.getSportTeaserVideoUrl());
 
         if (sport.getCompetitionType() != null) {
             response.setCompetitionType(sport.getCompetitionType().name());

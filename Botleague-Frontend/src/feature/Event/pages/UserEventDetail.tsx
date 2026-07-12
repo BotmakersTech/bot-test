@@ -284,6 +284,15 @@ export default function UserEventDetail() {
           ← Back to Events
         </button>
 
+        {/* HERO THUMBNAIL */}
+        {event.eventThumbnailUrl && (
+          <img
+            src={event.eventThumbnailUrl}
+            alt={event.eventName}
+            style={{ width: "100%", maxHeight: "320px", objectFit: "cover", borderRadius: "16px", marginBottom: "24px", border: `1px solid ${BORDER}` }}
+          />
+        )}
+
         {/* HEADER */}
         <div style={{ marginBottom: "32px" }}>
           <div style={{ display: "flex", alignItems: "flex-start", gap: "20px", flexWrap: "wrap" }}>
@@ -346,6 +355,23 @@ export default function UserEventDetail() {
             </div>
           </div>
         </div>
+
+        {/* TEASER VIDEOS */}
+        {(event.teaserVideo1Url || event.teaserVideo2Url) && (
+          <div style={{ background: CARD2, border: "1px solid rgba(250,71,21,0.14)", borderRadius: "16px", overflow: "hidden", marginBottom: "28px" }}>
+            <div style={{ padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, background: "rgba(250,71,21,0.04)", fontWeight: 700, letterSpacing: "0.06em", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ color: ACCENT }}>🎬</span> TEASER VIDEOS
+            </div>
+            <div style={{ padding: "18px 20px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
+              {event.teaserVideo1Url && (
+                <video src={event.teaserVideo1Url} controls style={{ width: "100%", borderRadius: "12px", border: `1px solid ${BORDER}` }} />
+              )}
+              {event.teaserVideo2Url && (
+                <video src={event.teaserVideo2Url} controls style={{ width: "100%", borderRadius: "12px", border: `1px solid ${BORDER}` }} />
+              )}
+            </div>
+          </div>
+        )}
 
         {/* SPORTS */}
         <div style={{ background: CARD2, border: "1px solid rgba(250,71,21,0.14)", borderRadius: "16px", overflow: "hidden" }}>

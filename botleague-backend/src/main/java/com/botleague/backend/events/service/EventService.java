@@ -16,6 +16,7 @@ import com.botleague.backend.common.service.BotleagueIdService;
 import com.botleague.backend.events.dto.CreateEventRequestDTO;
 import com.botleague.backend.events.dto.CreateEventResponseDTO;
 import com.botleague.backend.events.entity.Event;
+import com.botleague.backend.events.enums.EventMediaSlot;
 import com.botleague.backend.events.enums.EventStatus;
 import com.botleague.backend.events.repository.EventRepository;
 import com.botleague.backend.audit.service.AuditLogService;
@@ -308,6 +309,55 @@ public class EventService {
     }
 
     // =====================================================
+    // EVENT MEDIA SLOTS — thumbnail + up to 2 teaser videos
+    // =====================================================
+
+    public void saveEventMediaSlot(
+            UUID eventId,
+            EventMediaSlot slot,
+            String key,
+            String fileType,
+            Authentication authentication
+    ) {
+        assertCanManageEventMedia(eventId, authentication);
+        validateSlotContentType(slot, fileType);
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+
+        applyEventSlot(event, slot, key);
+        eventRepository.save(event);
+    }
+
+    public void clearEventMediaSlot(UUID eventId, EventMediaSlot slot, Authentication authentication) {
+        assertCanManageEventMedia(eventId, authentication);
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+
+        applyEventSlot(event, slot, null);
+        eventRepository.save(event);
+    }
+
+    private void applyEventSlot(Event event, EventMediaSlot slot, String key) {
+        switch (slot) {
+            case THUMBNAIL -> event.setEventThumbnailUrl(key);
+            case TEASER_1 -> event.setTeaserVideo1Url(key);
+            case TEASER_2 -> event.setTeaserVideo2Url(key);
+        }
+    }
+
+    private void validateSlotContentType(EventMediaSlot slot, String fileType) {
+        if (fileType == null) return;
+        boolean expectsVideo = slot == EventMediaSlot.TEASER_1 || slot == EventMediaSlot.TEASER_2;
+        boolean isVideo = fileType.startsWith("video");
+        if (expectsVideo != isVideo) {
+            throw ApiException.badRequest(
+                    expectsVideo ? "Teaser slot requires a video file" : "Thumbnail slot requires an image file");
+        }
+    }
+
+    // =====================================================
     // AUTHORIZATION — EVENT MEDIA (logo/upload-url)
     // -------------------------------------------------------
     // Delegates to the centralized AuthorizationService: platform admins,
@@ -364,6 +414,18 @@ public class EventService {
 
         response.setEventLogoUrl(
                 event.getEventLogoUrl()
+        );
+
+        response.setEventThumbnailUrl(
+                event.getEventThumbnailUrl()
+        );
+
+        response.setTeaserVideo1Url(
+                event.getTeaserVideo1Url()
+        );
+
+        response.setTeaserVideo2Url(
+                event.getTeaserVideo2Url()
         );
 
         response.setOrganizationName(

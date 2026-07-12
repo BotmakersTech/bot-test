@@ -437,6 +437,9 @@ public class AdminService {
         dto.setEventDescription(event.getEventDescription());
         dto.setStatus(event.getStatus() != null ? event.getStatus().name() : null);
         dto.setEventLogoUrl(event.getEventLogoUrl());
+        dto.setEventThumbnailUrl(event.getEventThumbnailUrl());
+        dto.setTeaserVideo1Url(event.getTeaserVideo1Url());
+        dto.setTeaserVideo2Url(event.getTeaserVideo2Url());
         dto.setCity(event.getCity());
         dto.setState(event.getState());
         dto.setCountry(event.getCountry());
@@ -468,6 +471,8 @@ public class AdminService {
         dto.setId(sport.getId());
         dto.setSport(sport.getSport());
         dto.setSportsInfo(sport.getSportsDescription());   // getSportsDescription(), not getSportsDescripction()
+        dto.setSportThumbnailUrl(sport.getSportThumbnailUrl());
+        dto.setSportTeaserVideoUrl(sport.getSportTeaserVideoUrl());
         dto.setStatus(sport.getStatus() != null ? sport.getStatus().name() : null);
         dto.setFormatType(sport.getFormatType());
         if (sport.getAgeGroup() != null) dto.setAgeGroup(sport.getAgeGroup().name());

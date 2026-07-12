@@ -12,12 +12,17 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import com.botleague.backend.common.security.AuthorizationService;
+import com.botleague.backend.common.service.UploadService;
 import com.botleague.backend.events.dto.EventSportsRequestDTO;
 import com.botleague.backend.events.dto.GetEventSportsDTO;
 import com.botleague.backend.events.dto.UpdateSportsDTO;
 import com.botleague.backend.events.entity.EventSports;
 import com.botleague.backend.events.enums.SportEventStatus;
+import com.botleague.backend.events.enums.SportMediaSlot;
 import com.botleague.backend.events.service.EventSportsService;
+import com.botleague.backend.profile.dto.UploadResponse;
+import com.botleague.backend.profile.service.FileKeyService;
+import com.botleague.backend.team.dto.MediaRequest;
 
 @RestController
 @RequestMapping("/api/events/{eventId}/sports")
@@ -25,10 +30,18 @@ public class EventSportsController {
 
     private final EventSportsService service;
     private final AuthorizationService authorizationService;
+    private final UploadService uploadService;
+    private final FileKeyService fileKeyService;
 
-    public EventSportsController(EventSportsService service, AuthorizationService authorizationService) {
+    public EventSportsController(
+            EventSportsService service,
+            AuthorizationService authorizationService,
+            UploadService uploadService,
+            FileKeyService fileKeyService) {
         this.service = service;
         this.authorizationService = authorizationService;
+        this.uploadService = uploadService;
+        this.fileKeyService = fileKeyService;
     }
 
     // =========================
@@ -101,6 +114,54 @@ public class EventSportsController {
 
         List<GetEventSportsDTO> response = service.getEventSports(eventId);
         return ResponseEntity.ok(response);
+    }
+
+    // =========================
+    // SPORT MEDIA — thumbnail + teaser video
+    // SPORT_HEAD must be able to reach these for their own assigned sport, so
+    // permission is enforced inside the service via assertCanManageSport
+    // rather than a class/method-level role allowlist.
+    // =========================
+    @PostMapping("/{sportId}/media/{slot}/upload-url")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UploadResponse> getSportMediaUploadUrl(
+            @PathVariable UUID eventId,
+            @PathVariable UUID sportId,
+            @PathVariable SportMediaSlot slot,
+            @RequestParam String fileType,
+            @RequestParam long fileSize,
+            Authentication auth) {
+
+        authorizationService.assertCanManageSport(extractUserId(auth), sportId);
+
+        String key = fileKeyService.generateSportMediaKey(sportId, slot.name(), fileType);
+        UploadResponse response = uploadService.generateUploadUrl(key, fileType, fileSize);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{sportId}/media/{slot}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<String> confirmSportMediaUpload(
+            @PathVariable UUID eventId,
+            @PathVariable UUID sportId,
+            @PathVariable SportMediaSlot slot,
+            @RequestBody MediaRequest request,
+            Authentication auth) {
+
+        service.saveSportMediaSlot(eventId, sportId, slot, request.getKey(), request.getFileType(), extractUserId(auth));
+        return ResponseEntity.ok("Sport media saved");
+    }
+
+    @DeleteMapping("/{sportId}/media/{slot}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<String> clearSportMedia(
+            @PathVariable UUID eventId,
+            @PathVariable UUID sportId,
+            @PathVariable SportMediaSlot slot,
+            Authentication auth) {
+
+        service.clearSportMediaSlot(eventId, sportId, slot, extractUserId(auth));
+        return ResponseEntity.ok("Sport media removed");
     }
 
     // =========================

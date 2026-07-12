@@ -17,6 +17,12 @@ public class CreateEventResponseDTO {
 
     private String eventLogoUrl;
 
+    private String eventThumbnailUrl;
+
+    private String teaserVideo1Url;
+
+    private String teaserVideo2Url;
+
     private String organizationName;
 
     private String venueName;
@@ -77,6 +83,30 @@ public class CreateEventResponseDTO {
 
     public void setEventLogoUrl(String eventLogoUrl) {
         this.eventLogoUrl = eventLogoUrl;
+    }
+
+    public String getEventThumbnailUrl() {
+        return eventThumbnailUrl;
+    }
+
+    public void setEventThumbnailUrl(String eventThumbnailUrl) {
+        this.eventThumbnailUrl = eventThumbnailUrl;
+    }
+
+    public String getTeaserVideo1Url() {
+        return teaserVideo1Url;
+    }
+
+    public void setTeaserVideo1Url(String teaserVideo1Url) {
+        this.teaserVideo1Url = teaserVideo1Url;
+    }
+
+    public String getTeaserVideo2Url() {
+        return teaserVideo2Url;
+    }
+
+    public void setTeaserVideo2Url(String teaserVideo2Url) {
+        this.teaserVideo2Url = teaserVideo2Url;
     }
 
     public String getOrganizationName() {

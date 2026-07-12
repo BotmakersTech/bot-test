@@ -23,9 +23,13 @@ public class UploadService {
     @Value("${r2.public-url}")
     private String publicBaseUrl;
 
-    // Max allowed size (optional config)
+    // Max allowed size (optional config) — images/logos/etc.
     @Value("${upload.max-size-bytes:52428800}") // default 50MB
-    private long maxSize;
+    private long maxImageSize;
+
+    // Video uploads (e.g. teaser videos) get a higher cap.
+    @Value("${upload.video-max-size-bytes:524288000}") // default 500MB
+    private long maxVideoSize;
 
     public UploadService(S3Presigner presigner) {
         this.presigner = presigner;
@@ -41,7 +45,7 @@ public class UploadService {
         // 1. Validate Input
         // =========================
         validateContentType(contentType);
-        validateFileSize(fileSize);
+        validateFileSize(fileSize, contentType);
 
       
         // =========================
@@ -96,14 +100,17 @@ public class UploadService {
         }
     }
 
-    private void validateFileSize(long fileSize) {
+    private void validateFileSize(long fileSize, String contentType) {
 
         if (fileSize <= 0) {
             throw new RuntimeException("Invalid file size");
         }
 
-        if (fileSize > maxSize) {
-            throw new RuntimeException("File size exceeds limit");
+        boolean isVideo = contentType != null && contentType.startsWith("video");
+        long limit = isVideo ? maxVideoSize : maxImageSize;
+
+        if (fileSize > limit) {
+            throw new RuntimeException("File size exceeds limit of " + (limit / (1024 * 1024)) + "MB");
         }
     }
 }

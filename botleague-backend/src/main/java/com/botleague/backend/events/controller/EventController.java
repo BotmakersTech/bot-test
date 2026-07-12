@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.botleague.backend.common.service.UploadService;
 import com.botleague.backend.events.dto.CreateEventRequestDTO;
 import com.botleague.backend.events.dto.CreateEventResponseDTO;
+import com.botleague.backend.events.enums.EventMediaSlot;
 import com.botleague.backend.events.service.EventService;
 import com.botleague.backend.profile.dto.UploadResponse;
 import com.botleague.backend.profile.service.FileKeyService;
@@ -158,6 +160,56 @@ public class EventController {
 	    return ResponseEntity.ok(
 	            "Event media saved"
 	    );
+	}
+
+	// =====================================================
+	// EVENT MEDIA SLOTS — thumbnail + up to 2 teaser videos
+	// =====================================================
+
+	@PostMapping("/{eventId}/media/{slot}/upload-url")
+	public ResponseEntity<UploadResponse> getEventMediaUploadUrl(
+			Authentication authentication,
+			@PathVariable UUID eventId,
+			@PathVariable EventMediaSlot slot,
+			@RequestParam String fileType,
+			@RequestParam long fileSize
+	) {
+		eventService.assertCanManageEventMedia(eventId, authentication);
+
+		String key = fileKeyService.generateEventMediaKey(eventId, slot.name(), fileType);
+
+		UploadResponse response = uploadService.generateUploadUrl(key, fileType, fileSize);
+
+		return ResponseEntity.ok(response);
+	}
+
+	@PostMapping("/{eventId}/media/{slot}")
+	public ResponseEntity<String> confirmEventMediaUpload(
+			@PathVariable UUID eventId,
+			@PathVariable EventMediaSlot slot,
+			@RequestBody MediaRequest request,
+			Authentication authentication
+	) {
+		eventService.saveEventMediaSlot(
+				eventId,
+				slot,
+				request.getKey(),
+				request.getFileType(),
+				authentication
+		);
+
+		return ResponseEntity.ok("Event media saved");
+	}
+
+	@DeleteMapping("/{eventId}/media/{slot}")
+	public ResponseEntity<String> clearEventMedia(
+			@PathVariable UUID eventId,
+			@PathVariable EventMediaSlot slot,
+			Authentication authentication
+	) {
+		eventService.clearEventMediaSlot(eventId, slot, authentication);
+
+		return ResponseEntity.ok("Event media removed");
 	}
 
 }

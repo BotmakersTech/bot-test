@@ -13,6 +13,8 @@ public class GetEventSportsDTO {
     private String sport;
     private String competitionType;   // enum name
     private String sportsDescription;
+    private String sportThumbnailUrl;
+    private String sportTeaserVideoUrl;
     private String ageGroup;          // enum name
 
     // ---- physical constraints ----
@@ -59,6 +61,12 @@ public class GetEventSportsDTO {
 
     public String getSportsDescription() { return sportsDescription; }
     public void setSportsDescription(String sportsDescription) { this.sportsDescription = sportsDescription; }
+
+    public String getSportThumbnailUrl() { return sportThumbnailUrl; }
+    public void setSportThumbnailUrl(String sportThumbnailUrl) { this.sportThumbnailUrl = sportThumbnailUrl; }
+
+    public String getSportTeaserVideoUrl() { return sportTeaserVideoUrl; }
+    public void setSportTeaserVideoUrl(String sportTeaserVideoUrl) { this.sportTeaserVideoUrl = sportTeaserVideoUrl; }
 
     public String getAgeGroup() { return ageGroup; }
     public void setAgeGroup(String ageGroup) { this.ageGroup = ageGroup; }

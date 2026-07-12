@@ -15,6 +15,9 @@ export interface EventResponse {
   eventName: string;
   eventDescription?: string;
   eventLogoUrl?: string;
+  eventThumbnailUrl?: string;
+  teaserVideo1Url?: string;
+  teaserVideo2Url?: string;
   organizationName?: string;
   venueName?: string;
   city?: string;
@@ -37,6 +40,8 @@ export interface EventSportResponse {
 
   competitionType?: string;
   sportsDescription?: string;
+  sportThumbnailUrl?: string;
+  sportTeaserVideoUrl?: string;
   ageGroup: string;
 
   weightClass?: string;

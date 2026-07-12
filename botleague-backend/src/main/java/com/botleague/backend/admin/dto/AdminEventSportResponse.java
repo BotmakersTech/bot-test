@@ -13,6 +13,10 @@ public class AdminEventSportResponse {
 
     private String sportsInfo;
 
+    private String sportThumbnailUrl;
+
+    private String sportTeaserVideoUrl;
+
     private String status;
 
     private String formatType;
@@ -77,6 +81,22 @@ public class AdminEventSportResponse {
 
 	public void setSportsInfo(String sportsInfo) {
 		this.sportsInfo = sportsInfo;
+	}
+
+	public String getSportThumbnailUrl() {
+		return sportThumbnailUrl;
+	}
+
+	public void setSportThumbnailUrl(String sportThumbnailUrl) {
+		this.sportThumbnailUrl = sportThumbnailUrl;
+	}
+
+	public String getSportTeaserVideoUrl() {
+		return sportTeaserVideoUrl;
+	}
+
+	public void setSportTeaserVideoUrl(String sportTeaserVideoUrl) {
+		this.sportTeaserVideoUrl = sportTeaserVideoUrl;
 	}
 
 	public String getStatus() {

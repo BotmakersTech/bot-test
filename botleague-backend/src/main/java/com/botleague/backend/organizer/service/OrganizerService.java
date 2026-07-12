@@ -178,6 +178,9 @@ public class OrganizerService {
         dto.setEventName(e.getEventName());
         dto.setEventDescription(e.getEventDescription());
         dto.setEventLogoUrl(e.getEventLogoUrl());
+        dto.setEventThumbnailUrl(e.getEventThumbnailUrl());
+        dto.setTeaserVideo1Url(e.getTeaserVideo1Url());
+        dto.setTeaserVideo2Url(e.getTeaserVideo2Url());
         dto.setOrganizationName(e.getOrganizationName());
         dto.setVenueName(e.getVenueName());
         dto.setCity(e.getCity());
@@ -199,6 +202,8 @@ public class OrganizerService {
         dto.setId(es.getId());
         dto.setEventId(es.getEventId());
         dto.setSport(es.getSport());
+        dto.setSportThumbnailUrl(es.getSportThumbnailUrl());
+        dto.setSportTeaserVideoUrl(es.getSportTeaserVideoUrl());
         dto.setAgeGroup(es.getAgeGroup() != null ? es.getAgeGroup().name() : null);
         dto.setWeightClass(es.getWeightClass());
         dto.setStatus(es.getStatus() != null ? es.getStatus().name() : null);

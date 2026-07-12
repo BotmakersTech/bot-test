@@ -210,6 +210,23 @@ function OverviewTab({ sport }: { sport: EventSportResponse }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
 
+      {/* Thumbnail + Teaser Video */}
+      {(sport.sportThumbnailUrl || sport.sportTeaserVideoUrl) && (
+        <div style={{ background: CARD2, border: "1px solid rgba(250,71,21,0.14)", borderRadius: "14px", overflow: "hidden" }}>
+          <div style={{ padding: "12px 18px", borderBottom: `1px solid ${BORDER}`, background: "rgba(250,71,21,0.04)", fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", color: ACCENT }}>
+            Sport Preview
+          </div>
+          <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: "14px" }}>
+            {sport.sportThumbnailUrl && (
+              <img src={sport.sportThumbnailUrl} alt={toLabel(sport.sport)} style={{ width: "100%", maxHeight: "280px", objectFit: "cover", borderRadius: "10px", border: `1px solid ${BORDER}` }} />
+            )}
+            {sport.sportTeaserVideoUrl && (
+              <video src={sport.sportTeaserVideoUrl} controls style={{ width: "100%", borderRadius: "10px", border: `1px solid ${BORDER}` }} />
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Description */}
       {sport.sportsDescription && (
         <div style={{ background: "rgba(250,71,21,0.04)", border: "1px solid rgba(250,71,21,0.14)", borderRadius: "12px", padding: "16px 20px" }}>

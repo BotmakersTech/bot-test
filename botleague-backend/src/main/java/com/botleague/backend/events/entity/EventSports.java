@@ -71,6 +71,12 @@ public class EventSports {
     @Column(name = "sports_info")
     private String sportsDescription;
 
+    @Column(name = "sport_thumbnail_url")
+    private String sportThumbnailUrl;
+
+    @Column(name = "sport_teaser_video_url")
+    private String sportTeaserVideoUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "age_group", nullable = false, length = 50)
     private AgeCategory ageGroup;
@@ -258,6 +264,12 @@ public class EventSports {
 
     public String getSportsDescription() { return sportsDescription; }
     public void setSportsDescription(String sportsDescription) { this.sportsDescription = sportsDescription; }
+
+    public String getSportThumbnailUrl() { return sportThumbnailUrl; }
+    public void setSportThumbnailUrl(String sportThumbnailUrl) { this.sportThumbnailUrl = sportThumbnailUrl; }
+
+    public String getSportTeaserVideoUrl() { return sportTeaserVideoUrl; }
+    public void setSportTeaserVideoUrl(String sportTeaserVideoUrl) { this.sportTeaserVideoUrl = sportTeaserVideoUrl; }
 
     public AgeCategory getAgeGroup() { return ageGroup; }
     public void setAgeGroup(AgeCategory ageGroup) { this.ageGroup = ageGroup; }
