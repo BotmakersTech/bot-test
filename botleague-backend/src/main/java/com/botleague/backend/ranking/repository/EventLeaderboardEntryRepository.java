@@ -14,6 +14,16 @@ public interface EventLeaderboardEntryRepository extends JpaRepository<EventLead
 
     Optional<EventLeaderboardEntry> findByEventSportIdAndTeamId(UUID eventSportId, UUID teamId);
 
+    /** The ranked entity's entry within one event sport — the primary lookup key. */
+    Optional<EventLeaderboardEntry> findByEventSportIdAndRobotId(UUID eventSportId, UUID robotId);
+
+    boolean existsByEventSportIdAndRobotId(UUID eventSportId, UUID robotId);
+
+    /** All entries a robot has ever had (for its public profile / global aggregation). */
+    List<EventLeaderboardEntry> findByRobotId(UUID robotId);
+
+    List<EventLeaderboardEntry> findByRobotIdAndIsFinalized(UUID robotId, Boolean isFinalized);
+
     /** Full leaderboard ordered by points DESC for tie-breaker processing. */
     List<EventLeaderboardEntry> findByEventSportIdOrderByPointsEarnedDescWinsDescMatchesPlayedDesc(
             UUID eventSportId);

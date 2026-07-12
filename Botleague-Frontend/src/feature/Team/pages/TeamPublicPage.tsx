@@ -263,6 +263,11 @@ export default function TeamPublicPage() {
                     <p style={{ margin: "0 0 4px", fontWeight: 700, fontSize: "0.9rem", color: TEXT }}>
                       {rec.eventName ?? "Unknown Event"}
                     </p>
+                    {rec.robotName && (
+                      <p style={{ margin: "0 0 4px", fontSize: "0.72rem", color: GOLD2 }}>
+                        🤖 {rec.robotName}
+                      </p>
+                    )}
                     <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
                       <span style={{ fontSize: "0.6rem", color: GOLD2, background: "rgba(245,158,11,0.1)", border: `1px solid rgba(245,158,11,0.2)`, borderRadius: 4, padding: "1px 7px", fontWeight: 700 }}>
                         {toLabel(rec.sport)}

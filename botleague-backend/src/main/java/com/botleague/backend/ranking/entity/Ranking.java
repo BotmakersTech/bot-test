@@ -21,6 +21,7 @@ import jakarta.persistence.*;
     indexes = {
         @Index(name = "idx_rank_pool",   columnList = "category, sport, weight_class, scope"),
         @Index(name = "idx_rank_team",   columnList = "team_id"),
+        @Index(name = "idx_rank_robot",  columnList = "robot_id"),
         @Index(name = "idx_rank_user",   columnList = "user_id"),
         @Index(name = "idx_rank_event",  columnList = "event_id"),
         @Index(name = "idx_rank_points", columnList = "total_points DESC"),
@@ -38,6 +39,14 @@ public class Ranking {
     @Column(name = "entity_type", nullable = false, length = 10)
     private String entityType;     // "TEAM" or "USER"
 
+    /** The ranked entity for TEAM-scope rows — one Ranking row per robot per pool. Null for USER rows. */
+    @Column(name = "robot_id")
+    private UUID robotId;
+
+    @Column(name = "robot_name", length = 120)
+    private String robotName;      // denormalized display snapshot
+
+    /** Denormalized — the robot's owning team. */
     @Column(name = "team_id")
     private UUID teamId;
 
@@ -154,6 +163,12 @@ public class Ranking {
 
     public String getEntityType() { return entityType; }
     public void setEntityType(String entityType) { this.entityType = entityType; }
+
+    public UUID getRobotId() { return robotId; }
+    public void setRobotId(UUID robotId) { this.robotId = robotId; }
+
+    public String getRobotName() { return robotName; }
+    public void setRobotName(String robotName) { this.robotName = robotName; }
 
     public UUID getTeamId() { return teamId; }
     public void setTeamId(UUID teamId) { this.teamId = teamId; }

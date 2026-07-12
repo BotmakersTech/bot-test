@@ -15,7 +15,25 @@ public interface RankingPointTransactionRepository extends JpaRepository<Ranking
 
     List<RankingPointTransaction> findByTeamIdAndIsVoidedFalseOrderByCreatedAtDesc(UUID teamId);
 
+    /** The ranked entity's transaction history — the primary lookup for a robot's point breakdown. */
+    List<RankingPointTransaction> findByRobotIdAndIsVoidedFalseOrderByCreatedAtDesc(UUID robotId);
+
     List<RankingPointTransaction> findByEventSportIdAndIsVoidedFalse(UUID eventSportId);
+
+    /**
+     * All non-voided transactions in a sport/ageGroup/weightClass pool — replaces the
+     * previously-broken fullRecalculate() call that passed null into
+     * findByEventSportIdAndIsVoidedFalse(eventSportId), which always returned empty
+     * since event_sport_id is non-null (a silent no-op on POST /api/rankings/recalculate).
+     */
+    @Query("""
+        SELECT t FROM RankingPointTransaction t
+        WHERE t.sport      = :sport
+          AND t.ageGroup    = :ageGroup
+          AND (:weightClass IS NULL OR t.weightClass = :weightClass)
+          AND t.isVoided    = false
+    """)
+    List<RankingPointTransaction> findByPool(String sport, String ageGroup, String weightClass);
 
     List<RankingPointTransaction> findByEventIdAndIsVoidedFalse(UUID eventId);
 
@@ -31,6 +49,18 @@ public interface RankingPointTransactionRepository extends JpaRepository<Ranking
     """)
     int sumPointsByTeamAndPool(UUID teamId, String sport, String ageGroup, String weightClass);
 
+    /** Total non-voided points a robot has earned in a specific sport/program/weight pool. */
+    @Query("""
+        SELECT COALESCE(SUM(t.pointsAwarded), 0)
+        FROM RankingPointTransaction t
+        WHERE t.robotId     = :robotId
+          AND t.sport       = :sport
+          AND t.ageGroup    = :ageGroup
+          AND (:weightClass IS NULL OR t.weightClass = :weightClass)
+          AND t.isVoided    = false
+    """)
+    int sumPointsByRobotAndPool(UUID robotId, String sport, String ageGroup, String weightClass);
+
     /** Sum of points per event for a team (for event breakdown). */
     @Query("""
         SELECT COALESCE(SUM(t.pointsAwarded), 0)
@@ -41,7 +71,8 @@ public interface RankingPointTransactionRepository extends JpaRepository<Ranking
     """)
     int sumPointsByTeamAndEvent(UUID teamId, UUID eventId);
 
-    boolean existsByMatchIdAndTeamId(UUID matchId, UUID teamId);
+    /** Idempotency guard for awardMatchPoints — per (match, robot), not per team, since points are robot-scoped. */
+    boolean existsByMatchIdAndRobotId(UUID matchId, UUID robotId);
 
     /** Void all transactions for a match (used on score correction). */
     @Query("UPDATE RankingPointTransaction t SET t.isVoided = true WHERE t.matchId = :matchId")

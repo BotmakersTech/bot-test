@@ -15,9 +15,16 @@ public interface GlobalRankingHistoryRepository extends JpaRepository<GlobalRank
     List<GlobalRankingHistory> findByTeamIdAndSportAndAgeGroupAndWeightClassOrderByRecordedAtDesc(
             UUID teamId, String sport, String ageGroup, String weightClass, Pageable pageable);
 
+    /** Most recent N rank changes for a robot in a specific competition. */
+    List<GlobalRankingHistory> findByRobotIdAndSportAndAgeGroupAndWeightClassOrderByRecordedAtDesc(
+            UUID robotId, String sport, String ageGroup, String weightClass, Pageable pageable);
+
     /** All history entries triggered by a specific event completion. */
     List<GlobalRankingHistory> findByTriggeredByEventIdOrderByRankDeltaDesc(UUID eventId);
 
-    /** Recent history across all competitions for a team (for profile page). */
+    /** Recent history across all competitions for a team (rollup, for profile page). */
     List<GlobalRankingHistory> findByTeamIdOrderByRecordedAtDesc(UUID teamId, Pageable pageable);
+
+    /** Recent history across all competitions for a robot (for profile page). */
+    List<GlobalRankingHistory> findByRobotIdOrderByRecordedAtDesc(UUID robotId, Pageable pageable);
 }

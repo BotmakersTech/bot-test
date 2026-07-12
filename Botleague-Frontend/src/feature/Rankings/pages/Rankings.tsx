@@ -240,7 +240,7 @@ export default function GlobalRankingsPage() {
               {weightClass}
             </span>
           )}
-          {page && <span className="text-neutral-500 ml-auto">{page.total} teams</span>}
+          {page && <span className="text-neutral-500 ml-auto">{page.total} entries</span>}
         </div>
       )}
 
@@ -292,8 +292,8 @@ export default function GlobalRankingsPage() {
             </thead>
             <tbody>
               {visible.map((entry) => (
-                <tr key={entry.teamId}
-                  onClick={() => navigate(`/team/${entry.teamId}`)}
+                <tr key={entry.robotId ?? entry.teamId}
+                  onClick={() => navigate(entry.robotId ? `/robot/${entry.robotId}` : `/team/${entry.teamId}`)}
                   className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors cursor-pointer">
 
                   {/* Rank badge */}
@@ -314,6 +314,9 @@ export default function GlobalRankingsPage() {
                       )}
                       <div className="min-w-0">
                         <p className="font-semibold text-white truncate">{entry.teamName}</p>
+                        {entry.robotName && (
+                          <p className="text-[11px] text-[#fa4715] truncate">🤖 {entry.robotName}</p>
+                        )}
                         {(entry.city || entry.state) && (
                           <p className="text-[11px] text-neutral-500 truncate">
                             📍 {[entry.city, entry.state].filter(Boolean).join(", ")}

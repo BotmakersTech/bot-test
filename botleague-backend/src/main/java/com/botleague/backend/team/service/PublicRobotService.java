@@ -105,9 +105,12 @@ public class PublicRobotService {
         int gold = 0, silver = 0, bronze = 0;
 
         for (SportRegistration reg : regs) {
-            // Lookup leaderboard entry for this robot's team in this sport
+            // Lookup this robot's own leaderboard entry for this sport. Was
+            // previously keyed by teamId, which merged two robots from the same
+            // team fielded into the same event-sport into one entry — this robot's
+            // profile would show its teammate's combined stats instead of its own.
             leaderboardEntryRepository
-                    .findByEventSportIdAndTeamId(reg.getEventSportId(), reg.getTeamId())
+                    .findByEventSportIdAndRobotId(reg.getEventSportId(), reg.getRobotId())
                     .ifPresent(lb -> {
                         PublicRobotProfileDTO.TournamentRecord rec = new PublicRobotProfileDTO.TournamentRecord();
                         rec.setEventSportId(lb.getEventSportId());

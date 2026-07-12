@@ -110,16 +110,25 @@ public class RankingEngineService {
             if (reg == null || reg.getTeamId() == null) continue;
 
             UUID teamId   = reg.getTeamId();
+            UUID robotId  = reg.getRobotId();
             boolean isWin = regId.equals(winnerRegId);
 
-            // Skip if already processed (idempotent)
-            if (transactionRepository.existsByMatchIdAndTeamId(match.getId(), teamId)) continue;
+            if (robotId == null) {
+                log.warn("[RankingEngine] SportRegistration {} has no robotId — skipping point award for match {}",
+                        regId, match.getId());
+                continue;
+            }
+
+            // Skip if already processed (idempotent) — per (match, robot), since
+            // points are robot-scoped and a team can field multiple robots.
+            if (transactionRepository.existsByMatchIdAndRobotId(match.getId(), robotId)) continue;
 
             int pts = isWin ? roundType.winnerPoints() : roundType.loserPoints();
             UUID opponentRegId = regIds.stream().filter(r -> !r.equals(regId)).findFirst().orElse(null);
 
             // Write transaction
             RankingPointTransaction tx = new RankingPointTransaction();
+            tx.setRobotId(robotId);
             tx.setTeamId(teamId);
             tx.setEventId(sport.getEventId());
             tx.setMatchId(match.getId());
@@ -134,7 +143,7 @@ public class RankingEngineService {
             transactionRepository.save(tx);
 
             // Update event leaderboard entry
-            updateLeaderboardEntry(sport, teamId, reg, pts, isWin, sportName, ageGroup, weightClass);
+            updateLeaderboardEntry(sport, robotId, teamId, reg, pts, isWin, sportName, ageGroup, weightClass);
         }
 
         // Recalculate leaderboard order
@@ -234,8 +243,13 @@ public class RankingEngineService {
         String weightClass = sport.getWeightClass();
 
         for (EventLeaderboardEntry entry : finalEntries) {
-            UUID teamId = entry.getTeamId();
-            Ranking global = findOrCreateGlobalRanking(teamId, sportName, ageGroup, weightClass);
+            UUID robotId = entry.getRobotId();
+            UUID teamId  = entry.getTeamId();
+            if (robotId == null) {
+                log.warn("[RankingEngine] leaderboard entry {} has no robotId — skipping global push", entry.getId());
+                continue;
+            }
+            Ranking global = findOrCreateGlobalRanking(robotId, teamId, entry.getRobotName(), sportName, ageGroup, weightClass);
 
             // Accumulate stats
             global.setTotalPoints(global.getTotalPoints() + entry.getPointsEarned());
@@ -297,19 +311,22 @@ public class RankingEngineService {
     public void fullRecalculate(String sport, String ageGroup, String weightClass) {
         log.info("[RankingEngine] Full recalculation for sport={} ageGroup={} weight={}", sport, ageGroup, weightClass);
 
-        // Get all teams that have transactions in this pool
-        List<RankingPointTransaction> txs = transactionRepository.findByEventSportIdAndIsVoidedFalse(null);
-        // Filter to the target pool
-        Set<UUID> teamIds = txs.stream()
-                .filter(t -> sport.equals(t.getSport()) && ageGroup.equals(t.getAgeGroup())
-                        && (weightClass == null || weightClass.equals(t.getWeightClass())))
-                .filter(t -> !t.getIsVoided())
-                .map(RankingPointTransaction::getTeamId)
-                .collect(Collectors.toSet());
+        // Get all non-voided transactions in this pool directly (previously this
+        // called findByEventSportIdAndIsVoidedFalse(null), which always returned
+        // empty since event_sport_id is non-null — a silent no-op).
+        List<RankingPointTransaction> txs = transactionRepository.findByPool(sport, ageGroup, weightClass);
 
-        for (UUID teamId : teamIds) {
-            int totalPts = transactionRepository.sumPointsByTeamAndPool(teamId, sport, ageGroup, weightClass);
-            Ranking r = findOrCreateGlobalRanking(teamId, sport, ageGroup, weightClass);
+        // Map each robot to its (denormalized) team — a robot's team doesn't change mid-pool.
+        Map<UUID, UUID> robotToTeam = txs.stream()
+                .filter(t -> t.getRobotId() != null)
+                .collect(Collectors.toMap(RankingPointTransaction::getRobotId,
+                        RankingPointTransaction::getTeamId, (a, b) -> a));
+
+        for (Map.Entry<UUID, UUID> e : robotToTeam.entrySet()) {
+            UUID robotId = e.getKey();
+            UUID teamId  = e.getValue();
+            int totalPts = transactionRepository.sumPointsByRobotAndPool(robotId, sport, ageGroup, weightClass);
+            Ranking r = findOrCreateGlobalRanking(robotId, teamId, null, sport, ageGroup, weightClass);
             r.setTotalPoints(totalPts);
             rankingRepository.save(r);
         }
@@ -363,15 +380,16 @@ public class RankingEngineService {
         return ids;
     }
 
-    private void updateLeaderboardEntry(EventSports sport, UUID teamId, SportRegistration reg,
+    private void updateLeaderboardEntry(EventSports sport, UUID robotId, UUID teamId, SportRegistration reg,
                                         int points, boolean isWin,
                                         String sportName, String ageGroup, String weightClass) {
         EventLeaderboardEntry entry = leaderboardEntryRepository
-                .findByEventSportIdAndTeamId(sport.getId(), teamId)
+                .findByEventSportIdAndRobotId(sport.getId(), robotId)
                 .orElseGet(() -> {
                     EventLeaderboardEntry e = new EventLeaderboardEntry();
                     e.setEventId(sport.getEventId());
                     e.setEventSportId(sport.getId());
+                    e.setRobotId(robotId);
                     e.setTeamId(teamId);
                     e.setSport(sportName);
                     e.setAgeGroup(ageGroup);
@@ -452,6 +470,7 @@ public class RankingEngineService {
             if (!Integer.valueOf(newRank).equals(r.getCurrentRank())) {
                 // Record history snapshot
                 GlobalRankingHistory h = new GlobalRankingHistory();
+                h.setRobotId(r.getRobotId());
                 h.setTeamId(r.getTeamId());
                 h.setTeamName(r.getDisplayName());
                 h.setSport(sport);
@@ -479,27 +498,32 @@ public class RankingEngineService {
         } catch (Exception ignored) {}
     }
 
-    private Ranking findOrCreateGlobalRanking(UUID teamId, String sport, String ageGroup, String weightClass) {
+    private Ranking findOrCreateGlobalRanking(UUID robotId, UUID teamId, String robotName,
+                                               String sport, String ageGroup, String weightClass) {
         com.botleague.backend.events.enums.AgeCategory cat = parseCategory(ageGroup);
 
         // Try to find existing by exact key including weight class
         Ranking r = rankingRepository
-                .findByTeamIdAndSportAndWeightClassAndScopeAndSeason(
-                        teamId, sport, weightClass, SCOPE_NATIONAL, SEASON_GLOBAL)
+                .findByRobotIdAndSportAndWeightClassAndScopeAndSeason(
+                        robotId, sport, weightClass, SCOPE_NATIONAL, SEASON_GLOBAL)
                 .orElseGet(() -> {
                     Ranking nr = new Ranking();
                     nr.setEntityType("TEAM");
+                    nr.setRobotId(robotId);
+                    nr.setRobotName(robotName);
                     nr.setTeamId(teamId);
                     nr.setScope(SCOPE_NATIONAL);
                     nr.setSeason(SEASON_GLOBAL);
                     nr.setSport(sport);
                     nr.setCategory(cat);
                     nr.setWeightClass(weightClass);
-                    teamRepository.findById(teamId).ifPresent(t -> {
-                        nr.setDisplayName(t.getTeamName());
-                        nr.setState(t.getState());
-                        nr.setCity(t.getCity());
-                    });
+                    if (teamId != null) {
+                        teamRepository.findById(teamId).ifPresent(t -> {
+                            nr.setDisplayName(t.getTeamName());
+                            nr.setState(t.getState());
+                            nr.setCity(t.getCity());
+                        });
+                    }
                     return nr;
                 });
 

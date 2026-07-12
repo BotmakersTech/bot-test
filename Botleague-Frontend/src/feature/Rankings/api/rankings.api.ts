@@ -6,6 +6,8 @@ export interface GlobalRankingEntry {
   rank:           number;
   previousRank:   number | null;
   rankDelta:      number | null;
+  robotId?:       string | null;
+  robotName?:     string | null;
   teamId:         string;
   teamName:       string;
   avatarUrl?:     string | null;
@@ -41,6 +43,7 @@ export interface GlobalRankingPage {
 
 export interface LeaderboardEntry {
   rank:          number;
+  robotId?:      string | null;
   teamId:        string;
   teamName:      string;
   robotName:     string | null;

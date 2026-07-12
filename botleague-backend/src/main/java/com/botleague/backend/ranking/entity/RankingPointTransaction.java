@@ -18,6 +18,7 @@ import java.util.UUID;
     name = "ranking_point_transactions",
     indexes = {
         @Index(name = "idx_rpt_team",      columnList = "team_id"),
+        @Index(name = "idx_rpt_robot",     columnList = "robot_id"),
         @Index(name = "idx_rpt_match",     columnList = "match_id"),
         @Index(name = "idx_rpt_sport",     columnList = "event_sport_id"),
         @Index(name = "idx_rpt_event",     columnList = "event_id"),
@@ -31,6 +32,9 @@ public class RankingPointTransaction {
 
     // ── Context ─────────────────────────────────────────────────────────────
 
+    /** The ranked entity that earned this point award. */
+    @Column(name = "robot_id")                         private UUID    robotId;
+    /** Denormalized — the robot's owning team at the time of this match. */
     @Column(name = "team_id",        nullable = false) private UUID    teamId;
     @Column(name = "event_id",       nullable = false) private UUID    eventId;
     @Column(name = "match_id",       nullable = false) private UUID    matchId;
@@ -65,6 +69,8 @@ public class RankingPointTransaction {
 
     public UUID getId()                              { return id; }
     public void setId(UUID id)                       { this.id = id; }
+    public UUID getRobotId()                         { return robotId; }
+    public void setRobotId(UUID v)                   { this.robotId = v; }
     public UUID getTeamId()                          { return teamId; }
     public void setTeamId(UUID v)                    { this.teamId = v; }
     public UUID getEventId()                         { return eventId; }

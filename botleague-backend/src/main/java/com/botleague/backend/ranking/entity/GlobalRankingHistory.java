@@ -14,6 +14,7 @@ import java.util.UUID;
     name = "global_ranking_history",
     indexes = {
         @Index(name = "idx_grh_team",   columnList = "team_id"),
+        @Index(name = "idx_grh_robot",  columnList = "robot_id"),
         @Index(name = "idx_grh_sport",  columnList = "sport, age_group, weight_class"),
         @Index(name = "idx_grh_event",  columnList = "triggered_by_event_id"),
         @Index(name = "idx_grh_time",   columnList = "recorded_at DESC")
@@ -24,6 +25,7 @@ public class GlobalRankingHistory {
     @Id
     private UUID id;
 
+    @Column(name = "robot_id")                          private UUID   robotId;
     @Column(name = "team_id",          nullable = false) private UUID   teamId;
     @Column(name = "team_name",        length = 120)     private String teamName;
     @Column(name = "sport",            length = 80)      private String sport;
@@ -46,6 +48,8 @@ public class GlobalRankingHistory {
     // Getters & Setters
     public UUID getId()                         { return id; }
     public void setId(UUID id)                  { this.id = id; }
+    public UUID getRobotId()                    { return robotId; }
+    public void setRobotId(UUID v)              { this.robotId = v; }
     public UUID getTeamId()                     { return teamId; }
     public void setTeamId(UUID v)               { this.teamId = v; }
     public String getTeamName()                 { return teamName; }

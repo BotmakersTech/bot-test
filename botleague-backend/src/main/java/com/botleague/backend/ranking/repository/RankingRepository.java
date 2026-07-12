@@ -44,12 +44,15 @@ public interface RankingRepository extends JpaRepository<Ranking, UUID> {
     List<Ranking> findAllByTeamIdAndSportAndScopeAndSeason(
             UUID teamId, String sport, String scope, String season);
 
-    /** All ranking entries for a team across all pools. */
+    /** All ranking entries for a team across all pools (rollup across its robots). */
     List<Ranking> findByTeamId(UUID teamId);
 
-    /** Exact match including weight class — the preferred upsert key. */
-    Optional<Ranking> findByTeamIdAndSportAndWeightClassAndScopeAndSeason(
-            UUID teamId, String sport, String weightClass, String scope, String season);
+    /** All ranking entries for a robot across all pools. */
+    List<Ranking> findByRobotId(UUID robotId);
+
+    /** Exact match including weight class — the preferred upsert key, per robot. */
+    Optional<Ranking> findByRobotIdAndSportAndWeightClassAndScopeAndSeason(
+            UUID robotId, String sport, String weightClass, String scope, String season);
 
     /** All entries for a specific pool — used for full rank recalculation. */
     @Query("""

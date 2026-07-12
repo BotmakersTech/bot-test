@@ -17,12 +17,13 @@ import java.util.UUID;
 @Table(
     name = "event_leaderboard_entries",
     uniqueConstraints = @UniqueConstraint(
-        name = "uk_leaderboard_team_sport",
-        columnNames = {"event_sport_id", "team_id"}
+        name = "uk_leaderboard_robot_sport",
+        columnNames = {"event_sport_id", "robot_id"}
     ),
     indexes = {
         @Index(name = "idx_lb_event_sport", columnList = "event_sport_id"),
         @Index(name = "idx_lb_team",        columnList = "team_id"),
+        @Index(name = "idx_lb_robot",       columnList = "robot_id"),
         @Index(name = "idx_lb_points",      columnList = "event_sport_id, points_earned DESC"),
         @Index(name = "idx_lb_finalized",   columnList = "event_sport_id, is_finalized")
     }
@@ -36,6 +37,9 @@ public class EventLeaderboardEntry {
 
     @Column(name = "event_id",       nullable = false) private UUID eventId;
     @Column(name = "event_sport_id", nullable = false) private UUID eventSportId;
+    /** The ranked entity — one entry per robot per event sport. */
+    @Column(name = "robot_id")                         private UUID robotId;
+    /** Denormalized — the robot's owning team at the time of this entry. */
     @Column(name = "team_id",        nullable = false) private UUID teamId;
 
     /** Display snapshot — denormalised so queries are fast. */
@@ -77,6 +81,8 @@ public class EventLeaderboardEntry {
     public void setEventId(UUID v)         { this.eventId = v; }
     public UUID getEventSportId()          { return eventSportId; }
     public void setEventSportId(UUID v)    { this.eventSportId = v; }
+    public UUID getRobotId()               { return robotId; }
+    public void setRobotId(UUID v)         { this.robotId = v; }
     public UUID getTeamId()                { return teamId; }
     public void setTeamId(UUID v)          { this.teamId = v; }
     public String getTeamName()            { return teamName; }

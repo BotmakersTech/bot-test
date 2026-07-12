@@ -76,6 +76,7 @@ public class RankingQueryService {
             EventLeaderboardEntry e = entries.get(i);
             LeaderboardEntryResponse row = new LeaderboardEntryResponse();
             row.rank          = e.getEventRank() != null ? e.getEventRank() : i + 1;
+            row.robotId       = e.getRobotId();
             row.teamId        = e.getTeamId();
             row.teamName      = e.getTeamName();
             row.robotName     = e.getRobotName();
@@ -135,14 +136,15 @@ public class RankingQueryService {
     }
 
     // =========================================================================
-    // TEAM RANKING DETAIL
+    // ROBOT / TEAM RANKING DETAIL
     // =========================================================================
 
-    public GlobalRankingResponse getTeamRanking(UUID teamId, String sport, String ageGroup, String weightClass) {
+    /** A single robot's global rank in a pool — the true single-entity analog of the old team lookup. */
+    public GlobalRankingResponse getRobotRanking(UUID robotId, String sport, String ageGroup, String weightClass) {
         AgeCategory cat = parseCategory(ageGroup);
         Optional<Ranking> rOpt = rankingRepository
-                .findByTeamIdAndSportAndWeightClassAndScopeAndSeason(
-                        teamId, sport, weightClass, SCOPE_NATIONAL, SEASON_GLOBAL);
+                .findByRobotIdAndSportAndWeightClassAndScopeAndSeason(
+                        robotId, sport, weightClass, SCOPE_NATIONAL, SEASON_GLOBAL);
 
         if (rOpt.isEmpty()) return null;
         Ranking r = rOpt.get();
@@ -155,7 +157,69 @@ public class RankingQueryService {
         return toGlobalResponse(r, rank);
     }
 
-    /** Per-event point breakdown for a team. */
+    /**
+     * Every robot a team has ranked in a pool — a team no longer has a single rank
+     * once it can field multiple robots into the same sport/weight-class.
+     */
+    public List<GlobalRankingResponse> getTeamRobotRankings(UUID teamId, String sport, String ageGroup, String weightClass) {
+        AgeCategory cat = parseCategory(ageGroup);
+        List<Ranking> pool = rankingRepository.findPoolOrderedByPoints(
+                sport, SCOPE_NATIONAL, SEASON_GLOBAL, cat, weightClass);
+
+        List<GlobalRankingResponse> result = new ArrayList<>();
+        for (int i = 0; i < pool.size(); i++) {
+            Ranking r = pool.get(i);
+            if (teamId.equals(r.getTeamId())) {
+                result.add(toGlobalResponse(r, i + 1));
+            }
+        }
+        return result;
+    }
+
+    /** Per-event point breakdown for a robot — the primary breakdown view. */
+    public RobotPointBreakdownResponse getRobotPointBreakdown(UUID robotId, String sport, String ageGroup, String weightClass) {
+        List<RankingPointTransaction> txs = transactionRepository
+                .findByRobotIdAndIsVoidedFalseOrderByCreatedAtDesc(robotId);
+
+        List<RankingPointTransaction> poolTxs = txs.stream()
+                .filter(t -> sport.equals(t.getSport()) && ageGroup.equals(t.getAgeGroup())
+                        && (weightClass == null || weightClass.equals(t.getWeightClass())))
+                .collect(Collectors.toList());
+
+        RobotPointBreakdownResponse res = new RobotPointBreakdownResponse();
+        res.robotId     = robotId;
+        res.sport       = sport;
+        res.ageGroup    = ageGroup;
+        res.weightClass = weightClass;
+        res.totalPoints = poolTxs.stream().mapToInt(RankingPointTransaction::getPointsAwarded).sum();
+
+        Map<UUID, List<RankingPointTransaction>> byEvent = poolTxs.stream()
+                .collect(Collectors.groupingBy(RankingPointTransaction::getEventId));
+
+        res.byEvent = byEvent.entrySet().stream().map(entry -> {
+            UUID eventId = entry.getKey();
+            List<RankingPointTransaction> etxs = entry.getValue();
+            EventPointSummary summary = new EventPointSummary();
+            summary.eventId      = eventId;
+            summary.pointsEarned = etxs.stream().mapToInt(RankingPointTransaction::getPointsAwarded).sum();
+            summary.wins         = (int) etxs.stream().filter(t -> Boolean.TRUE.equals(t.getIsWinner())).count();
+            summary.losses       = (int) etxs.stream().filter(t -> !Boolean.TRUE.equals(t.getIsWinner())).count();
+            eventRepository.findById(eventId).ifPresent(e -> summary.eventName = e.getEventName());
+            // Event rank from leaderboard — uses each transaction's own eventSportId
+            // (previously this used the outer eventId, which is a different UUID
+            // from eventSportId, so this lookup always came back empty).
+            etxs.stream().findFirst().ifPresent(t ->
+                    leaderboardEntryRepository.findByEventSportIdAndRobotId(t.getEventSportId(), robotId)
+                            .ifPresent(lb -> summary.eventRank = lb.getEventRank()));
+            return summary;
+        }).collect(Collectors.toList());
+
+        res.transactions = poolTxs.stream().map(this::toTransactionResponse).collect(Collectors.toList());
+
+        return res;
+    }
+
+    /** Per-event point breakdown rolled up across every robot a team has fielded. */
     public TeamPointBreakdownResponse getTeamPointBreakdown(UUID teamId, String sport, String ageGroup, String weightClass) {
         List<RankingPointTransaction> txs = transactionRepository
                 .findByTeamIdAndIsVoidedFalseOrderByCreatedAtDesc(teamId);
@@ -186,9 +250,9 @@ public class RankingQueryService {
             summary.wins         = (int) etxs.stream().filter(t -> Boolean.TRUE.equals(t.getIsWinner())).count();
             summary.losses       = (int) etxs.stream().filter(t -> !Boolean.TRUE.equals(t.getIsWinner())).count();
             eventRepository.findById(eventId).ifPresent(e -> summary.eventName = e.getEventName());
-            // Event rank from leaderboard
-            leaderboardEntryRepository.findByEventSportIdAndTeamId(eventId, teamId)
-                    .ifPresent(lb -> summary.eventRank = lb.getEventRank());
+            // Event rank left null here — a team rollup can span multiple robots in
+            // the same event, so there's no single leaderboard rank to attach; see
+            // getRobotPointBreakdown for the per-robot rank.
             return summary;
         }).collect(Collectors.toList());
 
@@ -201,6 +265,7 @@ public class RankingQueryService {
     // RANKING HISTORY
     // =========================================================================
 
+    /** Rank-change history rolled up across every robot a team has fielded. */
     public TeamRankingHistoryResponse getTeamRankingHistory(
             UUID teamId, String sport, String ageGroup, String weightClass, int limit) {
 
@@ -214,19 +279,40 @@ public class RankingQueryService {
         res.sport       = sport;
         res.ageGroup    = ageGroup;
         res.weightClass = weightClass;
-        res.history     = history.stream().map(h -> {
-            RankingHistoryEntry entry = new RankingHistoryEntry();
-            entry.oldRank              = h.getOldRank() != null ? h.getOldRank() : 0;
-            entry.newRank              = h.getNewRank() != null ? h.getNewRank() : 0;
-            entry.rankDelta            = h.getRankDelta() != null ? h.getRankDelta() : 0;
-            entry.pointsBefore         = h.getPointsBefore() != null ? h.getPointsBefore() : 0;
-            entry.pointsAfter          = h.getPointsAfter()  != null ? h.getPointsAfter()  : 0;
-            entry.triggeredByEventId   = h.getTriggeredByEventId();
-            entry.recordedAt           = h.getRecordedAt();
-            return entry;
-        }).collect(Collectors.toList());
+        res.history     = history.stream().map(this::toHistoryEntry).collect(Collectors.toList());
 
         return res;
+    }
+
+    /** Rank-change history for a single robot — the primary history view. */
+    public RobotRankingHistoryResponse getRobotRankingHistory(
+            UUID robotId, String sport, String ageGroup, String weightClass, int limit) {
+
+        Pageable pg = PageRequest.of(0, limit);
+        List<GlobalRankingHistory> history = historyRepository
+                .findByRobotIdAndSportAndAgeGroupAndWeightClassOrderByRecordedAtDesc(
+                        robotId, sport, ageGroup, weightClass, pg);
+
+        RobotRankingHistoryResponse res = new RobotRankingHistoryResponse();
+        res.robotId     = robotId;
+        res.sport       = sport;
+        res.ageGroup    = ageGroup;
+        res.weightClass = weightClass;
+        res.history     = history.stream().map(this::toHistoryEntry).collect(Collectors.toList());
+
+        return res;
+    }
+
+    private RankingHistoryEntry toHistoryEntry(GlobalRankingHistory h) {
+        RankingHistoryEntry entry = new RankingHistoryEntry();
+        entry.oldRank              = h.getOldRank() != null ? h.getOldRank() : 0;
+        entry.newRank              = h.getNewRank() != null ? h.getNewRank() : 0;
+        entry.rankDelta            = h.getRankDelta() != null ? h.getRankDelta() : 0;
+        entry.pointsBefore         = h.getPointsBefore() != null ? h.getPointsBefore() : 0;
+        entry.pointsAfter          = h.getPointsAfter()  != null ? h.getPointsAfter()  : 0;
+        entry.triggeredByEventId   = h.getTriggeredByEventId();
+        entry.recordedAt           = h.getRecordedAt();
+        return entry;
     }
 
     // =========================================================================
@@ -281,6 +367,8 @@ public class RankingQueryService {
         res.rank          = rank;
         res.previousRank  = r.getPreviousRank();
         res.rankDelta     = r.getPreviousRank() != null ? r.getPreviousRank() - rank : null;
+        res.robotId       = r.getRobotId();
+        res.robotName     = r.getRobotName();
         res.teamId        = r.getTeamId();
         res.teamName      = r.getDisplayName();
         res.avatarUrl     = r.getAvatarUrl();
@@ -308,6 +396,7 @@ public class RankingQueryService {
 
     private PointTransactionResponse toTransactionResponse(RankingPointTransaction t) {
         PointTransactionResponse res = new PointTransactionResponse();
+        res.robotId       = t.getRobotId();
         res.teamId        = t.getTeamId();
         res.matchId       = t.getMatchId();
         res.eventId       = t.getEventId();

@@ -19,6 +19,7 @@ public final class RankingDTOs {
     /** One row in the event leaderboard. */
     public static class LeaderboardEntryResponse {
         public int     rank;
+        public UUID    robotId;
         public UUID    teamId;
         public String  teamName;
         public String  robotName;
@@ -51,6 +52,8 @@ public final class RankingDTOs {
         public int           rank;
         public Integer       previousRank;
         public Integer       rankDelta;          // positive = moved up
+        public UUID          robotId;
+        public String        robotName;
         public UUID          teamId;
         public String        teamName;
         public String        avatarUrl;
@@ -108,11 +111,22 @@ public final class RankingDTOs {
         public List<RankingHistoryEntry> history;
     }
 
+    /** The robot-scoped analog of TeamRankingHistoryResponse — the primary history view. */
+    public static class RobotRankingHistoryResponse {
+        public UUID                     robotId;
+        public String                   robotName;
+        public String                   sport;
+        public String                   ageGroup;
+        public String                   weightClass;
+        public List<RankingHistoryEntry> history;
+    }
+
     // =========================================================================
     // POINT TRANSACTIONS
     // =========================================================================
 
     public static class PointTransactionResponse {
+        public UUID          robotId;
         public UUID          teamId;
         public UUID          matchId;
         public UUID          eventId;
@@ -129,6 +143,18 @@ public final class RankingDTOs {
     public static class TeamPointBreakdownResponse {
         public UUID                           teamId;
         public String                         teamName;
+        public String                         sport;
+        public String                         ageGroup;
+        public String                         weightClass;
+        public int                            totalPoints;
+        public List<EventPointSummary>        byEvent;
+        public List<PointTransactionResponse> transactions;
+    }
+
+    /** The robot-scoped analog of TeamPointBreakdownResponse — the primary breakdown view. */
+    public static class RobotPointBreakdownResponse {
+        public UUID                           robotId;
+        public String                         robotName;
         public String                         sport;
         public String                         ageGroup;
         public String                         weightClass;

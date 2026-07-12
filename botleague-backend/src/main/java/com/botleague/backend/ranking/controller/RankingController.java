@@ -27,9 +27,12 @@ import java.util.UUID;
  *   GET  /api/rankings/leaderboard/{eventSportId}         — live event leaderboard
  *   GET  /api/rankings/global                             — global ranking pool
  *   GET  /api/rankings/global/top                         — top N
- *   GET  /api/rankings/global/team/{teamId}               — specific team global rank
- *   GET  /api/rankings/global/team/{teamId}/breakdown     — per-event point breakdown
- *   GET  /api/rankings/global/team/{teamId}/history       — rank change history
+ *   GET  /api/rankings/global/team/{teamId}               — every robot the team has ranked in a pool
+ *   GET  /api/rankings/global/team/{teamId}/breakdown     — per-event point breakdown, rolled up across robots
+ *   GET  /api/rankings/global/team/{teamId}/history       — rank change history, rolled up across robots
+ *   GET  /api/rankings/global/robot/{robotId}             — a single robot's global rank
+ *   GET  /api/rankings/global/robot/{robotId}/breakdown   — per-event point breakdown for one robot
+ *   GET  /api/rankings/global/robot/{robotId}/history     — rank change history for one robot
  *   GET  /api/rankings/sports                             — available sports list
  *   GET  /api/rankings/sports/{sport}/weight-classes      — weight classes for sport
  *
@@ -149,24 +152,23 @@ public class RankingController {
     /**
      * GET /api/rankings/global/team/{teamId}
      *
-     * Get a specific team's current global rank in a pool.
+     * Every robot the team has ranked in this pool — a team no longer has a
+     * single rank once it can field multiple robots into the same sport/weight
+     * class, so this returns a list rather than silently picking one robot.
      */
     @GetMapping("/global/team/{teamId}")
-    public ResponseEntity<GlobalRankingResponse> getTeamGlobalRank(
+    public ResponseEntity<List<GlobalRankingResponse>> getTeamGlobalRank(
             @PathVariable                              UUID   teamId,
             @RequestParam                              String sport,
             @RequestParam                              String ageGroup,
             @RequestParam(required = false)            String weightClass) {
-        GlobalRankingResponse res = queryService.getTeamRanking(teamId, sport, ageGroup, weightClass);
-        if (res == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(res);
+        return ResponseEntity.ok(queryService.getTeamRobotRankings(teamId, sport, ageGroup, weightClass));
     }
 
     /**
      * GET /api/rankings/global/team/{teamId}/breakdown
      *
-     * Per-event point breakdown with transaction audit trail.
-     * Shows: Event 1 = 18 pts, Event 2 = 22 pts, Total = 40 pts.
+     * Per-event point breakdown rolled up across every robot the team has fielded.
      */
     @GetMapping("/global/team/{teamId}/breakdown")
     public ResponseEntity<TeamPointBreakdownResponse> getTeamPointBreakdown(
@@ -180,8 +182,7 @@ public class RankingController {
     /**
      * GET /api/rankings/global/team/{teamId}/history
      *
-     * Rank change history for a team in a specific pool.
-     * Shows: moved from rank 5 → 3 after Event X.
+     * Rank change history rolled up across every robot the team has fielded.
      */
     @GetMapping("/global/team/{teamId}/history")
     public ResponseEntity<TeamRankingHistoryResponse> getTeamRankingHistory(
@@ -192,6 +193,53 @@ public class RankingController {
             @RequestParam(defaultValue = "20")         int    limit) {
         return ResponseEntity.ok(
                 queryService.getTeamRankingHistory(teamId, sport, ageGroup, weightClass, limit));
+    }
+
+    /**
+     * GET /api/rankings/global/robot/{robotId}
+     *
+     * Get a specific robot's current global rank in a pool — the true
+     * single-entity analog of the team endpoint above.
+     */
+    @GetMapping("/global/robot/{robotId}")
+    public ResponseEntity<GlobalRankingResponse> getRobotGlobalRank(
+            @PathVariable                              UUID   robotId,
+            @RequestParam                              String sport,
+            @RequestParam                              String ageGroup,
+            @RequestParam(required = false)            String weightClass) {
+        GlobalRankingResponse res = queryService.getRobotRanking(robotId, sport, ageGroup, weightClass);
+        if (res == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(res);
+    }
+
+    /**
+     * GET /api/rankings/global/robot/{robotId}/breakdown
+     *
+     * Per-event point breakdown with transaction audit trail for one robot.
+     */
+    @GetMapping("/global/robot/{robotId}/breakdown")
+    public ResponseEntity<RobotPointBreakdownResponse> getRobotPointBreakdown(
+            @PathVariable                              UUID   robotId,
+            @RequestParam                              String sport,
+            @RequestParam                              String ageGroup,
+            @RequestParam(required = false)            String weightClass) {
+        return ResponseEntity.ok(queryService.getRobotPointBreakdown(robotId, sport, ageGroup, weightClass));
+    }
+
+    /**
+     * GET /api/rankings/global/robot/{robotId}/history
+     *
+     * Rank change history for one robot in a specific pool.
+     */
+    @GetMapping("/global/robot/{robotId}/history")
+    public ResponseEntity<RobotRankingHistoryResponse> getRobotRankingHistory(
+            @PathVariable                              UUID   robotId,
+            @RequestParam                              String sport,
+            @RequestParam                              String ageGroup,
+            @RequestParam(required = false)            String weightClass,
+            @RequestParam(defaultValue = "20")         int    limit) {
+        return ResponseEntity.ok(
+                queryService.getRobotRankingHistory(robotId, sport, ageGroup, weightClass, limit));
     }
 
     // =========================================================================
