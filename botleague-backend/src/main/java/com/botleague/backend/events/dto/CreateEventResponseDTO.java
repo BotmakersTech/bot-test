@@ -2,6 +2,7 @@ package com.botleague.backend.events.dto;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public class CreateEventResponseDTO {
@@ -33,6 +34,8 @@ public class CreateEventResponseDTO {
     private String status;
 
     private LocalDateTime createdAt;
+
+    private List<GetEventSportsDTO> sports;
 
     // Getters & Setters
 
@@ -147,5 +150,13 @@ public class CreateEventResponseDTO {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public List<GetEventSportsDTO> getSports() {
+        return sports;
+    }
+
+    public void setSports(List<GetEventSportsDTO> sports) {
+        this.sports = sports;
     }
 }

@@ -56,9 +56,37 @@ export interface OrganizerSport {
 
 export interface OrganizerTeamRegistration {
   id: string;
+  teamId?: string;
   teamName: string;
   teamLogoUrl?: string;
+  robotId?: string;
+  robotName?: string;
   lineup?: { id: string; fullName: string; role?: string }[];
+}
+
+// Shape actually returned by GET /event-registrations/event-sport/{sportId}
+// (backend: EventRegistrationResponse) — distinct from OrganizerTeamRegistration
+// above (which comes from the admin sport-detail endpoint). Do not conflate:
+// this one keys on `registrationId`, not `id`, and has no `lineup` field.
+export interface EventSportRegistration {
+  registrationId: string;
+  eventId: string;
+  eventSportId: string;
+  teamId: string;
+  teamName: string;
+  sportName: string;
+  eventName: string;
+  botId?: string;
+  robotId?: string;
+  robotName?: string;
+  status: string;
+  weightKg?: number;
+  lengthCm?: number;
+  widthCm?: number;
+  heightCm?: number;
+  controlType?: string;
+  controlMode?: string;
+  createdAt?: string;
 }
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
@@ -140,7 +168,7 @@ export const updateEventInfo = async (
 
 export const getRegistrationsForSport = async (
   sportId: string
-): Promise<OrganizerTeamRegistration[]> => {
+): Promise<EventSportRegistration[]> => {
   const res = await api.get(`/event-registrations/event-sport/${sportId}`);
   return res.data;
 };
@@ -201,6 +229,11 @@ export const deleteAnnouncement = async (eventId: string, announcementId: string
 
 export const ensureEventChatRoom = async (eventId: string): Promise<string> => {
   const res = await api.post(`/organizer/events/${eventId}/chat-room`);
+  return res.data;
+};
+
+export const ensureTeamChatRoom = async (eventId: string, teamId: string): Promise<string> => {
+  const res = await api.post(`/organizer/events/${eventId}/teams/${teamId}/chat-room`);
   return res.data;
 };
 

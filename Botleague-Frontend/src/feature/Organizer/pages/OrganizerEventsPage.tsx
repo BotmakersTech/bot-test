@@ -2,19 +2,21 @@ import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Search, MapPin, CalendarDays, Trophy, Users, ChevronRight } from "lucide-react"
 import { getMyEvents, type OrganizerEvent } from "../api/organizer.api"
+import { ORG } from "../theme/organizerTheme"
+import "../../../styles/organizerTheme.css"
 
-// ── theme ─────────────────────────────────────────────────────────────────────
-const P      = "#8C6CFF"
-const BG     = "#F4F3FF"
-const SURF   = "#FFFFFF"
-const BORDER = "#E0D9FF"
-const TEXT   = "#111111"
-const MUTED  = "#6B7280"
+// ── theme — Organizer light theme (organizerTheme.ts), matching the
+// User Dashboard / Team Dashboard / Robot Profile reference pages ──────────────
+const P      = ORG.violet
+const SURF   = ORG.cardBg
+const BORDER = "rgba(75,134,232,0.3)"
+const TEXT   = ORG.text
+const MUTED  = ORG.muted
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string; border: string; dot?: boolean }> = {
-  LIVE:      { label: "Live",      color: "#10b981", bg: "rgba(16,185,129,0.12)",  border: "rgba(16,185,129,0.3)", dot: true },
-  PUBLISHED: { label: "Published", color: P,          bg: "rgba(140,108,255,0.1)", border: "rgba(140,108,255,0.28)" },
-  DRAFT:     { label: "Draft",     color: "#f59e0b", bg: "rgba(245,158,11,0.1)",  border: "rgba(245,158,11,0.28)" },
+  LIVE:      { label: "Live",      color: ORG.success, bg: "rgba(31,169,82,0.12)",  border: "rgba(31,169,82,0.3)", dot: true },
+  PUBLISHED: { label: "Published", color: ORG.blueHeading, bg: "rgba(75,134,232,0.1)", border: "rgba(75,134,232,0.28)" },
+  DRAFT:     { label: "Draft",     color: "#a16207", bg: "rgba(161,98,7,0.1)",  border: "rgba(161,98,7,0.28)" },
   COMPLETED: { label: "Completed", color: "#94a3b8", bg: "rgba(148,163,184,0.1)", border: "rgba(148,163,184,0.25)" },
   ARCHIVED:  { label: "Archived",  color: "#64748b", bg: "rgba(100,116,139,0.1)", border: "rgba(100,116,139,0.25)" },
 }
@@ -57,9 +59,9 @@ export default function OrganizerEventsPage() {
   }), [events, tab, search])
 
   return (
-    <div style={{ minHeight: "100vh", background: BG, padding: "28px 32px", fontFamily: "'Inter',sans-serif" }}>
+    <div className="org-page-bg" style={{ padding: "28px 32px", fontFamily: ORG.fontBody }}>
       <div style={{ marginBottom: "24px" }}>
-        <h1 style={{ color: TEXT, fontFamily: "'Sarpanch',sans-serif", fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>Event Management</h1>
+        <h1 style={{ color: ORG.blueHeading, fontFamily: ORG.fontHeading, fontSize: "1.75rem", fontWeight: 700, margin: 0, letterSpacing: "0.02em" }}>Event Management</h1>
         <p style={{ color: MUTED, fontSize: "0.85rem", margin: "4px 0 0" }}>
           {loading ? "Loading…" : `${filtered.length} of ${events.length} event${events.length !== 1 ? "s" : ""}`}
         </p>
@@ -84,7 +86,7 @@ export default function OrganizerEventsPage() {
           <button
             key={t}
             onClick={() => setTab(t)}
-            style={{ background: tab === t ? "rgba(140,108,255,0.12)" : "rgba(0,0,0,0.04)", border: `1px solid ${tab === t ? "rgba(140,108,255,0.4)" : BORDER}`, color: tab === t ? P : MUTED, borderRadius: "8px", padding: "5px 14px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
+            style={{ background: tab === t ? "rgba(140,108,255,0.12)" : "rgba(75,134,232,0.04)", border: `1px solid ${tab === t ? "rgba(140,108,255,0.4)" : BORDER}`, color: tab === t ? P : MUTED, borderRadius: "8px", padding: "5px 14px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
           >
             {t === "ALL" ? "All" : t.charAt(0) + t.slice(1).toLowerCase()}
             {t !== "ALL" && ` (${events.filter(e => e.status?.toUpperCase() === t).length})`}
@@ -98,10 +100,10 @@ export default function OrganizerEventsPage() {
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: "center", padding: "80px 0", color: MUTED }}>No events found</div>
       ) : (
-        <div style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: "16px", overflow: "hidden" }}>
+        <div style={{ background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "16px", overflow: "hidden" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
             <thead>
-              <tr style={{ background: "rgba(140,108,255,0.06)", borderBottom: `1px solid ${BORDER}` }}>
+              <tr style={{ background: "rgba(75,134,232,0.06)", borderBottom: `1px solid ${BORDER}` }}>
                 <th style={{ textAlign: "left", padding: "12px 16px", color: MUTED, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Event</th>
                 <th style={{ textAlign: "left", padding: "12px 16px", color: MUTED, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Dates</th>
                 <th style={{ textAlign: "left", padding: "12px 16px", color: MUTED, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Venue</th>

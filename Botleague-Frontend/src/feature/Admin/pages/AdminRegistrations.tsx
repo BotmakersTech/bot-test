@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { getAllEvents, type AdminEventResponse, type AdminEventSportResponse } from "../api/admin.api"
-import { getRegistrationsForSport, type OrganizerTeamRegistration } from "../../Organizer/api/organizer.api"
+import { getRegistrationsForSport, type EventSportRegistration } from "../../Organizer/api/organizer.api"
 
 function toLabel(raw?: string | null) {
   if (!raw) return "—"
@@ -10,7 +10,7 @@ function toLabel(raw?: string | null) {
 export default function AdminRegistrations() {
   const [events, setEvents] = useState<AdminEventResponse[]>([])
   const [sports, setSports] = useState<AdminEventSportResponse[]>([])
-  const [registrations, setRegistrations] = useState<OrganizerTeamRegistration[]>([])
+  const [registrations, setRegistrations] = useState<EventSportRegistration[]>([])
 
   const [selectedEventId, setSelectedEventId] = useState<string>("")
   const [selectedSportId, setSelectedSportId] = useState<string>("")
@@ -157,37 +157,27 @@ export default function AdminRegistrations() {
         <div className="space-y-3">
           {filtered.map((reg, idx) => (
             <div
-              key={reg.id}
+              key={reg.registrationId}
               className="rounded-xl bg-white/5 border border-white/10 p-4 flex items-start gap-4 hover:bg-white/8 transition-colors"
             >
               <div className="shrink-0 w-8 h-8 rounded-lg bg-orange-500/15 text-orange-400 flex items-center justify-center text-sm font-bold">
                 {idx + 1}
               </div>
 
-              {reg.teamLogoUrl ? (
-                <img
-                  src={reg.teamLogoUrl}
-                  alt={reg.teamName}
-                  className="h-10 w-10 rounded-lg object-cover border border-white/10 shrink-0"
-                />
-              ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-white font-bold shrink-0">
-                  {(reg.teamName ?? "?").charAt(0)}
-                </div>
-              )}
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-white font-bold shrink-0">
+                {(reg.teamName ?? "?").charAt(0)}
+              </div>
 
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-white">{reg.teamName}</p>
-                {reg.lineup && reg.lineup.length > 0 && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    {reg.lineup.map((m) => m.fullName).join(", ")}
-                  </p>
+                {reg.robotName && (
+                  <p className="text-xs text-gray-400 mt-1">{reg.robotName}</p>
                 )}
               </div>
 
               <div className="shrink-0 text-right">
-                <p className="text-xs text-gray-500">Members</p>
-                <p className="text-sm font-semibold text-white">{reg.lineup?.length ?? 0}</p>
+                <p className="text-xs text-gray-500">Status</p>
+                <p className="text-sm font-semibold text-white">{toLabel(reg.status)}</p>
               </div>
             </div>
           ))}

@@ -187,6 +187,10 @@ public class OrganizerService {
         dto.setEndDate(e.getEndDate());
         dto.setStatus(e.getStatus() != null ? e.getStatus().name() : null);
         dto.setCreatedAt(e.getCreatedAt());
+        dto.setSports(eventSportsRepository.findByEventId(e.getId())
+                .stream()
+                .map(this::toSportResponse)
+                .collect(Collectors.toList()));
         return dto;
     }
 

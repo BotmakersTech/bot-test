@@ -14,7 +14,7 @@ import {
   type OrganizerEvent,
   type OrganizerSport,
   type OrganizerMatch,
-  type OrganizerTeamRegistration,
+  type EventSportRegistration,
 } from "../api/organizer.api";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -61,7 +61,7 @@ function GenerateBracketPanel({
   sportId: string;
   onGenerated: () => void;
 }) {
-  const [regs, setRegs]           = useState<OrganizerTeamRegistration[]>([]);
+  const [regs, setRegs]           = useState<EventSportRegistration[]>([]);
   const [selected, setSelected]   = useState<Set<string>>(new Set());
   const [loading, setLoading]     = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -75,7 +75,7 @@ function GenerateBracketPanel({
     getRegistrationsForSport(sportId)
       .then(r => {
         setRegs(r);
-        setSelected(new Set(r.map(x => x.id)));
+        setSelected(new Set(r.map(x => x.registrationId)));
       })
       .catch(() => setError("Failed to load registrations"))
       .finally(() => setLoading(false));
@@ -103,7 +103,7 @@ function GenerateBracketPanel({
 
   function toggleAll() {
     if (selected.size === regs.length) setSelected(new Set());
-    else setSelected(new Set(regs.map(r => r.id)));
+    else setSelected(new Set(regs.map(r => r.registrationId)));
   }
 
   if (loading) return <div className="py-8 text-center text-neutral-400">Loading registrations…</div>;
@@ -160,19 +160,21 @@ function GenerateBracketPanel({
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1">
             {regs.map(r => (
-              <label key={r.id} className="flex items-center gap-2.5 rounded-lg bg-white/4 p-3 cursor-pointer hover:bg-white/6 transition-colors">
+              <label key={r.registrationId} className="flex items-center gap-2.5 rounded-lg bg-white/4 p-3 cursor-pointer hover:bg-white/6 transition-colors">
                 <input
                   type="checkbox"
-                  checked={selected.has(r.id)}
+                  checked={selected.has(r.registrationId)}
                   onChange={e => {
                     const next = new Set(selected);
-                    e.target.checked ? next.add(r.id) : next.delete(r.id);
+                    e.target.checked ? next.add(r.registrationId) : next.delete(r.registrationId);
                     setSelected(next);
                   }}
                   className="accent-red-500"
                 />
-                {r.teamLogoUrl && <img src={r.teamLogoUrl} className="h-6 w-6 rounded object-cover" alt="" />}
-                <span className="text-sm text-white">{r.teamName}</span>
+                <span className="text-sm text-white">
+                  {r.teamName}
+                  {r.robotName && <span className="text-neutral-400"> · {r.robotName}</span>}
+                </span>
               </label>
             ))}
           </div>

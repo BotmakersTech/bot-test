@@ -1,0 +1,49 @@
+/* Organizer portal design tokens — verified against dashboard.css / teamDashboard.css /
+   robotProfile.css (the "new" light UI already live on User Dashboard, Team Dashboard,
+   Robot Profile). --org-* prefix avoids collision with the existing --bl-*/--cna-* blocks. */
+
+:root {
+  --org-blue: #4b86e8;
+  --org-blue-2: #4c8ee7;
+  --org-blue-heading: #3567cf;
+  --org-violet: #8c6cff;
+  --org-violet-heading: #5b62ea;
+  --org-gradient-cta: linear-gradient(135deg, #4c8ee7, #8c6cff);
+  --org-gradient-pill: linear-gradient(135deg, #5d91df, #8d70ff);
+
+  --org-text: #111111;
+  --org-text-strong: #080808;
+  --org-muted: #5d5d5d;
+  --org-muted-2: #6c6c6c;
+  --org-muted-3: #7c7c7c;
+
+  --org-card-bg: rgba(255, 255, 255, 0.9);
+  --org-card-border: 1.5px solid #4b86e8;
+  --org-border-color: #4b86e8;
+
+  --org-success: #1fa952;
+  --org-danger: #e04b4b;
+  --org-warning: #eab308;
+
+  --org-radius-card: 12px;
+  --org-radius-pill: 999px;
+  --org-radius-btn: 8px;
+  --org-btn-shadow: 0 3px 4px rgba(82, 71, 159, 0.28);
+
+  --org-font-heading: "Sarpanch", "Inter", system-ui, sans-serif;
+  --org-font-body: "Inter", system-ui, sans-serif;
+}
+
+.org-page-bg {
+  position: relative;
+  min-height: calc(100vh - 72px);
+  background:
+    linear-gradient(132deg, transparent 0 9%, rgba(69, 119, 222, 0.07) 9% 12%, transparent 12% 100%),
+    linear-gradient(132deg, transparent 0 76%, rgba(140, 108, 255, 0.06) 76% 79%, transparent 79% 100%),
+    transparent;
+  color: var(--org-text-strong);
+}
+
+@keyframes org-spin {
+  to { transform: rotate(360deg); }
+}

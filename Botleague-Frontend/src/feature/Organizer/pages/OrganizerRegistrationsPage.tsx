@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
-import { Search, Users } from "lucide-react"
+import { Search, Users, Bot } from "lucide-react"
 import {
   getMyEvents, getMySports, getRegistrationsForSport,
-  type OrganizerEvent, type OrganizerSport, type OrganizerTeamRegistration,
+  type OrganizerEvent, type OrganizerSport, type EventSportRegistration,
 } from "../api/organizer.api"
 
 // ── theme ─────────────────────────────────────────────────────────────────────
@@ -21,7 +21,7 @@ const toLabel = (raw?: string | null) => {
 export default function OrganizerRegistrationsPage() {
   const [events,  setEvents]  = useState<OrganizerEvent[]>([])
   const [sports,  setSports]  = useState<OrganizerSport[]>([])
-  const [regs,    setRegs]    = useState<OrganizerTeamRegistration[]>([])
+  const [regs,    setRegs]    = useState<EventSportRegistration[]>([])
 
   const [selectedEventId, setSelectedEventId] = useState("")
   const [selectedSportId, setSelectedSportId] = useState("")
@@ -146,12 +146,12 @@ export default function OrganizerRegistrationsPage() {
               <tr style={{ background: "rgba(140,108,255,0.06)", borderBottom: `1px solid ${BORDER}` }}>
                 <th style={{ textAlign: "left", padding: "12px 16px", color: MUTED, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>#</th>
                 <th style={{ textAlign: "left", padding: "12px 16px", color: MUTED, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Team</th>
-                <th style={{ textAlign: "left", padding: "12px 16px", color: MUTED, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Members</th>
+                <th style={{ textAlign: "left", padding: "12px 16px", color: MUTED, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Robot</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((r, i) => (
-                <tr key={r.id} style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${BORDER}` : "none", transition: "background 0.1s" }}
+                <tr key={r.registrationId} style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${BORDER}` : "none", transition: "background 0.1s" }}
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(140,108,255,0.03)"}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}>
                   <td style={{ padding: "13px 16px", color: MUTED, fontFamily: "monospace", fontSize: "0.78rem" }}>{i + 1}</td>
@@ -159,16 +159,12 @@ export default function OrganizerRegistrationsPage() {
                     <p style={{ color: TEXT, fontWeight: 600, margin: 0 }}>{r.teamName}</p>
                   </td>
                   <td style={{ padding: "13px 16px" }}>
-                    {r.lineup && r.lineup.length > 0 ? (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                        {r.lineup.map(m => (
-                          <span key={m.id} style={{ background: "rgba(140,108,255,0.08)", color: P, border: `1px solid rgba(140,108,255,0.2)`, borderRadius: "6px", padding: "2px 8px", fontSize: "0.75rem", fontWeight: 500 }}>
-                            {m.fullName}{m.role ? ` · ${m.role}` : ""}
-                          </span>
-                        ))}
-                      </div>
+                    {r.robotName ? (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(140,108,255,0.08)", color: P, border: `1px solid rgba(140,108,255,0.2)`, borderRadius: "6px", padding: "2px 8px", fontSize: "0.75rem", fontWeight: 500 }}>
+                        <Bot size={12} /> {r.robotName}
+                      </span>
                     ) : (
-                      <span style={{ color: MUTED, fontSize: "0.8rem" }}>No members</span>
+                      <span style={{ color: MUTED, fontSize: "0.8rem" }}>—</span>
                     )}
                   </td>
                 </tr>
