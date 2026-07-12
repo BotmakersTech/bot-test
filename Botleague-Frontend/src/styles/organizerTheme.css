@@ -1,6 +1,6 @@
-/* Organizer portal design tokens — verified against dashboard.css / teamDashboard.css /
+/* Organizer portal design tokens, verified against dashboard.css, teamDashboard.css and
    robotProfile.css (the "new" light UI already live on User Dashboard, Team Dashboard,
-   Robot Profile). --org-* prefix avoids collision with the existing --bl-*/--cna-* blocks. */
+   Robot Profile). The org prefix avoids collision with the existing bl and cna token blocks. */
 
 :root {
   --org-blue: #4b86e8;
