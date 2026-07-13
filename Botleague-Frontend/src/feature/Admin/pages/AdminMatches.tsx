@@ -71,6 +71,14 @@ export default function AdminMatches() {
     load()
   }, [load])
 
+  // Match results are often submitted from a different page (judge/organizer
+  // scoring UI) — auto-refresh so PENDING_APPROVAL matches show up here
+  // without requiring a manual page reload.
+  useEffect(() => {
+    const id = setInterval(load, 10_000)
+    return () => clearInterval(id)
+  }, [load])
+
   const [actingOnId, setActingOnId] = useState<string | null>(null)
 
   const handleApprove = async (matchId: string) => {
@@ -113,11 +121,17 @@ export default function AdminMatches() {
 
   return (
     <div className="min-h-screen bg-[#0a0c10] text-white p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Match Management</h1>
-        <p className="text-gray-400 text-sm mt-1">
-          {loading ? "Loading…" : `${filtered.length} match${filtered.length !== 1 ? "es" : ""}`}
-        </p>
+      <div className="mb-6 flex items-start justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Match Management</h1>
+          <p className="text-gray-400 text-sm mt-1">
+            {loading ? "Loading…" : `${filtered.length} match${filtered.length !== 1 ? "es" : ""}`}
+          </p>
+        </div>
+        <button onClick={() => load()} disabled={loading}
+          className="rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm text-white hover:bg-white/10 transition disabled:opacity-50">
+          {loading ? "Refreshing…" : "Refresh"}
+        </button>
       </div>
 
       {/* Summary cards */}

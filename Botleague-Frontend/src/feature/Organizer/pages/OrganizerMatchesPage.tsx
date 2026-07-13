@@ -84,6 +84,14 @@ export default function OrganizerMatchesPage() {
 
   useEffect(() => { loadMatches() }, [loadMatches])
 
+  // Match results are often submitted from a different page (judge/organizer
+  // scoring UI) — auto-refresh so PENDING_APPROVAL matches show up here
+  // without requiring a manual page reload.
+  useEffect(() => {
+    const id = setInterval(loadMatches, 10_000)
+    return () => clearInterval(id)
+  }, [loadMatches])
+
   const [actingOnId, setActingOnId] = useState<string | null>(null)
 
   const handleApprove = async (matchId: string) => {
@@ -128,11 +136,17 @@ export default function OrganizerMatchesPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: BG, padding: "28px 32px", fontFamily: "'Inter',sans-serif" }}>
-      <div style={{ marginBottom: "24px" }}>
-        <h1 style={{ color: TEXT, fontFamily: "'Sarpanch',sans-serif", fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>Match Management</h1>
-        <p style={{ color: MUTED, fontSize: "0.85rem", margin: "4px 0 0" }}>
-          {loading ? "Loading…" : `${filtered.length} match${filtered.length !== 1 ? "es" : ""}`}
-        </p>
+      <div style={{ marginBottom: "24px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+        <div>
+          <h1 style={{ color: TEXT, fontFamily: "'Sarpanch',sans-serif", fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>Match Management</h1>
+          <p style={{ color: MUTED, fontSize: "0.85rem", margin: "4px 0 0" }}>
+            {loading ? "Loading…" : `${filtered.length} match${filtered.length !== 1 ? "es" : ""}`}
+          </p>
+        </div>
+        <button onClick={() => loadMatches()} disabled={loading}
+          style={{ background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "10px", color: TEXT, fontSize: "0.82rem", fontWeight: 600, padding: "8px 16px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}>
+          {loading ? "Refreshing…" : "Refresh"}
+        </button>
       </div>
 
       {/* Summary cards */}
