@@ -726,3 +726,13 @@ export const cancelMatch = async (matchId: string): Promise<OrganizerMatch> => {
   const res = await api.patch(`/v1/matches/${matchId}/cancel`);
   return res.data;
 };
+
+export const approveMatchResult = async (matchId: string): Promise<OrganizerMatch> => {
+  const res = await api.patch(`/v1/matches/${matchId}/approve`);
+  return res.data;
+};
+
+export const rejectMatchResult = async (matchId: string, reason?: string): Promise<OrganizerMatch> => {
+  const res = await api.patch(`/v1/matches/${matchId}/reject`, { reason });
+  return res.data;
+};

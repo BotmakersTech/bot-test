@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react"
 import { Search } from "lucide-react"
 import {
   getMyEvents, getMySports, getMatchesForSport,
+  approveMatchResult, rejectMatchResult,
   type OrganizerEvent, type OrganizerSport, type OrganizerMatch,
 } from "../api/organizer.api"
 import { ORG } from "../theme/organizerTheme"
@@ -14,14 +15,15 @@ const BORDER = "#4b86e8"
 const TEXT   = "#111111"
 const MUTED  = "#5d5d5d"
 
-type MatchStatus = "ALL" | "SCHEDULED" | "LIVE" | "COMPLETED" | "CANCELLED"
-const STATUS_FILTERS: MatchStatus[] = ["ALL", "SCHEDULED", "LIVE", "COMPLETED", "CANCELLED"]
+type MatchStatus = "ALL" | "SCHEDULED" | "LIVE" | "PENDING_APPROVAL" | "COMPLETED" | "CANCELLED"
+const STATUS_FILTERS: MatchStatus[] = ["ALL", "SCHEDULED", "LIVE", "PENDING_APPROVAL", "COMPLETED", "CANCELLED"]
 
 const STATUS_STYLE: Record<string, React.CSSProperties> = {
-  SCHEDULED: { background: "rgba(76,142,231,0.1)",   color: "#4c8ee7", border: "1px solid rgba(76,142,231,0.3)" },
-  LIVE:      { background: "rgba(16,185,129,0.12)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" },
-  COMPLETED: { background: "rgba(148,163,184,0.1)", color: "#94a3b8", border: "1px solid rgba(148,163,184,0.25)" },
-  CANCELLED: { background: "rgba(239,68,68,0.1)",   color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" },
+  SCHEDULED:        { background: "rgba(76,142,231,0.1)",   color: "#4c8ee7", border: "1px solid rgba(76,142,231,0.3)" },
+  LIVE:             { background: "rgba(16,185,129,0.12)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" },
+  PENDING_APPROVAL: { background: "rgba(234,179,8,0.12)",  color: "#a16207", border: "1px solid rgba(234,179,8,0.3)" },
+  COMPLETED:        { background: "rgba(148,163,184,0.1)", color: "#94a3b8", border: "1px solid rgba(148,163,184,0.25)" },
+  CANCELLED:        { background: "rgba(239,68,68,0.1)",   color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" },
 }
 
 const toLabel = (raw?: string | null) => {
@@ -81,6 +83,23 @@ export default function OrganizerMatchesPage() {
   }, [selectedSportId])
 
   useEffect(() => { loadMatches() }, [loadMatches])
+
+  const [actingOnId, setActingOnId] = useState<string | null>(null)
+
+  const handleApprove = async (matchId: string) => {
+    setActingOnId(matchId)
+    try { await approveMatchResult(matchId); await loadMatches() }
+    catch { setError("Failed to approve match result") }
+    finally { setActingOnId(null) }
+  }
+
+  const handleReject = async (matchId: string) => {
+    const reason = window.prompt("Reason for rejecting this result (optional):") ?? undefined
+    setActingOnId(matchId)
+    try { await rejectMatchResult(matchId, reason); await loadMatches() }
+    catch { setError("Failed to reject match result") }
+    finally { setActingOnId(null) }
+  }
 
   const handleEventChange = (evId: string) => {
     setSelectedEventId(evId)
@@ -175,8 +194,8 @@ export default function OrganizerMatchesPage() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
             <thead>
               <tr style={{ background: "rgba(140,108,255,0.06)", borderBottom: `1px solid ${BORDER}` }}>
-                {["#", "Teams", "Round", "Score", "Scheduled", "Status"].map((h, i) => (
-                  <th key={i} style={{ textAlign: i === 3 || i === 5 ? "center" : "left", padding: "12px 14px", color: MUTED, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
+                {["#", "Teams", "Round", "Score", "Scheduled", "Status", "Actions"].map((h, i) => (
+                  <th key={i} style={{ textAlign: i === 3 || i === 5 || i === 6 ? "center" : "left", padding: "12px 14px", color: MUTED, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -209,6 +228,22 @@ export default function OrganizerMatchesPage() {
                   </td>
                   <td style={{ padding: "13px 14px", textAlign: "center" }}>
                     <StatusBadge status={m.status} />
+                  </td>
+                  <td style={{ padding: "13px 14px", textAlign: "center" }}>
+                    {m.status === "PENDING_APPROVAL" ? (
+                      <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                        <button onClick={() => handleApprove(m.matchId)} disabled={actingOnId === m.matchId}
+                          style={{ background: "rgba(31,169,82,0.1)", border: "1px solid rgba(31,169,82,0.3)", color: "#1fa952", borderRadius: "6px", padding: "5px 10px", fontSize: "0.72rem", fontWeight: 700, cursor: actingOnId === m.matchId ? "not-allowed" : "pointer", opacity: actingOnId === m.matchId ? 0.6 : 1 }}>
+                          Approve
+                        </button>
+                        <button onClick={() => handleReject(m.matchId)} disabled={actingOnId === m.matchId}
+                          style={{ background: "rgba(224,75,75,0.1)", border: "1px solid rgba(224,75,75,0.3)", color: "#e04b4b", borderRadius: "6px", padding: "5px 10px", fontSize: "0.72rem", fontWeight: 700, cursor: actingOnId === m.matchId ? "not-allowed" : "pointer", opacity: actingOnId === m.matchId ? 0.6 : 1 }}>
+                          Reject
+                        </button>
+                      </div>
+                    ) : (
+                      <span style={{ color: MUTED, fontSize: "0.75rem" }}>—</span>
+                    )}
                   </td>
                 </tr>
               ))}

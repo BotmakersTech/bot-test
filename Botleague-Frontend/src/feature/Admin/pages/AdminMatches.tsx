@@ -3,6 +3,8 @@ import { getAllEvents, type AdminEventResponse } from "../api/admin.api"
 import {
   getAllMatches,
   getMatchesByEventSport,
+  approveMatchResult,
+  rejectMatchResult,
   type MatchDTO,
   type MatchStatus,
 } from "../api/adminMatches.api"
@@ -14,10 +16,11 @@ function toLabel(raw?: string | null) {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    SCHEDULED: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-    LIVE:      "bg-green-500/15 text-green-400 border-green-500/30",
-    COMPLETED: "bg-gray-500/15 text-gray-400 border-gray-500/30",
-    CANCELLED: "bg-red-500/15 text-red-400 border-red-500/30",
+    SCHEDULED:        "bg-blue-500/15 text-blue-400 border-blue-500/30",
+    LIVE:             "bg-green-500/15 text-green-400 border-green-500/30",
+    PENDING_APPROVAL: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
+    COMPLETED:        "bg-gray-500/15 text-gray-400 border-gray-500/30",
+    CANCELLED:        "bg-red-500/15 text-red-400 border-red-500/30",
   }
   return (
     <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold border ${map[status] ?? "bg-white/10 text-gray-400 border-white/10"}`}>
@@ -26,7 +29,7 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-const STATUS_FILTERS: Array<MatchStatus | "ALL"> = ["ALL", "SCHEDULED", "LIVE", "COMPLETED", "CANCELLED"]
+const STATUS_FILTERS: Array<MatchStatus | "ALL"> = ["ALL", "SCHEDULED", "LIVE", "PENDING_APPROVAL", "COMPLETED", "CANCELLED"]
 
 export default function AdminMatches() {
   const [events, setEvents] = useState<AdminEventResponse[]>([])
@@ -67,6 +70,23 @@ export default function AdminMatches() {
   useEffect(() => {
     load()
   }, [load])
+
+  const [actingOnId, setActingOnId] = useState<string | null>(null)
+
+  const handleApprove = async (matchId: string) => {
+    setActingOnId(matchId)
+    try { await approveMatchResult(matchId); await load() }
+    catch { setError("Failed to approve match result") }
+    finally { setActingOnId(null) }
+  }
+
+  const handleReject = async (matchId: string) => {
+    const reason = window.prompt("Reason for rejecting this result (optional):") ?? undefined
+    setActingOnId(matchId)
+    try { await rejectMatchResult(matchId, reason); await load() }
+    catch { setError("Failed to reject match result") }
+    finally { setActingOnId(null) }
+  }
 
   const handleEventChange = (eventId: string) => {
     setSelectedEventId(eventId)
@@ -183,6 +203,7 @@ export default function AdminMatches() {
                 <th className="px-4 py-3 text-center hidden md:table-cell">Score</th>
                 <th className="px-4 py-3 text-left hidden lg:table-cell">Scheduled</th>
                 <th className="px-4 py-3 text-center">Status</th>
+                <th className="px-4 py-3 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -234,6 +255,22 @@ export default function AdminMatches() {
                   </td>
                   <td className="px-4 py-3 text-center">
                     <StatusBadge status={m.status ?? ""} />
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {m.status === "PENDING_APPROVAL" ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <button onClick={() => handleApprove(m.matchId)} disabled={actingOnId === m.matchId}
+                          className="rounded-lg bg-green-500/10 px-2.5 py-1 text-xs font-semibold text-green-400 hover:bg-green-500/20 disabled:opacity-50">
+                          Approve
+                        </button>
+                        <button onClick={() => handleReject(m.matchId)} disabled={actingOnId === m.matchId}
+                          className="rounded-lg bg-red-500/10 px-2.5 py-1 text-xs font-semibold text-red-400 hover:bg-red-500/20 disabled:opacity-50">
+                          Reject
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-gray-600">—</span>
+                    )}
                   </td>
                 </tr>
               ))}
