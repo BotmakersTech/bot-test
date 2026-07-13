@@ -111,6 +111,10 @@ public class TeamMembershipService {
             throw ApiException.badRequest("Use transfer captain API");
         }
 
+        if (target.getRoleInTeam() == TeamRole.CAPTAIN) {
+            throw ApiException.badRequest("Cannot change the captain's role directly; use transfer captain API");
+        }
+
         if (role == TeamRole.VICE_CAPTAIN) {
             teamMembershipRepository
                     .findByTeamIdAndRoleInTeamAndStatus(

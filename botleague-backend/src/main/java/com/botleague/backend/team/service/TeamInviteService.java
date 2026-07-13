@@ -61,6 +61,7 @@ public class TeamInviteService {
     public TeamInviteResponseDTO sendInvite(
             String teamCode,
             String invitedBotLeagueUserId,
+            TeamRole intendedRole,
             UUID invitedByUserId
     ) {
         Team team = teamRepository
@@ -79,7 +80,15 @@ public class TeamInviteService {
             throw ApiException.badRequest("You cannot invite yourself");
         }
 
-        validateInvitePermission(teamId, invitedByUserId);
+        TeamMembership callerMembership = validateInvitePermission(teamId, invitedByUserId);
+
+        if (intendedRole == TeamRole.CAPTAIN) {
+            throw ApiException.badRequest("Cannot invite directly as captain — use transfer captain after they join");
+        }
+        if (intendedRole == TeamRole.VICE_CAPTAIN
+                && callerMembership.getRoleInTeam() == TeamRole.VICE_CAPTAIN) {
+            throw ApiException.forbidden("Vice captain cannot invite a member as vice captain");
+        }
 
         // Reject if the user is already an active member of this team
         teamMembershipRepository
@@ -99,6 +108,7 @@ public class TeamInviteService {
         invite.setInvitedUserId(invitedUserId);
         invite.setInvitedBy(invitedByUserId);
         invite.setStatus(TeamInviteStatus.PENDING);
+        invite.setIntendedRole(intendedRole);
 
         TeamInvite saved = teamInviteRepository.save(invite);
 
@@ -170,13 +180,29 @@ public class TeamInviteService {
                 .map(m -> m.getStatus() != TeamMembershipStatus.ACTIVE)
                 .orElse(false);
 
+        TeamRole resolvedRole = invite.getIntendedRole() != null ? invite.getIntendedRole() : TeamRole.MEMBER;
+
+        // The invite may have sat pending for up to 7 days — someone else could have
+        // become vice-captain in the meantime via assignRole. Demote them the same
+        // way assignRole does before handing the role to the newly-accepting member.
+        if (resolvedRole == TeamRole.VICE_CAPTAIN) {
+            teamMembershipRepository
+                    .findByTeamIdAndRoleInTeamAndStatus(teamId, TeamRole.VICE_CAPTAIN, TeamMembershipStatus.ACTIVE)
+                    .ifPresent(existing -> {
+                        if (!existing.getUserId().equals(currentUserId)) {
+                            existing.setRoleInTeam(TeamRole.MEMBER);
+                            teamMembershipRepository.save(existing);
+                        }
+                    });
+        }
+
         // Upsert membership (reuse existing row if present — the unique(team_id, user_id) ensures one row per pair)
         TeamMembership membership = teamMembershipRepository
                 .findByTeamIdAndUserId(teamId, currentUserId)
                 .orElse(new TeamMembership());
         membership.setTeamId(teamId);
         membership.setUserId(currentUserId);
-        membership.setRoleInTeam(TeamRole.MEMBER);
+        membership.setRoleInTeam(resolvedRole);
         membership.setStatus(TeamMembershipStatus.ACTIVE);
         membership.setJoinedAt(LocalDateTime.now());
         membership.setLeftAt(null);
@@ -324,7 +350,7 @@ public class TeamInviteService {
     // HELPERS
     // =========================================================
 
-    private void validateInvitePermission(UUID teamId, UUID userId) {
+    private TeamMembership validateInvitePermission(UUID teamId, UUID userId) {
         TeamMembership membership = teamMembershipRepository
                 .findByTeamIdAndUserIdAndStatus(teamId, userId, TeamMembershipStatus.ACTIVE)
                 .orElseThrow(() -> ApiException.forbidden("Not a team member"));
@@ -333,6 +359,8 @@ public class TeamInviteService {
                 && membership.getRoleInTeam() != TeamRole.VICE_CAPTAIN) {
             throw ApiException.forbidden("Only captains and vice-captains can manage invites");
         }
+
+        return membership;
     }
 
     private void validateInviteOwner(TeamInvite invite, UUID userId) {

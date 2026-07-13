@@ -110,7 +110,8 @@ export const getTeamMemberships =
 export const inviteMember =
   async (
     teamCode: string,
-    invitedBotleagueId: string
+    invitedBotleagueId: string,
+    role?: TeamRole
   ) => {
 
     const response =
@@ -121,6 +122,7 @@ export const inviteMember =
         {
           invitedUserId:
             invitedBotleagueId,
+          role,
         },
 
         {

@@ -1,0 +1,179 @@
+/* ===================================================================
+   MEMBER MANAGEMENT PAGE
+   Sits alongside teamDashboard.css and reuses its page/card/button/
+   avatar primitives (.teamdash-page, .teamdash-content, .teamdash-top-row,
+   .teamdash-squad-panel, .teamdash-member-list, .teamdash-member,
+   .teamdash-avatar(-fallback), .teamdash-chat-btn, .teamdash-error,
+   .teamdash-state). This file only adds the pieces that don't already
+   exist: the invite search row, role selects, role pills, and roster
+   row actions.
+   =================================================================== */
+
+.memmgmt-search-card {
+  padding: 20px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.memmgmt-search-card label {
+  color: #5b62ea;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.memmgmt-search-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.memmgmt-input,
+.memmgmt-role-select {
+  height: 44px;
+  border: 1.5px solid #4b86e8;
+  border-radius: 8px;
+  padding: 0 14px;
+  font-size: 14px;
+  color: #14142b;
+  background: #ffffff;
+  outline: none;
+}
+
+.memmgmt-input {
+  flex: 1;
+  min-width: 220px;
+}
+
+.memmgmt-role-select {
+  min-width: 170px;
+}
+
+.memmgmt-invite-btn {
+  min-width: 120px;
+  font-size: 15px;
+  height: 44px;
+}
+
+.memmgmt-invite-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.memmgmt-invite-message {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1fa952;
+}
+
+.memmgmt-role-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1.5px solid;
+  width: fit-content;
+  margin-top: 4px;
+  letter-spacing: 0.3px;
+}
+
+.memmgmt-role-pill.captain {
+  color: #5b62ea;
+  border-color: #5b62ea;
+  background: rgba(91, 98, 234, 0.08);
+}
+
+.memmgmt-role-pill.vice_captain {
+  color: #3567cf;
+  border-color: #3567cf;
+  background: rgba(53, 103, 207, 0.08);
+}
+
+.memmgmt-role-pill.member {
+  color: #4b4b4b;
+  border-color: #9aa0b4;
+  background: rgba(154, 160, 180, 0.08);
+}
+
+.memmgmt-role-pill.mentor {
+  color: #1fa952;
+  border-color: #1fa952;
+  background: rgba(31, 169, 82, 0.06);
+}
+
+.memmgmt-roster-row {
+  grid-template-columns: 44px 1fr auto;
+}
+
+.memmgmt-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.memmgmt-action-select {
+  height: 32px;
+  border: 1.5px solid #4b86e8;
+  border-radius: 6px;
+  font-size: 12px;
+  padding: 0 8px;
+  background: #ffffff;
+  color: #14142b;
+}
+
+.memmgmt-remove-btn,
+.memmgmt-captain-btn,
+.memmgmt-cancel-btn {
+  height: 32px;
+  border-radius: 6px;
+  border: 1.5px solid;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  background: #ffffff;
+}
+
+.memmgmt-remove-btn:disabled,
+.memmgmt-captain-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.memmgmt-remove-btn {
+  color: #e04b4b;
+  border-color: #e04b4b;
+}
+
+.memmgmt-captain-btn {
+  color: #5b62ea;
+  border-color: #5b62ea;
+}
+
+.memmgmt-cancel-btn {
+  color: #4b4b4b;
+  border-color: #9aa0b4;
+}
+
+.memmgmt-confirm-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4b4b4b;
+}
+
+.memmgmt-readonly-note {
+  padding: 20px;
+  text-align: center;
+  color: #7c7c7c;
+  font-size: 13px;
+  font-weight: 600;
+}

@@ -237,7 +237,9 @@ const useTeamMembership = (
     useCallback(
       async (
         botleagueId:
-          string
+          string,
+        role?:
+          TeamRole
       ) => {
 
         try {
@@ -252,7 +254,8 @@ const useTeamMembership = (
 
           await inviteMember(
             teamCode,
-            botleagueId
+            botleagueId,
+            role
           );
 
           await loadTeamMemberships();

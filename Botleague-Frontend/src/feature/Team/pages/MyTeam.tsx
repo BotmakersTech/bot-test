@@ -437,7 +437,7 @@ export default function MyTeam() {
                 <div className="teamdash-empty-list">No members loaded yet.</div>
               )}
             </div>
-            <button type="button" className="teamdash-manage-btn" onClick={() => navigate("/my-team")}>
+            <button type="button" className="teamdash-manage-btn" onClick={() => navigate("/my-team/members")}>
               Member Management
             </button>
           </aside>

@@ -69,6 +69,7 @@ public class TeamInviteController {
                 teamInviteService.sendInvite(
                         teamCode,
                         request.getInvitedUserId(),
+                        request.getRole(),
                         currentUserId
                 );
 

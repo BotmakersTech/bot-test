@@ -34,6 +34,7 @@ import EventsLandingPage from "../temp/pages/EventsLandingPage";
 // TEAM PAGES
 // ============================
 import MyTeams from "../feature/Team/pages/MyTeam";
+import MemberManagementPage from "../feature/Team/TeamMembership/pages/MemberManagementPage";
 import CreateTeam from "../feature/Team/CreateTeam/pages/CreateTeamPage";
 
 // ============================
@@ -211,6 +212,7 @@ function AppRoutes() {
         {/* ── Core user pages ── */}
         <Route path="/user-dashboard" element={<UserDashboard />} />
         <Route path="/my-team" element={<MyTeams />} />
+        <Route path="/my-team/members" element={<MemberManagementPage />} />
         <Route path="/create-team" element={<CreateTeam />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/settings" element={<SettingsPage />} />

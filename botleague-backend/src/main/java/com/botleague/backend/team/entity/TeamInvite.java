@@ -1,6 +1,7 @@
 package com.botleague.backend.team.entity;
 
 import com.botleague.backend.team.enums.TeamInviteStatus;
+import com.botleague.backend.team.enums.TeamRole;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -47,6 +48,10 @@ public class TeamInvite {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private TeamInviteStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "intended_role", length = 20)
+    private TeamRole intendedRole;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -122,6 +127,14 @@ public class TeamInvite {
 
 	public void setStatus(TeamInviteStatus status) {
 		this.status = status;
+	}
+
+	public TeamRole getIntendedRole() {
+		return intendedRole;
+	}
+
+	public void setIntendedRole(TeamRole intendedRole) {
+		this.intendedRole = intendedRole;
 	}
 
 	public LocalDateTime getCreatedAt() {
