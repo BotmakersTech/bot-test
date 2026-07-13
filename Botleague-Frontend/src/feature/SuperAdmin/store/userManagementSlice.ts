@@ -3,6 +3,9 @@ import * as api from "../api/userManagement.api";
 import type {
   UserSummary, PagedResponse, EventOption, SportOption, UpdateUserProfileRequest,
 } from "../api/userManagement.api";
+import {
+  assignEventHead, unassignEventHead, assignSportHead, unassignSportHead,
+} from "../../Admin/api/admin.api";
 import type { RootState } from "../../../app/store";
 
 interface UserManagementState {
@@ -69,10 +72,14 @@ export const updateUserStatus = createAsyncThunk(
   }
 );
 
+// Assignment thunks call the OrganizerAssignmentController endpoints
+// (admin.api.ts) directly — the equivalent userManagement.api.ts endpoints
+// were removed from the backend ("moved to OrganizerAssignmentController")
+// without the frontend being updated, so they 404'd.
 export const assignUserEvent = createAsyncThunk(
   "userManagement/assignEvent",
   async ({ userId, eventId }: { userId: string; eventId: string }, { dispatch }) => {
-    await api.assignEvent(userId, eventId);
+    await assignEventHead(userId, eventId);
     dispatch(fetchUserDetail(userId));
   }
 );
@@ -80,7 +87,7 @@ export const assignUserEvent = createAsyncThunk(
 export const removeUserEventAssignment = createAsyncThunk(
   "userManagement/removeEventAssignment",
   async ({ userId, eventId }: { userId: string; eventId: string }, { dispatch }) => {
-    await api.removeEventAssignment(userId, eventId);
+    await unassignEventHead(userId, eventId);
     dispatch(fetchUserDetail(userId));
   }
 );
@@ -88,10 +95,10 @@ export const removeUserEventAssignment = createAsyncThunk(
 export const assignUserSport = createAsyncThunk(
   "userManagement/assignSport",
   async (
-    { userId, eventSportId, eventId }: { userId: string; eventSportId: string; eventId: string },
+    { userId, eventSportId }: { userId: string; eventSportId: string; eventId: string },
     { dispatch }
   ) => {
-    await api.assignSport(userId, eventSportId, eventId);
+    await assignSportHead(userId, eventSportId);
     dispatch(fetchUserDetail(userId));
   }
 );
@@ -99,7 +106,7 @@ export const assignUserSport = createAsyncThunk(
 export const removeUserSportAssignment = createAsyncThunk(
   "userManagement/removeSportAssignment",
   async ({ userId, sportId }: { userId: string; sportId: string }, { dispatch }) => {
-    await api.removeSportAssignment(userId, sportId);
+    await unassignSportHead(userId, sportId);
     dispatch(fetchUserDetail(userId));
   }
 );

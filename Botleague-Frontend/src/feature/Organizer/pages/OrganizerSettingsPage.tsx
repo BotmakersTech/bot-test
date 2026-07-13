@@ -5,13 +5,13 @@ function Field({ label, value, onChange, type = "text", readOnly = false }:
   { label: string; value: string; onChange?: (v: string) => void; type?: string; readOnly?: boolean }) {
   return (
     <div>
-      <label className="text-xs text-neutral-400 mb-1 block">{label}</label>
+      <label className="text-xs text-[#5d5d5d] mb-1 block font-semibold">{label}</label>
       {readOnly ? (
-        <div className="w-full rounded-lg bg-white/[0.03] border border-white/[0.06] px-3 py-2 text-sm text-neutral-400">{value || "—"}</div>
+        <div className="w-full rounded-lg bg-[#f8f9ff] border border-[#4b86e8]/20 px-3 py-2 text-sm text-[#5d5d5d]">{value || "—"}</div>
       ) : (
         <input type={type} value={value}
           onChange={e => onChange?.(e.target.value)}
-          className="w-full rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#fa4715] transition-colors" />
+          className="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none focus:ring-[#8c6cff] transition-colors" />
       )}
     </div>
   )
@@ -74,17 +74,17 @@ export default function OrganizerSettingsPage() {
   return (
     <div className="min-h-full p-6 space-y-6 max-w-3xl">
       <div>
-        <h1 className="text-xl font-bold text-white">Event Settings</h1>
-        <p className="text-sm text-neutral-500 mt-0.5">
+        <h1 className="text-xl font-bold text-[#3567cf]" style={{ fontFamily: "'Sarpanch', 'Inter', sans-serif" }}>Event Settings</h1>
+        <p className="text-sm text-[#5d5d5d] mt-0.5">
           Update event information. Sport specifications are managed by administrators.
         </p>
       </div>
 
       {/* Event selector */}
       <div>
-        <label className="text-xs text-neutral-400 mb-1 block">Event</label>
+        <label className="text-xs text-[#5d5d5d] mb-1 block font-semibold">Event</label>
         <select value={selectedEventId} onChange={e => handleSelectEvent(e.target.value)}
-          className="rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none w-full sm:w-64">
+          className="rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none w-full sm:w-64">
           {events.map(e => <option key={e.id} value={e.id}>{e.eventName}</option>)}
         </select>
       </div>
@@ -92,10 +92,10 @@ export default function OrganizerSettingsPage() {
       {event && (
         <>
           {/* Read-only fields (admin-controlled) */}
-          <div className="rounded-2xl border border-white/[0.06] bg-[#0e0e10] p-5 space-y-4">
+          <div className="rounded-2xl border border-[#4b86e8]/25 bg-white/90 p-5 space-y-4">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-sm font-semibold text-neutral-200">Read-Only Fields</span>
-              <span className="rounded-full bg-white/[0.07] px-2 py-0.5 text-[10px] text-neutral-400 font-semibold">Administrator Only</span>
+              <span className="text-sm font-semibold text-[#111111]">Read-Only Fields</span>
+              <span className="rounded-full bg-[#4b86e8]/10 px-2 py-0.5 text-[10px] text-[#3567cf] font-semibold">Administrator Only</span>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Event Code"  value={event.eventCode} readOnly />
@@ -104,15 +104,15 @@ export default function OrganizerSettingsPage() {
           </div>
 
           {/* Editable info fields */}
-          <div className="rounded-2xl border border-white/[0.06] bg-[#0e0e10] p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-neutral-200">Event Information</h2>
+          <div className="rounded-2xl border border-[#4b86e8]/25 bg-white/90 p-5 space-y-4">
+            <h2 className="text-sm font-semibold text-[#111111]">Event Information</h2>
             <Field label="Event Name *" value={form.eventName ?? ""} onChange={set("eventName")} />
             <div>
-              <label className="text-xs text-neutral-400 mb-1 block">Description</label>
+              <label className="text-xs text-[#5d5d5d] mb-1 block font-semibold">Description</label>
               <textarea value={form.eventDescription ?? ""}
                 onChange={e => setForm(p => ({ ...p, eventDescription: e.target.value }))}
                 rows={3}
-                className="w-full rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#fa4715] resize-none" />
+                className="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none focus:ring-[#8c6cff] resize-none" />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Organisation Name" value={form.organizationName ?? ""} onChange={set("organizationName")} />
@@ -121,8 +121,8 @@ export default function OrganizerSettingsPage() {
           </div>
 
           {/* Venue */}
-          <div className="rounded-2xl border border-white/[0.06] bg-[#0e0e10] p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-neutral-200">Venue</h2>
+          <div className="rounded-2xl border border-[#4b86e8]/25 bg-white/90 p-5 space-y-4">
+            <h2 className="text-sm font-semibold text-[#111111]">Venue</h2>
             <Field label="Venue Name"    value={form.venueName    ?? ""} onChange={set("venueName")} />
             <Field label="Venue Address" value={form.venueAddress ?? ""} onChange={set("venueAddress")} />
             <div className="grid gap-4 sm:grid-cols-3">
@@ -133,22 +133,22 @@ export default function OrganizerSettingsPage() {
           </div>
 
           {/* Timeline */}
-          <div className="rounded-2xl border border-white/[0.06] bg-[#0e0e10] p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-neutral-200">Timeline</h2>
+          <div className="rounded-2xl border border-[#4b86e8]/25 bg-white/90 p-5 space-y-4">
+            <h2 className="text-sm font-semibold text-[#111111]">Timeline</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Start Date" value={form.startDate ?? ""} onChange={set("startDate")} type="date" />
               <Field label="End Date"   value={form.endDate   ?? ""} onChange={set("endDate")}   type="date" />
             </div>
           </div>
 
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+          {error && <p className="text-[#e04b4b] text-sm">{error}</p>}
 
           <div className="flex items-center gap-4">
             <button onClick={handleSave} disabled={saving}
-              className="rounded-xl bg-[#fa4715] px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:bg-[#e03d0f] transition-colors">
+              className="rounded-xl bg-linear-to-br from-[#4c8ee7] to-[#8c6cff] px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:opacity-90 transition-opacity">
               {saving ? "Saving…" : "Save Changes"}
             </button>
-            {saved && <span className="text-sm text-green-400 font-medium">Changes saved!</span>}
+            {saved && <span className="text-sm text-[#1fa952] font-medium">Changes saved!</span>}
           </div>
         </>
       )}

@@ -4,20 +4,21 @@ import {
   getMyEvents, getMySports, getMatchesForSport,
   type OrganizerEvent, type OrganizerSport, type OrganizerMatch,
 } from "../api/organizer.api"
+import { ORG } from "../theme/organizerTheme"
 
 // ── theme ─────────────────────────────────────────────────────────────────────
-const P      = "#8C6CFF"
-const BG     = "#F4F3FF"
-const SURF   = "#FFFFFF"
-const BORDER = "#E0D9FF"
+const P      = "#8c6cff"
+const BG     = ORG.pageBg
+const SURF   = "rgba(255,255,255,0.9)"
+const BORDER = "#4b86e8"
 const TEXT   = "#111111"
-const MUTED  = "#6B7280"
+const MUTED  = "#5d5d5d"
 
 type MatchStatus = "ALL" | "SCHEDULED" | "LIVE" | "COMPLETED" | "CANCELLED"
 const STATUS_FILTERS: MatchStatus[] = ["ALL", "SCHEDULED", "LIVE", "COMPLETED", "CANCELLED"]
 
 const STATUS_STYLE: Record<string, React.CSSProperties> = {
-  SCHEDULED: { background: "rgba(1,98,209,0.1)",   color: "#0162D1", border: "1px solid rgba(1,98,209,0.3)" },
+  SCHEDULED: { background: "rgba(76,142,231,0.1)",   color: "#4c8ee7", border: "1px solid rgba(76,142,231,0.3)" },
   LIVE:      { background: "rgba(16,185,129,0.12)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" },
   COMPLETED: { background: "rgba(148,163,184,0.1)", color: "#94a3b8", border: "1px solid rgba(148,163,184,0.25)" },
   CANCELLED: { background: "rgba(239,68,68,0.1)",   color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" },
@@ -118,7 +119,7 @@ export default function OrganizerMatchesPage() {
       {/* Summary cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "12px", marginBottom: "20px" }}>
         {([
-          ["Scheduled", counts.SCHEDULED, "#0162D1"],
+          ["Scheduled", counts.SCHEDULED, "#4c8ee7"],
           ["Live",      counts.LIVE,      "#10b981"],
           ["Completed", counts.COMPLETED, "#94a3b8"],
           ["Cancelled", counts.CANCELLED, "#ef4444"],

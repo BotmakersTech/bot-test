@@ -4,14 +4,15 @@ import {
   getMyEvents, getMySports, getRegistrationsForSport,
   type OrganizerEvent, type OrganizerSport, type EventSportRegistration,
 } from "../api/organizer.api"
+import { ORG } from "../theme/organizerTheme"
 
 // ── theme ─────────────────────────────────────────────────────────────────────
-const P      = "#8C6CFF"
-const BG     = "#F4F3FF"
-const SURF   = "#FFFFFF"
-const BORDER = "#E0D9FF"
+const P      = "#8c6cff"
+const BG     = ORG.pageBg
+const SURF   = "rgba(255,255,255,0.9)"
+const BORDER = "#4b86e8"
 const TEXT   = "#111111"
-const MUTED  = "#6B7280"
+const MUTED  = "#5d5d5d"
 
 const toLabel = (raw?: string | null) => {
   if (!raw) return "—"

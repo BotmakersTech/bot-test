@@ -8,7 +8,7 @@ import {
 } from "lucide-react"
 import { useOrganizerSportDetail } from "../hooks/useOrganizerSportDetail"
 import { type CreateEventSportRequest, ensureTeamChatRoom } from "../api/organizer.api"
-import { uploadSportMedia, clearSportMedia, type SportMediaSlot } from "../api/sportMedia.api"
+import SportMediaField from "../components/SportMediaField"
 import { pushToGlobalRankings } from "../../Rankings/api/rankings.api"
 import type { RootState } from "../../../app/store"
 import { useAppDispatch } from "../../../app/hooks"
@@ -542,96 +542,6 @@ function localToIso(local?: string): string | undefined {
   return isNaN(d.getTime()) ? undefined : d.toISOString()
 }
 
-// Single thumbnail/video slot for a sport — uploads immediately (independent
-// of the modal's Save button), previews, and allows removal.
-function SportMediaField({
-  eventId,
-  sportId,
-  slot,
-  kind,
-  label,
-  currentUrl,
-  onMediaChange,
-}: {
-  eventId: string
-  sportId: string
-  slot: SportMediaSlot
-  kind: "image" | "video"
-  label: string
-  currentUrl?: string | null
-  onMediaChange: () => void
-}) {
-  const [uploading, setUploading] = React.useState(false)
-  const [fieldError, setFieldError] = React.useState<string | null>(null)
-
-  const handleFile = async (file: File | null) => {
-    if (!file) return
-    setFieldError(null)
-    setUploading(true)
-    try {
-      await uploadSportMedia(eventId, sportId, slot, file)
-      onMediaChange()
-    } catch (err: any) {
-      setFieldError(err?.message || "Upload failed.")
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  const handleRemove = async () => {
-    setFieldError(null)
-    setUploading(true)
-    try {
-      await clearSportMedia(eventId, sportId, slot)
-      onMediaChange()
-    } catch (err: any) {
-      setFieldError(err?.message || "Failed to remove.")
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-      <label style={{ display: "block", fontSize: "0.62rem", color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>
-        {label}
-      </label>
-      {currentUrl && (
-        kind === "image"
-          ? <img src={currentUrl} alt={label} style={{ width: "100%", maxHeight: "160px", objectFit: "cover", borderRadius: "8px", border: "1px solid rgba(75,134,232,0.3)" }} />
-          : <video src={currentUrl} controls style={{ width: "100%", maxHeight: "200px", borderRadius: "8px", border: "1px solid rgba(75,134,232,0.3)" }} />
-      )}
-      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-        <label style={{
-          display: "flex", alignItems: "center", gap: "6px", cursor: uploading ? "not-allowed" : "pointer",
-          background: "#f8f9ff", border: "1px solid rgba(75,134,232,0.3)", borderRadius: "8px",
-          padding: "7px 14px", fontSize: "0.76rem", fontWeight: 600, color: MUTED, opacity: uploading ? 0.6 : 1,
-        }}>
-          {uploading ? <Spinner size={12} color={ACCENT} /> : null}
-          {uploading ? "Uploading…" : currentUrl ? "Replace" : "Upload"}
-          <input
-            type="file"
-            accept={kind === "image" ? "image/*" : "video/*"}
-            disabled={uploading}
-            style={{ display: "none" }}
-            onChange={e => handleFile(e.target.files?.[0] ?? null)}
-          />
-        </label>
-        {currentUrl && (
-          <button type="button" onClick={handleRemove} disabled={uploading} style={{
-            background: "rgba(224,75,75,0.1)", border: "1px solid rgba(224,75,75,0.25)", color: DANGER,
-            borderRadius: "8px", padding: "7px 12px", fontSize: "0.76rem", fontWeight: 600,
-            cursor: uploading ? "not-allowed" : "pointer",
-          }}>
-            Remove
-          </button>
-        )}
-      </div>
-      {fieldError && <div style={{ fontSize: "0.74rem", color: DANGER }}>{fieldError}</div>}
-    </div>
-  )
-}
-
 function EditSportModal({
   sport,
   eventId,
@@ -798,8 +708,8 @@ function EditSportModal({
             background: "#f8f9ff", border: "1px solid rgba(75,134,232,0.3)", borderRadius: "10px",
             padding: "14px 16px", display: "flex", flexDirection: "column", gap: "16px",
           }}>
-            <SportMediaField eventId={eventId} sportId={sportId} slot="THUMBNAIL" kind="image" label="Sport Thumbnail" currentUrl={sport.sportThumbnailUrl} onMediaChange={onMediaChange} />
-            <SportMediaField eventId={eventId} sportId={sportId} slot="TEASER" kind="video" label="Teaser Video" currentUrl={sport.sportTeaserVideoUrl} onMediaChange={onMediaChange} />
+            <SportMediaField eventId={eventId} sportId={sportId} slot="THUMBNAIL" kind="image" label="Sport Thumbnail" currentUrl={sport.sportThumbnailUrl} onMediaChange={onMediaChange} colors={{ border: "rgba(75,134,232,0.3)", muted: MUTED, accent: ACCENT, danger: DANGER, uploadBg: "#f8f9ff" }} />
+            <SportMediaField eventId={eventId} sportId={sportId} slot="TEASER" kind="video" label="Teaser Video" currentUrl={sport.sportTeaserVideoUrl} onMediaChange={onMediaChange} colors={{ border: "rgba(75,134,232,0.3)", muted: MUTED, accent: ACCENT, danger: DANGER, uploadBg: "#f8f9ff" }} />
           </div>
 
           {/* Row 1: Age Group */}

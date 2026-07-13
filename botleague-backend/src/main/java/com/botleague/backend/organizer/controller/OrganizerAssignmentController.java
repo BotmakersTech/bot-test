@@ -2,6 +2,7 @@ package com.botleague.backend.organizer.controller;
 
 import com.botleague.backend.organizer.dto.AssignmentResponse;
 import com.botleague.backend.organizer.dto.EventAssignmentRequest;
+import com.botleague.backend.organizer.dto.RejectAssignmentRequest;
 import com.botleague.backend.organizer.dto.SportAssignmentRequest;
 import com.botleague.backend.organizer.service.OrganizerAssignmentService;
 import jakarta.validation.Valid;
@@ -99,5 +100,27 @@ public class OrganizerAssignmentController {
             @PathVariable UUID eventSportId) {
 
         return ResponseEntity.ok(service.getAssignmentsForSport(eventSportId));
+    }
+
+    @PatchMapping("/sport/{id}/approve")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
+    public ResponseEntity<AssignmentResponse> approveSportAssignment(
+            Authentication authentication,
+            @PathVariable UUID id) {
+
+        UUID approverId = UUID.fromString((String) authentication.getPrincipal());
+        return ResponseEntity.ok(service.approveSportAssignment(id, approverId));
+    }
+
+    @PatchMapping("/sport/{id}/reject")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
+    public ResponseEntity<AssignmentResponse> rejectSportAssignment(
+            Authentication authentication,
+            @PathVariable UUID id,
+            @RequestBody(required = false) RejectAssignmentRequest request) {
+
+        UUID approverId = UUID.fromString((String) authentication.getPrincipal());
+        String reason = request != null ? request.getReason() : null;
+        return ResponseEntity.ok(service.rejectSportAssignment(id, reason, approverId));
     }
 }

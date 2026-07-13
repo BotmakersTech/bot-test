@@ -8,15 +8,16 @@ import {
   getMyEvents, getDashboardStats,
   type OrganizerEvent, type DashboardStats,
 } from "../api/organizer.api"
+import { ORG } from "../theme/organizerTheme"
 
 // ── theme ─────────────────────────────────────────────────────────────────────
-const P      = "#8C6CFF"
-const BLUE   = "#0162D1"
-const BG     = "#F4F3FF"
-const SURF   = "#FFFFFF"
-const BORDER = "#E0D9FF"
+const P      = "#8c6cff"
+const BLUE   = "#4c8ee7"
+const BG     = ORG.pageBg
+const SURF   = "rgba(255,255,255,0.9)"
+const BORDER = "#4b86e8"
 const TEXT   = "#111111"
-const MUTED  = "#6B7280"
+const MUTED  = "#5d5d5d"
 
 const STATUS: Record<string, { label: string; color: string; bg: string; border: string; dot: boolean }> = {
   LIVE:      { label: "Live",      color: "#10b981", bg: "rgba(16,185,129,0.12)",  border: "rgba(16,185,129,0.3)",   dot: true  },
@@ -153,7 +154,7 @@ export default function OrganizerDashboard() {
         </div>
         <button
           onClick={() => navigate("/organizer/events")}
-          style={{ background: `linear-gradient(135deg,${P},${BLUE})`, color: "#fff", border: "none", borderRadius: "10px", padding: "0 18px", height: "40px", fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+          style={{ background: `linear-gradient(135deg,${BLUE},${P})`, color: "#fff", border: "none", borderRadius: "10px", padding: "0 18px", height: "40px", fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
         >
           <TrendingUp size={15} /> View All
         </button>

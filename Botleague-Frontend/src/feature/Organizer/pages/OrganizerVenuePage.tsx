@@ -23,7 +23,7 @@ function defaultChecklist(): ChecklistItem[] {
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button onClick={() => onChange(!checked)}
-      className={`relative h-5 w-9 rounded-full transition-colors ${checked ? "bg-[#fa4715]" : "bg-white/10"}`}>
+      className={`relative h-5 w-9 rounded-full transition-colors ${checked ? "bg-linear-to-br from-[#4c8ee7] to-[#8c6cff]" : "bg-[#4b86e8]/15"}`}>
       <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${checked ? "left-[18px]" : "left-0.5"}`} />
     </button>
   )
@@ -99,7 +99,7 @@ export default function OrganizerVenuePage() {
 
   if (loading) return (
     <div className="p-6 space-y-3">
-      {[1,2,3,4].map(i => <div key={i} className="h-16 animate-pulse rounded-xl bg-white/[0.04]" />)}
+      {[1,2,3,4].map(i => <div key={i} className="h-16 animate-pulse rounded-xl bg-[#4b86e8]/8" />)}
     </div>
   )
 
@@ -107,19 +107,19 @@ export default function OrganizerVenuePage() {
     <div className="min-h-full p-6 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold text-white">Venue & Logistics</h1>
-          <p className="text-sm text-neutral-500 mt-0.5">Facilities, arenas, and readiness checklist</p>
+          <h1 className="text-xl font-bold text-[#3567cf]" style={{ fontFamily: "'Sarpanch', 'Inter', sans-serif" }}>Venue &amp; Logistics</h1>
+          <p className="text-sm text-[#5d5d5d] mt-0.5">Facilities, arenas, and readiness checklist</p>
         </div>
         <select value={selectedEventId} onChange={e => setSelectedEventId(e.target.value)}
-          className="rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none">
+          className="rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none">
           {events.map(e => <option key={e.id} value={e.id}>{e.eventName}</option>)}
         </select>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* ── Facility Flags ── */}
-        <div className="rounded-2xl border border-white/[0.06] bg-[#0e0e10] p-5 space-y-4">
-          <h2 className="text-sm font-semibold text-neutral-200">Facility Status</h2>
+        <div className="rounded-2xl border border-[#4b86e8]/25 bg-white/90 p-5 space-y-4">
+          <h2 className="text-sm font-semibold text-[#111111]">Facility Status</h2>
           {[
             { key: "hasPower",           label: "Power Supply" },
             { key: "hasInternet",         label: "Internet Connectivity" },
@@ -127,7 +127,7 @@ export default function OrganizerVenuePage() {
             { key: "safetyCompliant",     label: "Safety Compliant" },
           ].map(({ key, label }) => (
             <div key={key} className="flex items-center justify-between">
-              <span className="text-sm text-neutral-300">{label}</span>
+              <span className="text-sm text-[#374151]">{label}</span>
               <Toggle
                 checked={!!(venue as any)?.[key]}
                 onChange={v => setFlag(key as keyof VenueDetail, v)}
@@ -143,72 +143,72 @@ export default function OrganizerVenuePage() {
               { label: "Emergency Contact Phone", key: "emergencyContactPhone", type: "tel" },
             ].map(f => (
               <div key={f.key}>
-                <label className="text-xs text-neutral-500 mb-1 block">{f.label}</label>
+                <label className="text-xs text-[#5d5d5d] mb-1 block font-semibold">{f.label}</label>
                 <input type={f.type}
                   value={(venue as any)?.[f.key] ?? ""}
                   onChange={e => setVenue(prev => prev ? { ...prev, [f.key]: f.type === "number" ? Number(e.target.value) || null : e.target.value } : prev)}
-                  className="w-full rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none" />
+                  className="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none" />
               </div>
             ))}
           </div>
           <button onClick={handleSave} disabled={saving}
-            className="w-full rounded-xl bg-[#fa4715] py-2 text-sm font-semibold text-white disabled:opacity-50 mt-2">
+            className="w-full rounded-xl bg-linear-to-br from-[#4c8ee7] to-[#8c6cff] py-2 text-sm font-semibold text-white disabled:opacity-50 mt-2">
             {saving ? "Saving…" : "Save Venue Details"}
           </button>
         </div>
 
         {/* ── Readiness Checklist ── */}
-        <div className="rounded-2xl border border-white/[0.06] bg-[#0e0e10] p-5 space-y-4">
+        <div className="rounded-2xl border border-[#4b86e8]/25 bg-white/90 p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-neutral-200">Readiness Checklist</h2>
-            <span className="text-xs font-semibold text-[#fa4715]">{pct}% complete</span>
+            <h2 className="text-sm font-semibold text-[#111111]">Readiness Checklist</h2>
+            <span className="text-xs font-semibold text-[#4c8ee7]">{pct}% complete</span>
           </div>
           {/* Progress bar */}
-          <div className="h-1.5 rounded-full bg-white/[0.07] overflow-hidden">
-            <div className="h-full rounded-full bg-[#fa4715] transition-all" style={{ width: `${pct}%` }} />
+          <div className="h-1.5 rounded-full bg-[#4b86e8]/10 overflow-hidden">
+            <div className="h-full rounded-full bg-linear-to-r from-[#4c8ee7] to-[#8c6cff] transition-all" style={{ width: `${pct}%` }} />
           </div>
           <div className="space-y-2 max-h-72 overflow-y-auto">
             {checklist.map((c, i) => (
               <button key={i} onClick={() => toggleCheckItem(i)}
-                className="flex items-center gap-3 w-full rounded-xl px-3 py-2.5 text-left hover:bg-white/[0.03] transition-colors">
-                <span className={`h-4 w-4 shrink-0 rounded border flex items-center justify-center transition-colors ${c.done ? "border-[#fa4715] bg-[#fa4715]" : "border-white/20"}`}>
+                className="flex items-center gap-3 w-full rounded-xl px-3 py-2.5 text-left hover:bg-[#4b86e8]/5 transition-colors">
+                <span className={`h-4 w-4 shrink-0 rounded border flex items-center justify-center transition-colors ${c.done ? "border-[#4c8ee7] bg-linear-to-br from-[#4c8ee7] to-[#8c6cff]" : "border-[#4b86e8]/30"}`}>
                   {c.done && <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 12 10">
                     <path d="M1 5l3.5 3.5L11 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                   </svg>}
                 </span>
-                <span className={`text-sm ${c.done ? "text-neutral-500 line-through" : "text-neutral-200"}`}>{c.item}</span>
+                <span className={`text-sm ${c.done ? "text-[#9a9a9a] line-through" : "text-[#374151]"}`}>{c.item}</span>
               </button>
             ))}
           </div>
-          <p className="text-xs text-neutral-600">{doneCount} of {checklist.length} items completed</p>
+          <p className="text-xs text-[#9a9a9a]">{doneCount} of {checklist.length} items completed</p>
         </div>
       </div>
 
       {/* ── Arenas ── */}
-      <div className="rounded-2xl border border-white/[0.06] bg-[#0e0e10] p-5 space-y-4">
-        <h2 className="text-sm font-semibold text-neutral-200">Arenas</h2>
+      <div className="rounded-2xl border border-[#4b86e8]/25 bg-white/90 p-5 space-y-4">
+        <h2 className="text-sm font-semibold text-[#111111]">Arenas</h2>
         <div className="flex gap-2">
           <input type="text" placeholder="Arena name…" value={newArenaName}
             onChange={e => setNewArenaName(e.target.value)}
-            className="flex-1 rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none" />
+            className="flex-1 rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none" />
           <button onClick={handleAddArena} disabled={addingArena || !newArenaName.trim()}
-            className="rounded-lg bg-[#fa4715] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+            className="rounded-lg bg-linear-to-br from-[#4c8ee7] to-[#8c6cff] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
             Add Arena
           </button>
         </div>
         {arenas.length === 0 ? (
-          <p className="text-sm text-neutral-500">No arenas added yet.</p>
+          <p className="text-sm text-[#5d5d5d]">No arenas added yet.</p>
         ) : (
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {arenas.map(a => (
-              <div key={a.id} className="flex items-center justify-between rounded-xl border border-white/[0.06] px-4 py-3">
+              <div key={a.id} className="flex items-center justify-between rounded-xl border border-[#4b86e8]/25 px-4 py-3">
                 <div>
-                  <p className="text-sm font-medium text-white">{a.arenaName}</p>
-                  {a.capacity && <p className="text-xs text-neutral-500">Capacity: {a.capacity}</p>}
-                  {a.sportType && <p className="text-xs text-neutral-500">{a.sportType}</p>}
+                  <p className="text-sm font-medium text-[#111111]">{a.arenaName}</p>
+                  {a.capacity && <p className="text-xs text-[#5d5d5d]">Capacity: {a.capacity}</p>}
+                  {a.sportType && <p className="text-xs text-[#5d5d5d]">{a.sportType}</p>}
                 </div>
                 <button onClick={() => handleDeleteArena(a.id)}
-                  className="rounded-lg bg-red-500/10 px-2 py-1 text-xs text-red-400 hover:bg-red-500/20 ml-3">
+                  className="rounded-lg bg-[#e04b4b]/10 px-2 py-1 text-xs text-[#e04b4b] hover:bg-[#e04b4b]/20 ml-3">
                   Remove
                 </button>
               </div>

@@ -51,6 +51,8 @@ export interface AdminEventSportResponse {
 
   competitionType?: string
   sportsDescription?: string
+  sportThumbnailUrl?: string
+  sportTeaserVideoUrl?: string
   ageGroup?: string
 
   weightClass?: string
@@ -89,6 +91,9 @@ export interface AdminEventResponse {
   eventName: string
   eventDescription: string
   eventLogoUrl?: string
+  eventThumbnailUrl?: string
+  teaserVideo1Url?: string
+  teaserVideo2Url?: string
   organizationName: string
   organizationUrl?: string
   venueName: string
@@ -145,6 +150,8 @@ export interface GetEventSportDTO {
 
   competitionType?: string
   sportsDescription?: string
+  sportThumbnailUrl?: string
+  sportTeaserVideoUrl?: string
   ageGroup?: string
 
   weightClass?: string

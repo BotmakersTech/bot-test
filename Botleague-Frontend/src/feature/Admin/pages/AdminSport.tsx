@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { ArrowLeft, Users, Trophy, Calendar, Tag, Swords, Weight, Zap, DollarSign, Award, Cpu, Ruler, Bot, Edit2, X } from "lucide-react"
 import { useAdminEvents } from "../hooks/UseAdminEvent"
 import { type CreateEventSportRequest } from "../api/admin.api"
+import SportMediaField from "../../Organizer/components/SportMediaField"
 import { finalizeEventLeaderboard } from "../../Rankings/api/rankings.api"
 
 // ─────────────────────────────────────────────────────────────
@@ -43,6 +44,8 @@ interface SportDetail {
   id: string
   sport: string
   sportsDescription?: string | null
+  sportThumbnailUrl?: string | null
+  sportTeaserVideoUrl?: string | null
   status?: string
   competitionType?: string | null
   ageGroup?: string
@@ -552,6 +555,7 @@ function EditSportModal({
   saving,
   onClose,
   onDone,
+  onMediaChange,
 }: {
   sport: SportDetail
   eventId: string
@@ -560,6 +564,7 @@ function EditSportModal({
   saving: boolean
   onClose: () => void
   onDone: () => void
+  onMediaChange: () => void
 }) {
   const initialForm: EditForm = {
     sport:                  sport.sport ?? "",
@@ -702,6 +707,15 @@ function EditSportModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit} style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+
+          {/* Sport Media */}
+          <div style={{
+            background: "rgba(0,0,0,0.3)", border: `1px solid ${BORDER}`, borderRadius: "10px",
+            padding: "14px 16px", display: "flex", flexDirection: "column", gap: "16px",
+          }}>
+            <SportMediaField eventId={eventId} sportId={sportId} slot="THUMBNAIL" kind="image" label="Sport Thumbnail" currentUrl={sport.sportThumbnailUrl} onMediaChange={onMediaChange} colors={{ border: BORDER, muted: MUTED, accent: ACCENT, danger: DANGER, uploadBg: "rgba(255,255,255,0.06)" }} />
+            <SportMediaField eventId={eventId} sportId={sportId} slot="TEASER" kind="video" label="Teaser Video" currentUrl={sport.sportTeaserVideoUrl} onMediaChange={onMediaChange} colors={{ border: BORDER, muted: MUTED, accent: ACCENT, danger: DANGER, uploadBg: "rgba(255,255,255,0.06)" }} />
+          </div>
 
           {/* Row 1: Age Group */}
           <div style={groupStyle}>
@@ -1108,6 +1122,7 @@ export default function AdminSport() {
             setShowEditSport(false)
             try { await refetch() } catch { /* modal is already closed; stale data is better than a crash */ }
           }}
+          onMediaChange={refetch}
         />
       )}
 

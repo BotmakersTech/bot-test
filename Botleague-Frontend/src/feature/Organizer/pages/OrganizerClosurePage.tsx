@@ -17,11 +17,11 @@ interface ClosureStatus {
 
 function Check({ ok, label }: { ok: boolean; label: string }) {
   return (
-    <div className={`flex items-center gap-3 rounded-lg p-3 ${ok ? "bg-green-500/8" : "bg-white/4"}`}>
-      <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm ${ok ? "bg-green-500/20 text-green-400" : "bg-white/10 text-neutral-500"}`}>
+    <div className={`flex items-center gap-3 rounded-lg p-3 ${ok ? "bg-[#1fa952]/8" : "bg-[#4b86e8]/5"}`}>
+      <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm ${ok ? "bg-[#1fa952]/20 text-[#1fa952]" : "bg-[#4b86e8]/10 text-[#7c7c7c]"}`}>
         {ok ? "✓" : "○"}
       </span>
-      <span className={`text-sm ${ok ? "text-green-300" : "text-neutral-400"}`}>{label}</span>
+      <span className={`text-sm ${ok ? "text-[#1fa952]" : "text-[#5d5d5d]"}`}>{label}</span>
     </div>
   );
 }
@@ -84,32 +84,32 @@ export default function OrganizerClosurePage() {
     setSubmitted(true);
   }
 
-  if (eventsLoading) return <div className="flex h-64 items-center justify-center text-neutral-400">Loading…</div>;
+  if (eventsLoading) return <div className="flex h-64 items-center justify-center text-[#5d5d5d]">Loading…</div>;
 
   return (
-    <div className="min-h-screen bg-gray-950 p-6 text-white">
-      <h1 className="mb-2 text-2xl font-bold text-red-500">Event Closure</h1>
-      <p className="mb-6 text-sm text-neutral-400">Complete pre-closure checks and submit the event summary report.</p>
+    <div className="min-h-screen p-6 text-[#111111]">
+      <h1 className="mb-2 text-2xl font-bold text-[#3567cf]" style={{ fontFamily: "'Sarpanch', 'Inter', sans-serif" }}>Event Closure</h1>
+      <p className="mb-6 text-sm text-[#5d5d5d]">Complete pre-closure checks and submit the event summary report.</p>
 
       {/* Event selector */}
       <div className="mb-6">
         <select
           value={selectedEventId}
           onChange={e => { setSelectedEventId(e.target.value); setSubmitted(false); }}
-          className="rounded-lg bg-white/8 px-3 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-red-500"
+          className="rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none focus:ring-[#8c6cff]"
         >
           <option value="" disabled>Select event…</option>
           {events.map(e => <option key={e.id} value={e.id}>{e.eventName}</option>)}
         </select>
       </div>
 
-      {loading && <div className="flex h-32 items-center justify-center text-neutral-400">Checking status…</div>}
+      {loading && <div className="flex h-32 items-center justify-center text-[#5d5d5d]">Checking status…</div>}
 
       {!loading && selectedEventId && status && (
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Pre-closure checklist */}
-          <div className="rounded-xl bg-white/4 p-5 ring-1 ring-white/8">
-            <h2 className="mb-4 font-semibold text-white">Pre-Closure Checklist</h2>
+          <div className="rounded-xl bg-white/90 p-5 ring-1 ring-[#4b86e8]/25 border border-[#4b86e8]/25">
+            <h2 className="mb-4 font-semibold text-[#111111]">Pre-Closure Checklist</h2>
             <div className="space-y-2">
               <Check ok={status.totalMatches > 0}   label={`Matches created (${status.totalMatches} total)`} />
               <Check ok={status.liveCount === 0}     label="No live matches in progress" />
@@ -119,15 +119,15 @@ export default function OrganizerClosurePage() {
             </div>
 
             {status.allMatchesDone && !eventCompleted ? (
-              <div className="mt-4 rounded-lg bg-green-500/10 px-4 py-3 text-sm text-green-400">
+              <div className="mt-4 rounded-lg bg-[#1fa952]/10 px-4 py-3 text-sm text-[#1fa952]">
                 All checks passed — ready for closure.
               </div>
             ) : eventCompleted ? (
-              <div className="mt-4 rounded-lg bg-white/6 px-4 py-3 text-sm text-neutral-400">
+              <div className="mt-4 rounded-lg bg-[#4b86e8]/8 px-4 py-3 text-sm text-[#5d5d5d]">
                 This event has already been closed.
               </div>
             ) : (
-              <div className="mt-4 rounded-lg bg-yellow-500/10 px-4 py-3 text-sm text-yellow-400">
+              <div className="mt-4 rounded-lg bg-[#eab308]/10 px-4 py-3 text-sm text-[#a16207]">
                 {status.liveCount > 0 && <p>{status.liveCount} match{status.liveCount !== 1 ? "es" : ""} still live.</p>}
                 {status.scheduledCount > 0 && <p>{status.scheduledCount} match{status.scheduledCount !== 1 ? "es" : ""} not yet played.</p>}
               </div>
@@ -135,34 +135,34 @@ export default function OrganizerClosurePage() {
           </div>
 
           {/* Closure form */}
-          <div className="rounded-xl bg-white/4 p-5 ring-1 ring-white/8">
-            <h2 className="mb-4 font-semibold text-white">Closure Report</h2>
+          <div className="rounded-xl bg-white/90 p-5 ring-1 ring-[#4b86e8]/25 border border-[#4b86e8]/25">
+            <h2 className="mb-4 font-semibold text-[#111111]">Closure Report</h2>
 
             {submitted ? (
-              <div className="rounded-lg bg-green-500/10 p-4 text-sm text-green-400">
+              <div className="rounded-lg bg-[#1fa952]/10 p-4 text-sm text-[#1fa952]">
                 Closure report submitted. An administrator will review and officially close this event.
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="mb-1 block text-xs text-neutral-400">Organiser summary notes</label>
+                  <label className="mb-1 block text-xs text-[#5d5d5d] font-semibold">Organiser summary notes</label>
                   <textarea
                     rows={5}
                     value={notes}
                     onChange={e => setNotes(e.target.value)}
                     placeholder="Event highlights, issues encountered, team performance notes…"
-                    className="w-full rounded-lg bg-white/6 px-3 py-2 text-sm text-white placeholder-neutral-600 ring-1 ring-white/10 focus:outline-none focus:ring-red-500 resize-none"
+                    className="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] placeholder-[#9a9a9a] ring-1 ring-[#4b86e8]/30 focus:outline-none focus:ring-[#8c6cff] resize-none"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={!canClose}
-                  className="w-full rounded-lg bg-red-600 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                  className="w-full rounded-lg bg-linear-to-br from-[#4c8ee7] to-[#8c6cff] py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Submit Closure Report
                 </button>
                 {!canClose && !eventCompleted && (
-                  <p className="text-center text-xs text-neutral-600">
+                  <p className="text-center text-xs text-[#9a9a9a]">
                     All matches must be completed before closing the event.
                   </p>
                 )}
@@ -173,7 +173,7 @@ export default function OrganizerClosurePage() {
       )}
 
       {!loading && !selectedEventId && (
-        <div className="rounded-xl bg-white/3 p-8 text-center text-neutral-500">Select an event to begin closure process.</div>
+        <div className="rounded-xl bg-[#4b86e8]/5 p-8 text-center text-[#5d5d5d]">Select an event to begin closure process.</div>
       )}
     </div>
   );

@@ -1,26 +1,27 @@
-import React, { useCallback, useEffect, useState } from "react"
+﻿import React, { useCallback, useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { ArrowLeft, Plus, X, ChevronDown, Info, Calendar, Users, Trophy, Swords, Edit2, CheckCircle2 } from "lucide-react"
 import {
   getMyEventById, updateEventInfo, changeEventStatus, createEventSport, submitSportForApproval,
   type OrganizerEvent, type OrganizerSport, type UpdateEventInfoRequest, type CreateEventSportRequest,
 } from "../api/organizer.api"
-import { uploadEventMedia, clearEventMedia, type EventMediaSlot } from "../api/eventMedia.api"
+import EventMediaField from "../components/EventMediaField"
 import SponsorManager from "../../Admin/components/SponsorManager"
+import { ORG } from "../theme/organizerTheme"
 
 // ─────────────────────────────────────────────────────────────
 // DESIGN TOKENS
 // ─────────────────────────────────────────────────────────────
 
-const BG      = "#3a3a3a"
-const CARD2   = "rgba(0,0,0,0.35)"
-const BORDER  = "rgba(255,255,255,0.08)"
-const ACCENT  = "#fa4715"
-const TEXT    = "#ffffff"
-const MUTED   = "#9ca3af"
-const SUCCESS = "#4ade80"
-const WARNING = "#fbbf24"
-const DANGER  = "#f87171"
+const BG      = ORG.pageBg
+const CARD2   = "rgba(255,255,255,0.9)"
+const BORDER  = "rgba(75,134,232,0.3)"
+const ACCENT  = "#8c6cff"
+const TEXT    = "#111111"
+const MUTED   = "#5d5d5d"
+const SUCCESS = "#1fa952"
+const WARNING = "#a16207"
+const DANGER  = "#e04b4b"
 
 type EventStatus = "DRAFT" | "PUBLISHED" | "LIVE" | "COMPLETED" | "ARCHIVED"
 
@@ -128,14 +129,14 @@ const INITIAL_FORM: AddSportForm = {
 
 function Spinner({ size = 16, color = ACCENT }: { size?: number; color?: string }) {
   return (
-    <span style={{ display: "inline-block", width: size, height: size, border: `2px solid rgba(255,255,255,0.12)`, borderTop: `2px solid ${color}`, borderRadius: "50%", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
+    <span style={{ display: "inline-block", width: size, height: size, border: `2px solid rgba(75,134,232,0.12)`, borderTop: `2px solid ${color}`, borderRadius: "50%", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
   )
 }
 
 function StatusPill({ status }: { status?: string }) {
   const MAP: Record<string, { bg: string; border: string; color: string; icon: string }> = {
     DRAFT:     { bg: "rgba(251,191,36,0.1)",  border: "rgba(251,191,36,0.28)",  color: WARNING, icon: "📝" },
-    PUBLISHED: { bg: "rgba(250,71,21,0.11)",  border: "rgba(250,71,21,0.28)",   color: ACCENT,  icon: "📣" },
+    PUBLISHED: { bg: "rgba(140,108,255,0.11)",  border: "rgba(140,108,255,0.28)",   color: ACCENT,  icon: "📣" },
     LIVE:      { bg: "rgba(74,222,128,0.1)",  border: "rgba(74,222,128,0.28)",  color: SUCCESS, icon: "🟢" },
     COMPLETED: { bg: "rgba(156,163,175,0.1)", border: "rgba(156,163,175,0.25)", color: MUTED,   icon: "✅" },
     ARCHIVED:  { bg: "rgba(100,116,139,0.1)", border: "rgba(100,116,139,0.25)", color: "#64748b", icon: "🗄️" },
@@ -155,7 +156,7 @@ function SportStatusPill({ status }: { status?: string }) {
     PENDING_APPROVAL:     { bg: "rgba(251,191,36,0.1)",  border: "rgba(251,191,36,0.28)",  color: WARNING },
     APPROVED:             { bg: "rgba(74,222,128,0.1)",  border: "rgba(74,222,128,0.28)",  color: SUCCESS },
     ACTIVE:               { bg: "rgba(74,222,128,0.12)", border: "rgba(74,222,128,0.3)",   color: SUCCESS },
-    REGISTRATION_OPEN:    { bg: "rgba(250,71,21,0.1)",   border: "rgba(250,71,21,0.28)",   color: ACCENT },
+    REGISTRATION_OPEN:    { bg: "rgba(140,108,255,0.1)",   border: "rgba(140,108,255,0.28)",   color: ACCENT },
     REGISTRATION_CLOSED:  { bg: "rgba(107,114,128,0.1)", border: "rgba(107,114,128,0.25)", color: MUTED },
     REJECTED:             { bg: "rgba(248,113,113,0.1)", border: "rgba(248,113,113,0.28)", color: DANGER },
     COMPLETED:            { bg: "rgba(156,163,175,0.1)", border: "rgba(156,163,175,0.25)", color: MUTED },
@@ -170,9 +171,9 @@ function SportStatusPill({ status }: { status?: string }) {
 }
 
 const chip = (): React.CSSProperties => ({
-  background: "rgba(255,255,255,0.06)",
+  background: "rgba(75,134,232,0.06)",
   border: `1px solid ${BORDER}`,
-  color: "#e5e7eb",
+  color: "#374151",
   borderRadius: "6px",
   fontSize: "0.7rem",
   padding: "3px 9px",
@@ -183,11 +184,11 @@ const chip = (): React.CSSProperties => ({
 
 function StatCard({ label, value, icon }: { label: string; value: string | number; icon: string }) {
   return (
-    <div style={{ background: "rgba(0,0,0,0.25)", border: `1px solid ${BORDER}`, borderRadius: "12px", padding: "16px 20px", display: "flex", flexDirection: "column", gap: "6px", minWidth: "140px" }}>
+    <div style={{ background: "rgba(75,134,232,0.05)", border: `1px solid ${BORDER}`, borderRadius: "12px", padding: "16px 20px", display: "flex", flexDirection: "column", gap: "6px", minWidth: "140px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "7px", color: MUTED, fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.09em" }}>
         <span>{icon}</span>{label}
       </div>
-      <div style={{ fontSize: "1.5rem", fontWeight: 700, color: TEXT, fontFamily: "'Orbitron', sans-serif" }}>
+      <div style={{ fontSize: "1.5rem", fontWeight: 700, color: TEXT, fontFamily: "'Sarpanch', 'Inter', sans-serif" }}>
         {value}
       </div>
     </div>
@@ -196,7 +197,7 @@ function StatCard({ label, value, icon }: { label: string; value: string | numbe
 
 function InfoCell({ label, value }: { label: string; value?: string }) {
   return (
-    <div style={{ background: "rgba(0,0,0,0.2)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "10px 14px" }}>
+    <div style={{ background: "rgba(75,134,232,0.04)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "10px 14px" }}>
       <div style={{ color: MUTED, fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "4px" }}>{label}</div>
       <div style={{ color: TEXT, fontWeight: 600, fontSize: "0.85rem" }}>{value || "—"}</div>
     </div>
@@ -215,8 +216,8 @@ function FormField({ label, children, required }: { label: string; children: Rea
 }
 
 const inputStyle: React.CSSProperties = {
-  background: "rgba(0,0,0,0.35)",
-  border: `1px solid rgba(255,255,255,0.12)`,
+  background: "#f8f9ff",
+  border: `1px solid rgba(75,134,232,0.12)`,
   borderRadius: "8px",
   color: TEXT,
   fontSize: "0.85rem",
@@ -232,8 +233,8 @@ function SectionHeader({ step, currentStep, label, subLabel }: { step: number; c
   const done   = currentStep > step
   const active = currentStep === step
   return (
-    <div style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", color: active ? ACCENT : done ? "rgba(250,71,21,0.55)" : MUTED, marginBottom: "10px", display: "flex", alignItems: "center", gap: "7px" }}>
-      <span style={{ background: active ? ACCENT : done ? "rgba(250,71,21,0.4)" : "rgba(255,255,255,0.12)", color: "#fff", borderRadius: "50%", width: "18px", height: "18px", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: 800, flexShrink: 0 }}>
+    <div style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", color: active ? ACCENT : done ? "rgba(140,108,255,0.55)" : MUTED, marginBottom: "10px", display: "flex", alignItems: "center", gap: "7px" }}>
+      <span style={{ background: active ? ACCENT : done ? "rgba(140,108,255,0.4)" : "rgba(75,134,232,0.12)", color: "#fff", borderRadius: "50%", width: "18px", height: "18px", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: 800, flexShrink: 0 }}>
         {done ? "✓" : step}
       </span>
       {label}
@@ -248,10 +249,10 @@ function AgeGroupPicker({ selected, onSelect }: { selected: string; onSelect: (v
       {AGE_GROUP_CATALOGUE.map(ag => {
         const active = selected === ag.value
         return (
-          <button key={ag.value} type="button" onClick={() => onSelect(ag.value)} style={{ background: active ? "rgba(250,71,21,0.12)" : "rgba(0,0,0,0.3)", border: `1.5px solid ${active ? "rgba(250,71,21,0.5)" : "rgba(255,255,255,0.09)"}`, borderRadius: "10px", padding: "12px 14px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", display: "flex", flexDirection: "column", gap: "3px" }}>
+          <button key={ag.value} type="button" onClick={() => onSelect(ag.value)} style={{ background: active ? "rgba(140,108,255,0.12)" : "#f8f9ff", border: `1.5px solid ${active ? "rgba(140,108,255,0.5)" : "rgba(75,134,232,0.09)"}`, borderRadius: "10px", padding: "12px 14px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", display: "flex", flexDirection: "column", gap: "3px" }}>
             <span style={{ color: active ? ACCENT : TEXT, fontWeight: 700, fontSize: "0.82rem", display: "block" }}>{ag.label}</span>
-            <span style={{ color: active ? "rgba(250,71,21,0.75)" : MUTED, fontSize: "0.68rem", display: "block" }}>{ag.subLabel}</span>
-            <span style={{ marginTop: "4px", background: active ? "rgba(250,71,21,0.15)" : "rgba(255,255,255,0.06)", border: `1px solid ${active ? "rgba(250,71,21,0.25)" : BORDER}`, color: active ? ACCENT : MUTED, borderRadius: "4px", fontSize: "0.6rem", padding: "2px 6px", display: "inline-block", fontWeight: 600 }}>{ag.connectivity}</span>
+            <span style={{ color: active ? "rgba(140,108,255,0.75)" : MUTED, fontSize: "0.68rem", display: "block" }}>{ag.subLabel}</span>
+            <span style={{ marginTop: "4px", background: active ? "rgba(140,108,255,0.15)" : "rgba(75,134,232,0.06)", border: `1px solid ${active ? "rgba(140,108,255,0.25)" : BORDER}`, color: active ? ACCENT : MUTED, borderRadius: "4px", fontSize: "0.6rem", padding: "2px 6px", display: "inline-block", fontWeight: 600 }}>{ag.connectivity}</span>
           </button>
         )
       })}
@@ -267,14 +268,14 @@ function SportPicker({ ageGroupValue, selected, onSelect }: { ageGroupValue: str
       {ag.sports.map(sp => {
         const active = selected === sp.value
         return (
-          <button key={sp.value} type="button" onClick={() => onSelect(sp)} style={{ background: active ? "rgba(250,71,21,0.1)" : "rgba(0,0,0,0.25)", border: `1.5px solid ${active ? "rgba(250,71,21,0.45)" : "rgba(255,255,255,0.07)"}`, borderRadius: "9px", padding: "10px 14px", cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", transition: "all 0.12s" }}>
+          <button key={sp.value} type="button" onClick={() => onSelect(sp)} style={{ background: active ? "rgba(140,108,255,0.1)" : "rgba(75,134,232,0.05)", border: `1.5px solid ${active ? "rgba(140,108,255,0.45)" : "rgba(75,134,232,0.07)"}`, borderRadius: "9px", padding: "10px 14px", cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", transition: "all 0.12s" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
               <span style={{ color: active ? ACCENT : TEXT, fontWeight: 600, fontSize: "0.83rem" }}>{sp.label}</span>
               {sp.hint && <span style={{ color: MUTED, fontSize: "0.68rem", display: "flex", alignItems: "center", gap: "4px" }}><Info size={10} style={{ flexShrink: 0 }} />{sp.hint}</span>}
             </div>
             <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", justifyContent: "flex-end" }}>
               {sp.weightClasses.map(wc => (
-                <span key={wc.value} style={{ background: active ? "rgba(250,71,21,0.18)" : "rgba(255,255,255,0.07)", border: `1px solid ${active ? "rgba(250,71,21,0.3)" : BORDER}`, color: active ? ACCENT : MUTED, borderRadius: "5px", fontSize: "0.62rem", padding: "2px 7px", fontWeight: 700, whiteSpace: "nowrap" }}>{wc.label}</span>
+                <span key={wc.value} style={{ background: active ? "rgba(140,108,255,0.18)" : "rgba(75,134,232,0.07)", border: `1px solid ${active ? "rgba(140,108,255,0.3)" : BORDER}`, color: active ? ACCENT : MUTED, borderRadius: "5px", fontSize: "0.62rem", padding: "2px 7px", fontWeight: 700, whiteSpace: "nowrap" }}>{wc.label}</span>
               ))}
             </div>
           </button>
@@ -291,7 +292,7 @@ function WeightClassPicker({ weightClasses, selected, onSelect }: { weightClasse
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
         {weightClasses.map(wc => {
           const active = selected === wc.value
-          return <button key={wc.value} type="button" onClick={() => onSelect(wc.value)} style={{ background: active ? "rgba(250,71,21,0.15)" : "rgba(0,0,0,0.3)", border: `1.5px solid ${active ? "rgba(250,71,21,0.5)" : "rgba(255,255,255,0.1)"}`, color: active ? ACCENT : "#e5e7eb", borderRadius: "8px", fontSize: "0.8rem", fontWeight: 700, padding: "7px 16px", cursor: "pointer", transition: "all 0.12s" }}>{wc.label}</button>
+          return <button key={wc.value} type="button" onClick={() => onSelect(wc.value)} style={{ background: active ? "rgba(140,108,255,0.15)" : "#f8f9ff", border: `1.5px solid ${active ? "rgba(140,108,255,0.5)" : "rgba(75,134,232,0.1)"}`, color: active ? ACCENT : "#374151", borderRadius: "8px", fontSize: "0.8rem", fontWeight: 700, padding: "7px 16px", cursor: "pointer", transition: "all 0.12s" }}>{wc.label}</button>
         })}
       </div>
     </FormField>
@@ -344,16 +345,16 @@ function AddSportModal({ onAddSport, submitting, onClose }: {
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div style={{ background: "#2a2a2a", border: `1px solid rgba(250,71,21,0.22)`, borderRadius: "18px", width: "100%", maxWidth: "640px", maxHeight: "92vh", overflowY: "auto", boxShadow: "0 24px 60px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column" }}>
+      <div style={{ background: "#ffffff", border: `1px solid rgba(140,108,255,0.22)`, borderRadius: "18px", width: "100%", maxWidth: "640px", maxHeight: "92vh", overflowY: "auto", boxShadow: "0 24px 60px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column" }}>
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 22px", borderBottom: `1px solid ${BORDER}`, background: "rgba(250,71,21,0.04)", borderRadius: "18px 18px 0 0", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 22px", borderBottom: `1px solid ${BORDER}`, background: "rgba(140,108,255,0.04)", borderRadius: "18px 18px 0 0", flexShrink: 0 }}>
           <div>
-            <div style={{ fontFamily: "'Orbitron', sans-serif", fontWeight: 700, fontSize: "1rem", letterSpacing: "0.06em" }}>ADD SPORT</div>
+            <div style={{ fontFamily: "'Sarpanch', 'Inter', sans-serif", fontWeight: 700, fontSize: "1rem", letterSpacing: "0.06em" }}>ADD SPORT</div>
             <div style={{ fontSize: "0.72rem", color: MUTED, marginTop: "2px" }}>Configure a new sport for this event</div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            {[1, 2, 3].map(n => <div key={n} style={{ width: n === step ? "20px" : "8px", height: "8px", borderRadius: "99px", background: n <= step ? ACCENT : "rgba(255,255,255,0.18)", opacity: n < step ? 0.5 : 1, transition: "all 0.25s" }} />)}
-            <button type="button" onClick={onClose} style={{ marginLeft: "8px", background: "rgba(255,255,255,0.06)", border: `1px solid ${BORDER}`, borderRadius: "8px", color: MUTED, cursor: "pointer", padding: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={16} /></button>
+            {[1, 2, 3].map(n => <div key={n} style={{ width: n === step ? "20px" : "8px", height: "8px", borderRadius: "99px", background: n <= step ? ACCENT : "rgba(75,134,232,0.18)", opacity: n < step ? 0.5 : 1, transition: "all 0.25s" }} />)}
+            <button type="button" onClick={onClose} style={{ marginLeft: "8px", background: "rgba(75,134,232,0.06)", border: `1px solid ${BORDER}`, borderRadius: "8px", color: MUTED, cursor: "pointer", padding: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={16} /></button>
           </div>
         </div>
 
@@ -402,7 +403,7 @@ function AddSportModal({ onAddSport, submitting, onClose }: {
                 <FormField label="Prize Money (₹)" required><input type="number" min={0} step={1000} style={inputStyle} value={form.prizeMoney} onChange={e => set("prizeMoney", parseFloat(e.target.value) || 0)} /></FormField>
               </div>
 
-              <div style={{ background: "rgba(250,71,21,0.04)", border: "1px solid rgba(250,71,21,0.14)", borderRadius: "10px", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ background: "rgba(140,108,255,0.04)", border: "1px solid rgba(140,108,255,0.14)", borderRadius: "10px", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: ACCENT }}>
                   <Calendar size={13} />Registration Window
                 </div>
@@ -423,8 +424,8 @@ function AddSportModal({ onAddSport, submitting, onClose }: {
         </div>
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", padding: "14px 22px 20px", borderTop: `1px solid ${BORDER}`, flexShrink: 0 }}>
-          <button type="button" onClick={onClose} disabled={submitting} style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "8px", padding: "9px 18px", fontSize: "0.82rem", fontWeight: 600, cursor: submitting ? "not-allowed" : "pointer" }}>Cancel</button>
-          <button type="button" onClick={handleSubmit} disabled={submitting || step < 3} style={{ background: (submitting || step < 3) ? "rgba(250,71,21,0.3)" : ACCENT, border: "none", color: step < 3 ? MUTED : "#fff", borderRadius: "8px", padding: "9px 22px", fontSize: "0.82rem", fontWeight: 700, cursor: (submitting || step < 3) ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "8px", transition: "all 0.15s" }}>
+          <button type="button" onClick={onClose} disabled={submitting} style={{ background: "rgba(75,134,232,0.05)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "8px", padding: "9px 18px", fontSize: "0.82rem", fontWeight: 600, cursor: submitting ? "not-allowed" : "pointer" }}>Cancel</button>
+          <button type="button" onClick={handleSubmit} disabled={submitting || step < 3} style={{ background: (submitting || step < 3) ? "rgba(140,108,255,0.3)" : ACCENT, border: "none", color: step < 3 ? MUTED : "#fff", borderRadius: "8px", padding: "9px 22px", fontSize: "0.82rem", fontWeight: 700, cursor: (submitting || step < 3) ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "8px", transition: "all 0.15s" }}>
             {submitting ? <><Spinner size={14} color="#fff" />Adding…</> : <><Plus size={14} />Add Sport</>}
           </button>
         </div>
@@ -451,14 +452,14 @@ function SportCard({ sport, index, eventId, navigate, onSubmitApproval, submitti
   return (
     <div
       onClick={() => navigate(`/organizer/events/${eventId}/sports/${sport.id}`)}
-      style={{ background: "rgba(0,0,0,0.28)", border: `1px solid rgba(255,255,255,0.09)`, borderRadius: "14px", overflow: "hidden", cursor: "pointer" }}
+      style={{ background: "rgba(75,134,232,0.06)", border: `1px solid rgba(75,134,232,0.09)`, borderRadius: "14px", overflow: "hidden", cursor: "pointer" }}
     >
       <div style={{ height: "3px", background: `linear-gradient(90deg, ${ACCENT}, hsl(${hue},80%,55%))` }} />
 
       <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: "12px" }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "9px" }}>
-            <span style={{ background: "rgba(250,71,21,0.13)", border: "1px solid rgba(250,71,21,0.28)", color: ACCENT, borderRadius: "6px", fontSize: "0.62rem", fontWeight: 800, padding: "2px 7px", flexShrink: 0 }}>#{index + 1}</span>
+            <span style={{ background: "rgba(140,108,255,0.13)", border: "1px solid rgba(140,108,255,0.28)", color: ACCENT, borderRadius: "6px", fontSize: "0.62rem", fontWeight: 800, padding: "2px 7px", flexShrink: 0 }}>#{index + 1}</span>
             <span style={{ fontWeight: 700, fontSize: "0.92rem", color: TEXT, lineHeight: 1.3 }}>{displayName}</span>
           </div>
           <Swords size={15} style={{ color: MUTED, flexShrink: 0, marginTop: "2px" }} />
@@ -472,18 +473,18 @@ function SportCard({ sport, index, eventId, navigate, onSubmitApproval, submitti
         </div>
 
         <div style={{ display: "flex", gap: "10px" }}>
-          <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "8px 12px", display: "flex", alignItems: "center", gap: "7px" }}>
+          <div style={{ flex: 1, background: "rgba(75,134,232,0.04)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "8px 12px", display: "flex", alignItems: "center", gap: "7px" }}>
             <Trophy size={13} style={{ color: WARNING, flexShrink: 0 }} />
             <div>
               <div style={{ fontSize: "0.62rem", color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>Teams</div>
-              <div style={{ fontSize: "1rem", fontWeight: 700, color: TEXT, fontFamily: "'Orbitron', sans-serif" }}>{teamCount}</div>
+              <div style={{ fontSize: "1rem", fontWeight: 700, color: TEXT, fontFamily: "'Sarpanch', 'Inter', sans-serif" }}>{teamCount}</div>
             </div>
           </div>
-          <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "8px 12px", display: "flex", alignItems: "center", gap: "7px" }}>
+          <div style={{ flex: 1, background: "rgba(75,134,232,0.04)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "8px 12px", display: "flex", alignItems: "center", gap: "7px" }}>
             <Users size={13} style={{ color: SUCCESS, flexShrink: 0 }} />
             <div>
               <div style={{ fontSize: "0.62rem", color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>Players</div>
-              <div style={{ fontSize: "1rem", fontWeight: 700, color: TEXT, fontFamily: "'Orbitron', sans-serif" }}>{playerCount}</div>
+              <div style={{ fontSize: "1rem", fontWeight: 700, color: TEXT, fontFamily: "'Sarpanch', 'Inter', sans-serif" }}>{playerCount}</div>
             </div>
           </div>
         </div>
@@ -491,13 +492,13 @@ function SportCard({ sport, index, eventId, navigate, onSubmitApproval, submitti
         {(sport.entryFee != null || sport.prizeMoney != null) && (
           <div style={{ display: "flex", gap: "10px" }}>
             {sport.entryFee != null && (
-              <div style={{ flex: 1, background: "rgba(255,255,255,0.03)", border: `1px solid ${BORDER}`, borderRadius: "7px", padding: "6px 10px" }}>
+              <div style={{ flex: 1, background: "rgba(75,134,232,0.03)", border: `1px solid ${BORDER}`, borderRadius: "7px", padding: "6px 10px" }}>
                 <div style={{ fontSize: "0.6rem", color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>Entry Fee</div>
                 <div style={{ fontSize: "0.85rem", fontWeight: 700, color: WARNING }}>₹{sport.entryFee.toLocaleString("en-IN")}</div>
               </div>
             )}
             {sport.prizeMoney != null && (
-              <div style={{ flex: 1, background: "rgba(255,255,255,0.03)", border: `1px solid ${BORDER}`, borderRadius: "7px", padding: "6px 10px" }}>
+              <div style={{ flex: 1, background: "rgba(75,134,232,0.03)", border: `1px solid ${BORDER}`, borderRadius: "7px", padding: "6px 10px" }}>
                 <div style={{ fontSize: "0.6rem", color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>Prize Pool</div>
                 <div style={{ fontSize: "0.85rem", fontWeight: 700, color: SUCCESS }}>₹{sport.prizeMoney.toLocaleString("en-IN")}</div>
               </div>
@@ -521,7 +522,7 @@ function SportCard({ sport, index, eventId, navigate, onSubmitApproval, submitti
             type="button"
             onClick={() => onSubmitApproval(sport.id)}
             disabled={submitting}
-            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "7px", background: "rgba(250,71,21,0.1)", border: "1px solid rgba(250,71,21,0.3)", color: ACCENT, borderRadius: "8px", padding: "8px 14px", fontSize: "0.78rem", fontWeight: 700, cursor: submitting ? "not-allowed" : "pointer" }}
+            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "7px", background: "rgba(140,108,255,0.1)", border: "1px solid rgba(140,108,255,0.3)", color: ACCENT, borderRadius: "8px", padding: "8px 14px", fontSize: "0.78rem", fontWeight: 700, cursor: submitting ? "not-allowed" : "pointer" }}
           >
             {submitting ? <Spinner size={13} /> : <CheckCircle2 size={13} />} Submit for Approval
           </button>
@@ -546,93 +547,6 @@ const STATUS_TRANSITIONS: Record<string, { value: string; label: string; color: 
 // ─────────────────────────────────────────────────────────────
 // EDIT EVENT MODAL
 // ─────────────────────────────────────────────────────────────
-
-// Single thumbnail/video slot: pick a file, upload immediately (independent
-// of the modal's Save button), preview, and allow removal.
-function EventMediaField({
-  eventId,
-  slot,
-  kind,
-  label,
-  currentUrl,
-  onMediaChange,
-}: {
-  eventId: string
-  slot: EventMediaSlot
-  kind: "image" | "video"
-  label: string
-  currentUrl?: string | null
-  onMediaChange: () => void
-}) {
-  const [uploading, setUploading] = useState(false)
-  const [fieldError, setFieldError] = useState<string | null>(null)
-
-  const handleFile = async (file: File | null) => {
-    if (!file) return
-    setFieldError(null)
-    setUploading(true)
-    try {
-      await uploadEventMedia(eventId, slot, file)
-      onMediaChange()
-    } catch (err: any) {
-      setFieldError(err?.message || "Upload failed.")
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  const handleRemove = async () => {
-    setFieldError(null)
-    setUploading(true)
-    try {
-      await clearEventMedia(eventId, slot)
-      onMediaChange()
-    } catch (err: any) {
-      setFieldError(err?.message || "Failed to remove.")
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  return (
-    <FormField label={label}>
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        {currentUrl && (
-          kind === "image"
-            ? <img src={currentUrl} alt={label} style={{ width: "100%", maxHeight: "160px", objectFit: "cover", borderRadius: "8px", border: `1px solid ${BORDER}` }} />
-            : <video src={currentUrl} controls style={{ width: "100%", maxHeight: "200px", borderRadius: "8px", border: `1px solid ${BORDER}` }} />
-        )}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <label style={{
-            display: "flex", alignItems: "center", gap: "6px", cursor: uploading ? "not-allowed" : "pointer",
-            background: "rgba(255,255,255,0.06)", border: `1px solid ${BORDER}`, borderRadius: "8px",
-            padding: "7px 14px", fontSize: "0.76rem", fontWeight: 600, color: MUTED, opacity: uploading ? 0.6 : 1,
-          }}>
-            {uploading ? <Spinner size={12} color={ACCENT} /> : null}
-            {uploading ? "Uploading…" : currentUrl ? "Replace" : "Upload"}
-            <input
-              type="file"
-              accept={kind === "image" ? "image/*" : "video/*"}
-              disabled={uploading}
-              style={{ display: "none" }}
-              onChange={e => handleFile(e.target.files?.[0] ?? null)}
-            />
-          </label>
-          {currentUrl && (
-            <button type="button" onClick={handleRemove} disabled={uploading} style={{
-              background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)", color: DANGER,
-              borderRadius: "8px", padding: "7px 12px", fontSize: "0.76rem", fontWeight: 600,
-              cursor: uploading ? "not-allowed" : "pointer",
-            }}>
-              Remove
-            </button>
-          )}
-        </div>
-        {fieldError && <div style={{ fontSize: "0.74rem", color: DANGER }}>{fieldError}</div>}
-      </div>
-    </FormField>
-  )
-}
 
 function EditEventModal({ event, onSave, saving, onClose, onMediaChange }: {
   event: OrganizerEvent
@@ -669,13 +583,13 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange }: {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}
          onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div style={{ background: "#2a2a2a", border: `1px solid rgba(250,71,21,0.22)`, borderRadius: "18px", width: "100%", maxWidth: "620px", maxHeight: "92vh", overflowY: "auto", boxShadow: "0 24px 60px rgba(0,0,0,0.5)" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 22px", borderBottom: `1px solid ${BORDER}`, background: "rgba(250,71,21,0.04)", borderRadius: "18px 18px 0 0" }}>
+      <div style={{ background: "#ffffff", border: `1px solid rgba(140,108,255,0.22)`, borderRadius: "18px", width: "100%", maxWidth: "620px", maxHeight: "92vh", overflowY: "auto", boxShadow: "0 24px 60px rgba(0,0,0,0.5)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 22px", borderBottom: `1px solid ${BORDER}`, background: "rgba(140,108,255,0.04)", borderRadius: "18px 18px 0 0" }}>
           <div>
-            <div style={{ fontFamily: "'Orbitron', sans-serif", fontWeight: 700, fontSize: "1rem", letterSpacing: "0.06em" }}>EDIT EVENT</div>
+            <div style={{ fontFamily: "'Sarpanch', 'Inter', sans-serif", fontWeight: 700, fontSize: "1rem", letterSpacing: "0.06em" }}>EDIT EVENT</div>
             <div style={{ fontSize: "0.72rem", color: MUTED, marginTop: "2px" }}>Fill in as many details as you have — the rest can be added later</div>
           </div>
-          <button type="button" onClick={onClose} style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${BORDER}`, borderRadius: "8px", color: MUTED, cursor: "pointer", padding: "6px", display: "flex" }}><X size={16} /></button>
+          <button type="button" onClick={onClose} style={{ background: "rgba(75,134,232,0.06)", border: `1px solid ${BORDER}`, borderRadius: "8px", color: MUTED, cursor: "pointer", padding: "6px", display: "flex" }}><X size={16} /></button>
         </div>
         <div style={{ padding: "20px 22px", display: "flex", flexDirection: "column", gap: "14px" }}>
           <FormField label="Event Name" required>
@@ -688,9 +602,9 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange }: {
             <input style={inputStyle} placeholder="https://…" value={form.eventLogoUrl ?? ""} onChange={e => set("eventLogoUrl", e.target.value)} />
           </FormField>
 
-          <EventMediaField eventId={event.id} slot="THUMBNAIL" kind="image" label="Thumbnail Image" currentUrl={event.eventThumbnailUrl} onMediaChange={onMediaChange} />
-          <EventMediaField eventId={event.id} slot="TEASER_1" kind="video" label="Teaser Video 1" currentUrl={event.teaserVideo1Url} onMediaChange={onMediaChange} />
-          <EventMediaField eventId={event.id} slot="TEASER_2" kind="video" label="Teaser Video 2" currentUrl={event.teaserVideo2Url} onMediaChange={onMediaChange} />
+          <EventMediaField eventId={event.id} slot="THUMBNAIL" kind="image" label="Thumbnail Image" currentUrl={event.eventThumbnailUrl} onMediaChange={onMediaChange} colors={{ border: BORDER, muted: MUTED, accent: ACCENT, danger: DANGER, uploadBg: "#f8f9ff" }} />
+          <EventMediaField eventId={event.id} slot="TEASER_1" kind="video" label="Teaser Video 1" currentUrl={event.teaserVideo1Url} onMediaChange={onMediaChange} colors={{ border: BORDER, muted: MUTED, accent: ACCENT, danger: DANGER, uploadBg: "#f8f9ff" }} />
+          <EventMediaField eventId={event.id} slot="TEASER_2" kind="video" label="Teaser Video 2" currentUrl={event.teaserVideo2Url} onMediaChange={onMediaChange} colors={{ border: BORDER, muted: MUTED, accent: ACCENT, danger: DANGER, uploadBg: "#f8f9ff" }} />
 
           <FormField label="Organization Name">
             <input style={inputStyle} value={form.organizationName} onChange={e => set("organizationName", e.target.value)} />
@@ -717,8 +631,8 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange }: {
           {error && <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "8px", padding: "10px 14px", color: DANGER, fontSize: "0.8rem", fontWeight: 600 }}>⚠️ {error}</div>}
         </div>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", padding: "14px 22px 20px", borderTop: `1px solid ${BORDER}` }}>
-          <button type="button" onClick={onClose} disabled={saving} style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "8px", padding: "9px 18px", fontSize: "0.82rem", fontWeight: 600, cursor: saving ? "not-allowed" : "pointer" }}>Cancel</button>
-          <button type="button" onClick={handleSave} disabled={saving} style={{ background: saving ? "rgba(250,71,21,0.3)" : ACCENT, border: "none", color: "#fff", borderRadius: "8px", padding: "9px 22px", fontSize: "0.82rem", fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
+          <button type="button" onClick={onClose} disabled={saving} style={{ background: "rgba(75,134,232,0.05)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "8px", padding: "9px 18px", fontSize: "0.82rem", fontWeight: 600, cursor: saving ? "not-allowed" : "pointer" }}>Cancel</button>
+          <button type="button" onClick={handleSave} disabled={saving} style={{ background: saving ? "rgba(140,108,255,0.3)" : ACCENT, border: "none", color: "#fff", borderRadius: "8px", padding: "9px 22px", fontSize: "0.82rem", fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
             {saving ? <><Spinner size={14} color="#fff" />Saving…</> : <>Save Changes</>}
           </button>
         </div>
@@ -736,7 +650,7 @@ function PageWrapper({ children }: { children: React.ReactNode }) {
     <div style={{ minHeight: "100vh", background: BG, color: TEXT, padding: "40px 48px", position: "relative", overflow: "hidden" }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        select option { background: #2a2a2a; color: #fff; }
+        select option { background: #ffffff; color: #111111; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
       `}</style>
       <div style={{ position: "relative", zIndex: 1, maxWidth: "1200px", margin: "0 auto" }}>
@@ -876,7 +790,7 @@ export default function OrganizerEventDetailPage() {
       )}
 
       {/* BACK — stays within /organizer */}
-      <button type="button" onClick={() => navigate("/organizer/events")} style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "8px", padding: "8px 14px", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", marginBottom: "28px" }}>
+      <button type="button" onClick={() => navigate("/organizer/events")} style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(75,134,232,0.05)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "8px", padding: "8px 14px", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", marginBottom: "28px" }}>
         <ArrowLeft size={14} /> Back to My Events
       </button>
 
@@ -887,23 +801,23 @@ export default function OrganizerEventDetailPage() {
       {/* HEADER */}
       <div style={{ marginBottom: "32px" }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
-          <h1 style={{ margin: 0, fontSize: "1.9rem", fontFamily: "'Orbitron', sans-serif", fontWeight: 700, letterSpacing: "0.08em" }}>{event.eventName}</h1>
+          <h1 style={{ margin: 0, fontSize: "1.9rem", fontFamily: "'Sarpanch', 'Inter', sans-serif", fontWeight: 700, letterSpacing: "0.08em" }}>{event.eventName}</h1>
           <div style={{ display: "flex", gap: "10px", flexShrink: 0, flexWrap: "wrap" }}>
             {canEdit && (
               <button type="button" onClick={() => setShowEditEvent(true)}
-                style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.07)", border: `1px solid ${BORDER}`, color: TEXT, borderRadius: "10px", padding: "10px 18px", fontSize: "0.82rem", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+                style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(75,134,232,0.07)", border: `1px solid ${BORDER}`, color: TEXT, borderRadius: "10px", padding: "10px 18px", fontSize: "0.82rem", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
                 <Edit2 size={14} /> EDIT
               </button>
             )}
             {canAddSport && (
               <button type="button" onClick={() => setShowAddSport(true)}
-                style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.07)", border: `1px solid ${BORDER}`, color: TEXT, borderRadius: "10px", padding: "10px 18px", fontSize: "0.82rem", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+                style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(75,134,232,0.07)", border: `1px solid ${BORDER}`, color: TEXT, borderRadius: "10px", padding: "10px 18px", fontSize: "0.82rem", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
                 <Plus size={14} /> ADD SPORT
               </button>
             )}
             {canEdit && STATUS_TRANSITIONS[event.status as string]?.map(t => (
               <button key={t.value} type="button" onClick={() => handleStatusChange(t.value)} disabled={actionLoading}
-                style={{ display: "flex", alignItems: "center", gap: "8px", background: actionLoading ? "rgba(255,255,255,0.04)" : t.color === ACCENT ? ACCENT : `${t.color}22`, border: `1px solid ${t.color}44`, color: t.color === ACCENT ? "#fff" : t.color, borderRadius: "10px", padding: "10px 18px", fontSize: "0.82rem", fontWeight: 700, cursor: actionLoading ? "not-allowed" : "pointer", whiteSpace: "nowrap" }}>
+                style={{ display: "flex", alignItems: "center", gap: "8px", background: actionLoading ? "rgba(75,134,232,0.04)" : t.color === ACCENT ? ACCENT : `${t.color}22`, border: `1px solid ${t.color}44`, color: t.color === ACCENT ? "#fff" : t.color, borderRadius: "10px", padding: "10px 18px", fontSize: "0.82rem", fontWeight: 700, cursor: actionLoading ? "not-allowed" : "pointer", whiteSpace: "nowrap" }}>
                 {actionLoading ? <Spinner size={14} color={t.color} /> : null}{t.label}
               </button>
             ))}
@@ -926,8 +840,8 @@ export default function OrganizerEventDetailPage() {
       </div>
 
       {/* EVENT DETAILS */}
-      <div style={{ background: CARD2, border: "1px solid rgba(250,71,21,0.14)", borderRadius: "16px", overflow: "hidden" }}>
-        <div style={{ padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, background: "rgba(250,71,21,0.04)", fontWeight: 700, letterSpacing: "0.06em" }}>EVENT DETAILS</div>
+      <div style={{ background: CARD2, border: "1px solid rgba(140,108,255,0.14)", borderRadius: "16px", overflow: "hidden" }}>
+        <div style={{ padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, background: "rgba(140,108,255,0.04)", fontWeight: 700, letterSpacing: "0.06em" }}>EVENT DETAILS</div>
         <div style={{ padding: "18px 20px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "10px" }}>
             <InfoCell label="Status"       value={event.status} />
@@ -946,14 +860,14 @@ export default function OrganizerEventDetailPage() {
       <SponsorManager mode="event" entityId={eventId} title="Event Sponsors" />
 
       {/* SPORTS LIST */}
-      <div style={{ background: CARD2, border: "1px solid rgba(250,71,21,0.14)", borderRadius: "16px", overflow: "hidden", marginTop: "24px" }}>
-        <div style={{ padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, background: "rgba(250,71,21,0.04)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ background: CARD2, border: "1px solid rgba(140,108,255,0.14)", borderRadius: "16px", overflow: "hidden", marginTop: "24px" }}>
+        <div style={{ padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, background: "rgba(140,108,255,0.04)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <span style={{ fontWeight: 700, letterSpacing: "0.06em", fontSize: "0.85rem" }}>SPORTS</span>
-            <span style={{ background: "rgba(250,71,21,0.13)", border: "1px solid rgba(250,71,21,0.28)", color: ACCENT, borderRadius: "999px", fontSize: "0.65rem", fontWeight: 800, padding: "1px 9px" }}>{sports.length}</span>
+            <span style={{ background: "rgba(140,108,255,0.13)", border: "1px solid rgba(140,108,255,0.28)", color: ACCENT, borderRadius: "999px", fontSize: "0.65rem", fontWeight: 800, padding: "1px 9px" }}>{sports.length}</span>
           </div>
           {canAddSport && (
-            <button type="button" onClick={() => setShowAddSport(true)} style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(250,71,21,0.1)", border: "1px solid rgba(250,71,21,0.3)", color: ACCENT, borderRadius: "8px", padding: "6px 14px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", letterSpacing: "0.04em" }}>
+            <button type="button" onClick={() => setShowAddSport(true)} style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(140,108,255,0.1)", border: "1px solid rgba(140,108,255,0.3)", color: ACCENT, borderRadius: "8px", padding: "6px 14px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", letterSpacing: "0.04em" }}>
               <Plus size={13} /> ADD SPORT
             </button>
           )}

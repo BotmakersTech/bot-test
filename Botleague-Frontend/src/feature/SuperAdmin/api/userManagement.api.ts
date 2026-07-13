@@ -140,27 +140,11 @@ export const updateAccountStatus = async (userId: string, status: string): Promi
   await api.patch(`/admin/users/${userId}/status`, null, { params: { status } });
 };
 
-// ── Event assignments ─────────────────────────────────────────────────────
-
-export const assignEvent = async (userId: string, eventId: string): Promise<void> => {
-  await api.post(`/admin/users/${userId}/assignments/events`, { eventId });
-};
-
-export const removeEventAssignment = async (userId: string, eventId: string): Promise<void> => {
-  await api.delete(`/admin/users/${userId}/assignments/events/${eventId}`);
-};
-
-// ── Sport assignments ─────────────────────────────────────────────────────
-
-export const assignSport = async (
-  userId: string, eventSportId: string, eventId: string
-): Promise<void> => {
-  await api.post(`/admin/users/${userId}/assignments/sports`, { eventSportId, eventId });
-};
-
-export const removeSportAssignment = async (userId: string, sportId: string): Promise<void> => {
-  await api.delete(`/admin/users/${userId}/assignments/sports/${sportId}`);
-};
+// Event/sport assignment goes through admin.api.ts's assignEventHead /
+// unassignEventHead / assignSportHead / unassignSportHead, which call the
+// real OrganizerAssignmentController endpoints — the /admin/users/{userId}/
+// assignments/... paths that used to live here were removed from the
+// backend and are gone; keeping them here just 404'd silently.
 
 // ── Picker data (for dropdowns) ───────────────────────────────────────────
 

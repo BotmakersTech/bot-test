@@ -2,14 +2,15 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Search, ExternalLink } from "lucide-react"
 import { getMyEvents, type OrganizerEvent, type OrganizerSport } from "../api/organizer.api"
+import { ORG } from "../theme/organizerTheme"
 
 // ── theme ─────────────────────────────────────────────────────────────────────
-const P      = "#8C6CFF"
-const BG     = "#F4F3FF"
-const SURF   = "#FFFFFF"
-const BORDER = "#E0D9FF"
+const P      = "#8c6cff"
+const BG     = ORG.pageBg
+const SURF   = "rgba(255,255,255,0.9)"
+const BORDER = "#4b86e8"
 const TEXT   = "#111111"
-const MUTED  = "#6B7280"
+const MUTED  = "#5d5d5d"
 
 interface FlatSport extends OrganizerSport {
   eventId: string
@@ -98,7 +99,7 @@ export default function OrganizerSportsPage() {
             />
           </div>
           <button onClick={() => setActiveSearch(search)}
-            style={{ background: `linear-gradient(135deg,${P},#0162D1)`, color: "#fff", border: "none", borderRadius: "10px", padding: "0 16px", height: "40px", fontWeight: 600, fontSize: "0.85rem", cursor: "pointer" }}>
+            style={{ background: `linear-gradient(135deg,#4c8ee7,${P})`, color: "#fff", border: "none", borderRadius: "10px", padding: "0 16px", height: "40px", fontWeight: 600, fontSize: "0.85rem", cursor: "pointer" }}>
             Search
           </button>
         </div>

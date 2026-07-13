@@ -17,6 +17,7 @@ import type { RootState } from "../../../app/store"
 import { hasRole, AppRole } from "../../../shared/constants/roles"
 import LocationSelects from "../../../shared/components/LocationSelects"
 import SponsorManager from "../components/SponsorManager"
+import EventMediaField from "../../Organizer/components/EventMediaField"
 
 // ─────────────────────────────────────────────────────────────
 // DESIGN TOKENS
@@ -733,15 +734,16 @@ const STATUS_TRANSITIONS: Record<string, { value: string; label: string; color: 
 // ─────────────────────────────────────────────────────────────
 
 interface EditEventModalProps {
-  event: { eventName: string; eventDescription?: string; organizationName?: string; organizationUrl?: string; venueName?: string; city?: string; state?: string; country?: string; startDate?: string; endDate?: string }
+  event: { id: string; eventName: string; eventDescription?: string; organizationName?: string; organizationUrl?: string; venueName?: string; city?: string; state?: string; country?: string; startDate?: string; endDate?: string; eventThumbnailUrl?: string; teaserVideo1Url?: string; teaserVideo2Url?: string }
   onSave: (req: UpdateEventRequest) => Promise<unknown>
   saving: boolean
   onClose: () => void
+  onMediaChange: () => void
   /** When true (PUBLISHED + organizer), only name/description/logo/org are editable */
   limitedEdit?: boolean
 }
 
-function EditEventModal({ event, onSave, saving, onClose, limitedEdit = false }: EditEventModalProps) {
+function EditEventModal({ event, onSave, saving, onClose, onMediaChange, limitedEdit = false }: EditEventModalProps) {
   const fmt = (d?: string) => d ? d.slice(0, 10) : ""
   const [form, setForm] = useState<UpdateEventRequest>({
     eventName:       event.eventName       ?? "",
@@ -795,6 +797,11 @@ function EditEventModal({ event, onSave, saving, onClose, limitedEdit = false }:
           <FormField label="Logo URL">
             <input style={inputStyle} placeholder="https://…" value={form.eventLogoUrl ?? ""} onChange={e => set("eventLogoUrl", e.target.value)} />
           </FormField>
+
+          <EventMediaField eventId={event.id} slot="THUMBNAIL" kind="image" label="Thumbnail Image" currentUrl={event.eventThumbnailUrl} onMediaChange={onMediaChange} colors={{ border: BORDER, muted: MUTED, accent: ACCENT, danger: DANGER, uploadBg: "rgba(255,255,255,0.06)" }} />
+          <EventMediaField eventId={event.id} slot="TEASER_1" kind="video" label="Teaser Video 1" currentUrl={event.teaserVideo1Url} onMediaChange={onMediaChange} colors={{ border: BORDER, muted: MUTED, accent: ACCENT, danger: DANGER, uploadBg: "rgba(255,255,255,0.06)" }} />
+          <EventMediaField eventId={event.id} slot="TEASER_2" kind="video" label="Teaser Video 2" currentUrl={event.teaserVideo2Url} onMediaChange={onMediaChange} colors={{ border: BORDER, muted: MUTED, accent: ACCENT, danger: DANGER, uploadBg: "rgba(255,255,255,0.06)" }} />
+
           <FormField label="Organization Name">
             <input style={inputStyle} value={form.organizationName} onChange={e => set("organizationName", e.target.value)} />
           </FormField>
@@ -1310,7 +1317,7 @@ export default function AdminEventPage() {
       )}
 
       {showEditEvent && event && (
-        <EditEventModal event={event} onSave={handleSaveEdit} saving={publishLoading} onClose={() => setShowEditEvent(false)} limitedEdit={limitedEdit} />
+        <EditEventModal event={event} onSave={handleSaveEdit} saving={publishLoading} onClose={() => setShowEditEvent(false)} onMediaChange={refetch} limitedEdit={limitedEdit} />
       )}
 
       {/* PUBLISH CONFIRM DIALOG */}

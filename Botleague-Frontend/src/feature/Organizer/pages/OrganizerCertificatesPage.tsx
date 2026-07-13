@@ -8,11 +8,11 @@ const CERT_TYPES = ["PARTICIPATION", "WINNER", "FINALIST", "JUDGE", "VOLUNTEER"]
 const POSITIONS: Record<number, string> = { 1: "🥇 Gold", 2: "🥈 Silver", 3: "🥉 Bronze" }
 
 const TYPE_COLORS: Record<string, string> = {
-  WINNER:        "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-  FINALIST:      "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  PARTICIPATION: "bg-neutral-500/10 text-neutral-400 border-neutral-500/20",
-  JUDGE:         "bg-purple-500/10 text-purple-400 border-purple-500/20",
-  VOLUNTEER:     "bg-green-500/10 text-green-400 border-green-500/20",
+  WINNER:        "bg-[#eab308]/10 text-[#a16207] border-[#eab308]/25",
+  FINALIST:      "bg-[#4c8ee7]/10 text-[#3567cf] border-[#4c8ee7]/25",
+  PARTICIPATION: "bg-[#4b86e8]/8 text-[#5d5d5d] border-[#4b86e8]/20",
+  JUDGE:         "bg-[#8c6cff]/10 text-[#5b62ea] border-[#8c6cff]/25",
+  VOLUNTEER:     "bg-[#1fa952]/10 text-[#1fa952] border-[#1fa952]/25",
 }
 
 const EMPTY: CertificateRequest = { recipientName: "", certificateType: "PARTICIPATION", teamName: "", sportName: "" }
@@ -74,11 +74,11 @@ export default function OrganizerCertificatesPage() {
     <div className="min-h-full p-6 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold text-white">Certificates</h1>
-          <p className="text-sm text-neutral-500 mt-0.5">Issue and manage participation and achievement certificates</p>
+          <h1 className="text-xl font-bold text-[#3567cf]" style={{ fontFamily: "'Sarpanch', 'Inter', sans-serif" }}>Certificates</h1>
+          <p className="text-sm text-[#5d5d5d] mt-0.5">Issue and manage participation and achievement certificates</p>
         </div>
         <button onClick={() => { setForm(EMPTY); setShowForm(true) }}
-          className="rounded-xl bg-[#fa4715] px-4 py-2 text-sm font-semibold text-white hover:bg-[#e03d0f] transition-colors">
+          className="rounded-xl bg-linear-to-br from-[#4c8ee7] to-[#8c6cff] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity">
           + Issue Certificate
         </button>
       </div>
@@ -96,31 +96,31 @@ export default function OrganizerCertificatesPage() {
       {/* Controls */}
       <div className="flex flex-wrap gap-3">
         <select value={selectedEventId} onChange={e => setSelectedEventId(e.target.value)}
-          className="rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none">
+          className="rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none">
           {events.map(e => <option key={e.id} value={e.id}>{e.eventName}</option>)}
         </select>
         <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}
-          className="rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none">
+          className="rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none">
           <option value="ALL">All Types</option>
           {CERT_TYPES.map(t => <option key={t} value={t}>{t.charAt(0) + t.slice(1).toLowerCase()}</option>)}
         </select>
         <input type="text" placeholder="Search recipient or team…" value={filter}
           onChange={e => setFilter(e.target.value)}
-          className="rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-white placeholder-neutral-500 ring-1 ring-white/10 focus:outline-none flex-1 min-w-48" />
+          className="rounded-lg bg-white px-3 py-2 text-sm text-[#111111] placeholder-[#9a9a9a] ring-1 ring-[#4b86e8]/30 focus:outline-none flex-1 min-w-48" />
       </div>
 
-      {error && <p className="text-red-400 text-sm">{error}</p>}
+      {error && <p className="text-[#e04b4b] text-sm">{error}</p>}
 
       {loading ? (
-        <div className="space-y-2">{[1,2,3].map(i => <div key={i} className="h-16 animate-pulse rounded-xl bg-white/[0.04]" />)}</div>
+        <div className="space-y-2">{[1,2,3].map(i => <div key={i} className="h-16 animate-pulse rounded-xl bg-[#4b86e8]/8" />)}</div>
       ) : visible.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-white/10 py-16 text-center">
-          <p className="text-neutral-400 text-sm">No certificates issued yet.</p>
+        <div className="rounded-2xl border border-dashed border-[#4b86e8]/30 py-16 text-center">
+          <p className="text-[#5d5d5d] text-sm">No certificates issued yet.</p>
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {visible.map(c => (
-            <div key={c.id} className={`rounded-2xl border p-4 space-y-2 ${TYPE_COLORS[c.certificateType] ?? "border-white/10 bg-[#0e0e10]"}`}>
+            <div key={c.id} className={`rounded-2xl border p-4 space-y-2 ${TYPE_COLORS[c.certificateType] ?? "border-[#4b86e8]/25 bg-white/90"}`}>
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <div className="font-semibold text-sm">{c.recipientName}</div>
@@ -139,12 +139,12 @@ export default function OrganizerCertificatesPage() {
                 <div className="flex gap-2">
                   {c.pdfUrl && (
                     <a href={c.pdfUrl} target="_blank" rel="noreferrer"
-                      className="rounded-lg bg-black/20 px-2.5 py-1 text-xs hover:bg-black/30">
+                      className="rounded-lg bg-black/5 px-2.5 py-1 text-xs hover:bg-black/10">
                       Download
                     </a>
                   )}
                   <button onClick={() => handleDelete(c)}
-                    className="rounded-lg bg-red-500/20 px-2.5 py-1 text-xs text-red-300 hover:bg-red-500/30">
+                    className="rounded-lg bg-[#e04b4b]/15 px-2.5 py-1 text-xs text-[#e04b4b] hover:bg-[#e04b4b]/25">
                     Revoke
                   </button>
                 </div>
@@ -156,9 +156,9 @@ export default function OrganizerCertificatesPage() {
 
       {/* Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#141416] p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-base font-bold text-white">Issue Certificate</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl border border-[#4b86e8]/30 bg-white p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-base font-bold text-[#111111]">Issue Certificate</h3>
             {[
               { label: "Recipient Name *", key: "recipientName", type: "text" },
               { label: "Team Name", key: "teamName", type: "text" },
@@ -166,26 +166,26 @@ export default function OrganizerCertificatesPage() {
               { label: "PDF URL", key: "pdfUrl", type: "url" },
             ].map(f => (
               <div key={f.key}>
-                <label className="text-xs text-neutral-400 mb-1 block">{f.label}</label>
+                <label className="text-xs text-[#5d5d5d] mb-1 block font-semibold">{f.label}</label>
                 <input type={f.type} value={(form as any)[f.key] ?? ""}
                   onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
-                  className="w-full rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none" />
+                  className="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none" />
               </div>
             ))}
             <div>
-              <label className="text-xs text-neutral-400 mb-1 block">Certificate Type *</label>
+              <label className="text-xs text-[#5d5d5d] mb-1 block font-semibold">Certificate Type *</label>
               <select value={form.certificateType}
                 onChange={e => setForm(p => ({ ...p, certificateType: e.target.value }))}
-                className="w-full rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none">
+                className="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none">
                 {CERT_TYPES.map(t => <option key={t} value={t}>{t.charAt(0) + t.slice(1).toLowerCase()}</option>)}
               </select>
             </div>
             {(form.certificateType === "WINNER" || form.certificateType === "FINALIST") && (
               <div>
-                <label className="text-xs text-neutral-400 mb-1 block">Position</label>
+                <label className="text-xs text-[#5d5d5d] mb-1 block font-semibold">Position</label>
                 <select value={form.position ?? ""}
                   onChange={e => setForm(p => ({ ...p, position: e.target.value ? Number(e.target.value) : undefined }))}
-                  className="w-full rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none">
+                  className="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none">
                   <option value="">— None —</option>
                   <option value="1">Gold (1st)</option>
                   <option value="2">Silver (2nd)</option>
@@ -194,19 +194,19 @@ export default function OrganizerCertificatesPage() {
               </div>
             )}
             <div>
-              <label className="text-xs text-neutral-400 mb-1 block">Sport</label>
+              <label className="text-xs text-[#5d5d5d] mb-1 block font-semibold">Sport</label>
               <select value={form.sportId ?? ""}
                 onChange={e => setForm(p => ({ ...p, sportId: e.target.value || undefined }))}
-                className="w-full rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none">
+                className="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none">
                 <option value="">— None —</option>
                 {eventSports.map(s => <option key={s.id} value={s.id}>{s.sport.replace(/_/g, " ")}</option>)}
               </select>
             </div>
             <div className="flex gap-3 pt-2">
               <button onClick={() => setShowForm(false)}
-                className="flex-1 rounded-xl border border-white/10 py-2 text-sm text-neutral-400 hover:bg-white/5">Cancel</button>
+                className="flex-1 rounded-xl border border-[#4b86e8]/30 py-2 text-sm text-[#5d5d5d] hover:bg-[#4b86e8]/5">Cancel</button>
               <button onClick={handleIssue} disabled={saving || !form.recipientName.trim()}
-                className="flex-1 rounded-xl bg-[#fa4715] py-2 text-sm font-semibold text-white disabled:opacity-50">
+                className="flex-1 rounded-xl bg-linear-to-br from-[#4c8ee7] to-[#8c6cff] py-2 text-sm font-semibold text-white disabled:opacity-50">
                 {saving ? "Issuing…" : "Issue Certificate"}
               </button>
             </div>
