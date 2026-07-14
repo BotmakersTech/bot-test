@@ -115,7 +115,7 @@ public class AdminService {
      * but kept in the signature to avoid touching every call site.
      */
     public AdminAllEventResponse getEventById(UUID eventId, UUID callerId, List<String> callerRoles) {
-        authorizationService.assertCanManageEvent(callerId, eventId);
+        authorizationService.assertCanViewEvent(callerId, eventId);
         return getEventById(eventId);
     }
 

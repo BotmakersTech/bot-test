@@ -64,6 +64,22 @@ public class AuthorizationService {
                 userId, ResourceRoleAssignment.SCOPE_EVENT, eventId, ResourceRoleAssignment.STATUS_APPROVED);
     }
 
+    /**
+     * Read-only visibility: everything canManageEvent() allows, plus a
+     * SPORT_HEAD who holds no event-level assignment but has an approved
+     * assignment on a sport within this event. Deliberately NOT folded into
+     * canManageEvent() — that method is also the write-gate for event media,
+     * sponsors, announcements, and assignment approval, none of which a
+     * sport-scoped-only user should be able to touch.
+     */
+    public boolean canViewEvent(UUID userId, UUID eventId) {
+        if (canManageEvent(userId, eventId)) return true;
+        if (eventId == null) return false;
+        return eventSportsRepository.findByEventId(eventId).stream()
+                .anyMatch(sport -> resourceRoleAssignmentRepository.existsByUserIdAndScopeTypeAndScopeIdAndStatus(
+                        userId, ResourceRoleAssignment.SCOPE_SPORT, sport.getId(), ResourceRoleAssignment.STATUS_APPROVED));
+    }
+
     public boolean canManageSport(UUID userId, UUID eventSportId) {
         if (eventSportId == null) return false;
         UUID eventId = resolveEventIdForSport(eventSportId);
@@ -93,6 +109,12 @@ public class AuthorizationService {
 
     public void assertCanManageEvent(UUID userId, UUID eventId) {
         if (!canManageEvent(userId, eventId)) {
+            throw ApiException.forbidden("Insufficient role or event assignment required");
+        }
+    }
+
+    public void assertCanViewEvent(UUID userId, UUID eventId) {
+        if (!canViewEvent(userId, eventId)) {
             throw ApiException.forbidden("Insufficient role or event assignment required");
         }
     }
