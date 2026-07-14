@@ -302,8 +302,7 @@ public class MatchesController {
 
     @GetMapping("/my")
     public ResponseEntity<List<MatchResponseDTO>> getMyMatches(Authentication authentication) {
-        com.botleague.backend.auth.entity.User user =
-                (com.botleague.backend.auth.entity.User) authentication.getPrincipal();
-        return ResponseEntity.ok(matchService.getMyMatches(user.getId()));
+        UUID userId = UUID.fromString((String) authentication.getPrincipal());
+        return ResponseEntity.ok(matchService.getMyMatches(userId));
     }
 }
