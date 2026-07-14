@@ -280,8 +280,8 @@ function AppRoutes() {
         <Route path="/super-admin-dashboard" element={<RoleRoute roles={[AppRole.SUPER_ADMIN]}><SuperAdminDashboard /></RoleRoute>} />
 
         {/* ── Organizer Portal ── */}
-        <Route path="/organizer/events"          element={<RoleRoute roles={EVENT_HEAD_AND_UP}><OrganizerEventsPage /></RoleRoute>} />
-        <Route path="/organizer/events/:eventId" element={<RoleRoute roles={EVENT_HEAD_AND_UP}><OrganizerEventDetailPage /></RoleRoute>} />
+        <Route path="/organizer/events"          element={<RoleRoute roles={SPORT_HEAD_AND_UP}><OrganizerEventsPage /></RoleRoute>} />
+        <Route path="/organizer/events/:eventId" element={<RoleRoute roles={SPORT_HEAD_AND_UP}><OrganizerEventDetailPage /></RoleRoute>} />
         <Route
           path="/organizer/events/:eventId/sports/:sportId"
           element={<RoleRoute roles={SPORT_HEAD_AND_UP}><OrganizerSportDetailPage /></RoleRoute>}

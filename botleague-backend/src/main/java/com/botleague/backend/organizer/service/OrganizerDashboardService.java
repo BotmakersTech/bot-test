@@ -106,9 +106,21 @@ public class OrganizerDashboardService {
             return eventRepository.findAllByDeletedAtIsNull().stream()
                     .map(e -> e.getId()).collect(Collectors.toList());
         }
-        return assignmentRepository.findByUserId(userId).stream()
+        Set<UUID> ids = assignmentRepository.findByUserId(userId).stream()
                 .filter(a -> ResourceRoleAssignment.SCOPE_EVENT.equals(a.getScopeType())
                         && ResourceRoleAssignment.STATUS_APPROVED.equals(a.getStatus()))
-                .map(a -> a.getEventId()).collect(Collectors.toList());
+                .map(a -> a.getEventId())
+                .collect(Collectors.toCollection(java.util.HashSet::new));
+        // SPORT_HEAD holds no SCOPE_EVENT assignment — surface the parent
+        // event of their assigned sport(s) instead so their dashboard isn't empty.
+        assignmentRepository.findByUserId(userId).stream()
+                .filter(a -> ResourceRoleAssignment.SCOPE_SPORT.equals(a.getScopeType())
+                        && ResourceRoleAssignment.STATUS_APPROVED.equals(a.getStatus()))
+                .map(a -> eventSportsRepository.findById(a.getScopeId()))
+                .filter(java.util.Optional::isPresent)
+                .map(java.util.Optional::get)
+                .map(EventSports::getEventId)
+                .forEach(ids::add);
+        return new java.util.ArrayList<>(ids);
     }
 }

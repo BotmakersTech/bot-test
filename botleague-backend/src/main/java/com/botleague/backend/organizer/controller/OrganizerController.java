@@ -47,7 +47,7 @@ public class OrganizerController {
     // =========================================================================
 
     @GetMapping("/dashboard")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD','SPORT_HEAD')")
     public ResponseEntity<DashboardStatsResponse> getDashboard(Authentication auth) {
         return ResponseEntity.ok(
             dashboardService.getStats(extractUserId(auth), extractRoles(auth)));
@@ -58,14 +58,14 @@ public class OrganizerController {
     // =========================================================================
 
     @GetMapping("/my-events")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD','SPORT_HEAD')")
     public ResponseEntity<List<CreateEventResponseDTO>> getMyEvents(Authentication auth) {
         return ResponseEntity.ok(
             organizerService.getMyEvents(extractUserId(auth), extractRoles(auth)));
     }
 
     @GetMapping("/my-sports")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD','SPORT_HEAD')")
     public ResponseEntity<List<GetEventSportsDTO>> getMySports(Authentication auth) {
         return ResponseEntity.ok(
             organizerService.getMySports(extractUserId(auth), extractRoles(auth)));

@@ -59,8 +59,26 @@ public class OrganizerService {
     }
 
     /**
+     * Parent event IDs of every sport this user holds an approved SPORT_HEAD
+     * assignment on — read-only visibility only, deliberately NOT folded into
+     * myAssignedOrOwnedEventIds() so a SPORT_HEAD still can't pass the
+     * updateEventInfo() authorization check for that event.
+     */
+    private Set<UUID> mySportDerivedEventIds(UUID userId) {
+        return assignmentRepository.findByUserId(userId).stream()
+                .filter(a -> ResourceRoleAssignment.SCOPE_SPORT.equals(a.getScopeType())
+                        && ResourceRoleAssignment.STATUS_APPROVED.equals(a.getStatus()))
+                .map(a -> eventSportsRepository.findById(a.getScopeId()))
+                .filter(java.util.Optional::isPresent)
+                .map(java.util.Optional::get)
+                .map(EventSports::getEventId)
+                .collect(Collectors.toCollection(HashSet::new));
+    }
+
+    /**
      * Platform admins → ALL events.
-     * EVENT_HEAD/ORGANISER → only their assigned/owned events.
+     * EVENT_HEAD/ORGANISER → their assigned/owned events.
+     * SPORT_HEAD → (read-only) the parent event of their assigned sport(s).
      */
     public List<CreateEventResponseDTO> getMyEvents(UUID userId, List<String> userRoles) {
         if (hasFullAccess(userRoles)) {
@@ -69,7 +87,9 @@ public class OrganizerService {
                     .map(this::toEventResponse)
                     .collect(Collectors.toList());
         }
-        return myAssignedOrOwnedEventIds(userId).stream()
+        Set<UUID> ids = new HashSet<>(myAssignedOrOwnedEventIds(userId));
+        ids.addAll(mySportDerivedEventIds(userId));
+        return ids.stream()
                 .map(eventRepository::findById)
                 .filter(java.util.Optional::isPresent)
                 .map(java.util.Optional::get)

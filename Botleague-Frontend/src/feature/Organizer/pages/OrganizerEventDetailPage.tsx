@@ -1,5 +1,6 @@
 ﻿import React, { useCallback, useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
+import { useSelector } from "react-redux"
 import { ArrowLeft, Plus, X, ChevronDown, Info, Calendar, Users, Trophy, Swords, Edit2, CheckCircle2 } from "lucide-react"
 import {
   getMyEventById, updateEventInfo, changeEventStatus, createEventSport, submitSportForApproval,
@@ -8,6 +9,8 @@ import {
 import EventMediaField from "../components/EventMediaField"
 import SponsorManager from "../../Admin/components/SponsorManager"
 import { ORG } from "../theme/organizerTheme"
+import type { RootState } from "../../../app/store"
+import { hasRole, AppRole } from "../../../shared/constants/roles"
 
 // ─────────────────────────────────────────────────────────────
 // DESIGN TOKENS
@@ -692,13 +695,20 @@ export default function OrganizerEventDetailPage() {
 
   useEffect(() => { load() }, [load])
 
+  // SPORT_HEAD can view the event their sport belongs to, but only
+  // EVENT_HEAD-and-up can actually manage it — event section is read-only
+  // for them; their own sport (via OrganizerSportDetailPage) is not.
+  const user = useSelector((state: RootState) => state.auth.user)
+  const userRoles = user?.allRoles ?? (user?.role ? [user.role] : [])
+  const canManageEvent = hasRole(userRoles, [AppRole.SUPER_ADMIN, AppRole.ADMIN, AppRole.ORGANISER, AppRole.EVENT_HEAD])
+
   const eventStatus = event?.status as EventStatus | undefined
   const isDraft      = eventStatus === "DRAFT"
   const isArchived   = eventStatus === "ARCHIVED"
   const isLive       = eventStatus === "LIVE"
   const isCompleted  = eventStatus === "COMPLETED"
-  const canEdit      = !isArchived && !isLive && !isCompleted
-  const canAddSport  = isDraft
+  const canEdit      = canManageEvent && !isArchived && !isLive && !isCompleted
+  const canAddSport  = canManageEvent && isDraft
 
   const handleSaveEdit = async (req: UpdateEventInfoRequest) => {
     if (!eventId) return
@@ -856,8 +866,10 @@ export default function OrganizerEventDetailPage() {
         </div>
       </div>
 
-      {/* SPONSORS */}
-      <SponsorManager mode="event" entityId={eventId} title="Event Sponsors" />
+      {/* SPONSORS — event-level management only, not shown to SPORT_HEAD */}
+      {canManageEvent && (
+        <SponsorManager mode="event" entityId={eventId} title="Event Sponsors" />
+      )}
 
       {/* SPORTS LIST */}
       <div style={{ background: CARD2, border: "1px solid rgba(140,108,255,0.14)", borderRadius: "16px", overflow: "hidden", marginTop: "24px" }}>
