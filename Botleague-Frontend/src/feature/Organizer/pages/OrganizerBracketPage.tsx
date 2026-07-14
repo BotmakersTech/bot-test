@@ -276,6 +276,7 @@ export default function OrganizerBracketPage() {
 
   // ── Match popup state ──
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   const [scoreA, setScoreA] = useState(0)
   const [scoreB, setScoreB] = useState(0)
@@ -401,10 +402,18 @@ export default function OrganizerBracketPage() {
   // START MATCH
   // =====================================================
 
+  const describeActionError = (err: any, fallback: string): string =>
+    err?.response?.data?.message || err?.response?.data?.error || fallback
+
   const handleStart = async () => {
     if (!selectedMatchId) return
-    await startMatch(selectedMatchId)
-    await refreshMatches()
+    setActionError(null)
+    try {
+      await startMatch(selectedMatchId)
+      await refreshMatches()
+    } catch (err: any) {
+      setActionError(describeActionError(err, "Failed to start match"))
+    }
   }
 
   // =====================================================
@@ -413,6 +422,7 @@ export default function OrganizerBracketPage() {
 
   const handleSaveScore = async () => {
     if (!selectedMatchId || !selectedMatch) return
+    setActionError(null)
     const payload: Parameters<typeof updateMatchScore>[1] = {
       teamAScore: scoreA,
       teamBScore: scoreB,
@@ -423,8 +433,12 @@ export default function OrganizerBracketPage() {
     if (selectedMatch.matchType === "FATAL_FOUR") {
       payload.teamDScore = scoreD
     }
-    await updateMatchScore(selectedMatchId, payload)
-    await refreshMatches()
+    try {
+      await updateMatchScore(selectedMatchId, payload)
+      await refreshMatches()
+    } catch (err: any) {
+      setActionError(describeActionError(err, "Failed to save score"))
+    }
   }
 
   // =====================================================
@@ -433,50 +447,55 @@ export default function OrganizerBracketPage() {
 
   const handleSubmitResult = async () => {
     if (!selectedMatchId || !selectedMatch) return
+    setActionError(null)
 
-    if (!isMultiTeam) {
-      if (resultMethod === "SCORE") {
-        // infer winner from scores
-        await completeMatch(selectedMatchId)
-      } else if (resultMethod === "JUDGE_DECISION") {
-        if (!judgeWinnerId) return
-        await submitMatchResult(selectedMatchId, {
-          teamAScore: scoreA,
-          teamBScore: scoreB,
-          winnerRegistrationId: judgeWinnerId,
-          winMethod: "JUDGE_DECISION",
-        })
+    try {
+      if (!isMultiTeam) {
+        if (resultMethod === "SCORE") {
+          // infer winner from scores
+          await completeMatch(selectedMatchId)
+        } else if (resultMethod === "JUDGE_DECISION") {
+          if (!judgeWinnerId) return
+          await submitMatchResult(selectedMatchId, {
+            teamAScore: scoreA,
+            teamBScore: scoreB,
+            winnerRegistrationId: judgeWinnerId,
+            winMethod: "JUDGE_DECISION",
+          })
+        } else {
+          // TAPOUT / FORFEIT / DISQUALIFICATION — pick the loser, other team wins
+          if (!losingTeamId) return
+          const allIds = getTeams(selectedMatch).map(t => t.id).filter(Boolean) as string[]
+          const winnerId = allIds.find(id => id !== losingTeamId)
+          if (!winnerId) return
+          await submitMatchResult(selectedMatchId, {
+            teamAScore: scoreA,
+            teamBScore: scoreB,
+            winnerRegistrationId: winnerId,
+            winMethod: resultMethod,
+          })
+        }
       } else {
-        // TAPOUT / FORFEIT / DISQUALIFICATION — pick the loser, other team wins
-        if (!losingTeamId) return
-        const allIds = getTeams(selectedMatch).map(t => t.id).filter(Boolean) as string[]
-        const winnerId = allIds.find(id => id !== losingTeamId)
-        if (!winnerId) return
-        await submitMatchResult(selectedMatchId, {
+        // Multi-team: score + finish positions
+        const payload: SubmitMatchResultDTO = {
           teamAScore: scoreA,
           teamBScore: scoreB,
-          winnerRegistrationId: winnerId,
-          winMethod: resultMethod,
-        })
+          teamCScore: scoreC,
+          positionFirstRegistrationId:  pos1 || undefined,
+          positionSecondRegistrationId: pos2 || undefined,
+          positionThirdRegistrationId:  pos3 || undefined,
+          winMethod: "SCORE",
+        }
+        if (isFatalFour) {
+          payload.teamDScore = scoreD
+          payload.positionFourthRegistrationId = pos4 || undefined
+        }
+        await submitMatchResult(selectedMatchId, payload)
       }
-    } else {
-      // Multi-team: score + finish positions
-      const payload: SubmitMatchResultDTO = {
-        teamAScore: scoreA,
-        teamBScore: scoreB,
-        teamCScore: scoreC,
-        positionFirstRegistrationId:  pos1 || undefined,
-        positionSecondRegistrationId: pos2 || undefined,
-        positionThirdRegistrationId:  pos3 || undefined,
-        winMethod: "SCORE",
-      }
-      if (isFatalFour) {
-        payload.teamDScore = scoreD
-        payload.positionFourthRegistrationId = pos4 || undefined
-      }
-      await submitMatchResult(selectedMatchId, payload)
+      await refreshMatches()
+    } catch (err: any) {
+      setActionError(describeActionError(err, "Failed to submit match result"))
     }
-    await refreshMatches()
   }
 
   // =====================================================
@@ -485,15 +504,25 @@ export default function OrganizerBracketPage() {
 
   const handleApprove = async () => {
     if (!selectedMatchId) return
-    await approveMatchResult(selectedMatchId)
-    await refreshMatches()
+    setActionError(null)
+    try {
+      await approveMatchResult(selectedMatchId)
+      await refreshMatches()
+    } catch (err: any) {
+      setActionError(describeActionError(err, "Failed to approve match result"))
+    }
   }
 
   const handleReject = async () => {
     if (!selectedMatchId) return
     const reason = window.prompt("Reason for rejecting this result (optional):") || undefined
-    await rejectMatchResult(selectedMatchId, reason)
-    await refreshMatches()
+    setActionError(null)
+    try {
+      await rejectMatchResult(selectedMatchId, reason)
+      await refreshMatches()
+    } catch (err: any) {
+      setActionError(describeActionError(err, "Failed to reject match result"))
+    }
   }
 
   // =====================================================
@@ -503,8 +532,13 @@ export default function OrganizerBracketPage() {
   const handleCancel = async () => {
     if (!selectedMatchId) return
     if (!confirm("Cancel this match?")) return
-    await cancelMatch(selectedMatchId)
-    await refreshMatches()
+    setActionError(null)
+    try {
+      await cancelMatch(selectedMatchId)
+      await refreshMatches()
+    } catch (err: any) {
+      setActionError(describeActionError(err, "Failed to cancel match"))
+    }
   }
 
   // =====================================================
@@ -513,9 +547,14 @@ export default function OrganizerBracketPage() {
 
   const handleSetSchedule = async () => {
     if (!selectedMatchId || !scheduleDate || !scheduleTime) return
+    setActionError(null)
     const isoString = new Date(`${scheduleDate}T${scheduleTime}`).toISOString()
-    await scheduleMatch(selectedMatchId, isoString)
-    await refreshMatches()
+    try {
+      await scheduleMatch(selectedMatchId, isoString)
+      await refreshMatches()
+    } catch (err: any) {
+      setActionError(describeActionError(err, "Failed to update schedule"))
+    }
   }
 
   // =====================================================
@@ -847,7 +886,7 @@ export default function OrganizerBracketPage() {
               return (
                 <g
                   key={match.matchId}
-                  onClick={() => setSelectedMatchId(match.matchId)}
+                  onClick={() => { setActionError(null); setSelectedMatchId(match.matchId) }}
                   style={{ cursor: "pointer" }}
                 >
                   {isSelected && (
@@ -960,7 +999,7 @@ export default function OrganizerBracketPage() {
           <div style={styles.thirdPlaceLabel}>🥉 3rd Place Match</div>
 
           <div
-            onClick={() => setSelectedMatchId(thirdPlaceMatch.matchId)}
+            onClick={() => { setActionError(null); setSelectedMatchId(thirdPlaceMatch.matchId) }}
             style={{
               ...styles.thirdPlaceCard,
               background: selectedMatchId === thirdPlaceMatch.matchId ? "#1e1e22" : T.surface,
@@ -1061,10 +1100,10 @@ export default function OrganizerBracketPage() {
 
       {/* ── MATCH POPUP ── */}
       {selectedMatch && (
-        <div style={styles.overlay} onClick={() => setSelectedMatchId(null)}>
+        <div style={styles.overlay} onClick={() => { setActionError(null); setSelectedMatchId(null) }}>
           <div style={styles.popup} onClick={e => e.stopPropagation()}>
 
-            <button style={styles.closeBtn} onClick={() => setSelectedMatchId(null)}>
+            <button style={styles.closeBtn} onClick={() => { setActionError(null); setSelectedMatchId(null) }}>
               <X size={16} />
             </button>
 
@@ -1111,6 +1150,13 @@ export default function OrganizerBracketPage() {
                 )}
               </div>
             </div>
+
+            {actionError && (
+              <div style={{ ...styles.errorBanner, marginBottom: 12 }}>
+                <AlertTriangle size={14} />
+                {actionError}
+              </div>
+            )}
 
             {/* Teams display */}
             <div style={styles.teamsDisplay}>

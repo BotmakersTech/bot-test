@@ -77,8 +77,8 @@ export const useMatches = (
         err: any,
         fallback: string
     ): string =>
-        err?.response?.data?.error ||
         err?.response?.data?.message ||
+        err?.response?.data?.error ||
         fallback
 
     // =====================================================
