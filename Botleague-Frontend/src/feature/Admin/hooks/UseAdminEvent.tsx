@@ -12,7 +12,6 @@ import {
     createEventSport as createEventSportApi,
     updateEventSport as updateEventSportApi,
     getEventSports as getEventSportsApi,
-    makeEventLive as makeEventLiveApi,
     getAllEvents,
     getEventById,
     getEventSportById,
@@ -96,6 +95,7 @@ export const useAdminEvents = (
 
     const [publishLoading, setPublishLoading] =
         useState<boolean>(false)
+
 
     const [error, setError] =
         useState<string | null>(null)
@@ -463,55 +463,6 @@ const changeSportRegistrationStatus =
         }, [fetchEventSports])
 
     // =====================================================
-    // PUBLISH EVENT
-    // =====================================================
-
-    const handlePublishEvent =
-        useCallback(async (
-            id: string
-        ) => {
-
-            try {
-
-                setPublishLoading(true)
-
-                setError(null)
-
-                const response =
-                    await makeEventLiveApi(id)
-
-                // =====================================================
-                // REFLECT UPDATED STATUS IN LOCAL STATE
-                // =====================================================
-
-                setEvent(response)
-
-                setEvents(prev =>
-                    prev.map(e =>
-                        e.id === id ? response : e
-                    )
-                )
-
-                return response
-
-            } catch (err: any) {
-
-                const message =
-                    err?.response?.data?.message ||
-                    "Failed to publish event"
-
-                setError(message)
-
-                throw new Error(message, { cause: err })
-
-            } finally {
-
-                setPublishLoading(false)
-            }
-
-        }, [])
-
-    // =====================================================
     // UPDATE EVENT
     // =====================================================
 
@@ -715,7 +666,6 @@ const changeSportRegistrationStatus =
         createEvent:      handleCreateEvent,
         createEventSport: handleCreateEventSport,
         updateEventSport: handleUpdateEventSport,
-        publishEvent:     handlePublishEvent,
         updateEvent:      handleUpdateEvent,
         changeEventStatus: handleChangeEventStatus,
         deleteEvent:      handleDeleteEvent,

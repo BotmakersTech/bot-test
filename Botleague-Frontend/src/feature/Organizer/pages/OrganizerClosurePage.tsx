@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import {
   getMyEvents,
   getMatchesForSport,
+  changeEventStatus,
   type OrganizerEvent,
   type OrganizerMatch,
 } from "../api/organizer.api";
@@ -37,6 +38,8 @@ export default function OrganizerClosurePage() {
   const [eventsLoading, setEventsLoading] = useState(true);
   const [loading, setLoading]         = useState(false);
   const [submitted, setSubmitted]     = useState(false);
+  const [closing, setClosing]         = useState(false);
+  const [closeError, setCloseError]   = useState<string | null>(null);
 
   useEffect(() => {
     getMyEvents()
@@ -49,13 +52,18 @@ export default function OrganizerClosurePage() {
 
   useEffect(() => {
     const event = events.find(e => e.id === selectedEventId);
-    if (!event?.sports?.length) { setStatus(null); return; }
+    if (!event) { setStatus(null); return; }
+
+    // An event with no sports (or no matches yet) has nothing to block
+    // closure — fall through to the empty-array Promise.all case below
+    // rather than treating "no sports" as "status not computed yet".
+    const sports = event.sports ?? [];
 
     setLoading(true);
     setStatus(null);
 
     Promise.all(
-      event.sports.map(s =>
+      sports.map(s =>
         getMatchesForSport(s.id).catch(() => [] as OrganizerMatch[])
       )
     )
@@ -79,9 +87,20 @@ export default function OrganizerClosurePage() {
   const eventCompleted = event?.status === "COMPLETED";
   const canClose = status?.allMatchesDone && !eventCompleted;
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitted(true);
+    if (!selectedEventId) return;
+    setClosing(true);
+    setCloseError(null);
+    try {
+      const updated = await changeEventStatus(selectedEventId, "COMPLETED", notes.trim() || undefined);
+      setEvents(prev => prev.map(ev => ev.id === updated.id ? updated : ev));
+      setSubmitted(true);
+    } catch (err: any) {
+      setCloseError(err?.response?.data?.message || "Failed to close event.");
+    } finally {
+      setClosing(false);
+    }
   }
 
   if (eventsLoading) return <div className="flex h-64 items-center justify-center text-[#5d5d5d]">Loading…</div>;
@@ -95,7 +114,7 @@ export default function OrganizerClosurePage() {
       <div className="mb-6">
         <select
           value={selectedEventId}
-          onChange={e => { setSelectedEventId(e.target.value); setSubmitted(false); }}
+          onChange={e => { setSelectedEventId(e.target.value); setSubmitted(false); setCloseError(null); }}
           className="rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none focus:ring-[#8c6cff]"
         >
           <option value="" disabled>Select event…</option>
@@ -138,9 +157,9 @@ export default function OrganizerClosurePage() {
           <div className="rounded-xl bg-white/90 p-5 ring-1 ring-[#4b86e8]/25 border border-[#4b86e8]/25">
             <h2 className="mb-4 font-semibold text-[#111111]">Closure Report</h2>
 
-            {submitted ? (
+            {submitted || eventCompleted ? (
               <div className="rounded-lg bg-[#1fa952]/10 p-4 text-sm text-[#1fa952]">
-                Closure report submitted. An administrator will review and officially close this event.
+                Event marked Completed.
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -154,12 +173,17 @@ export default function OrganizerClosurePage() {
                     className="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] placeholder-[#9a9a9a] ring-1 ring-[#4b86e8]/30 focus:outline-none focus:ring-[#8c6cff] resize-none"
                   />
                 </div>
+                {closeError && (
+                  <div className="rounded-lg bg-[#e04b4b]/10 px-4 py-3 text-sm text-[#e04b4b] whitespace-pre-line">
+                    {closeError}
+                  </div>
+                )}
                 <button
                   type="submit"
-                  disabled={!canClose}
+                  disabled={!canClose || closing}
                   className="w-full rounded-lg bg-linear-to-br from-[#4c8ee7] to-[#8c6cff] py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Submit Closure Report
+                  {closing ? "Closing event…" : "Submit Closure Report"}
                 </button>
                 {!canClose && !eventCompleted && (
                   <p className="text-center text-xs text-[#9a9a9a]">

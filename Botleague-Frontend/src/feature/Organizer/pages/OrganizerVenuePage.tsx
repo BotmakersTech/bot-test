@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react"
-import { getMyEvents, getVenueDetail, upsertVenueDetail, getArenas, createArena, deleteArena,
-  type OrganizerEvent, type VenueDetail, type Arena } from "../api/organizer.api"
+import { getMyEvents, getVenueDetail, upsertVenueDetail, getArenas, createArena, updateArena, deleteArena,
+  type OrganizerEvent, type VenueDetail, type Arena, type ArenaRequest } from "../api/organizer.api"
+
+const EMPTY_ARENA: ArenaRequest = { arenaName: "", capacity: undefined, locationNotes: "", sportType: "" }
 
 interface ChecklistItem { item: string; done: boolean }
 
@@ -37,8 +39,10 @@ export default function OrganizerVenuePage() {
   const [checklist, setChecklist] = useState<ChecklistItem[]>(defaultChecklist())
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [newArenaName, setNewArenaName] = useState("")
+  const [arenaForm, setArenaForm] = useState<ArenaRequest>(EMPTY_ARENA)
   const [addingArena, setAddingArena] = useState(false)
+  const [editingArena, setEditingArena] = useState<Arena | null>(null)
+  const [savingArenaEdit, setSavingArenaEdit] = useState(false)
 
   useEffect(() => {
     getMyEvents().then(e => { setEvents(e); if (e.length) setSelectedEventId(e[0].id) }).catch(() => {})
@@ -79,12 +83,18 @@ export default function OrganizerVenuePage() {
   }
 
   const handleAddArena = async () => {
-    if (!selectedEventId || !newArenaName.trim()) return
+    if (!selectedEventId || !arenaForm.arenaName.trim()) return
     setAddingArena(true)
     try {
-      const a = await createArena(selectedEventId, { arenaName: newArenaName.trim() })
+      const a = await createArena(selectedEventId, {
+        ...arenaForm,
+        arenaName: arenaForm.arenaName.trim(),
+        capacity: arenaForm.capacity || undefined,
+        locationNotes: arenaForm.locationNotes || undefined,
+        sportType: arenaForm.sportType || undefined,
+      })
       setArenas(prev => [...prev, a])
-      setNewArenaName("")
+      setArenaForm(EMPTY_ARENA)
     } catch {} finally { setAddingArena(false) }
   }
 
@@ -92,6 +102,25 @@ export default function OrganizerVenuePage() {
     if (!confirm("Remove this arena?")) return
     await deleteArena(selectedEventId, arenaId)
     setArenas(prev => prev.filter(a => a.id !== arenaId))
+  }
+
+  const openEditArena = (a: Arena) => {
+    setEditingArena(a)
+  }
+
+  const handleSaveArenaEdit = async () => {
+    if (!editingArena || !selectedEventId) return
+    setSavingArenaEdit(true)
+    try {
+      const updated = await updateArena(selectedEventId, editingArena.id, {
+        arenaName: editingArena.arenaName,
+        capacity: editingArena.capacity ?? undefined,
+        locationNotes: editingArena.locationNotes ?? undefined,
+        sportType: editingArena.sportType ?? undefined,
+      })
+      setArenas(prev => prev.map(a => a.id === updated.id ? updated : a))
+      setEditingArena(null)
+    } catch {} finally { setSavingArenaEdit(false) }
   }
 
   const doneCount = checklist.filter(c => c.done).length
@@ -187,15 +216,24 @@ export default function OrganizerVenuePage() {
       {/* ── Arenas ── */}
       <div className="rounded-2xl border border-[#4b86e8]/25 bg-white/90 p-5 space-y-4">
         <h2 className="text-sm font-semibold text-[#111111]">Arenas</h2>
-        <div className="flex gap-2">
-          <input type="text" placeholder="Arena name…" value={newArenaName}
-            onChange={e => setNewArenaName(e.target.value)}
-            className="flex-1 rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none" />
-          <button onClick={handleAddArena} disabled={addingArena || !newArenaName.trim()}
-            className="rounded-lg bg-linear-to-br from-[#4c8ee7] to-[#8c6cff] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
-            Add Arena
-          </button>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <input type="text" placeholder="Arena name…" value={arenaForm.arenaName}
+            onChange={e => setArenaForm(p => ({ ...p, arenaName: e.target.value }))}
+            className="rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none" />
+          <input type="number" placeholder="Capacity" value={arenaForm.capacity ?? ""}
+            onChange={e => setArenaForm(p => ({ ...p, capacity: e.target.value ? Number(e.target.value) : undefined }))}
+            className="rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none" />
+          <input type="text" placeholder="Sport type (optional)" value={arenaForm.sportType ?? ""}
+            onChange={e => setArenaForm(p => ({ ...p, sportType: e.target.value }))}
+            className="rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none" />
+          <input type="text" placeholder="Location notes (optional)" value={arenaForm.locationNotes ?? ""}
+            onChange={e => setArenaForm(p => ({ ...p, locationNotes: e.target.value }))}
+            className="rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none" />
         </div>
+        <button onClick={handleAddArena} disabled={addingArena || !arenaForm.arenaName.trim()}
+          className="rounded-lg bg-linear-to-br from-[#4c8ee7] to-[#8c6cff] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+          {addingArena ? "Adding…" : "Add Arena"}
+        </button>
         {arenas.length === 0 ? (
           <p className="text-sm text-[#5d5d5d]">No arenas added yet.</p>
         ) : (
@@ -206,16 +244,64 @@ export default function OrganizerVenuePage() {
                   <p className="text-sm font-medium text-[#111111]">{a.arenaName}</p>
                   {a.capacity && <p className="text-xs text-[#5d5d5d]">Capacity: {a.capacity}</p>}
                   {a.sportType && <p className="text-xs text-[#5d5d5d]">{a.sportType}</p>}
+                  {a.locationNotes && <p className="text-xs text-[#5d5d5d]">{a.locationNotes}</p>}
                 </div>
-                <button onClick={() => handleDeleteArena(a.id)}
-                  className="rounded-lg bg-[#e04b4b]/10 px-2 py-1 text-xs text-[#e04b4b] hover:bg-[#e04b4b]/20 ml-3">
-                  Remove
-                </button>
+                <div className="flex gap-2 shrink-0 ml-3">
+                  <button onClick={() => openEditArena(a)}
+                    className="rounded-lg bg-[#4b86e8]/10 px-2 py-1 text-xs text-[#3567cf] hover:bg-[#4b86e8]/20">
+                    Edit
+                  </button>
+                  <button onClick={() => handleDeleteArena(a.id)}
+                    className="rounded-lg bg-[#e04b4b]/10 px-2 py-1 text-xs text-[#e04b4b] hover:bg-[#e04b4b]/20">
+                    Remove
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Edit Arena Modal */}
+      {editingArena && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl border border-[#4b86e8]/30 bg-white p-6 space-y-4">
+            <h3 className="text-base font-bold text-[#111111]">Edit Arena</h3>
+            <div>
+              <label className="text-xs text-[#5d5d5d] mb-1 block font-semibold">Arena Name</label>
+              <input type="text" value={editingArena.arenaName}
+                onChange={e => setEditingArena(prev => prev ? { ...prev, arenaName: e.target.value } : prev)}
+                className="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none" />
+            </div>
+            <div>
+              <label className="text-xs text-[#5d5d5d] mb-1 block font-semibold">Capacity</label>
+              <input type="number" value={editingArena.capacity ?? ""}
+                onChange={e => setEditingArena(prev => prev ? { ...prev, capacity: e.target.value ? Number(e.target.value) : null } : prev)}
+                className="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none" />
+            </div>
+            <div>
+              <label className="text-xs text-[#5d5d5d] mb-1 block font-semibold">Sport Type</label>
+              <input type="text" value={editingArena.sportType ?? ""}
+                onChange={e => setEditingArena(prev => prev ? { ...prev, sportType: e.target.value } : prev)}
+                className="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none" />
+            </div>
+            <div>
+              <label className="text-xs text-[#5d5d5d] mb-1 block font-semibold">Location Notes</label>
+              <input type="text" value={editingArena.locationNotes ?? ""}
+                onChange={e => setEditingArena(prev => prev ? { ...prev, locationNotes: e.target.value } : prev)}
+                className="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none" />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => setEditingArena(null)}
+                className="flex-1 rounded-xl border border-[#4b86e8]/30 py-2 text-sm text-[#5d5d5d] hover:bg-[#4b86e8]/5">Cancel</button>
+              <button onClick={handleSaveArenaEdit} disabled={savingArenaEdit || !editingArena.arenaName.trim()}
+                className="flex-1 rounded-xl bg-linear-to-br from-[#4c8ee7] to-[#8c6cff] py-2 text-sm font-semibold text-white disabled:opacity-50">
+                {savingArenaEdit ? "Saving…" : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

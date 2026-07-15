@@ -91,6 +91,8 @@ import TeamDetailPage from "../feature/SuperAdmin/pages/TeamDetailPage";
 import AdminRobotsPage from "../feature/Admin/pages/AdminRobotsPage";
 import AdminRobotDetailPage from "../feature/Admin/pages/AdminRobotDetailPage";
 import OrganizerEventsPage        from "../feature/Organizer/pages/OrganizerEventsPage";
+import OrganizerCreateEventPage   from "../feature/Organizer/pages/OrganizerCreateEventPage";
+import OrganizerIncidentsPage     from "../feature/Organizer/pages/OrganizerIncidentsPage";
 import OrganizerEventDetailPage   from "../feature/Organizer/pages/OrganizerEventDetailPage";
 import OrganizerSportDetailPage   from "../feature/Organizer/pages/OrganizerSportDetailPage";
 import OrganizerBracketPage       from "../feature/Organizer/pages/OrganizerBracketPage";
@@ -281,6 +283,7 @@ function AppRoutes() {
 
         {/* ── Organizer Portal ── */}
         <Route path="/organizer/events"          element={<RoleRoute roles={SPORT_HEAD_AND_UP}><OrganizerEventsPage /></RoleRoute>} />
+        <Route path="/organizer/events/create"   element={<RoleRoute roles={EVENT_HEAD_AND_UP}><OrganizerCreateEventPage /></RoleRoute>} />
         <Route path="/organizer/events/:eventId" element={<RoleRoute roles={SPORT_HEAD_AND_UP}><OrganizerEventDetailPage /></RoleRoute>} />
         <Route
           path="/organizer/events/:eventId/sports/:sportId"
@@ -296,6 +299,7 @@ function AppRoutes() {
         <Route path="/organizer/communication"   element={<RoleRoute roles={EVENT_HEAD_AND_UP}><OrganizerCommunicationPage /></RoleRoute>} />
         <Route path="/organizer/schedule"        element={<RoleRoute roles={SPORT_HEAD_AND_UP}><OrganizerSchedulePage /></RoleRoute>} />
         <Route path="/organizer/monitoring"      element={<RoleRoute roles={EVENT_HEAD_AND_UP}><OrganizerMonitoringPage /></RoleRoute>} />
+        <Route path="/organizer/incidents"       element={<RoleRoute roles={EVENT_HEAD_AND_UP}><OrganizerIncidentsPage /></RoleRoute>} />
         <Route path="/organizer/reports"         element={<RoleRoute roles={EVENT_HEAD_AND_UP}><OrganizerReportsPage /></RoleRoute>} />
         <Route path="/organizer/closure"         element={<RoleRoute roles={EVENT_HEAD_AND_UP}><OrganizerClosurePage /></RoleRoute>} />
         <Route path="/organizer/volunteers"      element={<RoleRoute roles={EVENT_HEAD_AND_UP}><OrganizerVolunteersPage /></RoleRoute>} />

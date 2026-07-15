@@ -709,6 +709,9 @@ export default function OrganizerEventDetailPage() {
   const isCompleted  = eventStatus === "COMPLETED"
   const canEdit      = canManageEvent && !isArchived && !isLive && !isCompleted
   const canAddSport  = canManageEvent && isDraft
+  // Deliberately includes isLive — status transitions (e.g. "Complete Event"
+  // on a LIVE event) must stay reachable even though info edits don't.
+  const canChangeStatus = canManageEvent && !isArchived && !isCompleted
 
   const handleSaveEdit = async (req: UpdateEventInfoRequest) => {
     if (!eventId) return
@@ -825,7 +828,7 @@ export default function OrganizerEventDetailPage() {
                 <Plus size={14} /> ADD SPORT
               </button>
             )}
-            {canEdit && STATUS_TRANSITIONS[event.status as string]?.map(t => (
+            {canChangeStatus && STATUS_TRANSITIONS[event.status as string]?.map(t => (
               <button key={t.value} type="button" onClick={() => handleStatusChange(t.value)} disabled={actionLoading}
                 style={{ display: "flex", alignItems: "center", gap: "8px", background: actionLoading ? "rgba(75,134,232,0.04)" : t.color === ACCENT ? ACCENT : `${t.color}22`, border: `1px solid ${t.color}44`, color: t.color === ACCENT ? "#fff" : t.color, borderRadius: "10px", padding: "10px 18px", fontSize: "0.82rem", fontWeight: 700, cursor: actionLoading ? "not-allowed" : "pointer", whiteSpace: "nowrap" }}>
                 {actionLoading ? <Spinner size={14} color={t.color} /> : null}{t.label}

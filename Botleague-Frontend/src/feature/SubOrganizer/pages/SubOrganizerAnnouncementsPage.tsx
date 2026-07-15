@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { getMySports, broadcastAnnouncement, ensureEventChatRoom, type OrganizerSport } from "../../Organizer/api/organizer.api"
+import { getMySports, getMyEvents, broadcastAnnouncement, ensureEventChatRoom, type OrganizerSport } from "../../Organizer/api/organizer.api"
 
 function toLabel(raw?: string | null) {
   if (!raw) return "—"
@@ -21,17 +21,15 @@ export default function SubOrganizerAnnouncementsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getMySports()
-      .then((data) => {
-        setSports(data)
-        // Derive unique events from sports list
-        const evMap = new Map<string, string>()
-        data.forEach((sp) => {
-          if (sp.eventId && !evMap.has(sp.eventId)) {
-            evMap.set(sp.eventId, sp.sport)
-          }
-        })
-        const evList = Array.from(evMap.entries()).map(([id, name]) => ({ id, name }))
+    Promise.all([getMySports(), getMyEvents()])
+      .then(([sportsData, eventsData]) => {
+        setSports(sportsData)
+        // Only offer events the sports list actually references, but label
+        // them with their real event name (not a truncated UUID).
+        const assignedEventIds = new Set(sportsData.map((sp) => sp.eventId).filter(Boolean))
+        const evList = eventsData
+          .filter((ev) => assignedEventIds.has(ev.id))
+          .map((ev) => ({ id: ev.id, name: ev.eventName }))
         setEvents(evList)
         if (evList.length > 0) setSelectedEventId(evList[0].id)
       })
@@ -119,7 +117,7 @@ export default function SubOrganizerAnnouncementsPage() {
                   className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500/50"
                 >
                   {events.map((ev) => (
-                    <option key={ev.id} value={ev.id}>Event: {ev.id.slice(0, 8)}</option>
+                    <option key={ev.id} value={ev.id}>{ev.name}</option>
                   ))}
                 </select>
                 {sportsForEvent.length > 0 && (

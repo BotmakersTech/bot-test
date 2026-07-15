@@ -40,7 +40,7 @@ public class OrganizerPeopleService {
 
     @Transactional(readOnly = true)
     public List<ArenaResponse> getArenas(UUID eventId) {
-        return arenaRepo.findByEventId(eventId).stream().map(this::toArenaResponse).collect(Collectors.toList());
+        return arenaRepo.findByEventIdAndIsActive(eventId, true).stream().map(this::toArenaResponse).collect(Collectors.toList());
     }
 
     public ArenaResponse createArena(UUID eventId, ArenaRequest req) {

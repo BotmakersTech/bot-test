@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import {
   CalendarDays, Trophy, Users, Activity, TrendingUp, Clock, Zap, CheckCircle2
 } from "lucide-react"
@@ -19,9 +20,12 @@ const toLabel = (raw?: string | null) => {
   return raw.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
 }
 
-function BigStat({ icon, label, value, color, subtitle }: { icon: React.ReactNode; label: string; value: number; color: string; subtitle?: string }) {
+function BigStat({ icon, label, value, color, subtitle, onClick }: { icon: React.ReactNode; label: string; value: number; color: string; subtitle?: string; onClick?: () => void }) {
   return (
-    <div style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: "16px", padding: "22px 26px", display: "flex", alignItems: "center", gap: "16px" }}>
+    <div
+      onClick={onClick}
+      style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: "16px", padding: "22px 26px", display: "flex", alignItems: "center", gap: "16px", cursor: onClick ? "pointer" : "default" }}
+    >
       <div style={{ background: `${color}1A`, color, borderRadius: "12px", width: "50px", height: "50px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{icon}</div>
       <div>
         <p style={{ color: MUTED, fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", margin: 0 }}>{label}</p>
@@ -48,6 +52,7 @@ function ProgressBar({ label, value, total, color }: { label: string; value: num
 }
 
 export default function OrganizerAnalyticsPage() {
+  const navigate = useNavigate()
   const [events,  setEvents]  = useState<OrganizerEvent[]>([])
   const [stats,   setStats]   = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -94,7 +99,7 @@ export default function OrganizerAnalyticsPage() {
         <BigStat icon={<Users size={22} />}          label="Teams"         value={totalTeams}   color="#0ea5e9" />
         <BigStat icon={<Activity size={22} />}       label="Matches"       value={totalMatches} color="#8b5cf6" />
         <BigStat icon={<CheckCircle2 size={22} />}   label="Completed"     value={doneCount}    color="#94a3b8" />
-        <BigStat icon={<TrendingUp size={22} />}     label="Open Incidents" value={openIncidents} color="#ef4444" />
+        <BigStat icon={<TrendingUp size={22} />}     label="Open Incidents" value={openIncidents} color="#ef4444" onClick={() => navigate("/organizer/incidents")} />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>

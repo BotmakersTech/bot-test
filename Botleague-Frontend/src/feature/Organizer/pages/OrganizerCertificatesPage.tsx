@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import {
-  getMyEvents, getCertificates, issueCertificate, deleteCertificate, getMySports,
+  getMyEvents, getCertificates, issueCertificate, updateCertificate, deleteCertificate, getMySports,
   type OrganizerEvent, type OrganizerSport, type Certificate, type CertificateRequest,
 } from "../api/organizer.api"
 
@@ -26,6 +26,7 @@ export default function OrganizerCertificatesPage() {
   const [typeFilter, setTypeFilter] = useState("ALL")
   const [loading, setLoading] = useState(false)
   const [showForm, setShowForm] = useState(false)
+  const [editing, setEditing] = useState<Certificate | null>(null)
   const [form, setForm] = useState<CertificateRequest>(EMPTY)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -45,13 +46,25 @@ export default function OrganizerCertificatesPage() {
 
   const refresh = () => { if (selectedEventId) getCertificates(selectedEventId).then(setCerts).catch(() => {}) }
 
-  const handleIssue = async () => {
+  const openAdd = () => { setEditing(null); setForm(EMPTY); setShowForm(true) }
+  const openEdit = (c: Certificate) => {
+    setEditing(c)
+    setForm({
+      recipientName: c.recipientName, certificateType: c.certificateType,
+      sportId: c.sportId ?? undefined, position: c.position ?? undefined,
+      pdfUrl: c.pdfUrl ?? undefined, teamName: c.teamName ?? undefined, sportName: c.sportName ?? undefined,
+    })
+    setShowForm(true)
+  }
+
+  const handleSave = async () => {
     if (!selectedEventId || !form.recipientName.trim()) return
     setSaving(true)
     try {
-      await issueCertificate(selectedEventId, form)
-      setShowForm(false); setForm(EMPTY); refresh()
-    } catch { setError("Failed to issue certificate") } finally { setSaving(false) }
+      if (editing) await updateCertificate(selectedEventId, editing.id, form)
+      else await issueCertificate(selectedEventId, form)
+      setShowForm(false); setEditing(null); setForm(EMPTY); refresh()
+    } catch { setError(editing ? "Failed to update certificate" : "Failed to issue certificate") } finally { setSaving(false) }
   }
 
   const handleDelete = (c: Certificate) => {
@@ -77,7 +90,7 @@ export default function OrganizerCertificatesPage() {
           <h1 className="text-xl font-bold text-[#3567cf]" style={{ fontFamily: "'Sarpanch', 'Inter', sans-serif" }}>Certificates</h1>
           <p className="text-sm text-[#5d5d5d] mt-0.5">Issue and manage participation and achievement certificates</p>
         </div>
-        <button onClick={() => { setForm(EMPTY); setShowForm(true) }}
+        <button onClick={openAdd}
           className="rounded-xl bg-linear-to-br from-[#4c8ee7] to-[#8c6cff] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity">
           + Issue Certificate
         </button>
@@ -143,6 +156,10 @@ export default function OrganizerCertificatesPage() {
                       Download
                     </a>
                   )}
+                  <button onClick={() => openEdit(c)}
+                    className="rounded-lg bg-black/5 px-2.5 py-1 text-xs hover:bg-black/10">
+                    Edit
+                  </button>
                   <button onClick={() => handleDelete(c)}
                     className="rounded-lg bg-[#e04b4b]/15 px-2.5 py-1 text-xs text-[#e04b4b] hover:bg-[#e04b4b]/25">
                     Revoke
@@ -158,7 +175,7 @@ export default function OrganizerCertificatesPage() {
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="w-full max-w-md rounded-2xl border border-[#4b86e8]/30 bg-white p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-base font-bold text-[#111111]">Issue Certificate</h3>
+            <h3 className="text-base font-bold text-[#111111]">{editing ? "Edit Certificate" : "Issue Certificate"}</h3>
             {[
               { label: "Recipient Name *", key: "recipientName", type: "text" },
               { label: "Team Name", key: "teamName", type: "text" },
@@ -203,11 +220,11 @@ export default function OrganizerCertificatesPage() {
               </select>
             </div>
             <div className="flex gap-3 pt-2">
-              <button onClick={() => setShowForm(false)}
+              <button onClick={() => { setShowForm(false); setEditing(null) }}
                 className="flex-1 rounded-xl border border-[#4b86e8]/30 py-2 text-sm text-[#5d5d5d] hover:bg-[#4b86e8]/5">Cancel</button>
-              <button onClick={handleIssue} disabled={saving || !form.recipientName.trim()}
+              <button onClick={handleSave} disabled={saving || !form.recipientName.trim()}
                 className="flex-1 rounded-xl bg-linear-to-br from-[#4c8ee7] to-[#8c6cff] py-2 text-sm font-semibold text-white disabled:opacity-50">
-                {saving ? "Issuing…" : "Issue Certificate"}
+                {saving ? "Saving…" : editing ? "Update Certificate" : "Issue Certificate"}
               </button>
             </div>
           </div>

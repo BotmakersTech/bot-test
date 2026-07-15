@@ -13,6 +13,8 @@ import com.botleague.backend.notification.enums.NotificationType;
 import com.botleague.backend.notification.enums.NotificationTargetType;
 import com.botleague.backend.notification.service.NotificationService;
 import com.botleague.backend.organizer.dto.BroadcastAnnounceRequest;
+import com.botleague.backend.organizer.dto.OrganizerDTOs.AnnouncementRequest;
+import com.botleague.backend.organizer.service.OrganizerCommunicationService;
 import com.botleague.backend.team.entity.Team;
 import com.botleague.backend.team.enums.TeamMembershipStatus;
 import com.botleague.backend.team.enums.TeamRole;
@@ -45,6 +47,7 @@ public class OrganizerCommunicationController {
     private final TeamRepository teamRepository;
     private final TeamMembershipRepository teamMembershipRepository;
     private final EventRegistrationLineupRepository lineupRepository;
+    private final OrganizerCommunicationService communicationService;
 
     public OrganizerCommunicationController(
             EventRepository eventRepository,
@@ -53,7 +56,8 @@ public class OrganizerCommunicationController {
             AuthorizationService authorizationService,
             TeamRepository teamRepository,
             TeamMembershipRepository teamMembershipRepository,
-            EventRegistrationLineupRepository lineupRepository) {
+            EventRegistrationLineupRepository lineupRepository,
+            OrganizerCommunicationService communicationService) {
         this.eventRepository     = eventRepository;
         this.chatService         = chatService;
         this.notificationService = notificationService;
@@ -61,6 +65,7 @@ public class OrganizerCommunicationController {
         this.teamRepository = teamRepository;
         this.teamMembershipRepository = teamMembershipRepository;
         this.lineupRepository = lineupRepository;
+        this.communicationService = communicationService;
     }
 
     /**
@@ -163,6 +168,13 @@ public class OrganizerCommunicationController {
                     eventId, event.getEventName(), userId);
             chatService.sendMessage(room.getId(), userId, request.getChatMessage());
         }
+
+        // 3. Persist as a manageable EventAnnouncement record so organizers
+        // can see, edit, pin, or delete broadcasts they already sent.
+        AnnouncementRequest persistReq = new AnnouncementRequest();
+        persistReq.title = request.getTitle();
+        persistReq.body = request.getMessage();
+        communicationService.createAnnouncement(eventId, userId, persistReq);
 
         return ResponseEntity.ok().build();
     }

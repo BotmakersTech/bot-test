@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import com.botleague.backend.common.exception.ResourceNotFoundException;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import com.botleague.backend.common.exception.ResourceNotFoundException;
 
@@ -166,6 +167,27 @@ public class EventService {
         event.setCreatedBy(userId);
 
         // =============================================
+        // OWNERSHIP
+        // An ORGANISER/EVENT_HEAD creating their own event owns it
+        // (enables AuthorizationService.isOrganiserOwner downstream).
+        // Platform admins keep the default BOTLEAGUE-owned/no-owner event,
+        // even if they also happen to hold an ORGANISER/EVENT_HEAD role.
+        // =============================================
+
+        List<String> callerRoles = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .map(a -> a.replace("ROLE_", ""))
+                .collect(Collectors.toList());
+
+        boolean isPlatformAdmin = callerRoles.contains("SUPER_ADMIN") || callerRoles.contains("ADMIN");
+        boolean isOrganiserCaller = callerRoles.contains("ORGANISER") || callerRoles.contains("EVENT_HEAD");
+
+        if (!isPlatformAdmin && isOrganiserCaller) {
+            event.setOwnerType("ORGANISER");
+            event.setOwnerId(userId);
+        }
+
+        // =============================================
         // DEFAULT STATUS
         // =============================================
 
@@ -213,34 +235,6 @@ public class EventService {
                 .collect(Collectors.toList());
     }
     
-    public CreateEventResponseDTO makeEventLive(UUID eventId) {
-        Event event = eventRepository
-                .findByIdAndDeletedAtIsNull(eventId)
-                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
-        event.setStatus(EventStatus.PUBLISHED);
-        Event saved = eventRepository.save(event);
-        auditLogService.log("EVENT_PUBLISHED", "EVENT", saved.getId(),
-                saved.getEventName(), "DRAFT", "PUBLISHED");
-        notificationService.systemNotify(
-                saved.getEventName() + " is now Live!",
-                "A new event has been published. Check it out and register your team!",
-                NotificationType.EVENT_CREATED,
-                NotificationPriority.HIGH,
-                NotificationTargetType.ALL_USERS,
-                null,
-                "/events/" + saved.getId()
-        );
-
-        // Create event announcement channel (idempotent)
-        try {
-            chatService.createEventAnnouncementChannel(saved.getId(), saved.getEventName());
-        } catch (Exception ignored) {
-            // Chat creation failure must not roll back the event publish
-        }
-
-        return mapToResponse(saved);
-    }
-
     // =====================================================
     // GET LIVE EVENTS
     // =====================================================

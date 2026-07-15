@@ -128,6 +128,43 @@ export const getMyEventById = async (eventId: string): Promise<OrganizerEvent> =
   return res.data;
 };
 
+export interface CreateEventRequest {
+  eventName: string;
+  eventDescription: string;
+  organizationName: string;
+  organizationUrl?: string;
+  venueName: string;
+  venueAddress: string;
+  city: string;
+  state: string;
+  country: string;
+  startDate: string;
+  endDate: string;
+}
+
+export const createEvent = async (request: CreateEventRequest): Promise<OrganizerEvent> => {
+  const res = await api.post("/Events/create-event", request);
+  return res.data;
+};
+
+export const uploadEventImage = async (eventId: string, file: File): Promise<{ fileUrl: string; key: string }> => {
+  const uploadRes = await api.post(`/Events/${eventId}/upload-url`, null, {
+    params: { fileType: file.type, fileSize: file.size },
+  });
+  const { uploadUrl, fileUrl, key } = uploadRes.data;
+  if (!uploadUrl || !key) throw new Error("Invalid upload URL response from server");
+
+  const putRes = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: { "Content-Type": file.type },
+    body: file,
+  });
+  if (!putRes.ok) throw new Error("Upload to storage failed");
+
+  await api.post(`/Events/${eventId}/media`, { key, fileType: file.type });
+  return { fileUrl, key };
+};
+
 // Backend ignores sportId and returns the parent event (with all its sports
 // nested) — same shape/endpoint the admin sport-detail page uses, scoped
 // server-side to the caller's assigned events. Callers pick the matching
@@ -175,6 +212,27 @@ export const getRegistrationsForSport = async (
   sportId: string
 ): Promise<EventSportRegistration[]> => {
   const res = await api.get(`/event-registrations/event-sport/${sportId}`);
+  return res.data;
+};
+
+// Full roster (all statuses, not just REGISTERED) — use this for the
+// organizer roster-management view so WAITLISTED/REJECTED/CHECKED_IN
+// registrations stay visible and restorable.
+export const getAllRegistrationsForSport = async (
+  eventId: string,
+  sportId: string
+): Promise<EventSportRegistration[]> => {
+  const res = await api.get(`/organizer/events/${eventId}/sports/${sportId}/registrations`);
+  return res.data;
+};
+
+export const updateRegistrationStatus = async (
+  eventId: string,
+  registrationId: string,
+  status: string,
+  reason?: string
+): Promise<EventSportRegistration> => {
+  const res = await api.patch(`/organizer/events/${eventId}/registrations/${registrationId}/status`, { status, reason });
   return res.data;
 };
 
@@ -293,6 +351,10 @@ export const updateIncident = async (
 ): Promise<Incident> => {
   const res = await api.patch(`/organizer/events/${eventId}/incidents/${incidentId}`, req);
   return res.data;
+};
+
+export const deleteIncident = async (eventId: string, incidentId: string): Promise<void> => {
+  await api.delete(`/organizer/events/${eventId}/incidents/${incidentId}`);
 };
 
 // ── Arenas ────────────────────────────────────────────────────────────────────
@@ -568,6 +630,15 @@ export const issueCertificate = async (
   return res.data;
 };
 
+export const updateCertificate = async (
+  eventId: string,
+  certId: string,
+  req: CertificateRequest
+): Promise<Certificate> => {
+  const res = await api.put(`/organizer/events/${eventId}/certificates/${certId}`, req);
+  return res.data;
+};
+
 export const deleteCertificate = async (eventId: string, certId: string): Promise<void> => {
   await api.delete(`/organizer/events/${eventId}/certificates/${certId}`);
 };
@@ -638,9 +709,10 @@ export const toggleSportRegistration = async (
 
 export const changeEventStatus = async (
   eventId: string,
-  status: string
+  status: string,
+  notes?: string
 ): Promise<OrganizerEvent> => {
-  const res = await api.patch(`/admin/events/${eventId}/status`, { status });
+  const res = await api.patch(`/admin/events/${eventId}/status`, { status, notes });
   return res.data;
 };
 

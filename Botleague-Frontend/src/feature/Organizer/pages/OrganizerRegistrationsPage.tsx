@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { Search, Users, Bot } from "lucide-react"
 import {
-  getMyEvents, getMySports, getRegistrationsForSport,
+  getMyEvents, getMySports, getAllRegistrationsForSport, updateRegistrationStatus,
   type OrganizerEvent, type OrganizerSport, type EventSportRegistration,
 } from "../api/organizer.api"
 import { ORG } from "../theme/organizerTheme"
@@ -19,6 +19,23 @@ const toLabel = (raw?: string | null) => {
   return raw.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
 }
 
+const STATUS_STYLE: Record<string, { bg: string; color: string; border: string }> = {
+  REGISTERED:  { bg: "rgba(31,169,82,0.1)",  color: "#1fa952", border: "rgba(31,169,82,0.3)" },
+  CHECKED_IN:  { bg: "rgba(75,134,232,0.1)", color: "#3567cf", border: "rgba(75,134,232,0.3)" },
+  WAITLISTED:  { bg: "rgba(234,179,8,0.1)",  color: "#a16207", border: "rgba(234,179,8,0.3)" },
+  REJECTED:    { bg: "rgba(224,75,75,0.1)",  color: "#e04b4b", border: "rgba(224,75,75,0.3)" },
+  CANCELLED:   { bg: "rgba(0,0,0,0.05)",     color: "#5d5d5d", border: "rgba(0,0,0,0.1)" },
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const s = STATUS_STYLE[status?.toUpperCase()] ?? { bg: "rgba(0,0,0,0.05)", color: "#5d5d5d", border: "rgba(0,0,0,0.1)" }
+  return (
+    <span style={{ background: s.bg, border: `1px solid ${s.border}`, color: s.color, borderRadius: "999px", fontSize: "0.7rem", padding: "2px 10px", fontWeight: 700, whiteSpace: "nowrap" }}>
+      {toLabel(status)}
+    </span>
+  )
+}
+
 export default function OrganizerRegistrationsPage() {
   const [events,  setEvents]  = useState<OrganizerEvent[]>([])
   const [sports,  setSports]  = useState<OrganizerSport[]>([])
@@ -31,6 +48,7 @@ export default function OrganizerRegistrationsPage() {
   const [loadingEvents, setLoadingEvents] = useState(true)
   const [loadingRegs,   setLoadingRegs]   = useState(false)
   const [error,         setError]         = useState<string | null>(null)
+  const [actingOnId,    setActingOnId]    = useState<string | null>(null)
 
   useEffect(() => {
     setLoadingEvents(true)
@@ -60,13 +78,38 @@ export default function OrganizerRegistrationsPage() {
 
   useEffect(() => {
     if (!selectedSportId) { setRegs([]); return }
+    const eventId = sports.find(s => s.id === selectedSportId)?.eventId ?? selectedEventId
+    if (!eventId) { setRegs([]); return }
     setLoadingRegs(true)
     setError(null)
-    getRegistrationsForSport(selectedSportId)
+    getAllRegistrationsForSport(eventId, selectedSportId)
       .then(setRegs)
       .catch(() => setError("Failed to load registrations"))
       .finally(() => setLoadingRegs(false))
   }, [selectedSportId])
+
+  const refreshRegs = () => {
+    if (!selectedSportId) return
+    const eventId = sports.find(s => s.id === selectedSportId)?.eventId ?? selectedEventId
+    if (!eventId) return
+    getAllRegistrationsForSport(eventId, selectedSportId).then(setRegs).catch(() => {})
+  }
+
+  const handleStatusChange = async (reg: EventSportRegistration, status: string) => {
+    let reason: string | undefined
+    if (status === "REJECTED") {
+      reason = window.prompt("Reason for rejecting this registration (optional):") ?? undefined
+    }
+    setActingOnId(reg.registrationId)
+    try {
+      await updateRegistrationStatus(reg.eventId, reg.registrationId, status, reason)
+      refreshRegs()
+    } catch {
+      setError("Failed to update registration status")
+    } finally {
+      setActingOnId(null)
+    }
+  }
 
   const handleEventChange = (eventId: string) => {
     setSelectedEventId(eventId)
@@ -83,27 +126,28 @@ export default function OrganizerRegistrationsPage() {
   })
 
   const selectedSport = sports.find(s => s.id === selectedSportId)
+  const activeCount = regs.filter(r => ["REGISTERED", "CHECKED_IN"].includes((r.status ?? "").toUpperCase())).length
 
   return (
     <div style={{ minHeight: "100vh", background: BG, padding: "28px 32px", fontFamily: "'Inter',sans-serif" }}>
       <div style={{ marginBottom: "24px" }}>
         <h1 style={{ color: TEXT, fontFamily: "'Sarpanch',sans-serif", fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>Registrations</h1>
         <p style={{ color: MUTED, fontSize: "0.85rem", margin: "4px 0 0" }}>
-          {loadingRegs ? "Loading…" : `${filtered.length} team${filtered.length !== 1 ? "s" : ""} registered`}
+          {loadingRegs ? "Loading…" : `${filtered.length} registration${filtered.length !== 1 ? "s" : ""} (${activeCount} active)`}
         </p>
       </div>
 
       {/* Summary cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "12px", marginBottom: "20px" }}>
         {[
-          ["Total Teams",  String(regs.length),                             P],
+          ["Active Teams",  String(activeCount),                             P],
           ["Sport",        selectedSport ? toLabel(selectedSport.sport) : "—",  TEXT],
           ["Age Group",    selectedSport?.ageGroup ? toLabel(selectedSport.ageGroup) : "—", TEXT],
-          ["Capacity",     selectedSport?.maxTeams ? `${regs.length}/${selectedSport.maxTeams}` : String(regs.length), TEXT],
+          ["Capacity",     selectedSport?.maxTeams ? `${activeCount}/${selectedSport.maxTeams}` : String(activeCount), TEXT],
         ].map(([label, val, color]) => (
           <div key={label} style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: "12px", padding: "14px 18px" }}>
             <p style={{ color: MUTED, fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", margin: 0 }}>{label}</p>
-            <p style={{ color, fontSize: label === "Total Teams" ? "1.75rem" : "0.9rem", fontWeight: 700, fontFamily: label === "Total Teams" ? "'Sarpanch',sans-serif" : "inherit", margin: "4px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{val}</p>
+            <p style={{ color, fontSize: label === "Active Teams" ? "1.75rem" : "0.9rem", fontWeight: 700, fontFamily: label === "Active Teams" ? "'Sarpanch',sans-serif" : "inherit", margin: "4px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{val}</p>
           </div>
         ))}
       </div>
@@ -148,10 +192,15 @@ export default function OrganizerRegistrationsPage() {
                 <th style={{ textAlign: "left", padding: "12px 16px", color: MUTED, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>#</th>
                 <th style={{ textAlign: "left", padding: "12px 16px", color: MUTED, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Team</th>
                 <th style={{ textAlign: "left", padding: "12px 16px", color: MUTED, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Robot</th>
+                <th style={{ textAlign: "center", padding: "12px 16px", color: MUTED, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Status</th>
+                <th style={{ textAlign: "center", padding: "12px 16px", color: MUTED, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((r, i) => (
+              {filtered.map((r, i) => {
+                const status = (r.status ?? "").toUpperCase()
+                const busy = actingOnId === r.registrationId
+                return (
                 <tr key={r.registrationId} style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${BORDER}` : "none", transition: "background 0.1s" }}
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(140,108,255,0.03)"}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}>
@@ -168,8 +217,41 @@ export default function OrganizerRegistrationsPage() {
                       <span style={{ color: MUTED, fontSize: "0.8rem" }}>—</span>
                     )}
                   </td>
+                  <td style={{ padding: "13px 16px", textAlign: "center" }}>
+                    <StatusBadge status={status} />
+                  </td>
+                  <td style={{ padding: "13px 16px", textAlign: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", flexWrap: "wrap" }}>
+                      {status === "REGISTERED" && (
+                        <>
+                          <button onClick={() => handleStatusChange(r, "CHECKED_IN")} disabled={busy}
+                            style={{ background: "rgba(75,134,232,0.1)", border: "1px solid rgba(75,134,232,0.3)", color: "#3567cf", borderRadius: "6px", padding: "4px 10px", fontSize: "0.72rem", fontWeight: 600, cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.5 : 1 }}>
+                            Check In
+                          </button>
+                          <button onClick={() => handleStatusChange(r, "WAITLISTED")} disabled={busy}
+                            style={{ background: "rgba(234,179,8,0.1)", border: "1px solid rgba(234,179,8,0.3)", color: "#a16207", borderRadius: "6px", padding: "4px 10px", fontSize: "0.72rem", fontWeight: 600, cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.5 : 1 }}>
+                            Waitlist
+                          </button>
+                          <button onClick={() => handleStatusChange(r, "REJECTED")} disabled={busy}
+                            style={{ background: "rgba(224,75,75,0.1)", border: "1px solid rgba(224,75,75,0.3)", color: "#e04b4b", borderRadius: "6px", padding: "4px 10px", fontSize: "0.72rem", fontWeight: 600, cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.5 : 1 }}>
+                            Reject
+                          </button>
+                        </>
+                      )}
+                      {status === "WAITLISTED" && (
+                        <button onClick={() => handleStatusChange(r, "REGISTERED")} disabled={busy}
+                          style={{ background: "rgba(31,169,82,0.1)", border: "1px solid rgba(31,169,82,0.3)", color: "#1fa952", borderRadius: "6px", padding: "4px 10px", fontSize: "0.72rem", fontWeight: 600, cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.5 : 1 }}>
+                          Restore
+                        </button>
+                      )}
+                      {(status === "REJECTED" || status === "CHECKED_IN" || status === "CANCELLED") && (
+                        <span style={{ color: MUTED, fontSize: "0.75rem" }}>—</span>
+                      )}
+                    </div>
+                  </td>
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
         </div>

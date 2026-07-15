@@ -288,16 +288,6 @@ export const getEventSports = async (
   return response.data
 }
 
-export const makeEventLive = async (
-  eventId: string
-): Promise<AdminEventResponse> => {
-  const response = await api.patch<AdminEventResponse>(
-    `/Events/${eventId}/PublishEvent`
-  )
-  return response.data
-}
- 
-
 // =====================================================
 // UPDATE EVENT
 // =====================================================

@@ -1,10 +1,15 @@
 package com.botleague.backend.organizer.controller;
 
+import com.botleague.backend.common.security.AuthorizationService;
 import com.botleague.backend.events.dto.CreateEventResponseDTO;
+import com.botleague.backend.events.dto.EventRegistrationResponse;
 import com.botleague.backend.events.dto.GetEventSportsDTO;
+import com.botleague.backend.events.enums.RegistrationStatus;
 import com.botleague.backend.events.service.EventSportsService;
+import com.botleague.backend.events.service.SportRegistrationService;
 import com.botleague.backend.organizer.dto.OrganizerDTOs.*;
 import com.botleague.backend.organizer.dto.UpdateEventInfoDTO;
+import com.botleague.backend.organizer.dto.UpdateRegistrationStatusRequest;
 import com.botleague.backend.organizer.service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,6 +31,8 @@ public class OrganizerController {
     private final OrganizerVenueAndCertService  venueAndCertService;
     private final OrganizerDashboardService    dashboardService;
     private final EventSportsService           eventSportsService;
+    private final SportRegistrationService     registrationService;
+    private final AuthorizationService         authorizationService;
 
     public OrganizerController(
             OrganizerService             organizerService,
@@ -33,13 +40,17 @@ public class OrganizerController {
             OrganizerCommunicationService communicationService,
             OrganizerVenueAndCertService  venueAndCertService,
             OrganizerDashboardService    dashboardService,
-            EventSportsService           eventSportsService) {
+            EventSportsService           eventSportsService,
+            SportRegistrationService     registrationService,
+            AuthorizationService         authorizationService) {
         this.organizerService    = organizerService;
         this.peopleService       = peopleService;
         this.communicationService= communicationService;
         this.venueAndCertService = venueAndCertService;
         this.dashboardService    = dashboardService;
         this.eventSportsService  = eventSportsService;
+        this.registrationService = registrationService;
+        this.authorizationService = authorizationService;
     }
 
     // =========================================================================
@@ -347,6 +358,53 @@ public class OrganizerController {
     }
 
     // =========================================================================
+    // REGISTRATIONS (ROSTER MANAGEMENT)
+    // =========================================================================
+
+    // Full roster (all statuses) — the public/bracket-facing
+    // /event-registrations/event-sport/{sportId} endpoint only returns
+    // REGISTERED entries, so organizers need this to see and restore
+    // WAITLISTED/REJECTED/CHECKED_IN registrations.
+    @GetMapping("/events/{eventId}/sports/{sportId}/registrations")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD','SPORT_HEAD')")
+    public ResponseEntity<List<EventRegistrationResponse>> getAllRegistrationsForSport(
+            Authentication authentication,
+            @PathVariable UUID eventId,
+            @PathVariable UUID sportId) {
+        UUID callerId = extractUserId(authentication);
+        authorizationService.assertCanViewEvent(callerId, eventId);
+        return ResponseEntity.ok(
+                registrationService.getAllRegistrationsByEventSport(sportId).stream()
+                        .map(registrationService::mapToResponse)
+                        .collect(Collectors.toList()));
+    }
+
+    @PatchMapping("/events/{eventId}/registrations/{registrationId}/status")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD','SPORT_HEAD')")
+    public ResponseEntity<EventRegistrationResponse> updateRegistrationStatus(
+            Authentication authentication,
+            @PathVariable UUID eventId,
+            @PathVariable UUID registrationId,
+            @RequestBody UpdateRegistrationStatusRequest req) {
+        UUID callerId = extractUserId(authentication);
+        // Sport-scoped check (a strict superset of the event-scoped one —
+        // canManageSport() already falls back to canManageEvent() first) so
+        // a SPORT_HEAD can manage registrations for their own sport, not
+        // just an EVENT_HEAD/ORGANISER/ADMIN.
+        UUID eventSportId = registrationService.getRegistrationById(registrationId).getEventSportId();
+        authorizationService.assertCanManageSport(callerId, eventSportId);
+
+        RegistrationStatus newStatus;
+        try {
+            newStatus = RegistrationStatus.valueOf(req.getStatus().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Unknown registration status: " + req.getStatus());
+        }
+        return ResponseEntity.ok(registrationService.mapToResponse(
+                registrationService.updateRegistrationStatus(registrationId, newStatus, req.getReason())));
+    }
+
+    // =========================================================================
     // VENUE & LOGISTICS
     // =========================================================================
 
@@ -378,6 +436,13 @@ public class OrganizerController {
     public ResponseEntity<CertificateResponse> issueCertificate(
             @PathVariable UUID eventId, @RequestBody CertificateRequest req) {
         return ResponseEntity.ok(venueAndCertService.issueCertificate(eventId, req));
+    }
+
+    @PutMapping("/events/{eventId}/certificates/{certId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
+    public ResponseEntity<CertificateResponse> updateCertificate(
+            @PathVariable UUID eventId, @PathVariable UUID certId, @RequestBody CertificateRequest req) {
+        return ResponseEntity.ok(venueAndCertService.updateCertificate(certId, req));
     }
 
     @DeleteMapping("/events/{eventId}/certificates/{certId}")

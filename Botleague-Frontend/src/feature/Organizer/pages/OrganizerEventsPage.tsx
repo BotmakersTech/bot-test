@@ -60,11 +60,19 @@ export default function OrganizerEventsPage() {
 
   return (
     <div className="org-page-bg" style={{ padding: "28px 32px", fontFamily: ORG.fontBody }}>
-      <div style={{ marginBottom: "24px" }}>
-        <h1 style={{ color: ORG.blueHeading, fontFamily: ORG.fontHeading, fontSize: "1.75rem", fontWeight: 700, margin: 0, letterSpacing: "0.02em" }}>Event Management</h1>
-        <p style={{ color: MUTED, fontSize: "0.85rem", margin: "4px 0 0" }}>
-          {loading ? "Loading…" : `${filtered.length} of ${events.length} event${events.length !== 1 ? "s" : ""}`}
-        </p>
+      <div style={{ marginBottom: "24px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+        <div>
+          <h1 style={{ color: ORG.blueHeading, fontFamily: ORG.fontHeading, fontSize: "1.75rem", fontWeight: 700, margin: 0, letterSpacing: "0.02em" }}>Event Management</h1>
+          <p style={{ color: MUTED, fontSize: "0.85rem", margin: "4px 0 0" }}>
+            {loading ? "Loading…" : `${filtered.length} of ${events.length} event${events.length !== 1 ? "s" : ""}`}
+          </p>
+        </div>
+        <button
+          onClick={() => navigate("/organizer/events/create")}
+          style={{ background: ORG.gradientCta, color: "#fff", border: "none", borderRadius: "10px", padding: "10px 18px", fontSize: "0.85rem", fontWeight: 700, cursor: "pointer", boxShadow: ORG.btnShadow }}
+        >
+          + Create Event
+        </button>
       </div>
 
       {/* Controls */}

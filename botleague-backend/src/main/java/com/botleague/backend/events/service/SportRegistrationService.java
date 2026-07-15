@@ -616,6 +616,77 @@ public class SportRegistrationService {
     }
 
     // =====================================================
+    // UPDATE REGISTRATION STATUS (ORGANIZER ROSTER MANAGEMENT)
+    //
+    // Manual, organizer-triggered transitions only — not the auto-REGISTERED
+    // path used at registration time, and not the captain-initiated
+    // cancelRegistration() withdrawal above.
+    // =====================================================
+
+    public SportRegistration updateRegistrationStatus(
+            UUID registrationId, RegistrationStatus newStatus, String reason) {
+
+        SportRegistration registration = sportRegistrationRepository
+                .findById(registrationId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Registration not found: " + registrationId));
+
+        RegistrationStatus current = registration.getStatus();
+
+        boolean allowed =
+                (current == RegistrationStatus.REGISTERED && newStatus == RegistrationStatus.WAITLISTED)
+             || (current == RegistrationStatus.WAITLISTED && newStatus == RegistrationStatus.REGISTERED)
+             || (current == RegistrationStatus.REGISTERED && newStatus == RegistrationStatus.REJECTED)
+             || (current == RegistrationStatus.REGISTERED && newStatus == RegistrationStatus.CHECKED_IN);
+
+        if (!allowed) {
+            throw new IllegalStateException(
+                    "Cannot change registration status from " + current + " to " + newStatus);
+        }
+
+        boolean heldSlotBefore = current == RegistrationStatus.REGISTERED || current == RegistrationStatus.CHECKED_IN;
+        boolean holdsSlotAfter = newStatus == RegistrationStatus.REGISTERED || newStatus == RegistrationStatus.CHECKED_IN;
+
+        registration.setStatus(newStatus);
+        SportRegistration saved = sportRegistrationRepository.save(registration);
+
+        if (heldSlotBefore != holdsSlotAfter) {
+            eventSportsRepository.findById(registration.getEventSportId())
+                    .ifPresent(eventSport -> {
+                        int count = eventSport.getRegisteredTeamsCount() == null
+                                ? 0 : eventSport.getRegisteredTeamsCount();
+                        eventSport.setRegisteredTeamsCount(Math.max(0, count + (holdsSlotAfter ? 1 : -1)));
+                        eventSportsRepository.save(eventSport);
+                    });
+        }
+
+        try {
+            auditLogService.log("REGISTRATION_STATUS_CHANGED", "REGISTRATION", saved.getId(),
+                    saved.getRobotName(), current.name(), newStatus.name(), reason);
+        } catch (Exception ignored) {}
+
+        try {
+            String title = switch (newStatus) {
+                case REJECTED    -> "Registration Rejected: " + saved.getRobotName();
+                case WAITLISTED  -> "Moved to Waitlist: " + saved.getRobotName();
+                case CHECKED_IN  -> "Checked In: " + saved.getRobotName();
+                default          -> "Registration Confirmed: " + saved.getRobotName();
+            };
+            NotificationType type = newStatus == RegistrationStatus.REJECTED
+                    ? NotificationType.REGISTRATION_REJECTED
+                    : NotificationType.REGISTRATION_APPROVED;
+            notificationService.systemNotify(
+                    title,
+                    reason != null && !reason.isBlank() ? reason : "Status updated to " + newStatus + ".",
+                    type, NotificationPriority.MEDIUM, NotificationTargetType.TEAM,
+                    saved.getTeamId(), "/events/" + saved.getEventId()
+            );
+        } catch (Exception ignored) {}
+
+        return saved;
+    }
+
+    // =====================================================
     // REGISTER ROBOT + LINEUP (ATOMIC)
     // =====================================================
 
@@ -694,6 +765,16 @@ public class SportRegistrationService {
 
         return sportRegistrationRepository
                 .findByEventSportIdAndStatus(eventSportId, RegistrationStatus.REGISTERED);
+    }
+
+    /**
+     * Every registration in a competition regardless of status — for the
+     * organizer roster-management view, where WAITLISTED/REJECTED/CHECKED_IN
+     * entries must stay visible (and restorable), unlike the REGISTERED-only
+     * public/bracket-facing getRegistrationsByEventSport() above.
+     */
+    public List<SportRegistration> getAllRegistrationsByEventSport(UUID eventSportId) {
+        return sportRegistrationRepository.findByEventSportId(eventSportId);
     }
 
     /** All active registrations for a team, across all sports/events. */

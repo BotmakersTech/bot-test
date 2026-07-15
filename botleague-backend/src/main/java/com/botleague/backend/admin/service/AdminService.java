@@ -14,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.botleague.backend.chat.service.ChatService;
 import com.botleague.backend.common.security.AuthorizationService;
 import com.botleague.backend.admin.dto.AdminAllEventResponse;
 import com.botleague.backend.admin.dto.AdminEventSportResponse;
@@ -75,6 +76,7 @@ public class AdminService {
     private final AuditLogService                   auditLogService;
     private final RealtimePublisher                 realtimePublisher;
     private final AuthorizationService               authorizationService;
+    private final ChatService                        chatService;
 
     // =====================================================
     // CONSTRUCTOR
@@ -92,7 +94,8 @@ public class AdminService {
             NotificationService               notificationService,
             AuditLogService                   auditLogService,
             RealtimePublisher                 realtimePublisher,
-            AuthorizationService              authorizationService
+            AuthorizationService              authorizationService,
+            ChatService                       chatService
     ) {
         this.eventRepository             = eventRepository;
         this.eventSportRepository        = eventSportRepository;
@@ -106,6 +109,7 @@ public class AdminService {
         this.auditLogService             = auditLogService;
         this.realtimePublisher           = realtimePublisher;
         this.authorizationService        = authorizationService;
+        this.chatService                 = chatService;
     }
 
     /**
@@ -314,13 +318,26 @@ public class AdminService {
         if (newStatus == EventStatus.LIVE) {
             validateGoLivePrerequisites(eventId);
         }
+        if (newStatus == EventStatus.COMPLETED) {
+            validateCompletePrerequisites(eventId);
+        }
 
         event.setStatus(newStatus);
         Event saved = eventRepository.save(event);
         auditLogService.log("EVENT_STATUS_CHANGED", "EVENT", saved.getId(),
-                saved.getEventName(), oldStatus.name(), newStatus.name());
+                saved.getEventName(), oldStatus.name(), newStatus.name(), request.getNotes());
         realtimePublisher.pushEventStatusChange(saved.getId(), mapToResponse(saved));
         dispatchEventStatusNotification(saved, newStatus);
+
+        if (newStatus == EventStatus.PUBLISHED) {
+            // Create the event announcement chat channel (idempotent). Chat
+            // creation failure must not roll back the publish.
+            try {
+                chatService.createEventAnnouncementChannel(saved.getId(), saved.getEventName());
+            } catch (Exception ignored) {
+            }
+        }
+
         return mapToResponse(saved);
     }
 
@@ -340,7 +357,14 @@ public class AdminService {
                     NotificationTargetType.ALL_USERS, null,
                     "/events/" + event.getId()
             );
-            default -> { /* no auto-notification for DRAFT, COMPLETED, ARCHIVED */ }
+            case COMPLETED -> notificationService.systemNotify(
+                    event.getEventName() + " has been marked Completed",
+                    "All matches finished. Review results and issue certificates.",
+                    NotificationType.EVENT_COMPLETED, NotificationPriority.MEDIUM,
+                    NotificationTargetType.PLATFORM_ADMINS, event.getId(),
+                    "/admin/event/" + event.getId()
+            );
+            default -> { /* no auto-notification for DRAFT, ARCHIVED */ }
         }
     }
 
@@ -409,6 +433,37 @@ public class AdminService {
         if (!blockers.isEmpty()) {
             throw new IllegalStateException(
                 "Cannot go live. Unmet prerequisites:\n• " +
+                String.join("\n• ", blockers));
+        }
+    }
+
+    // COMPLETED: no sport may still have a LIVE, SCHEDULED, or
+    // PENDING_APPROVAL match. A sport with zero matches does not block.
+    private void validateCompletePrerequisites(UUID eventId) {
+        List<com.botleague.backend.events.entity.EventSports> sports =
+                eventSportRepository.findByEventId(eventId);
+
+        List<String> blockers = new ArrayList<>();
+
+        for (com.botleague.backend.events.entity.EventSports sport : sports) {
+            String label = sport.getSport()
+                + (sport.getWeightClass() != null ? " (" + sport.getWeightClass() + ")" : "");
+
+            long unfinished = matchRepository
+                    .findByEventSportIdAndDeletedAtIsNull(sport.getId())
+                    .stream()
+                    .filter(m -> m.getStatus() == com.botleague.backend.matches.enums.MatchStatus.LIVE
+                              || m.getStatus() == com.botleague.backend.matches.enums.MatchStatus.SCHEDULED
+                              || m.getStatus() == com.botleague.backend.matches.enums.MatchStatus.PENDING_APPROVAL)
+                    .count();
+            if (unfinished > 0) {
+                blockers.add(label + ": " + unfinished + " match(es) not yet finished");
+            }
+        }
+
+        if (!blockers.isEmpty()) {
+            throw new IllegalStateException(
+                "Cannot complete event. Unmet prerequisites:\n• " +
                 String.join("\n• ", blockers));
         }
     }

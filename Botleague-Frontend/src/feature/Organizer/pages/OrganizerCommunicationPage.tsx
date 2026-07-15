@@ -4,7 +4,11 @@ import {
   getMyEvents,
   broadcastAnnouncement,
   ensureEventChatRoom,
+  getAnnouncements,
+  updateAnnouncement,
+  deleteAnnouncement,
   type OrganizerEvent,
+  type Announcement,
 } from "../api/organizer.api";
 
 interface Toast { message: string; type: "success" | "error" }
@@ -26,6 +30,13 @@ export default function OrganizerCommunicationPage() {
   const [chatRoomId, setChatRoomId] = useState<string | null>(null);
   const [chatLoading, setChatLoading] = useState(false);
 
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(false);
+  const [editing, setEditing] = useState<Announcement | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editBody, setEditBody] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+
   useEffect(() => {
     getMyEvents()
       .then(e => {
@@ -34,6 +45,20 @@ export default function OrganizerCommunicationPage() {
       })
       .finally(() => setEventsLoading(false));
   }, [preselectedEventId]);
+
+  const refreshAnnouncements = () => {
+    if (!selectedEventId) return;
+    setAnnouncementsLoading(true);
+    getAnnouncements(selectedEventId)
+      .then(setAnnouncements)
+      .catch(() => {})
+      .finally(() => setAnnouncementsLoading(false));
+  };
+
+  useEffect(() => {
+    refreshAnnouncements();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedEventId]);
 
   function showToast(message: string, type: "success" | "error") {
     setToast({ message, type });
@@ -52,6 +77,7 @@ export default function OrganizerCommunicationPage() {
       });
       showToast("Announcement sent to all registered teams.", "success");
       setTitle(""); setMessage(""); setChatMsg("");
+      refreshAnnouncements();
     } catch {
       showToast("Failed to send announcement.", "error");
     } finally {
@@ -70,6 +96,40 @@ export default function OrganizerCommunicationPage() {
     } finally {
       setChatLoading(false);
     }
+  }
+
+  async function handleTogglePin(a: Announcement) {
+    try {
+      await updateAnnouncement(selectedEventId, a.id, { title: a.title, body: a.body, isPinned: !a.isPinned });
+      refreshAnnouncements();
+    } catch {
+      showToast("Failed to update announcement.", "error");
+    }
+  }
+
+  function openEdit(a: Announcement) {
+    setEditing(a);
+    setEditTitle(a.title);
+    setEditBody(a.body);
+  }
+
+  async function handleSaveEdit() {
+    if (!editing || !editTitle.trim() || !editBody.trim()) return;
+    setSavingEdit(true);
+    try {
+      await updateAnnouncement(selectedEventId, editing.id, { title: editTitle, body: editBody, isPinned: editing.isPinned });
+      setEditing(null);
+      refreshAnnouncements();
+    } catch {
+      showToast("Failed to save changes.", "error");
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
+  function handleDeleteAnnouncement(a: Announcement) {
+    if (!confirm(`Delete announcement "${a.title}"?`)) return;
+    deleteAnnouncement(selectedEventId, a.id).then(refreshAnnouncements).catch(() => showToast("Failed to delete announcement.", "error"));
   }
 
   if (eventsLoading) return <div className="flex h-64 items-center justify-center text-[#5d5d5d]">Loading…</div>;
@@ -175,6 +235,76 @@ export default function OrganizerCommunicationPage() {
           )}
         </div>
       </div>
+
+      {/* Announcement history */}
+      <div className="mt-6 rounded-xl bg-white/90 p-5 ring-1 ring-[#4b86e8]/25 border border-[#4b86e8]/25">
+        <h2 className="mb-4 text-lg font-semibold text-[#111111]">Recent Announcements</h2>
+        {announcementsLoading ? (
+          <div className="space-y-2">{[1, 2].map(i => <div key={i} className="h-14 animate-pulse rounded-xl bg-[#4b86e8]/8" />)}</div>
+        ) : announcements.length === 0 ? (
+          <p className="text-sm text-[#5d5d5d]">No announcements sent yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {announcements.map(a => (
+              <div key={a.id} className="rounded-xl border border-[#4b86e8]/20 bg-white p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      {a.isPinned && <span className="text-xs">📌</span>}
+                      <span className="font-medium text-sm text-[#111111]">{a.title}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-[#5d5d5d]">{a.body}</p>
+                    <p className="mt-1 text-[10px] text-[#9a9a9a]">
+                      {a.sentAt ? new Date(a.sentAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 gap-2">
+                    <button onClick={() => handleTogglePin(a)}
+                      className="rounded-lg bg-[#4b86e8]/10 px-2.5 py-1 text-xs text-[#3567cf] hover:bg-[#4b86e8]/20">
+                      {a.isPinned ? "Unpin" : "Pin"}
+                    </button>
+                    <button onClick={() => openEdit(a)}
+                      className="rounded-lg bg-[#4b86e8]/10 px-2.5 py-1 text-xs text-[#3567cf] hover:bg-[#4b86e8]/20">
+                      Edit
+                    </button>
+                    <button onClick={() => handleDeleteAnnouncement(a)}
+                      className="rounded-lg bg-[#e04b4b]/10 px-2.5 py-1 text-xs text-[#e04b4b] hover:bg-[#e04b4b]/20">
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Edit modal */}
+      {editing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl border border-[#4b86e8]/30 bg-white p-6 space-y-4">
+            <h3 className="text-base font-bold text-[#111111]">Edit Announcement</h3>
+            <div>
+              <label className="text-xs text-[#5d5d5d] mb-1 block font-semibold">Title</label>
+              <input value={editTitle} onChange={e => setEditTitle(e.target.value)}
+                className="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none" />
+            </div>
+            <div>
+              <label className="text-xs text-[#5d5d5d] mb-1 block font-semibold">Message</label>
+              <textarea rows={3} value={editBody} onChange={e => setEditBody(e.target.value)}
+                className="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none resize-none" />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => setEditing(null)}
+                className="flex-1 rounded-xl border border-[#4b86e8]/30 py-2 text-sm text-[#5d5d5d] hover:bg-[#4b86e8]/5">Cancel</button>
+              <button onClick={handleSaveEdit} disabled={savingEdit || !editTitle.trim() || !editBody.trim()}
+                className="flex-1 rounded-xl bg-linear-to-br from-[#4c8ee7] to-[#8c6cff] py-2 text-sm font-semibold text-white disabled:opacity-50">
+                {savingEdit ? "Saving…" : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -111,6 +111,11 @@ public class OrganizerDashboardService {
                         && ResourceRoleAssignment.STATUS_APPROVED.equals(a.getStatus()))
                 .map(a -> a.getEventId())
                 .collect(Collectors.toCollection(java.util.HashSet::new));
+        // Events this user owns directly (ORGANISER-created events) — no
+        // resource_role_assignments row exists for the owner themselves.
+        eventRepository.findAllByDeletedAtIsNull().stream()
+                .filter(e -> "ORGANISER".equals(e.getOwnerType()) && userId.equals(e.getOwnerId()))
+                .forEach(e -> ids.add(e.getId()));
         // SPORT_HEAD holds no SCOPE_EVENT assignment — surface the parent
         // event of their assigned sport(s) instead so their dashboard isn't empty.
         assignmentRepository.findByUserId(userId).stream()

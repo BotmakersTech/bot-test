@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { FileText, Users } from "lucide-react"
 import {
-  getMyEvents, getRegistrationsForSport,
+  getMyEvents, getRegistrationsForSport, getMatchesForSport,
   type OrganizerEvent, type OrganizerSport,
 } from "../api/organizer.api"
 import { ORG } from "../theme/organizerTheme"
@@ -19,6 +19,7 @@ interface SportReport extends OrganizerSport {
   eventId: string
   eventName: string
   registrationCount: number
+  matchCount: number
 }
 
 const toLabel = (raw?: string | null) => {
@@ -70,7 +71,12 @@ export default function OrganizerReportsPage() {
               const r = await getRegistrationsForSport(sp.id)
               regCount = r.length
             } catch { /* use pre-fetched count */ }
-            flat.push({ ...sp as OrganizerSport, eventId: ev.id, eventName: ev.eventName, registrationCount: regCount })
+            let matchCount = 0
+            try {
+              const m = await getMatchesForSport(sp.id)
+              matchCount = m.length
+            } catch { /* leave at 0 */ }
+            flat.push({ ...sp as OrganizerSport, eventId: ev.id, eventName: ev.eventName, registrationCount: regCount, matchCount })
           }
         }
         setReports(flat)
@@ -82,7 +88,7 @@ export default function OrganizerReportsPage() {
 
   const totalTeams   = displayed.reduce((a, r) => a + r.registrationCount, 0)
   const totalSports  = displayed.length
-  const totalMatches = 0
+  const totalMatches = displayed.reduce((a, r) => a + r.matchCount, 0)
   const activeCount  = displayed.filter(r => ["ACTIVE","REGISTRATION_OPEN"].includes((r.status ?? "").toUpperCase())).length
 
   return (

@@ -5,6 +5,7 @@ import com.botleague.backend.organizer.entity.EventCertificate;
 import com.botleague.backend.organizer.entity.EventVenueDetail;
 import com.botleague.backend.organizer.repository.EventCertificateRepository;
 import com.botleague.backend.organizer.repository.EventVenueDetailRepository;
+import com.botleague.backend.common.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -84,6 +85,19 @@ public class OrganizerVenueAndCertService {
         c.setTeamName(req.teamName);
         c.setSportName(req.sportName);
         c.setIssuedAt(LocalDateTime.now());
+        return toCertResponse(certRepo.save(c));
+    }
+
+    public CertificateResponse updateCertificate(UUID certId, CertificateRequest req) {
+        EventCertificate c = certRepo.findById(certId)
+                .orElseThrow(() -> new ResourceNotFoundException("Certificate not found"));
+        if (req.recipientName   != null) c.setRecipientName(req.recipientName);
+        if (req.certificateType != null) c.setCertificateType(req.certificateType);
+        if (req.sportId         != null) c.setSportId(req.sportId);
+        if (req.position        != null) c.setPosition(req.position);
+        if (req.pdfUrl          != null) c.setPdfUrl(req.pdfUrl);
+        if (req.teamName        != null) c.setTeamName(req.teamName);
+        if (req.sportName       != null) c.setSportName(req.sportName);
         return toCertResponse(certRepo.save(c));
     }
 
