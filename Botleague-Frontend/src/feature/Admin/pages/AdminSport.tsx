@@ -4,7 +4,7 @@ import { ArrowLeft, Users, Trophy, Calendar, Tag, Swords, Weight, Zap, DollarSig
 import { useAdminEvents } from "../hooks/UseAdminEvent"
 import { type CreateEventSportRequest } from "../api/admin.api"
 import SportMediaField from "../../Organizer/components/SportMediaField"
-import { finalizeEventLeaderboard } from "../../Rankings/api/rankings.api"
+import { pushToGlobalRankings } from "../../Rankings/api/rankings.api"
 
 // ─────────────────────────────────────────────────────────────
 // DESIGN TOKENS
@@ -1045,16 +1045,16 @@ export default function AdminSport() {
 
   const isOpen = sport?.status?.toUpperCase() === "REGISTRATION_OPEN"
 
-  // ── finalize handler — propagates event results to global rankings ──
+  // ── publish handler — pushes the finalized event leaderboard to global rankings ──
   const handleFinalize = async () => {
     if (!sportId) return
     setFinalizing(true)
     setFinalizeMsg(null)
     try {
-      await finalizeEventLeaderboard(sportId)
+      await pushToGlobalRankings(sportId)
       setFinalizeMsg("✓ Global rankings updated successfully!")
     } catch (e: any) {
-      setFinalizeMsg("⚠️ " + (e?.response?.data?.message ?? "Finalization failed"))
+      setFinalizeMsg("⚠️ " + (e?.response?.data?.message ?? e?.response?.data?.error ?? "Publish failed"))
     } finally {
       setFinalizing(false)
     }

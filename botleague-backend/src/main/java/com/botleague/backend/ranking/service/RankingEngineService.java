@@ -214,19 +214,27 @@ public class RankingEngineService {
     public void pushToGlobalRankings(UUID eventSportId) {
         EventSports sport = eventSportsRepository.findById(eventSportId).orElse(null);
         if (sport == null) {
-            log.warn("[RankingEngine] Cannot push to global rankings — eventSportId={} not found", eventSportId);
-            return;
+            throw com.botleague.backend.common.exception.ApiException.notFound(
+                    "Event sport not found: " + eventSportId);
         }
 
-        List<EventLeaderboardEntry> entries =
-                leaderboardEntryRepository.findByEventSportIdOrderByPointsEarnedDescWinsDescMatchesPlayedDesc(eventSportId)
-                        .stream()
+        List<EventLeaderboardEntry> allEntries =
+                leaderboardEntryRepository.findByEventSportIdOrderByPointsEarnedDescWinsDescMatchesPlayedDesc(eventSportId);
+
+        if (allEntries.isEmpty()) {
+            throw com.botleague.backend.common.exception.ApiException.badRequest(
+                    "No leaderboard entries yet for this sport — matches need to be played and approved first.");
+        }
+
+        List<EventLeaderboardEntry> entries = allEntries.stream()
                         .filter(e -> Boolean.TRUE.equals(e.getIsFinalized()))
                         .collect(Collectors.toList());
 
         if (entries.isEmpty()) {
-            log.warn("[RankingEngine] No finalized leaderboard entries for eventSportId={} — finalize before pushing to global rankings", eventSportId);
-            return;
+            throw com.botleague.backend.common.exception.ApiException.badRequest(
+                    "Leaderboard is not finalized yet — this happens automatically once every match in the "
+                    + "bracket is completed and approved. Finish the remaining matches first, or use "
+                    + "Finalize Leaderboard to force it.");
         }
 
         updateGlobalRankings(sport, entries);
