@@ -28,4 +28,7 @@ public interface ResourceRoleAssignmentRepository extends JpaRepository<Resource
     void deleteByUserIdAndScopeTypeAndScopeId(UUID userId, String scopeType, UUID scopeId);
 
     long countByUserIdAndRoleTypeAndStatus(UUID userId, String roleType, String status);
+
+    List<ResourceRoleAssignment> findByEventIdAndScopeTypeAndRoleTypeAndStatus(
+            UUID eventId, String scopeType, String roleType, String status);
 }

@@ -681,12 +681,63 @@ export const createEventSport = async (
   return res.data;
 };
 
+export interface SportUpdateResult {
+  status: "APPLIED" | "PENDING_APPROVAL";
+  message: string;
+}
+
 export const updateEventSport = async (
   eventId: string,
   sportId: string,
   request: CreateEventSportRequest
-): Promise<void> => {
-  await api.patch(`/events/${eventId}/sports/${sportId}`, request);
+): Promise<SportUpdateResult> => {
+  const res = await api.patch(`/events/${eventId}/sports/${sportId}`, request);
+  return res.data;
+};
+
+// ── Sport change requests (approval chain for edits to APPROVED+ sports) ───────
+
+export interface SportChangeRequest {
+  id: string;
+  eventSportId: string;
+  eventId: string;
+  sportName: string;
+  requestedBy: string;
+  requestedByName: string | null;
+  requesterTier: "SPORT_HEAD" | "EVENT_HEAD_OR_ORGANISER";
+  proposedChanges: CreateEventSportRequest;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  reviewedBy: string | null;
+  reviewedByName: string | null;
+  reviewedAt: string | null;
+  rejectionReason: string | null;
+  createdAt: string;
+}
+
+export const getSportChangeRequests = async (
+  eventId: string,
+  sportId: string,
+  status: string = "PENDING"
+): Promise<SportChangeRequest[]> => {
+  const res = await api.get(`/events/${eventId}/sports/${sportId}/change-requests`, { params: { status } });
+  return res.data;
+};
+
+export const approveSportChangeRequest = async (
+  eventId: string,
+  changeRequestId: string
+): Promise<SportChangeRequest> => {
+  const res = await api.patch(`/events/${eventId}/sports/change-requests/${changeRequestId}/approve`);
+  return res.data;
+};
+
+export const rejectSportChangeRequest = async (
+  eventId: string,
+  changeRequestId: string,
+  reason?: string
+): Promise<SportChangeRequest> => {
+  const res = await api.patch(`/events/${eventId}/sports/change-requests/${changeRequestId}/reject`, { reason });
+  return res.data;
 };
 
 // ── Sport lifecycle ───────────────────────────────────────────────────────────

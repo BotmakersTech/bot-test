@@ -15,11 +15,15 @@ import com.botleague.backend.common.security.AuthorizationService;
 import com.botleague.backend.common.service.UploadService;
 import com.botleague.backend.events.dto.EventSportsRequestDTO;
 import com.botleague.backend.events.dto.GetEventSportsDTO;
+import com.botleague.backend.events.dto.SportChangeRequestResponseDTO;
+import com.botleague.backend.events.dto.SportUpdateResultDTO;
 import com.botleague.backend.events.dto.UpdateSportsDTO;
 import com.botleague.backend.events.entity.EventSports;
 import com.botleague.backend.events.enums.SportEventStatus;
 import com.botleague.backend.events.enums.SportMediaSlot;
 import com.botleague.backend.events.service.EventSportsService;
+import com.botleague.backend.events.service.SportChangeRequestService;
+import com.botleague.backend.organizer.dto.RejectAssignmentRequest;
 import com.botleague.backend.profile.dto.UploadResponse;
 import com.botleague.backend.profile.service.FileKeyService;
 import com.botleague.backend.team.dto.MediaRequest;
@@ -29,16 +33,19 @@ import com.botleague.backend.team.dto.MediaRequest;
 public class EventSportsController {
 
     private final EventSportsService service;
+    private final SportChangeRequestService sportChangeRequestService;
     private final AuthorizationService authorizationService;
     private final UploadService uploadService;
     private final FileKeyService fileKeyService;
 
     public EventSportsController(
             EventSportsService service,
+            SportChangeRequestService sportChangeRequestService,
             AuthorizationService authorizationService,
             UploadService uploadService,
             FileKeyService fileKeyService) {
         this.service = service;
+        this.sportChangeRequestService = sportChangeRequestService;
         this.authorizationService = authorizationService;
         this.uploadService = uploadService;
         this.fileKeyService = fileKeyService;
@@ -77,8 +84,8 @@ public class EventSportsController {
     // UPDATE SPORT
     // =========================
     @PatchMapping("/{sportId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
-    public ResponseEntity<String> updateEventSport(
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD','SPORT_HEAD')")
+    public ResponseEntity<SportUpdateResultDTO> updateEventSport(
             @PathVariable UUID eventId,
             @PathVariable UUID sportId,
             @Valid @RequestBody UpdateSportsDTO dto,
@@ -86,15 +93,15 @@ public class EventSportsController {
 
         dto.setEventId(eventId);
         dto.setSportId(sportId);
-        service.updateSports(dto, extractUserId(auth), extractRoles(auth));
-        return ResponseEntity.ok("Sport updated successfully");
+        SportUpdateResultDTO result = sportChangeRequestService.submitOrApply(dto, extractUserId(auth), extractRoles(auth));
+        return ResponseEntity.ok(result);
     }
 
     // =========================
     // TOGGLE REGISTRATION OPEN/CLOSED
     // =========================
     @PatchMapping("/{sportId}/registration")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD','SPORT_HEAD')")
     public ResponseEntity<String> toggleRegistration(
             @PathVariable UUID eventId,
             @PathVariable UUID sportId,
@@ -102,6 +109,52 @@ public class EventSportsController {
 
         String status = service.updateSportsRegistration(sportId, eventId, extractUserId(auth), extractRoles(auth));
         return ResponseEntity.ok("Registration status updated to " + status);
+    }
+
+    // =========================
+    // SPORT CHANGE REQUESTS (approval chain for edits to APPROVED+ sports)
+    // =========================
+    @GetMapping("/{sportId}/change-requests")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD','SPORT_HEAD')")
+    public ResponseEntity<List<SportChangeRequestResponseDTO>> getSportChangeRequests(
+            @PathVariable UUID eventId,
+            @PathVariable UUID sportId,
+            @RequestParam(defaultValue = "PENDING") String status,
+            Authentication auth) {
+
+        return ResponseEntity.ok(sportChangeRequestService.getForSport(sportId, extractUserId(auth), status));
+    }
+
+    @GetMapping("/change-requests")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD','SPORT_HEAD')")
+    public ResponseEntity<List<SportChangeRequestResponseDTO>> getEventChangeRequests(
+            @PathVariable UUID eventId,
+            @RequestParam(defaultValue = "PENDING") String status,
+            Authentication auth) {
+
+        return ResponseEntity.ok(sportChangeRequestService.getForEvent(eventId, extractUserId(auth), status));
+    }
+
+    @PatchMapping("/change-requests/{changeRequestId}/approve")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
+    public ResponseEntity<SportChangeRequestResponseDTO> approveSportChangeRequest(
+            @PathVariable UUID eventId,
+            @PathVariable UUID changeRequestId,
+            Authentication auth) {
+
+        return ResponseEntity.ok(sportChangeRequestService.approve(changeRequestId, extractUserId(auth)));
+    }
+
+    @PatchMapping("/change-requests/{changeRequestId}/reject")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
+    public ResponseEntity<SportChangeRequestResponseDTO> rejectSportChangeRequest(
+            @PathVariable UUID eventId,
+            @PathVariable UUID changeRequestId,
+            @RequestBody(required = false) RejectAssignmentRequest request,
+            Authentication auth) {
+
+        String reason = request != null ? request.getReason() : null;
+        return ResponseEntity.ok(sportChangeRequestService.reject(changeRequestId, extractUserId(auth), reason));
     }
 
     // =========================

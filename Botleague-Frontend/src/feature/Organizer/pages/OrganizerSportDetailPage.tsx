@@ -4,15 +4,19 @@ import { useSelector } from "react-redux"
 import {
   ArrowLeft, Users, Trophy, Calendar, Tag, Swords, Weight, Zap, DollarSign, Award, Cpu, Ruler, Bot,
   Edit2, X, Megaphone, FileEdit, PlayCircle, RefreshCw, CheckCircle2, XCircle, Lock, Unlock, Globe,
-  AlertTriangle, MessageCircle,
+  AlertTriangle, MessageCircle, Check, Ban, Clock,
 } from "lucide-react"
 import { useOrganizerSportDetail } from "../hooks/useOrganizerSportDetail"
-import { type CreateEventSportRequest, ensureTeamChatRoom } from "../api/organizer.api"
+import {
+  type CreateEventSportRequest, ensureTeamChatRoom,
+  type SportChangeRequest, type SportUpdateResult,
+  getSportChangeRequests, approveSportChangeRequest, rejectSportChangeRequest,
+} from "../api/organizer.api"
 import SportMediaField from "../components/SportMediaField"
 import { pushToGlobalRankings } from "../../Rankings/api/rankings.api"
 import type { RootState } from "../../../app/store"
 import { useAppDispatch } from "../../../app/hooks"
-import { hasRole, AppRole } from "../../../shared/constants/roles"
+import { hasRole, AppRole, EVENT_HEAD_AND_UP } from "../../../shared/constants/roles"
 import { fetchChatRooms, setActiveRoom } from "../../Chat/store/chatSlice"
 import { ORG } from "../theme/organizerTheme"
 import PageWrapper from "../components/PageWrapper"
@@ -555,10 +559,10 @@ function EditSportModal({
   sport: SportDetail
   eventId: string
   sportId: string
-  onSave: (eid: string, sid: string, req: CreateEventSportRequest) => Promise<void>
+  onSave: (eid: string, sid: string, req: CreateEventSportRequest) => Promise<SportUpdateResult>
   saving: boolean
   onClose: () => void
-  onDone: () => void
+  onDone: (result: SportUpdateResult) => void
   onMediaChange: () => void
 }) {
   const initialForm: EditForm = {
@@ -628,8 +632,8 @@ function EditSportModal({
         Object.entries(raw).filter(([, v]) => v !== "" && v !== undefined && v !== null)
       ) as unknown as CreateEventSportRequest
 
-      await onSave(eventId, sportId, payload)
-      onDone()
+      const result = await onSave(eventId, sportId, payload)
+      onDone(result)
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string; error?: string } }; message?: string }
       setSaveError(e?.response?.data?.message ?? e?.response?.data?.error ?? e?.message ?? "Failed to save.")
@@ -1008,6 +1012,203 @@ function EditSportModal({
 }
 
 // ─────────────────────────────────────────────────────────────
+// PENDING CHANGE REQUEST PANEL
+// Held edits to an already-APPROVED sport's specs. A SPORT_HEAD's edit
+// needs EVENT_HEAD/ORGANISER approval; an EVENT_HEAD/ORGANISER's edit needs
+// ADMIN approval. The panel below shows the requester's own submission as a
+// read-only "awaiting approval" banner, or — for whoever the request routes
+// to — inline Approve/Reject actions (mirrors AdminEventDetail's SportCard
+// isPending review pattern).
+// ─────────────────────────────────────────────────────────────
+
+function ChangeFieldDiff({ request, sport }: { request: SportChangeRequest; sport: SportDetail }) {
+  const LABELS: Record<string, string> = {
+    sport: "Sport", ageGroup: "Age Group", competitionType: "Competition Type",
+    sportData: "Description", weightClass: "Weight Class", weightLimitKg: "Weight Limit (kg)",
+    maxLengthCm: "Max Length (cm)", maxWidthCm: "Max Width (cm)", maxHeightCm: "Max Height (cm)",
+    controlType: "Control Type", maxBotsPerTeam: "Max Bots/Team", minTeamSize: "Min Team Size",
+    maxTeamSize: "Max Team Size", maxTeams: "Max Teams", entryFee: "Entry Fee", prizeMoney: "Prize Money",
+    formatType: "Format", registrationStartDate: "Registration Start", registrationEndDate: "Registration End",
+  }
+  const CURRENT_KEY: Record<string, keyof SportDetail> = {
+    sport: "sport", ageGroup: "ageGroup", competitionType: "competitionType", sportData: "sportsDescription",
+    weightClass: "weightClass", weightLimitKg: "weightLimitKg", maxLengthCm: "maxLengthCm",
+    maxWidthCm: "maxWidthCm", maxHeightCm: "maxHeightCm", controlType: "controlType",
+    maxBotsPerTeam: "maxBotsPerTeam", minTeamSize: "minTeamSize", maxTeamSize: "maxTeamSize",
+    maxTeams: "maxTeams", entryFee: "entryFee", prizeMoney: "prizeMoney", formatType: "formatType",
+    registrationStartDate: "registrationStartDate", registrationEndDate: "registrationEndDate",
+  }
+  const changes = Object.entries(request.proposedChanges || {})
+    .filter(([key, value]) => key in LABELS && value !== null && value !== undefined && value !== "")
+
+  if (changes.length === 0) return null
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "4px" }}>
+      {changes.map(([key, value]) => {
+        const currentVal = sport[CURRENT_KEY[key]]
+        return (
+          <div key={key} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.76rem", flexWrap: "wrap" }}>
+            <span style={{ color: MUTED, fontWeight: 700, minWidth: "140px" }}>{LABELS[key]}:</span>
+            <span style={{ color: DANGER, textDecoration: "line-through", opacity: 0.7 }}>{String(currentVal ?? "—")}</span>
+            <span style={{ color: MUTED }}>→</span>
+            <span style={{ color: SUCCESS, fontWeight: 700 }}>{String(value)}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function PendingChangeRequestPanel({
+  eventId,
+  sportId,
+  sport,
+  currentUserId,
+  canReviewSportHeadTier,
+  canReviewManagerTier,
+  onResolved,
+}: {
+  eventId: string
+  sportId: string
+  sport: SportDetail
+  currentUserId?: string
+  canReviewSportHeadTier: boolean
+  canReviewManagerTier: boolean
+  onResolved: () => void
+}) {
+  const [requests, setRequests] = React.useState<SportChangeRequest[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [busyId, setBusyId] = React.useState<string | null>(null)
+  const [rejectingId, setRejectingId] = React.useState<string | null>(null)
+  const [reason, setReason] = React.useState("")
+  const [actionError, setActionError] = React.useState<string | null>(null)
+
+  const load = React.useCallback(async () => {
+    try {
+      setLoading(true)
+      const data = await getSportChangeRequests(eventId, sportId, "PENDING")
+      setRequests(data)
+    } catch {
+      // silently skip — pending-changes panel is a convenience surface, not critical path
+    } finally {
+      setLoading(false)
+    }
+  }, [eventId, sportId])
+
+  React.useEffect(() => { load() }, [load])
+
+  if (loading || requests.length === 0) return null
+
+  const handleApprove = async (id: string) => {
+    setBusyId(id); setActionError(null)
+    try {
+      await approveSportChangeRequest(eventId, id)
+      await load()
+      onResolved()
+    } catch (err: any) {
+      setActionError(err?.response?.data?.message || err?.response?.data?.error || "Failed to approve change request")
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  const handleReject = async (id: string) => {
+    setBusyId(id); setActionError(null)
+    try {
+      await rejectSportChangeRequest(eventId, id, reason || undefined)
+      setRejectingId(null); setReason("")
+      await load()
+      onResolved()
+    } catch (err: any) {
+      setActionError(err?.response?.data?.message || err?.response?.data?.error || "Failed to reject change request")
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "24px" }}>
+      {requests.map(req => {
+        const isOwn = currentUserId != null && req.requestedBy === currentUserId
+        const canReview = !isOwn && (
+          (req.requesterTier === "SPORT_HEAD" && canReviewSportHeadTier) ||
+          (req.requesterTier === "EVENT_HEAD_OR_ORGANISER" && canReviewManagerTier)
+        )
+        const busy = busyId === req.id
+
+        return (
+          <div key={req.id} style={{
+            background: "rgba(161,98,7,0.06)",
+            border: "1px solid rgba(161,98,7,0.3)",
+            borderRadius: "12px",
+            padding: "14px 18px",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", fontWeight: 700, color: WARNING }}>
+              <Clock size={14} />
+              {isOwn
+                ? "Your edit is awaiting approval"
+                : `${req.requestedByName || "Someone"} proposed a change awaiting your approval`}
+            </div>
+
+            <ChangeFieldDiff request={req} sport={sport} />
+
+            {actionError && (
+              <div style={{ color: DANGER, fontSize: "0.78rem", marginTop: "8px" }}>{actionError}</div>
+            )}
+
+            {canReview && (
+              <div style={{ marginTop: "12px" }}>
+                {rejectingId !== req.id ? (
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button
+                      type="button"
+                      onClick={() => handleApprove(req.id)}
+                      disabled={busy}
+                      style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(31,169,82,0.12)", border: "1px solid rgba(31,169,82,0.35)", color: SUCCESS, borderRadius: "8px", padding: "7px 14px", fontSize: "0.76rem", fontWeight: 700, cursor: busy ? "not-allowed" : "pointer" }}
+                    >
+                      {busy ? <Spinner size={12} color={SUCCESS} /> : <Check size={13} />} Approve
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRejectingId(req.id)}
+                      disabled={busy}
+                      style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(224,75,75,0.08)", border: "1px solid rgba(224,75,75,0.25)", color: DANGER, borderRadius: "8px", padding: "7px 14px", fontSize: "0.76rem", fontWeight: 700, cursor: busy ? "not-allowed" : "pointer" }}
+                    >
+                      <Ban size={13} /> Reject
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <input
+                      autoFocus
+                      placeholder="Reason for rejection (optional)…"
+                      value={reason}
+                      onChange={e => setReason(e.target.value)}
+                      style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: "7px", padding: "7px 10px", color: TEXT, fontSize: "0.78rem", outline: "none" }}
+                    />
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button type="button" onClick={() => { setRejectingId(null); setReason("") }} disabled={busy}
+                        style={{ background: "rgba(0,0,0,0.04)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "7px", padding: "7px 12px", fontSize: "0.76rem", fontWeight: 600, cursor: "pointer" }}>
+                        Cancel
+                      </button>
+                      <button type="button" onClick={() => handleReject(req.id)} disabled={busy}
+                        style={{ display: "flex", alignItems: "center", gap: "6px", background: busy ? "rgba(224,75,75,0.2)" : DANGER, border: "none", color: "#fff", borderRadius: "7px", padding: "7px 12px", fontSize: "0.76rem", fontWeight: 700, cursor: busy ? "not-allowed" : "pointer" }}>
+                        {busy ? <Spinner size={12} color="#fff" /> : <Ban size={13} />} Confirm Reject
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────
 // MAIN PAGE
 // ─────────────────────────────────────────────────────────────
 
@@ -1019,12 +1220,19 @@ export default function OrganizerSportDetailPage() {
   const user = useSelector((state: RootState) => state.auth.user)
   const userRoles = user?.allRoles ?? (user?.role ? [user.role] : [])
   const isAdmin = hasRole(userRoles, [AppRole.ADMIN, AppRole.SUPER_ADMIN])
+  // Who can review a pending sport-edit change request at each tier — an
+  // approximation for showing/hiding the Approve/Reject UI; the backend
+  // (assertCanManageEvent / assertIsPlatformAdmin) is the real gate.
+  const canReviewSportHeadTier = hasRole(userRoles, EVENT_HEAD_AND_UP)
+  const canReviewManagerTier   = isAdmin
 
   const [registrationLoading, setRegistrationLoading] = React.useState(false)
   const [showEditSport,       setShowEditSport]       = React.useState(false)
   const [finalizing,          setFinalizing]          = React.useState(false)
   const [finalizeMsg,         setFinalizeMsg]         = React.useState<string | null>(null)
   const [finalizeOk,          setFinalizeOk]          = React.useState(false)
+  const [saveResultMsg,       setSaveResultMsg]       = React.useState<{ text: string; pending: boolean } | null>(null)
+  const [pendingPanelKey,     setPendingPanelKey]     = React.useState(0)
 
   const {
     event,
@@ -1120,9 +1328,10 @@ export default function OrganizerSportDetailPage() {
           onSave={updateEventSport}
           saving={sportLoading}
           onClose={() => setShowEditSport(false)}
-          onDone={async () => {
+          onDone={(result) => {
             setShowEditSport(false)
-            try { await refetch() } catch { /* modal is already closed; stale data is better than a crash */ }
+            setSaveResultMsg({ text: result.message, pending: result.status === "PENDING_APPROVAL" })
+            setPendingPanelKey(k => k + 1)
           }}
           onMediaChange={refetch}
         />
@@ -1272,6 +1481,38 @@ export default function OrganizerSportDetailPage() {
           </p>
         )}
       </div>
+
+      {/* save-result feedback (applied vs held for approval) */}
+      {saveResultMsg && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: "8px",
+          padding: "10px 16px",
+          background: saveResultMsg.pending ? "rgba(161,98,7,0.08)" : "rgba(31,169,82,0.08)",
+          border: `1px solid ${saveResultMsg.pending ? "rgba(161,98,7,0.28)" : "rgba(31,169,82,0.25)"}`,
+          borderRadius: "10px",
+          fontSize: "0.84rem",
+          fontWeight: 600,
+          color: saveResultMsg.pending ? WARNING : SUCCESS,
+          marginBottom: "20px",
+        }}>
+          {saveResultMsg.pending ? <Clock size={15} /> : <CheckCircle2 size={15} />}
+          {saveResultMsg.text}
+        </div>
+      )}
+
+      {/* pending sport-edit change requests awaiting review */}
+      {eventId && sportId && (
+        <PendingChangeRequestPanel
+          key={pendingPanelKey}
+          eventId={eventId}
+          sportId={sportId}
+          sport={sport}
+          currentUserId={user?.id}
+          canReviewSportHeadTier={canReviewSportHeadTier}
+          canReviewManagerTier={canReviewManagerTier}
+          onResolved={refetch}
+        />
+      )}
 
       {/* ── STAT BOXES ── */}
       <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "28px" }}>

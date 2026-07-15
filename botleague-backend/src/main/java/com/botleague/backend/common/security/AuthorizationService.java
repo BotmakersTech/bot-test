@@ -105,6 +105,16 @@ public class AuthorizationService {
         return eventSportsRepository.findById(eventSportId).map(EventSports::getEventId).orElse(null);
     }
 
+    /** Users holding an APPROVED EVENT_HEAD assignment on this event. */
+    public java.util.List<UUID> findApprovedEventHeadUserIds(UUID eventId) {
+        return resourceRoleAssignmentRepository
+                .findByEventIdAndScopeTypeAndRoleTypeAndStatus(
+                        eventId, ResourceRoleAssignment.SCOPE_EVENT, "EVENT_HEAD", ResourceRoleAssignment.STATUS_APPROVED)
+                .stream()
+                .map(ResourceRoleAssignment::getUserId)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
     // ── Asserts (throw 403) ─────────────────────────────────────────────
 
     public void assertCanManageEvent(UUID userId, UUID eventId) {

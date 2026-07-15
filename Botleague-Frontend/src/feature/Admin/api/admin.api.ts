@@ -271,8 +271,9 @@ export const updateEventSport = async (
   eventId: string,
   sportId: string,
   request: CreateEventSportRequest
-): Promise<void> => {
-  await api.patch(`/events/${eventId}/sports/${sportId}`, request)
+): Promise<{ status: string; message: string }> => {
+  const response = await api.patch(`/events/${eventId}/sports/${sportId}`, request)
+  return response.data
 }
 
 // =====================================================

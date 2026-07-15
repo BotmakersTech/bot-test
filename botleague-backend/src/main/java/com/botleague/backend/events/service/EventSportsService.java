@@ -58,9 +58,15 @@ public class EventSportsService {
         this.authorizationService = authorizationService;
     }
 
-    /** Platform admins/organiser owner can manage any of their events' sports; EVENT_HEAD only their assigned events. */
-    private void assertCanManage(UUID eventId, UUID callerId, List<String> callerRoles) {
-        authorizationService.assertCanManageEvent(callerId, eventId);
+    /**
+     * Platform admins/organiser owner can manage any of their events' sports;
+     * EVENT_HEAD only their assigned events; SPORT_HEAD only their assigned
+     * sport. assertCanManageSport is a strict superset of assertCanManageEvent
+     * (it falls back to the event-level check first), so this one call covers
+     * every caller tier.
+     */
+    private void assertCanManage(UUID eventId, UUID sportId, UUID callerId, List<String> callerRoles) {
+        authorizationService.assertCanManageSport(callerId, sportId);
     }
 
     // =========================
@@ -113,7 +119,7 @@ public class EventSportsService {
 
         validateUpdateRequest(request);
 
-        assertCanManage(request.getEventId(), callerId, callerRoles);
+        assertCanManage(request.getEventId(), request.getSportId(), callerId, callerRoles);
 
         // Existence check only — no status restriction on updates so that
         // super admins can edit sport data at any event stage.
@@ -147,7 +153,7 @@ public class EventSportsService {
     @Transactional
     public String updateSportsRegistration(UUID sportId, UUID eventId, UUID callerId, List<String> callerRoles) {
 
-        assertCanManage(eventId, callerId, callerRoles);
+        assertCanManage(eventId, sportId, callerId, callerRoles);
 
         EventSports sport = eventSportsRepository
                 .findByIdAndEventId(sportId, eventId)

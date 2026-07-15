@@ -151,7 +151,7 @@ export default function GlobalRankingsPage() {
 
   const entries = page?.entries ?? []
   const visible = search
-    ? entries.filter(e => e.teamName.toLowerCase().includes(search.toLowerCase()))
+    ? entries.filter(e => (e.robotName || e.teamName).toLowerCase().includes(search.toLowerCase()))
     : entries
 
   return (
@@ -220,7 +220,7 @@ export default function GlobalRankingsPage() {
         </div>
 
         {/* Search within results */}
-        <input type="text" placeholder="Search team name…" value={search}
+        <input type="text" placeholder="Search robot name…" value={search}
           onChange={e => setSearch(e.target.value)}
           className="w-full rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-white placeholder-neutral-500 ring-1 ring-white/10 focus:outline-none focus:ring-[#fa4715]" />
       </div>
@@ -281,7 +281,7 @@ export default function GlobalRankingsPage() {
             <thead>
               <tr className="border-b border-white/[0.07] text-left text-[10px] text-neutral-500 uppercase tracking-widest">
                 <th className="px-4 py-3 w-16">Rank</th>
-                <th className="px-4 py-3">Team</th>
+                <th className="px-4 py-3">Robot</th>
                 <th className="px-4 py-3 text-center">Points</th>
                 <th className="px-4 py-3 text-center">W / L</th>
                 <th className="px-4 py-3 text-center">Win %</th>
@@ -301,7 +301,7 @@ export default function GlobalRankingsPage() {
                     <RankBadge rank={entry.rank} />
                   </td>
 
-                  {/* Team info */}
+                  {/* Robot info */}
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       {entry.avatarUrl ? (
@@ -309,13 +309,15 @@ export default function GlobalRankingsPage() {
                           className="w-8 h-8 rounded-full object-cover shrink-0" />
                       ) : (
                         <div className="w-8 h-8 rounded-full bg-[#fa4715]/15 border border-[#fa4715]/30 flex items-center justify-center text-[#fa4715] text-xs font-bold shrink-0">
-                          {entry.teamName.charAt(0).toUpperCase()}
+                          {(entry.robotName || entry.teamName).charAt(0).toUpperCase()}
                         </div>
                       )}
                       <div className="min-w-0">
-                        <p className="font-semibold text-white truncate">{entry.teamName}</p>
+                        <p className="font-semibold text-white truncate">
+                          {entry.robotName ? `🤖 ${entry.robotName}` : entry.teamName}
+                        </p>
                         {entry.robotName && (
-                          <p className="text-[11px] text-[#fa4715] truncate">🤖 {entry.robotName}</p>
+                          <p className="text-[11px] text-neutral-500 truncate">{entry.teamName}</p>
                         )}
                         {(entry.city || entry.state) && (
                           <p className="text-[11px] text-neutral-500 truncate">

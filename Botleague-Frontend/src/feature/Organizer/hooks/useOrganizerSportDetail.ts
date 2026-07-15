@@ -7,6 +7,7 @@ import {
 
   type OrganizerEvent,
   type CreateEventSportRequest,
+  type SportUpdateResult,
 } from "../api/organizer.api"
 
 // =====================================================
@@ -56,12 +57,13 @@ export const useOrganizerSportDetail = (eventId?: string, sportId?: string) => {
     }
   }, [])
 
-  const updateEventSport = useCallback(async (evtId: string, spId: string, request: CreateEventSportRequest) => {
+  const updateEventSport = useCallback(async (evtId: string, spId: string, request: CreateEventSportRequest): Promise<SportUpdateResult> => {
     try {
       setSportLoading(true)
       setError(null)
-      await updateEventSportApi(evtId, spId, request)
+      const result = await updateEventSportApi(evtId, spId, request)
       await fetchEventSportById(evtId, spId)
+      return result
     } catch (err: any) {
       const message = err?.response?.data?.message || "Failed to update sport"
       setError(message)
