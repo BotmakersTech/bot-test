@@ -104,8 +104,8 @@ export default function OrganizerRegistrationsPage() {
     try {
       await updateRegistrationStatus(reg.eventId, reg.registrationId, status, reason)
       refreshRegs()
-    } catch {
-      setError("Failed to update registration status")
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.response?.data?.error || "Failed to update registration status")
     } finally {
       setActingOnId(null)
     }

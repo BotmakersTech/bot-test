@@ -183,6 +183,26 @@ public class MatchService {
             throw ApiException.badRequest("At least one team registration ID is required");
         }
 
+        // Server-side guard: bracket generation must not seed a WAITLISTED,
+        // REJECTED, or otherwise-inactive registration into a match — the
+        // caller-supplied ID list was previously trusted with no validation.
+        List<com.botleague.backend.events.entity.SportRegistration> suppliedRegistrations =
+                eventRegistrationRepository.findAllById(request.getTeamRegistrationIds());
+        if (suppliedRegistrations.size() != request.getTeamRegistrationIds().size()) {
+            throw ApiException.badRequest("One or more team registration IDs were not found");
+        }
+        List<String> ineligible = suppliedRegistrations.stream()
+                .filter(r -> !request.getEventSportId().equals(r.getEventSportId())
+                          || r.getStatus() != com.botleague.backend.events.enums.RegistrationStatus.REGISTERED)
+                .map(r -> (r.getRobotName() != null ? r.getRobotName() : r.getId().toString())
+                        + " (" + r.getStatus() + ")")
+                .collect(java.util.stream.Collectors.toList());
+        if (!ineligible.isEmpty()) {
+            throw ApiException.badRequest(
+                    "Cannot generate bracket: not eligible (not REGISTERED for this sport): "
+                    + String.join(", ", ineligible));
+        }
+
         // tournamentFormat has a default of SINGLE_ELIMINATION in the DTO
         TournamentFormat tournamentFormat = request.getTournamentFormat();
         if (tournamentFormat == null) {

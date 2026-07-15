@@ -389,8 +389,8 @@ export default function OrganizerBracketPage() {
       setView("bracket")
     } catch (err: any) {
       setGenerateError(
-        err?.response?.data?.error ||
         err?.response?.data?.message ||
+        err?.response?.data?.error ||
         "Failed to generate bracket"
       )
     }

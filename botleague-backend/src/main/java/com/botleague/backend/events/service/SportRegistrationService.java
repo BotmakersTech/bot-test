@@ -82,6 +82,7 @@ public class SportRegistrationService {
     private final RealtimePublisher                 realtimePublisher;
     private final EventRegistrationLineupRepository lineupRepository;
     private final SportRegistrationLineupService    lineupService;
+    private final com.botleague.backend.matches.repository.MatchRepository matchRepository;
 
     // =====================================================
     // CONSTRUCTOR
@@ -101,7 +102,8 @@ public class SportRegistrationService {
             ChatService                          chatService,
             RealtimePublisher                    realtimePublisher,
             EventRegistrationLineupRepository    lineupRepository,
-            SportRegistrationLineupService       lineupService
+            SportRegistrationLineupService       lineupService,
+            com.botleague.backend.matches.repository.MatchRepository matchRepository
     ) {
         this.sportRegistrationRepository = sportRegistrationRepository;
         this.eventSportsRepository       = eventSportsRepository;
@@ -117,6 +119,7 @@ public class SportRegistrationService {
         this.realtimePublisher           = realtimePublisher;
         this.lineupRepository            = lineupRepository;
         this.lineupService               = lineupService;
+        this.matchRepository             = matchRepository;
     }
 
     // =====================================================
@@ -642,6 +645,22 @@ public class SportRegistrationService {
         if (!allowed) {
             throw new IllegalStateException(
                     "Cannot change registration status from " + current + " to " + newStatus);
+        }
+
+        // A team pulled from the active roster (waitlisted/rejected) must not
+        // leave a stale, still-playable match behind — block until the
+        // organizer resolves those matches (cancel/reschedule) first.
+        if (newStatus == RegistrationStatus.WAITLISTED || newStatus == RegistrationStatus.REJECTED) {
+            long activeMatches = matchRepository.findByAnyRegistrationIdIn(List.of(registrationId)).stream()
+                    .filter(m -> m.getStatus() == com.botleague.backend.matches.enums.MatchStatus.SCHEDULED
+                              || m.getStatus() == com.botleague.backend.matches.enums.MatchStatus.LIVE
+                              || m.getStatus() == com.botleague.backend.matches.enums.MatchStatus.PENDING_APPROVAL)
+                    .count();
+            if (activeMatches > 0) {
+                throw new IllegalStateException(
+                        "Cannot move this registration to " + newStatus + ": " + activeMatches +
+                        " match(es) already involve this team. Cancel or resolve those matches first.");
+            }
         }
 
         boolean heldSlotBefore = current == RegistrationStatus.REGISTERED || current == RegistrationStatus.CHECKED_IN;
