@@ -33,9 +33,26 @@ public class EventAnnouncement {
     @Column(name = "target_type", length = 30)
     private String targetType = "ALL";
 
-    /** Populated when targetType = SPECIFIC_SPORT */
+    /**
+     * Scopes this announcement to one sport within the event. Null = the
+     * event-wide broadcast (existing behavior); non-null = a sport-level
+     * announcement (see OrganizerCommunicationService.sendSportAnnouncement).
+     */
     @Column(name = "target_sport_id")
     private UUID targetSportId;
+
+    /** JSON array of team UUIDs — only set when targetType = SPECIFIC_TEAMS. */
+    @Column(name = "target_team_ids_json", columnDefinition = "TEXT")
+    private String targetTeamIdsJson;
+
+    @Column(name = "attachment_url")
+    private String attachmentUrl;
+
+    @Column(name = "attachment_key")
+    private String attachmentKey;
+
+    @Column(name = "attachment_file_type")
+    private String attachmentFileType;
 
     /** When the announcement was pushed / sent */
     @Column(name = "sent_at")
@@ -75,6 +92,14 @@ public class EventAnnouncement {
     public void setTargetType(String targetType) { this.targetType = targetType; }
     public UUID getTargetSportId() { return targetSportId; }
     public void setTargetSportId(UUID targetSportId) { this.targetSportId = targetSportId; }
+    public String getTargetTeamIdsJson() { return targetTeamIdsJson; }
+    public void setTargetTeamIdsJson(String targetTeamIdsJson) { this.targetTeamIdsJson = targetTeamIdsJson; }
+    public String getAttachmentUrl() { return attachmentUrl; }
+    public void setAttachmentUrl(String attachmentUrl) { this.attachmentUrl = attachmentUrl; }
+    public String getAttachmentKey() { return attachmentKey; }
+    public void setAttachmentKey(String attachmentKey) { this.attachmentKey = attachmentKey; }
+    public String getAttachmentFileType() { return attachmentFileType; }
+    public void setAttachmentFileType(String attachmentFileType) { this.attachmentFileType = attachmentFileType; }
     public LocalDateTime getSentAt() { return sentAt; }
     public void setSentAt(LocalDateTime sentAt) { this.sentAt = sentAt; }
     public Boolean getIsPinned() { return isPinned; }

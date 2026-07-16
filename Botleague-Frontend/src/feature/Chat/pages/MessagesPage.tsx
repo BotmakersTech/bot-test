@@ -75,6 +75,7 @@ function roomTag(room: ChatRoom): string {
   if (room.type === "TEAM") return "Help wanted";
   if (room.type === "DIRECT") return "Question";
   if (room.type === "REGISTRATION" || room.type === "EVENT_TEAM") return "Bug";
+  if (room.type.includes("ANNOUNCEMENT")) return "Announcement";
   return "Update";
 }
 

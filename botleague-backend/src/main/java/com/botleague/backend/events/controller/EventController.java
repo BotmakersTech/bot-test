@@ -22,6 +22,8 @@ import com.botleague.backend.events.dto.CreateEventRequestDTO;
 import com.botleague.backend.events.dto.CreateEventResponseDTO;
 import com.botleague.backend.events.enums.EventMediaSlot;
 import com.botleague.backend.events.service.EventService;
+import com.botleague.backend.organizer.dto.OrganizerDTOs.SupportContactResponse;
+import com.botleague.backend.organizer.service.OrganizerCommunicationService;
 import com.botleague.backend.profile.dto.UploadResponse;
 import com.botleague.backend.profile.service.FileKeyService;
 import com.botleague.backend.team.dto.MediaRequest;
@@ -30,18 +32,25 @@ import com.botleague.backend.team.enums.MediaType;
 @RestController
 @RequestMapping("/api/Events")
 public class EventController {
-	
-	
-	
+
+
+
 	private final EventService eventService;
 	private final FileKeyService fileKeyService;
 	private final UploadService uploadService;
-	
-	public EventController(EventService eventService,FileKeyService fileKeyService,UploadService uploadService) {
-	
+	private final OrganizerCommunicationService communicationService;
+
+	public EventController(EventService eventService,FileKeyService fileKeyService,UploadService uploadService,OrganizerCommunicationService communicationService) {
+
 		this.eventService=eventService;
 		this.fileKeyService=fileKeyService;
 		this.uploadService=uploadService;
+		this.communicationService=communicationService;
+	}
+
+	@GetMapping("/{eventId}/support-contacts")
+	public ResponseEntity<List<SupportContactResponse>> getEventSupportContacts(@PathVariable UUID eventId) {
+		return ResponseEntity.ok(communicationService.getSupportContacts(eventId, null));
 	}
 	
 	@PostMapping("/create-event")

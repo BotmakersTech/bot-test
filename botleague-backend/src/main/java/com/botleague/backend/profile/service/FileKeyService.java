@@ -59,6 +59,14 @@ public class FileKeyService {
     }
 
     // =========================
+    // SPORT ANNOUNCEMENT - ATTACHMENT
+    // =========================
+    public String generateAnnouncementAttachmentKey(UUID eventSportId, String contentType) {
+        return "sports/" + eventSportId + "/announcements/" +
+                UUID.randomUUID() + getExtension(contentType);
+    }
+
+    // =========================
     // SPONSOR - LOGO (TEAM)
     // =========================
     public String generateSponsorLogoKey(UUID teamId, String contentType) {

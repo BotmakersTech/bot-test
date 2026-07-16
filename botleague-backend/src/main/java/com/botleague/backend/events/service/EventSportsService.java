@@ -77,7 +77,7 @@ public class EventSportsService {
 
         validateCreateRequest(dto);
 
-        getEventOrThrow(dto.getEventId());
+        Event event = getEventOrThrow(dto.getEventId());
 
         validateDuplicate(dto);
 
@@ -100,7 +100,8 @@ public class EventSportsService {
             chatService.createSportAnnouncementChannel(
                     savedSport.getId(),
                     savedSport.getSport(),
-                    savedSport.getEventId());
+                    savedSport.getEventId(),
+                    event.getEventName());
         } catch (Exception ignored) {
             // Chat creation failure must not roll back the sport creation
         }

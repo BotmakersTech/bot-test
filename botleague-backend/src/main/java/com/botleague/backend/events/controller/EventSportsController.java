@@ -23,7 +23,10 @@ import com.botleague.backend.events.enums.SportEventStatus;
 import com.botleague.backend.events.enums.SportMediaSlot;
 import com.botleague.backend.events.service.EventSportsService;
 import com.botleague.backend.events.service.SportChangeRequestService;
+import com.botleague.backend.organizer.dto.OrganizerDTOs.AnnouncementResponse;
+import com.botleague.backend.organizer.dto.OrganizerDTOs.SupportContactResponse;
 import com.botleague.backend.organizer.dto.RejectAssignmentRequest;
+import com.botleague.backend.organizer.service.OrganizerCommunicationService;
 import com.botleague.backend.profile.dto.UploadResponse;
 import com.botleague.backend.profile.service.FileKeyService;
 import com.botleague.backend.team.dto.MediaRequest;
@@ -34,6 +37,7 @@ public class EventSportsController {
 
     private final EventSportsService service;
     private final SportChangeRequestService sportChangeRequestService;
+    private final OrganizerCommunicationService communicationService;
     private final AuthorizationService authorizationService;
     private final UploadService uploadService;
     private final FileKeyService fileKeyService;
@@ -41,11 +45,13 @@ public class EventSportsController {
     public EventSportsController(
             EventSportsService service,
             SportChangeRequestService sportChangeRequestService,
+            OrganizerCommunicationService communicationService,
             AuthorizationService authorizationService,
             UploadService uploadService,
             FileKeyService fileKeyService) {
         this.service = service;
         this.sportChangeRequestService = sportChangeRequestService;
+        this.communicationService = communicationService;
         this.authorizationService = authorizationService;
         this.uploadService = uploadService;
         this.fileKeyService = fileKeyService;
@@ -155,6 +161,49 @@ public class EventSportsController {
 
         String reason = request != null ? request.getReason() : null;
         return ResponseEntity.ok(sportChangeRequestService.reject(changeRequestId, extractUserId(auth), reason));
+    }
+
+    // =========================
+    // SPORT ANNOUNCEMENTS — competitor-facing read (registered participants only)
+    // =========================
+    @GetMapping("/{sportId}/announcements")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<AnnouncementResponse>> getSportAnnouncementsForParticipant(
+            @PathVariable UUID eventId,
+            @PathVariable UUID sportId,
+            Authentication auth) {
+
+        UUID callerId = extractUserId(auth);
+        boolean canView = communicationService.isRegisteredParticipant(sportId, callerId)
+                || authorizationService.canViewEvent(callerId, eventId);
+        if (!canView) return ResponseEntity.ok(List.of());
+        return ResponseEntity.ok(communicationService.getSportAnnouncementsForParticipant(sportId, callerId));
+    }
+
+    @PostMapping("/{sportId}/announcements/upload-url")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UploadResponse> getAnnouncementAttachmentUploadUrl(
+            @PathVariable UUID eventId,
+            @PathVariable UUID sportId,
+            @RequestParam String fileType,
+            @RequestParam long fileSize,
+            Authentication auth) {
+
+        authorizationService.assertCanManageSport(extractUserId(auth), sportId);
+
+        String key = fileKeyService.generateAnnouncementAttachmentKey(sportId, fileType);
+        UploadResponse response = uploadService.generateUploadUrl(key, fileType, fileSize);
+        return ResponseEntity.ok(response);
+    }
+
+    // =========================
+    // SUPPORT CONTACTS — public read (falls back to event-wide if the sport has none)
+    // =========================
+    @GetMapping("/{sportId}/support-contacts")
+    public ResponseEntity<List<SupportContactResponse>> getSportSupportContacts(
+            @PathVariable UUID eventId,
+            @PathVariable UUID sportId) {
+        return ResponseEntity.ok(communicationService.getSupportContactsForSport(eventId, sportId));
     }
 
     // =========================

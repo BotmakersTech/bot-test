@@ -12,6 +12,7 @@ import CategoryBadge from "../../../shared/components/CategoryBadge";
 import { useEligibility } from "../../Eligibility/hooks/useEligibility";
 import { getEventSponsors, type EventSponsor } from "../api/eventSponsor.api";
 import { getSportSponsors, type SportSponsor } from "../api/sportSponsor.api";
+import { getEventSupportContacts, type SupportContact } from "../api/event.api";
 import SponsorStrip from "../../../shared/components/SponsorStrip";
 
 import type {
@@ -420,6 +421,30 @@ interface SportsPanelProps {
   eventSponsors?: EventSponsor[];
 }
 
+function EventSupportCard({ eventId }: { eventId: string }) {
+  const [contacts, setContacts] = useState<SupportContact[]>([]);
+
+  useEffect(() => {
+    if (!eventId) return;
+    getEventSupportContacts(eventId).then(setContacts).catch(() => setContacts([]));
+  }, [eventId]);
+
+  if (contacts.length === 0) return null;
+
+  return (
+    <div style={{ padding: "0 20px 12px", display: "flex", flexDirection: "column", gap: "6px" }}>
+      <div style={{ fontSize: "0.65rem", color: MUTED, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>Support</div>
+      {contacts.map(c => (
+        <div key={c.id} style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "baseline" }}>
+          <span style={{ fontSize: "0.78rem", fontWeight: 700, color: TEXT }}>{c.name}{c.roleLabel ? ` — ${c.roleLabel}` : ""}</span>
+          {c.email && <span style={{ fontSize: "0.72rem", color: MUTED }}>✉️ {c.email}</span>}
+          {c.phone && <span style={{ fontSize: "0.72rem", color: MUTED }}>📞 {c.phone}</span>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function SportsPanel({
   event, sports, registrations, teamId, isCaptain,
   loading, error, busySportId,
@@ -469,6 +494,8 @@ function SportsPanel({
           <SponsorStrip sponsors={eventSponsors} compact />
         </div>
       )}
+
+      <EventSupportCard eventId={event.id} />
 
       <div style={{ padding: "16px 20px" }}>
         {loading && sports.length === 0 && (

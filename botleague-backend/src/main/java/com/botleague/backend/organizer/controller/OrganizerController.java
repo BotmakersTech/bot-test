@@ -405,6 +405,89 @@ public class OrganizerController {
     }
 
     // =========================================================================
+    // SPORT ANNOUNCEMENTS — one-way organiser -> sport participants
+    // =========================================================================
+
+    @PostMapping("/events/{eventId}/sports/{sportId}/announce")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD','SPORT_HEAD')")
+    public ResponseEntity<AnnouncementResponse> sendSportAnnouncement(
+            Authentication authentication,
+            @PathVariable UUID eventId,
+            @PathVariable UUID sportId,
+            @jakarta.validation.Valid @RequestBody com.botleague.backend.organizer.dto.SportAnnounceRequest req) {
+        UUID callerId = extractUserId(authentication);
+        authorizationService.assertCanManageSport(callerId, sportId);
+        return ResponseEntity.ok(communicationService.sendSportAnnouncement(eventId, sportId, callerId, req));
+    }
+
+    @GetMapping("/events/{eventId}/sports/{sportId}/announcements")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD','SPORT_HEAD')")
+    public ResponseEntity<List<AnnouncementResponse>> getSportAnnouncementsForOrganizer(
+            Authentication authentication,
+            @PathVariable UUID eventId,
+            @PathVariable UUID sportId) {
+        authorizationService.assertCanManageSport(extractUserId(authentication), sportId);
+        return ResponseEntity.ok(communicationService.getSportAnnouncementsForOrganizer(sportId));
+    }
+
+    // =========================================================================
+    // SUPPORT CONTACTS
+    // =========================================================================
+
+    @GetMapping("/events/{eventId}/support-contacts")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD','SPORT_HEAD')")
+    public ResponseEntity<List<SupportContactResponse>> getSupportContacts(
+            Authentication authentication,
+            @PathVariable UUID eventId,
+            @RequestParam(required = false) UUID sportId) {
+        UUID callerId = extractUserId(authentication);
+        if (sportId != null) authorizationService.assertCanManageSport(callerId, sportId);
+        else authorizationService.assertCanManageEvent(callerId, eventId);
+        return ResponseEntity.ok(communicationService.getSupportContacts(eventId, sportId));
+    }
+
+    @PostMapping("/events/{eventId}/support-contacts")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD','SPORT_HEAD')")
+    public ResponseEntity<SupportContactResponse> createSupportContact(
+            Authentication authentication,
+            @PathVariable UUID eventId,
+            @RequestBody SupportContactRequest req) {
+        UUID callerId = extractUserId(authentication);
+        if (req.eventSportId != null) authorizationService.assertCanManageSport(callerId, req.eventSportId);
+        else authorizationService.assertCanManageEvent(callerId, eventId);
+        return ResponseEntity.ok(communicationService.createSupportContact(eventId, req));
+    }
+
+    @PutMapping("/events/{eventId}/support-contacts/{contactId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD','SPORT_HEAD')")
+    public ResponseEntity<SupportContactResponse> updateSupportContact(
+            Authentication authentication,
+            @PathVariable UUID eventId,
+            @PathVariable UUID contactId,
+            @RequestBody SupportContactRequest req) {
+        UUID callerId = extractUserId(authentication);
+        assertCanManageContact(callerId, eventId, communicationService.getSupportContactEventSportId(contactId));
+        return ResponseEntity.ok(communicationService.updateSupportContact(contactId, req));
+    }
+
+    @DeleteMapping("/events/{eventId}/support-contacts/{contactId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD','SPORT_HEAD')")
+    public ResponseEntity<Void> deleteSupportContact(
+            Authentication authentication,
+            @PathVariable UUID eventId,
+            @PathVariable UUID contactId) {
+        UUID callerId = extractUserId(authentication);
+        assertCanManageContact(callerId, eventId, communicationService.getSupportContactEventSportId(contactId));
+        communicationService.deleteSupportContact(contactId);
+        return ResponseEntity.noContent().build();
+    }
+
+    private void assertCanManageContact(UUID callerId, UUID eventId, UUID eventSportId) {
+        if (eventSportId != null) authorizationService.assertCanManageSport(callerId, eventSportId);
+        else authorizationService.assertCanManageEvent(callerId, eventId);
+    }
+
+    // =========================================================================
     // VENUE & LOGISTICS
     // =========================================================================
 

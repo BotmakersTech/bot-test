@@ -333,7 +333,8 @@ public class NotificationService {
         return new ArrayList<>(userIds);
     }
 
-    private List<UUID> resolveSportRecipients(UUID sportId) {
+    /** Every active team member across all REGISTERED registrations for a sport — the sport's audience. */
+    public List<UUID> resolveSportRecipients(UUID sportId) {
         List<SportRegistration> registrations = sportRegistrationRepository
                 .findByEventSportIdAndStatus(sportId, RegistrationStatus.REGISTERED);
         Set<UUID> userIds = new LinkedHashSet<>();

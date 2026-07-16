@@ -13,6 +13,8 @@ import {
   getSportChangeRequests, approveSportChangeRequest, rejectSportChangeRequest,
 } from "../api/organizer.api"
 import SportMediaField from "../components/SportMediaField"
+import SportAnnouncementForm from "../components/SportAnnouncementForm"
+import SupportContactManager from "../components/SupportContactManager"
 import { pushToGlobalRankings } from "../../Rankings/api/rankings.api"
 import type { RootState } from "../../../app/store"
 import { useAppDispatch } from "../../../app/hooks"
@@ -1233,6 +1235,7 @@ export default function OrganizerSportDetailPage() {
   const [finalizeOk,          setFinalizeOk]          = React.useState(false)
   const [saveResultMsg,       setSaveResultMsg]       = React.useState<{ text: string; pending: boolean } | null>(null)
   const [pendingPanelKey,     setPendingPanelKey]     = React.useState(0)
+  const [showAnnounceForm,    setShowAnnounceForm]    = React.useState(false)
 
   const {
     event,
@@ -1389,6 +1392,19 @@ export default function OrganizerSportDetailPage() {
             <Edit2 size={13} /> Edit Sport
           </PrimaryButton>
 
+          {/* SEND ANNOUNCEMENT BUTTON */}
+          <button
+            onClick={() => setShowAnnounceForm(v => !v)}
+            style={{
+              display: "flex", alignItems: "center", gap: "7px",
+              background: showAnnounceForm ? "rgba(109,91,208,0.14)" : "rgba(109,91,208,0.08)",
+              border: "1px solid rgba(109,91,208,0.3)", color: "#6d5bd0",
+              borderRadius: "8px", padding: "7px 14px", fontSize: "0.74rem", fontWeight: 700, cursor: "pointer",
+            }}
+          >
+            <Megaphone size={13} /> Send Announcement
+          </button>
+
           {/* TOGGLE REGISTRATION BUTTON */}
           <button
             onClick={handleToggleRegistration}
@@ -1481,6 +1497,19 @@ export default function OrganizerSportDetailPage() {
           </p>
         )}
       </div>
+
+      {/* SEND ANNOUNCEMENT — inline, one-way organiser -> sport participants */}
+      {showAnnounceForm && eventId && sportId && (
+        <SportAnnouncementForm
+          eventId={eventId}
+          sportId={sportId}
+          teams={registrations
+            .filter(t => t.teamId)
+            .map(t => ({ teamId: t.teamId as string, teamName: t.teamName, robotName: t.robotName }))}
+          onClose={() => setShowAnnounceForm(false)}
+          onSent={() => setShowAnnounceForm(false)}
+        />
+      )}
 
       {/* save-result feedback (applied vs held for approval) */}
       {saveResultMsg && (
@@ -1635,6 +1664,11 @@ export default function OrganizerSportDetailPage() {
           )}
         </div>
       </div>
+
+      {/* ── SPORT SUPPORT CONTACTS ── */}
+      {eventId && sportId && (
+        <SupportContactManager mode="sport" eventId={eventId} sportId={sportId} />
+      )}
 
       {/* ── BRACKET / MATCHES — only once registration is not open ── */}
       {!isOpen && (

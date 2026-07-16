@@ -154,9 +154,37 @@ public final class OrganizerDTOs {
         public String body;
         public String targetType;
         public UUID targetSportId;
+        public String sportName;
+        public java.util.List<UUID> targetTeamIds;
+        public String attachmentUrl;
+        public String attachmentFileType;
         public Boolean isPinned;
         public LocalDateTime sentAt;
         public LocalDateTime createdAt;
+    }
+
+    // =========================================================================
+    // SUPPORT CONTACT
+    // =========================================================================
+
+    public static class SupportContactRequest {
+        public UUID eventSportId; // null = event-wide contact
+        public String name;
+        public String email;
+        public String phone;
+        public String roleLabel;
+        public Integer displayOrder;
+    }
+
+    public static class SupportContactResponse {
+        public UUID id;
+        public UUID eventId;
+        public UUID eventSportId;
+        public String name;
+        public String email;
+        public String phone;
+        public String roleLabel;
+        public Integer displayOrder;
     }
 
     // =========================================================================

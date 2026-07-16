@@ -297,3 +297,58 @@ export const registerTeamWithLineup = async (
   const response = await api.post("/event-registrations/with-lineup", request);
   return response.data;
 };
+
+// ======================================================
+// SPORT ANNOUNCEMENTS (competitor-facing, read-only)
+// ======================================================
+
+export interface SportAnnouncement {
+  id: string;
+  eventId: string;
+  title: string;
+  body: string;
+  targetType: string;
+  targetSportId: string | null;
+  sportName: string | null;
+  attachmentUrl: string | null;
+  attachmentFileType: string | null;
+  isPinned: boolean;
+  sentAt: string | null;
+  createdAt: string;
+}
+
+export const getSportAnnouncements = async (
+  eventId: string,
+  sportId: string
+): Promise<SportAnnouncement[]> => {
+  const response = await api.get(`/events/${eventId}/sports/${sportId}/announcements`);
+  return response.data;
+};
+
+// ======================================================
+// SUPPORT CONTACTS (public read)
+// ======================================================
+
+export interface SupportContact {
+  id: string;
+  eventId: string;
+  eventSportId: string | null;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  roleLabel: string | null;
+  displayOrder: number;
+}
+
+export const getEventSupportContacts = async (eventId: string): Promise<SupportContact[]> => {
+  const response = await api.get(`/Events/${eventId}/support-contacts`);
+  return response.data;
+};
+
+export const getSportSupportContacts = async (
+  eventId: string,
+  sportId: string
+): Promise<SupportContact[]> => {
+  const response = await api.get(`/events/${eventId}/sports/${sportId}/support-contacts`);
+  return response.data;
+};

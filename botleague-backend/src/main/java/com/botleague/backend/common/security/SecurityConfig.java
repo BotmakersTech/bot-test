@@ -55,6 +55,8 @@ public class SecurityConfig {
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/profile/public/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/Events/live").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/Events/completed").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/Events/*/support-contacts").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/events/*/sports/*/support-contacts").permitAll()
                 .requestMatchers("/ws/chat/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/rankings/**").permitAll()

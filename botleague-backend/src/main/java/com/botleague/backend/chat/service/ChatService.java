@@ -268,24 +268,6 @@ public class ChatService {
     }
 
     /**
-     * Returns or creates a SPORT_ANNOUNCEMENT room for the given event sport.
-     */
-    public ChatRoom getOrCreateSportAnnouncementRoom(UUID eventSportId, String sportLabel, UUID organizerUserId) {
-        return chatRoomRepository.findByTypeAndReferenceId(ChatRoomType.SPORT_ANNOUNCEMENT, eventSportId)
-                .orElseGet(() -> {
-                    ChatRoom room = new ChatRoom();
-                    room.setType(ChatRoomType.SPORT_ANNOUNCEMENT);
-                    room.setName(sportLabel + " — Announcements");
-                    room.setReferenceId(eventSportId);
-                    ChatRoom saved = chatRoomRepository.save(room);
-                    if (organizerUserId != null) {
-                        addParticipant(saved.getId(), organizerUserId, true);
-                    }
-                    return saved;
-                });
-    }
-
-    /**
      * Creates or retrieves a direct chat between two users.
      * Normalizes by always storing min(uuid) as referenceId.
      */
@@ -341,11 +323,16 @@ public class ChatService {
     }
 
     public ChatRoom createSportAnnouncementChannel(UUID eventSportId, String sportName, UUID eventId) {
+        return createSportAnnouncementChannel(eventSportId, sportName, eventId, null);
+    }
+
+    /** Single canonical entry point for a sport's announcement room — idempotent by eventSportId. */
+    public ChatRoom createSportAnnouncementChannel(UUID eventSportId, String sportName, UUID eventId, String eventName) {
         return chatRoomRepository.findByTypeAndReferenceId(ChatRoomType.SPORT_ANNOUNCEMENT, eventSportId)
                 .orElseGet(() -> {
                     ChatRoom room = new ChatRoom();
                     room.setType(ChatRoomType.SPORT_ANNOUNCEMENT);
-                    room.setName(sportName + " Announcements");
+                    room.setName((eventName != null ? eventName + " · " : "") + sportName + " Announcements");
                     room.setReferenceId(eventSportId);
                     room.setSecondaryReferenceId(eventId);
                     return chatRoomRepository.save(room);

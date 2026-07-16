@@ -8,6 +8,7 @@ import {
 } from "../api/organizer.api"
 import EventMediaField from "../components/EventMediaField"
 import SponsorManager from "../../Admin/components/SponsorManager"
+import SupportContactManager from "../components/SupportContactManager"
 import { ORG } from "../theme/organizerTheme"
 import type { RootState } from "../../../app/store"
 import { hasRole, AppRole } from "../../../shared/constants/roles"
@@ -872,6 +873,11 @@ export default function OrganizerEventDetailPage() {
       {/* SPONSORS — event-level management only, not shown to SPORT_HEAD */}
       {canManageEvent && (
         <SponsorManager mode="event" entityId={eventId} title="Event Sponsors" />
+      )}
+
+      {/* SUPPORT CONTACTS — event-level management only, not shown to SPORT_HEAD */}
+      {canManageEvent && (
+        <SupportContactManager mode="event" eventId={eventId} title="Event Support Contacts" />
       )}
 
       {/* SPORTS LIST */}

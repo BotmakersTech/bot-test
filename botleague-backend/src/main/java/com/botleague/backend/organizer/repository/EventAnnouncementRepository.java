@@ -12,5 +12,6 @@ public interface EventAnnouncementRepository extends JpaRepository<EventAnnounce
     List<EventAnnouncement> findByEventIdOrderByCreatedAtDesc(UUID eventId);
     List<EventAnnouncement> findByEventIdAndTargetType(UUID eventId, String targetType);
     List<EventAnnouncement> findByEventIdAndIsPinnedTrueOrderByCreatedAtDesc(UUID eventId);
+    List<EventAnnouncement> findByTargetSportIdOrderByCreatedAtDesc(UUID targetSportId);
     long countByEventId(UUID eventId);
 }

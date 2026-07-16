@@ -13,6 +13,8 @@ import {
   addLineupMember,
   removeLineupMember,
   registerTeamWithLineup,
+  getSportAnnouncements,
+  getSportSupportContacts,
 } from "../api/event.api";
 import type {
   EventResponse,
@@ -20,6 +22,8 @@ import type {
   EventRegistrationResponse,
   TeamLineUpResponse,
   LineupRole,
+  SportAnnouncement,
+  SupportContact,
 } from "../api/event.api";
 import useMatches from "../../Matches/Hooks/useMatches";
 import type { PublicMatchView } from "../../Matches/api/matches.api";
@@ -60,7 +64,7 @@ const TABS = [
   { id: "matches",   label: "Matches",   icon: "⚔️"  },
   { id: "rankings",  label: "Leaderboard",  icon: "🏆" },
   { id: "schedule",  label: "Schedule",  icon: "📅" },
-  { id: "news",      label: "News",      icon: "📰" },
+  { id: "news",      label: "Announcements", icon: "📰" },
 ] as const;
 
 type TabId = typeof TABS[number]["id"] | "registration" | "lineup";
@@ -201,6 +205,43 @@ function fmtRuleVal(val: string): string {
   return val;
 }
 
+// ─── Support Info Card ──────────────────────────────────
+function SupportInfoCard({ eventId, sportId }: { eventId: string; sportId: string }) {
+  const [contacts, setContacts] = useState<SupportContact[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!eventId || !sportId) return;
+    getSportSupportContacts(eventId, sportId)
+      .then(setContacts)
+      .catch(() => setContacts([]))
+      .finally(() => setLoading(false));
+  }, [eventId, sportId]);
+
+  if (loading || contacts.length === 0) return null;
+
+  return (
+    <div style={{ background: CARD2, border: "1px solid rgba(250,71,21,0.14)", borderRadius: "14px", overflow: "hidden" }}>
+      <div style={{ padding: "12px 18px", borderBottom: `1px solid ${BORDER}`, background: "rgba(250,71,21,0.04)", fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", color: ACCENT }}>
+        Support
+      </div>
+      <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: "10px" }}>
+        {contacts.map(c => (
+          <div key={c.id} style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+            <div style={{ fontSize: "0.84rem", fontWeight: 700, color: TEXT }}>
+              {c.name}{c.roleLabel ? ` — ${c.roleLabel}` : ""}
+            </div>
+            <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
+              {c.email && <span style={{ fontSize: "0.76rem", color: MUTED }}>✉️ {c.email}</span>}
+              {c.phone && <span style={{ fontSize: "0.76rem", color: MUTED }}>📞 {c.phone}</span>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Overview Tab ─────────────────────────────────────
 function OverviewTab({ sport }: { sport: EventSportResponse }) {
   const hasPhysical = sport.weightLimitKg != null || sport.maxLengthCm != null || sport.maxWidthCm != null || sport.maxHeightCm != null;
@@ -254,6 +295,8 @@ function OverviewTab({ sport }: { sport: EventSportResponse }) {
           <MetaCell label="Registered"       value={`${sport.registeredTeamsCount} robots`} />
         </div>
       </div>
+
+      <SupportInfoCard eventId={sport.eventId} sportId={sport.id} />
 
       {/* Physical constraints */}
       {hasPhysical && (
@@ -1358,27 +1401,35 @@ function ScheduleTab({ matches, loading, error }: { matches: PublicMatchView[]; 
   );
 }
 
-// ─── News Tab ─────────────────────────────────────────
-const MOCK_NEWS = [
-  { id: "n1", tag: "ANNOUNCEMENT", tagColor: ACCENT,  title: "Registration Extended by One Week",                      body: "Due to overwhelming interest, the registration deadline has been extended to 10th August 2025.", author: "BotLeague Organising Committee", date: "2025-07-28T09:00:00", pinned: true },
-  { id: "n4", tag: "LIVE",         tagColor: SUCCESS,  title: "Semi Final 1 Underway — Apex Ignitors vs Volt Riders", body: "The first semi final is live right now! Both bots are evenly matched at 1-1 after the first two rounds.",  author: "BotLeague Live Desk",          date: "2025-08-16T10:15:00", pinned: true },
-];
-function NewsTab() {
+// ─── News / Announcements Tab ──────────────────────────
+function NewsTab({ announcements, loading }: { announcements: SportAnnouncement[]; loading: boolean }) {
+  if (loading) {
+    return <div style={{ color: MUTED, fontSize: "0.85rem", padding: "24px 0", textAlign: "center" }}>Loading announcements…</div>;
+  }
+  if (announcements.length === 0) {
+    return <div style={{ color: MUTED, fontSize: "0.85rem", padding: "24px 0", textAlign: "center" }}>No announcements yet for this sport.</div>;
+  }
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-      {MOCK_NEWS.map(news => (
-        <div key={news.id} style={{ background: CARD, border: `1px solid ${news.pinned ? "rgba(250,71,21,0.28)" : BORDER}`, borderRadius: "14px", padding: "20px 22px", position: "relative", overflow: "hidden" }}>
-          {news.pinned && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: `linear-gradient(to right, ${ACCENT}, ${ACCENT2})` }} />}
+      {announcements.map(news => (
+        <div key={news.id} style={{ background: CARD, border: `1px solid ${news.isPinned ? "rgba(250,71,21,0.28)" : BORDER}`, borderRadius: "14px", padding: "20px 22px", position: "relative", overflow: "hidden" }}>
+          {news.isPinned && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: `linear-gradient(to right, ${ACCENT}, ${ACCENT2})` }} />}
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", marginBottom: "10px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ background: `${news.tagColor}20`, border: `1px solid ${news.tagColor}50`, color: news.tagColor, borderRadius: "6px", fontSize: "0.6rem", padding: "2px 8px", fontWeight: 800 }}>{news.tag}</span>
-              {news.pinned && <span style={{ background: "rgba(250,71,21,0.1)", border: "1px solid rgba(250,71,21,0.2)", color: ACCENT, borderRadius: "6px", fontSize: "0.6rem", padding: "2px 8px", fontWeight: 700 }}>📌 PINNED</span>}
+              <span style={{ background: `${ACCENT}20`, border: `1px solid ${ACCENT}50`, color: ACCENT, borderRadius: "6px", fontSize: "0.6rem", padding: "2px 8px", fontWeight: 800 }}>ANNOUNCEMENT</span>
+              {news.isPinned && <span style={{ background: "rgba(250,71,21,0.1)", border: "1px solid rgba(250,71,21,0.2)", color: ACCENT, borderRadius: "6px", fontSize: "0.6rem", padding: "2px 8px", fontWeight: 700 }}>📌 PINNED</span>}
             </div>
-            <span style={{ fontSize: "0.68rem", color: MUTED, whiteSpace: "nowrap" }}>{new Date(news.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })} · {new Date(news.date).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
+            {news.sentAt && (
+              <span style={{ fontSize: "0.68rem", color: MUTED, whiteSpace: "nowrap" }}>{new Date(news.sentAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })} · {new Date(news.sentAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
+            )}
           </div>
           <h3 style={{ margin: "0 0 8px", fontSize: "0.95rem", fontWeight: 700, color: TEXT, lineHeight: 1.4 }}>{news.title}</h3>
-          <p style={{ margin: "0 0 12px", fontSize: "0.82rem", color: MUTED, lineHeight: 1.7 }}>{news.body}</p>
-          <div style={{ fontSize: "0.68rem", color: MUTED, display: "flex", alignItems: "center", gap: "5px" }}><span>✍️</span><span>{news.author}</span></div>
+          <p style={{ margin: "0 0 12px", fontSize: "0.82rem", color: MUTED, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{news.body}</p>
+          {news.attachmentUrl && (
+            <a href={news.attachmentUrl} target="_blank" rel="noreferrer" style={{ fontSize: "0.75rem", color: ACCENT, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "5px" }}>
+              📎 View attachment
+            </a>
+          )}
         </div>
       ))}
     </div>
@@ -1411,6 +1462,18 @@ export default function UserSportDetail() {
   const {
     leaderboard, loading: lbLoading, error: lbError, refetch: lbRefetch,
   } = useLeaderboard(eventId ?? "", sportId ?? "");
+
+  const [announcements,        setAnnouncements]        = useState<SportAnnouncement[]>([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!eventId || !sportId) return;
+    setAnnouncementsLoading(true);
+    getSportAnnouncements(eventId, sportId)
+      .then(setAnnouncements)
+      .catch(() => setAnnouncements([]))
+      .finally(() => setAnnouncementsLoading(false));
+  }, [eventId, sportId]);
 
   const [tab,           setTab]           = useState<TabId>("overview");
   const [busyReg,       setBusyReg]       = useState(false);
@@ -1733,7 +1796,7 @@ export default function UserSportDetail() {
           {tab === "matches"   && <MatchesTab matches={matches} loading={matchesLoading} error={matchesError} />}
           {tab === "rankings"  && <RankingsTab leaderboard={leaderboard} loading={lbLoading} error={lbError} onRefresh={lbRefetch} />}
           {tab === "schedule"  && <ScheduleTab matches={matches} loading={matchesLoading} error={matchesError} />}
-          {tab === "news"      && <NewsTab />}
+          {tab === "news"      && <NewsTab announcements={announcements} loading={announcementsLoading} />}
 
           {tab === "registration" && (
             <RegistrationTab

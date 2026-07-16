@@ -300,6 +300,116 @@ export const ensureTeamChatRoom = async (eventId: string, teamId: string): Promi
   return res.data;
 };
 
+// ── Sport announcements (one-way, organiser -> sport participants) ────────────
+
+export interface SportAnnounceRequest {
+  title?: string;
+  message: string;
+  targetType: "ALL" | "SPECIFIC_TEAMS";
+  teamIds?: string[];
+  attachmentKey?: string;
+  attachmentUrl?: string;
+  attachmentFileType?: string;
+}
+
+export interface SportAnnouncementRecord {
+  id: string;
+  eventId: string;
+  title: string;
+  body: string;
+  targetType: string;
+  targetSportId: string | null;
+  sportName: string | null;
+  targetTeamIds: string[];
+  attachmentUrl: string | null;
+  attachmentFileType: string | null;
+  isPinned: boolean;
+  sentAt: string | null;
+  createdAt: string;
+}
+
+export const sendSportAnnouncement = async (
+  eventId: string,
+  sportId: string,
+  req: SportAnnounceRequest
+): Promise<SportAnnouncementRecord> => {
+  const res = await api.post(`/organizer/events/${eventId}/sports/${sportId}/announce`, req);
+  return res.data;
+};
+
+export const getSportAnnouncementsForOrganizer = async (
+  eventId: string,
+  sportId: string
+): Promise<SportAnnouncementRecord[]> => {
+  const res = await api.get(`/organizer/events/${eventId}/sports/${sportId}/announcements`);
+  return res.data;
+};
+
+export const getAnnouncementAttachmentUploadUrl = async (
+  eventId: string,
+  sportId: string,
+  fileType: string,
+  fileSize: number
+): Promise<{ uploadUrl: string; fileUrl: string; key: string }> => {
+  const res = await api.post(`/events/${eventId}/sports/${sportId}/announcements/upload-url`, null, {
+    params: { fileType, fileSize },
+  });
+  return res.data;
+};
+
+// ── Support contacts ────────────────────────────────────────────────────────
+
+export interface SupportContactRecord {
+  id: string;
+  eventId: string;
+  eventSportId: string | null;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  roleLabel: string | null;
+  displayOrder: number;
+}
+
+export interface SupportContactRequest {
+  eventSportId?: string | null;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  roleLabel?: string | null;
+  displayOrder?: number | null;
+}
+
+export const getSupportContacts = async (
+  eventId: string,
+  sportId?: string
+): Promise<SupportContactRecord[]> => {
+  const res = await api.get(`/organizer/events/${eventId}/support-contacts`, {
+    params: sportId ? { sportId } : undefined,
+  });
+  return res.data;
+};
+
+export const createSupportContact = async (
+  eventId: string,
+  req: SupportContactRequest
+): Promise<SupportContactRecord> => {
+  const res = await api.post(`/organizer/events/${eventId}/support-contacts`, req);
+  return res.data;
+};
+
+export const updateSupportContact = async (
+  eventId: string,
+  contactId: string,
+  req: SupportContactRequest
+): Promise<SupportContactRecord> => {
+  const res = await api.put(`/organizer/events/${eventId}/support-contacts/${contactId}`, req);
+  return res.data;
+};
+
+export const deleteSupportContact = async (eventId: string, contactId: string): Promise<void> => {
+  await api.delete(`/organizer/events/${eventId}/support-contacts/${contactId}`);
+};
+
 export const broadcastAnnouncement = async (
   eventId: string,
   request: BroadcastRequest
