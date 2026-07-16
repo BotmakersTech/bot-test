@@ -34,6 +34,12 @@ public class ChatMessage {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
+    @Column(name = "attachment_url")
+    private String attachmentUrl;
+
+    @Column(name = "attachment_file_type")
+    private String attachmentFileType;
+
     @Column(name = "sent_at", nullable = false)
     private LocalDateTime sentAt;
 
@@ -68,6 +74,12 @@ public class ChatMessage {
 
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
+
+    public String getAttachmentUrl() { return attachmentUrl; }
+    public void setAttachmentUrl(String attachmentUrl) { this.attachmentUrl = attachmentUrl; }
+
+    public String getAttachmentFileType() { return attachmentFileType; }
+    public void setAttachmentFileType(String attachmentFileType) { this.attachmentFileType = attachmentFileType; }
 
     public LocalDateTime getSentAt() { return sentAt; }
     public void setSentAt(LocalDateTime sentAt) { this.sentAt = sentAt; }

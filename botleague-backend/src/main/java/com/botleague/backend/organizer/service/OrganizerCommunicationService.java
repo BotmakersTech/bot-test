@@ -180,7 +180,8 @@ public class OrganizerCommunicationService {
                 chatService.addParticipant(room.getId(), userId, false);
             }
             chatService.addParticipant(room.getId(), senderId, true);
-            chatService.sendMessage(room.getId(), senderId, title + "\n\n" + req.getMessage());
+            chatService.sendMessage(room.getId(), senderId, title + "\n\n" + req.getMessage(),
+                    req.getAttachmentUrl(), req.getAttachmentFileType());
         }
 
         // 3. Persist audit record

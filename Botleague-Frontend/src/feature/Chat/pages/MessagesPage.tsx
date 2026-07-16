@@ -102,6 +102,17 @@ function allRoomsFromList(rooms: ReturnType<typeof selectChatRooms>): ChatRoom[]
   ];
 }
 
+type MessagesTab = "team" | "announcements";
+
+// "Team Chat" = team groups + the group created at event registration + direct messages.
+// "Event Announcement" = everything an organiser broadcasts (read-only for the recipient).
+function roomsForTab(rooms: ReturnType<typeof selectChatRooms>, tab: MessagesTab): ChatRoom[] {
+  if (!rooms) return [];
+  return tab === "announcements"
+    ? [...rooms.announcementChats]
+    : [...rooms.teamChats, ...rooms.registrationChats, ...rooms.directChats];
+}
+
 interface MessageGroup {
   key: string;
   isSystem: boolean;
@@ -196,9 +207,22 @@ function BubbleGroup({ group, onDeleteMessage }: { group: MessageGroup; onDelete
       {!group.isMine && <BubbleAvatar name={group.senderName} photoSrc={photoSrc} />}
 
       <div className="chat-bubble-stack">
+        {!group.isMine && group.senderName && (
+          <span style={{ fontSize: "0.74rem", fontWeight: 700, color: "#6b6b6b", padding: "0 4px" }}>
+            {group.senderName}
+          </span>
+        )}
         {group.messages.map((msg) => (
           <div key={msg.id} style={{ display: "flex", flexDirection: "column", alignItems: group.isMine ? "flex-end" : "flex-start" }}>
             <div className={group.isMine ? "chat-bubble chat-bubble-mine" : "chat-bubble"} style={{ position: "relative" }}>
+              {msg.attachmentUrl && (
+                msg.attachmentFileType?.startsWith("video") ? (
+                  <video src={msg.attachmentUrl} controls style={{ maxWidth: "260px", maxHeight: "220px", borderRadius: "8px", display: "block", marginBottom: msg.content ? "8px" : 0 }} />
+                ) : (
+                  <img src={msg.attachmentUrl} alt="attachment" style={{ maxWidth: "260px", maxHeight: "260px", borderRadius: "8px", display: "block", marginBottom: msg.content ? "8px" : 0, cursor: "pointer" }}
+                    onClick={() => window.open(msg.attachmentUrl!, "_blank")} />
+                )
+              )}
               {msg.content}
               {group.isMine && (
                 <button
@@ -244,6 +268,7 @@ export default function MessagesPage() {
   const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
   const activeRoomMessages = useSelector(selectMessages(activeRoomId ?? ""));
 
+  const [activeTab, setActiveTab] = useState<MessagesTab>("team");
   const [messageText, setMessageText] = useState("");
   const [query, setQuery] = useState("");
   const [showAddMember, setShowAddMember] = useState(false);
@@ -257,6 +282,10 @@ export default function MessagesPage() {
   const allRoomIds = allRooms.map((room) => room.id);
   const unreadTotal = allRooms.reduce((sum, room) => sum + room.unreadCount, 0);
 
+  const tabRooms = useMemo(() => roomsForTab(rooms, activeTab), [rooms, activeTab]);
+  const teamUnread = useMemo(() => roomsForTab(rooms, "team").reduce((sum, r) => sum + r.unreadCount, 0), [rooms]);
+  const announcementUnread = useMemo(() => roomsForTab(rooms, "announcements").reduce((sum, r) => sum + r.unreadCount, 0), [rooms]);
+
   useChatWebSocket(allRoomIds, getAccessToken());
 
   useEffect(() => {
@@ -269,6 +298,15 @@ export default function MessagesPage() {
     }
   }, [activeRoomId, allRooms, dispatch]);
 
+  function handleTabSelect(tab: MessagesTab) {
+    setActiveTab(tab);
+    const roomsInTab = roomsForTab(rooms, tab);
+    const stillVisible = roomsInTab.some((r) => r.id === activeRoomId);
+    if (!stillVisible && roomsInTab.length > 0) {
+      dispatch(setActiveRoom(roomsInTab[0].id));
+    }
+  }
+
   useEffect(() => {
     if (activeRoomId) {
       dispatch(fetchMessages(activeRoomId)).then(() => dispatch(markChatRoomRead(activeRoomId)));
@@ -280,7 +318,7 @@ export default function MessagesPage() {
   }, [activeRoomMessages]);
 
   const activeRoom = allRooms.find((room) => room.id === activeRoomId);
-  const visibleRooms = allRooms.filter((room) =>
+  const visibleRooms = tabRooms.filter((room) =>
     room.name.toLowerCase().includes(query.trim().toLowerCase())
   );
   const groups = buildGroups(activeRoomMessages, currentUserId);
@@ -353,6 +391,35 @@ export default function MessagesPage() {
           </div>
           <button type="button" className="chat-add-button" aria-label="Start new chat">
             <Plus size={26} strokeWidth={2.8} />
+          </button>
+        </div>
+
+        <div style={{ display: "flex", gap: "8px", padding: "0 16px 12px" }}>
+          <button
+            type="button"
+            onClick={() => handleTabSelect("team")}
+            style={{
+              flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+              padding: "8px 10px", borderRadius: "9px", fontSize: "0.8rem", fontWeight: 700, cursor: "pointer",
+              background: activeTab === "team" ? "#8C6CFF" : "rgba(140,108,255,0.08)",
+              color: activeTab === "team" ? "#fff" : "#8C6CFF",
+              border: `1px solid ${activeTab === "team" ? "#8C6CFF" : "rgba(140,108,255,0.25)"}`,
+            }}
+          >
+            Team Chat {teamUnread > 0 && <span style={{ background: activeTab === "team" ? "rgba(255,255,255,0.3)" : "#8C6CFF", color: "#fff", borderRadius: "999px", fontSize: "0.65rem", padding: "1px 6px" }}>{teamUnread}</span>}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleTabSelect("announcements")}
+            style={{
+              flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+              padding: "8px 10px", borderRadius: "9px", fontSize: "0.8rem", fontWeight: 700, cursor: "pointer",
+              background: activeTab === "announcements" ? "#8C6CFF" : "rgba(140,108,255,0.08)",
+              color: activeTab === "announcements" ? "#fff" : "#8C6CFF",
+              border: `1px solid ${activeTab === "announcements" ? "#8C6CFF" : "rgba(140,108,255,0.25)"}`,
+            }}
+          >
+            Event Announcement {announcementUnread > 0 && <span style={{ background: activeTab === "announcements" ? "rgba(255,255,255,0.3)" : "#8C6CFF", color: "#fff", borderRadius: "999px", fontSize: "0.65rem", padding: "1px 6px" }}>{announcementUnread}</span>}
           </button>
         </div>
 

@@ -7,6 +7,8 @@ export interface ChatMessage {
   senderName: string
   senderPhotoUrl?: string | null
   content: string
+  attachmentUrl?: string | null
+  attachmentFileType?: string | null
   sentAt: string
   isDeleted: boolean
   mine: boolean

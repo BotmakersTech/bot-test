@@ -1507,7 +1507,7 @@ export default function OrganizerSportDetailPage() {
             .filter(t => t.teamId)
             .map(t => ({ teamId: t.teamId as string, teamName: t.teamName, robotName: t.robotName }))}
           onClose={() => setShowAnnounceForm(false)}
-          onSent={() => setShowAnnounceForm(false)}
+          onSent={() => {}}
         />
       )}
 

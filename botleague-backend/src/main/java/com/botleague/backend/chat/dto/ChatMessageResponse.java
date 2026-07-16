@@ -11,6 +11,8 @@ public class ChatMessageResponse {
     private String senderName;
     private String senderPhotoUrl;
     private String content;
+    private String attachmentUrl;
+    private String attachmentFileType;
     private LocalDateTime sentAt;
     private boolean isDeleted;
     private boolean mine;
@@ -37,6 +39,12 @@ public class ChatMessageResponse {
 
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
+
+    public String getAttachmentUrl() { return attachmentUrl; }
+    public void setAttachmentUrl(String attachmentUrl) { this.attachmentUrl = attachmentUrl; }
+
+    public String getAttachmentFileType() { return attachmentFileType; }
+    public void setAttachmentFileType(String attachmentFileType) { this.attachmentFileType = attachmentFileType; }
 
     public LocalDateTime getSentAt() { return sentAt; }
     public void setSentAt(LocalDateTime sentAt) { this.sentAt = sentAt; }

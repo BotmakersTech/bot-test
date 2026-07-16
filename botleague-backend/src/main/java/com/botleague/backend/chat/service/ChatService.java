@@ -386,6 +386,11 @@ public class ChatService {
     // ─────────────────────────────────────────────────────────────────────────
 
     public ChatMessageResponse sendMessage(UUID chatRoomId, UUID senderId, String content) {
+        return sendMessage(chatRoomId, senderId, content, null, null);
+    }
+
+    public ChatMessageResponse sendMessage(UUID chatRoomId, UUID senderId, String content,
+                                            String attachmentUrl, String attachmentFileType) {
         ChatParticipant participant = chatParticipantRepository
                 .findByChatRoomIdAndUserId(chatRoomId, senderId)
                 .orElseThrow(() -> ApiException.forbidden("You are not a participant in this chat"));
@@ -406,6 +411,8 @@ public class ChatService {
         message.setSenderName(buildDisplayName(sender));
         message.setSenderPhotoUrl(getFileService.resolveProfileImage(sender.getProfilePhotoUrl()));
         message.setContent(content);
+        message.setAttachmentUrl(attachmentUrl);
+        message.setAttachmentFileType(attachmentFileType);
 
         ChatMessage saved = chatMessageRepository.save(message);
         ChatMessageResponse response = toMessageResponse(saved, senderId);
@@ -577,6 +584,8 @@ public class ChatService {
         response.setSenderName(message.getSenderName());
         response.setSenderPhotoUrl(message.getSenderPhotoUrl());
         response.setContent(message.getContent());
+        response.setAttachmentUrl(message.getAttachmentUrl());
+        response.setAttachmentFileType(message.getAttachmentFileType());
         response.setSentAt(message.getSentAt());
         response.setDeleted(message.isDeleted());
         response.setSystem(message.isSystem());
