@@ -394,7 +394,7 @@ export default function MessagesPage() {
           </button>
         </div>
 
-        <div style={{ display: "flex", gap: "8px", padding: "0 16px 12px" }}>
+        <div style={{ display: "flex", gap: "8px", padding: "12px 16px 12px" }}>
           <button
             type="button"
             onClick={() => handleTabSelect("team")}

@@ -1,0 +1,325 @@
+/* =========================================================
+   AuthMockup.css — BotLeague
+   Login + Register mockup restyle (variant="login" / "register"
+   on AuthLayout / AuthCard). Kept separate from AuthLayout.css
+   so the "default" variant (Forgot/Reset password) is untouched.
+   ========================================================= */
+
+/* Logo at its natural 609x57 size for the login/register variants.
+   `.cna-logo` hard-codes width:320px in BOTH AuthLayout.css and
+   login.css (a near-duplicate stylesheet also loaded on every auth
+   page); whichever of those two happens to load last wins a plain
+   single-class override, which is exactly the kind of load-order
+   accident that broke padding earlier in this file. Written as a
+   compound selector (.cna-logo.cna-logo--auth) instead, which is
+   MORE specific than either single-class `.cna-logo` rule, so it
+   wins unconditionally regardless of load order. */
+.cna-logo.cna-logo--auth {
+  width: 609px;
+  max-width: 100%;
+  height: auto;
+}
+
+@font-face {
+  font-family: "AuthInter";
+  src: url("../assets/fonts/Inter_18pt-Medium.ttf") format("truetype");
+}
+@font-face {
+  font-family: "AuthOrbitron";
+  src: url("../assets/fonts/Orbitron-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "AuthPoppins";
+  src: url("../assets/fonts/Poppins-Medium.ttf") format("truetype");
+}
+@font-face {
+  font-family: "AuthRacingSansOne";
+  src: url("../assets/fonts/RacingSansOne-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "AuthSarpanch";
+  src: url("../assets/fonts/Sarpanch-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "AuthSpaceGrotesk";
+  src: url("../assets/fonts/SpaceGrotesk-Regular.ttf") format("truetype");
+}
+
+.cna-gradient-card--login,
+.cna-gradient-card--register {
+  --auth-inter: "AuthInter", sans-serif;
+  --auth-orbitron: "AuthOrbitron", sans-serif;
+  --auth-poppins: "AuthPoppins", sans-serif;
+  --auth-racing: "AuthRacingSansOne", sans-serif;
+  --auth-sarpanch: "AuthSarpanch", sans-serif;
+  --auth-spacegrotesk: "AuthSpaceGrotesk", sans-serif;
+}
+
+/* ── Background decorations (register only, hidden below 1100px) ── */
+.cna-auth-deco {
+  display: none;
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+@media (min-width: 1100px) {
+  .cna-auth-deco { display: block; }
+}
+
+/* ── Login gradient-border card ── */
+.cna-gradient-card--login {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 692px;
+  padding-top: 32px;
+  padding-bottom: 24px;
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(135deg, rgba(1, 98, 209, 0.75), rgba(140, 108, 255, 0.75)) border-box;
+  border: 7px solid transparent;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.06);
+}
+@media (min-width: 1024px) {
+  .cna-gradient-card--login { padding-top: 44px; padding-bottom: 30px; }
+}
+@media (min-width: 1280px) {
+  .cna-gradient-card--login { padding-top: 60px; padding-bottom: 40px; }
+}
+
+/* ── Register gradient-border card ── */
+.cna-gradient-card--register {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 692px;
+  border: 6px solid transparent;
+  border-radius: 12px;
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(180deg, #0162d1, #715bc0) border-box;
+  background-clip: padding-box, border-box;
+  background-origin: border-box;
+  padding: 16px 20px 24px;
+}
+@media (min-width: 768px)  { .cna-gradient-card--register { padding: 18px 32px 28px; } }
+@media (min-width: 1024px) { .cna-gradient-card--register { padding: 20px 48px 32px; } }
+@media (min-width: 1280px) { .cna-gradient-card--register { padding: 24px 72px 36px; } }
+
+/* ── Login outline "Create new account" button ── */
+.cna-gradient-btn {
+  border: 1.5px solid transparent;
+  background-image:
+    linear-gradient(#ffffff, #ffffff),
+    linear-gradient(to right, #0162D1, #8C6CFF);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+.cna-gradient-btn:hover {
+  background-image:
+    linear-gradient(#f8faff, #f8faff),
+    linear-gradient(to right, #0162D1, #8C6CFF);
+}
+
+/* ── Register outline "Login" button ── */
+.cna-border-gradient {
+  border: 2px solid transparent;
+  background-image:
+    linear-gradient(#ffffff, #ffffff),
+    linear-gradient(180deg, #0162d1, #715bc0);
+  background-clip: padding-box, border-box;
+  background-origin: border-box;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  display: block;
+}
+@media (min-width: 1024px) {
+  .cna-border-gradient { padding-top: 12px; padding-bottom: 12px; }
+}
+
+/* ── Login input ── */
+.cna-login-field-input {
+  height: 42px;
+  width: 100%;
+  background-color: rgba(221, 221, 221, 0.42);
+  border: 1px solid #BDBDBD;
+  border-radius: 12px;
+  box-shadow: inset 4px 4px 4px rgba(0, 0, 0, 0.25);
+  padding: 10px 16px;
+  outline: none;
+  transition: all 0.2s ease;
+  font-family: var(--auth-inter);
+}
+@media (min-width: 768px) {
+  .cna-login-field-input { height: 46px; padding: 12px 18px; }
+}
+@media (min-width: 1024px) {
+  .cna-login-field-input { height: 48px; padding: 14px 20px; }
+}
+@media (min-width: 1280px) {
+  .cna-login-field-input { height: 51px; padding: 16px 20px; }
+}
+.cna-login-field-input:focus {
+  border-color: #0162D1;
+  background-color: #ffffff;
+  box-shadow: none;
+}
+.cna-login-field-input::placeholder { color: rgba(0, 0, 0, 0.45); }
+.cna-login-field-input.cna-has-icon-left  { padding-left: 44px; }
+.cna-login-field-input.cna-has-icon-right { padding-right: 44px; }
+
+/* ── Register input ── */
+.cna-register-field-input {
+  font-family: var(--auth-inter);
+  color: #999797;
+  background-color: #bdbdbd2b;
+  border: 1px solid #BDBDBD;
+  border-radius: 0.75rem;
+  padding: 10px 12px 10px 16px;
+  width: 100%;
+  box-shadow: inset 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+  transition: box-shadow 150ms ease-in;
+  box-sizing: border-box;
+}
+@media (min-width: 768px) {
+  .cna-register-field-input { padding-top: 12px; padding-bottom: 12px; padding-left: 24px; }
+}
+@media (min-width: 1024px) {
+  .cna-register-field-input { padding-left: 28px; }
+}
+.cna-register-field-input.cna-has-eye { padding-right: 44px; }
+@media (min-width: 768px) {
+  .cna-register-field-input.cna-has-eye { padding-right: 48px; }
+}
+.cna-register-field-input:focus {
+  outline: none;
+  border-color: #BDBDBD;
+  box-shadow: none;
+}
+
+/* Small spacing utilities.
+   Tailwind CDN margin/padding utilities lose the cascade tie against
+   .cna-root * (AuthLayout.css) when both end up at equal specificity;
+   these classes always win because this stylesheet loads after
+   AuthLayout.css. Use these instead of mt-*, mb-*, pl-*, mx-auto for
+   spacing in the login/register variants, and prefer gap on a flex
+   parent wherever the layout allows it. */
+.cna-auth-label-pad { padding-left: 4px; }
+
+.cna-login-form-pad { padding-left: 24px; padding-right: 24px; }
+@media (min-width: 768px) {
+  .cna-login-form-pad { padding-left: 0; padding-right: 0; }
+}
+
+.cna-otp-resend-row { padding-top: 8px; padding-bottom: 8px; }
+@media (min-width: 768px)  { .cna-otp-resend-row { padding-top: 10px; padding-bottom: 10px; } }
+@media (min-width: 1024px) { .cna-otp-resend-row { padding-top: 12px; padding-bottom: 12px; } }
+
+.cna-register-hint-pad { }
+@media (min-width: 1024px) { .cna-register-hint-pad { padding-left: 8px; } }
+
+.cna-or-divider-pad { padding-top: 4px; padding-bottom: 4px; }
+
+.cna-checkbox-nudge { margin-top: 5px; }
+
+/* ── Register OTP boxes ── */
+.cna-register-otp-box {
+  font-family: var(--auth-inter);
+  color: #999797;
+  background-color: #bdbdbd2b;
+  border: 1px solid #BDBDBD;
+  border-radius: 0.5rem;
+  text-align: center;
+  transition: box-shadow 150ms ease-in;
+  box-sizing: border-box;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 10px 4px;
+}
+.cna-register-otp-box:focus {
+  outline: none;
+  border-color: #BDBDBD;
+  box-shadow: none;
+}
+
+/* ── Two-row alignment grid (mobile+GetOTP / otp-boxes+Verify) ── */
+.cna-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+}
+@media (min-width: 768px) {
+  .cna-form-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+  }
+}
+
+.cna-row-left {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+.cna-row-left .cna-register-field-input { width: 100%; }
+
+.cna-otp-group {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  align-items: center;
+}
+@media (min-width: 768px) { .cna-otp-group { gap: 12px; } }
+
+.cna-row-right {
+  flex-shrink: 0;
+  width: 100%;
+}
+@media (min-width: 768px)  { .cna-row-right { width: 108px; } }
+@media (min-width: 1024px) { .cna-row-right { width: 120px; } }
+@media (min-width: 1280px) { .cna-row-right { width: 136px; } }
+
+/* ── Register row buttons (Get OTP / Verify) ── */
+.cna-register-row-btn {
+  background-image: linear-gradient(360deg, #9d7df9 0%, #708bf4 50%, #5385ed 100%);
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  border-radius: 0.75rem;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  transition: transform 150ms ease;
+  box-shadow: 0 6px 20px rgba(83, 133, 237, 0.35);
+  font-family: var(--auth-poppins);
+}
+.cna-register-row-btn:active:not(:disabled) { transform: scale(0.95); }
+.cna-register-row-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+@media (min-width: 768px)  { .cna-register-row-btn { font-size: 15px; padding: 11px 12px; } }
+@media (min-width: 1024px) { .cna-register-row-btn { font-size: 16px; padding: 12px 12px; } }
+@media (min-width: 1280px) { .cna-register-row-btn { font-size: 18px; padding: 13px 12px; } }
+
+/* ── Register "Create account" submit button ── */
+.cna-register-submit-btn {
+  background-image: linear-gradient(300deg, #9d7df9 40%, #5385ed 100%);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: transform 300ms ease-linear;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+@media (min-width: 1024px) {
+  .cna-register-submit-btn { padding-top: 12px; padding-bottom: 12px; }
+}
+.cna-register-submit-btn:active:not(:disabled) { transform: scale(0.98); }
+.cna-register-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }

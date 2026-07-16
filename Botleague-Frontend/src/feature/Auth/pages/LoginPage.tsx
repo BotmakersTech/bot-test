@@ -9,11 +9,8 @@ export default function LoginPage() {
   
 
   return (
-    <AuthLayout>
-      <AuthCard
-        title="Welcome Back!"
-        subtitle="Enter the Arena"
-      >
+    <AuthLayout variant="login">
+      <AuthCard title="Welcome Back!" variant="login">
         <LoginForm />
       </AuthCard>
     </AuthLayout>

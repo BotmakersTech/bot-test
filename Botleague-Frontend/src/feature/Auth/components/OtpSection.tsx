@@ -78,94 +78,82 @@ export default function OtpSection({
   };
 
   return (
-    <div className="flex flex-col w-full gap-5">
-      {/* ---------- MOBILE + GET OTP ---------- */}
-      <div className="flex items-stretch gap-3 md:gap-4">
-        <input
-          type="tel"
-          inputMode="numeric"
-          autoComplete="tel"
-          placeholder="Mobile No"
-          value={mobile}
-          onChange={(e) =>
-            setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))
-          }
-          disabled={otpVerified}
-          className="w-full cna-input font-inter text-[14px] md:text-[16px] text-[#5c5c5c]
-            placeholder:text-[20px] placeholder:text-[#000000]/45 bg-[#bdbdbd2b] rounded-xl
-            border border-[#BDBDBD] px-4 py-3 md:px-5 md:py-4
-            shadow-[inset_0_2px_4px_rgba(0,0,0,0.12)] focus:shadow-none
-            focus:outline-none focus:border-[#BDBDBD]
-            transition-shadow duration-150 ease-in
-            disabled:opacity-60 disabled:cursor-not-allowed
-            "
-        />
-
-        <button
-          type="button"
-          onClick={otpSent ? onResendOtp : onSendOtp}
-          disabled={isLoading || otpVerified || (otpSent && resendTimer > 0)}
-          className="cna-btn cna-btn--otp shrink-0 whitespace-nowrap font-poppins font-semibold tracking-wide
-            text-white text-[14px] md:text-[16px]
-            bg-gradient-to-b from-[#3B82F6] to-[#8B7CF6]
-            flex items-center justify-center
-            cursor-pointer transition-transform duration-150 active:scale-95
-            disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100"
-        >
-          {otpSent && resendTimer > 0
-            ? `Resend in ${resendTimer}s`
-            : otpSent
-            ? "Resend OTP"
-            : "Get OTP"}
-        </button>
-      </div>
-
-      {/* ---------- OTP BOXES ---------- */}
-      <div className="flex justify-center items-center gap-5 md:gap-8 mt-6 mb-4 md:mt-8 md:mb-5">
-        {otp.map((digit, index) => (
+    <div className="flex flex-col gap-3 md:gap-4 lg:gap-5 w-full">
+      {/* ---------- ROW 1: MOBILE + GET OTP ---------- */}
+      <div className="cna-form-row">
+        <div className="cna-row-left">
           <input
-            key={index}
-            ref={(el) => {
-              otpRefs.current[index] = el;
-            }}
-            value={digit}
-            maxLength={1}
+            type="tel"
             inputMode="numeric"
-            autoComplete="one-time-code"
-            onChange={(e) => handleOtpChange(e.target.value, index)}
-            onKeyDown={(e) => handleOtpKeyDown(e, index)}
-            onPaste={handleOtpPaste}
-            onFocus={(e) => e.target.select()}
-            disabled={!otpSent || otpVerified}
-            className="w-11 h-11 md:w-14 md:h-14  text-center font-inter
-              text-[16px] md:text-[18px] text-[#5c5c5c]
-              bg-[#bdbdbd2b] rounded-lg border border-[#BDBDBD]
-              shadow-[inset_0_2px_4px_rgba(0,0,0,0.12)] focus:shadow-none
-              focus:outline-none focus:border-[#BDBDBD]
-              transition-shadow duration-150 ease-in
-              disabled:opacity-60 disabled:cursor-not-allowed"
+            autoComplete="tel"
+            placeholder="Mobile Number"
+            value={mobile}
+            onChange={(e) =>
+              setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))
+            }
+            disabled={otpVerified}
+            className="cna-register-field-input text-[14px] md:text-[16px] lg:text-[18px] xl:text-[20px] disabled:opacity-60 disabled:cursor-not-allowed"
           />
-        ))}
+        </div>
+        <div className="cna-row-right">
+          <button
+            type="button"
+            onClick={otpSent ? onResendOtp : onSendOtp}
+            disabled={isLoading || otpVerified || (otpSent && resendTimer > 0)}
+            className="cna-register-row-btn"
+          >
+            {otpSent && resendTimer > 0
+              ? `Resend in ${resendTimer}s`
+              : otpSent
+              ? "Resend OTP"
+              : "Get OTP"}
+          </button>
+        </div>
       </div>
 
-      {/* ---------- RESEND TIMER + VERIFY ---------- */}
-      <div className="flex justify-between items-center px-1 md:px-4 pb-2 md:pb-4">
-        <span className="text-[#8C6CFF] text-[12px] md:text-[14px] font-inter font-medium">
+      {/* ---------- ROW 2: OTP BOXES + VERIFY ---------- */}
+      <div className="cna-form-row">
+        <div className="cna-row-left">
+          <div className="cna-otp-group">
+            {otp.map((digit, index) => (
+              <input
+                key={index}
+                ref={(el) => {
+                  otpRefs.current[index] = el;
+                }}
+                value={digit}
+                maxLength={1}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                onChange={(e) => handleOtpChange(e.target.value, index)}
+                onKeyDown={(e) => handleOtpKeyDown(e, index)}
+                onPaste={handleOtpPaste}
+                onFocus={(e) => e.target.select()}
+                disabled={!otpSent || otpVerified}
+                className="cna-register-otp-box text-[14px] md:text-[16px] lg:text-[18px] xl:text-[20px] disabled:opacity-60 disabled:cursor-not-allowed"
+              />
+            ))}
+          </div>
+        </div>
+        <div className="cna-row-right">
+          <button
+            type="button"
+            onClick={onVerifyOtp}
+            disabled={isLoading || !otpSent || otpVerified}
+            className="cna-register-row-btn"
+          >
+            {otpVerified ? "Verified ✔" : "Verify"}
+          </button>
+        </div>
+      </div>
+
+      {/* ---------- RESEND TIMER ---------- */}
+      <div className="cna-otp-resend-row">
+        <span className="text-[#8C6CFF] text-[12px] md:text-[14px] lg:text-[16px] xl:text-[18px] font-semibold">
           {otpSent && resendTimer > 0
             ? `Resend in 0:${String(resendTimer).padStart(2, "0")}`
             : ""}
         </span>
-
-        <button
-          type="button"
-          onClick={onVerifyOtp}
-          disabled={isLoading || !otpSent || otpVerified}
-          className="text-[13px] md:text-[15px] font-semibold font-inter text-black
-            cursor-pointer pr-1 md:pr-4
-            disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {otpVerified ? "Verified ✔" : "Verify"}
-        </button>
       </div>
     </div>
   );

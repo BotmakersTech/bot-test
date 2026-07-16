@@ -36,11 +36,26 @@
   --cna-font: 'Inter', system-ui, sans-serif;
 }
 
-/* ── Reset ───────────────────────────────────────────────── */
+/* ── Reset ─────────────────────────────────────────────────
+   Scoped to typographic/form elements only (not every element),
+   and wrapped in :where() so the selector contributes ZERO extra
+   specificity beyond `.cna-root` itself. Combining `.cna-root`
+   with a bare tag name (e.g. `.cna-root input`) — the first
+   version of this fix — adds a type-selector to the specificity,
+   which then unconditionally beats any single-class component
+   style like `.cna-register-field-input` or `.cna-btn`, no
+   matter what order the stylesheets load in. :where() keeps this
+   a true specificity tie with those classes, which source order
+   (this file loads first) then resolves correctly, restoring the
+   original intent — strip browser-default margin/padding from
+   headings, paragraphs, lists, and bare form controls — without
+   ever being able to outrank a real component class. */
 .cna-root *,
 .cna-root *::before,
 .cna-root *::after {
   box-sizing: border-box;
+}
+.cna-root :where(h1, h2, h3, h4, h5, h6, p, ul, ol, li, figure, blockquote, dl, dd, fieldset, legend, button, input, textarea, select) {
   margin: 0;
   padding: 0;
 }

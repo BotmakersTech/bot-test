@@ -3,18 +3,17 @@ import AuthCard from "../components/AuthCard";
 import OtpSection from "../components/OtpSection";
 import PasswordSection from "../components/PasswordSection";
 import TermsSection from "../components/TermsSection";
-import SocialAuth from "../components/SocialAuth";
-// import '../../../styles/login.css' ;
 import useRegister from "../hooks/useRegister";
 import "../../../styles/AuthLayout.css"
 export default function RegisterPage() {
   const register = useRegister();
 
   return (
-    <AuthLayout >
+    <AuthLayout variant="register">
       <AuthCard
-        title="Create New Account"
+        title="create new account"
         subtitle="Start your journey"
+        variant="register"
       >
 
         {/* OTP SECTION */}
@@ -49,36 +48,38 @@ export default function RegisterPage() {
 
         {/* ERROR */}
         {register.error && (
-          <p className="cna-field-error">
+          <p className="cna-field-error text-center">
             {register.error}
           </p>
         )}
 
-<button
-  onClick={register.handleRegister}
-  className="cna-btn shadow-xs text-white tracking-wide cursor-pointer text-[14px] md:text-[18px] w-full 
-  bg-linear-to-b from-[#3B82F6] to-[#8B7CF6]
-  px-3! py-2.5! md:py-4 md:px-2 font-poppins font-semibold rounded-xl transition-transform duration-150 active:scale-95
-  disabled:opacity-60 disabled:cursor-not-allowed"
-  disabled={register.isLoading}
->
-  {register.isLoading ? "Loading..." : "Create Account"}
-</button>
+        {/* Action buttons */}
+        <div className="flex flex-col gap-0">
+          <button
+            type="button"
+            onClick={register.handleRegister}
+            disabled={register.isLoading}
+            className="cna-register-submit-btn w-full rounded-lg font-semibold tracking-tight
+              text-[16px] md:text-[17px] lg:text-[18px]"
+            style={{ fontFamily: "var(--auth-poppins)" }}
+          >
+            {register.isLoading ? "Loading..." : "Create account"}
+          </button>
 
+          <div className="cna-or-divider-pad flex justify-center items-center">
+            <span className="text-sm text-gray-500">OR</span>
+          </div>
 
-        {/* SUBMIT */}
-     
-
-        {/* LOGIN LINK */}
-        <p className="text-sm text-center mt-4 text-(--cna-text-secondary)">
-          Already have an account?{" "}
-          <a href="/login" className="text-(--cna-text-link) font-semibold">
+          <a
+            href="/login"
+            className="cna-border-gradient w-full rounded-lg font-semibold tracking-tight cursor-pointer
+              text-[16px] md:text-[17px] lg:text-[18px] text-[#0162D1] text-center
+              active:scale-[0.98] transition-transform duration-300 ease-linear"
+            style={{ fontFamily: "var(--auth-poppins)" }}
+          >
             Login
           </a>
-        </p>
-
-        {/* SOCIAL */}
-        <SocialAuth />
+        </div>
 
       </AuthCard>
     </AuthLayout>

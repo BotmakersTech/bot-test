@@ -2,12 +2,7 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
 const inputClass =
-  " cna-input w-full font-inter text-[14px] md:text-[16px] text-[#5c5c5c] " +
-  " placeholder:text-[20px] placeholder:text-[#000000]/45 bg-[#bdbdbd2b] rounded-xl " +
-  "border border-[#BDBDBD] py-2.5 pl-4 pr-11 md:py-4 md:pl-5 md:pr-12 " +
-  "shadow-[inset_0_2px_4px_rgba(0,0,0,0.12)] focus:shadow-none " +
-  "focus:outline-none focus:border-[#BDBDBD] " +
-  "transition-shadow duration-150 ease-in " +
+  "cna-register-field-input cna-has-eye text-[14px] md:text-[16px] lg:text-[18px] xl:text-[20px] " +
   "disabled:opacity-60 disabled:cursor-not-allowed";
 
 const eyeButtonClass =
@@ -35,7 +30,7 @@ export default function PasswordSection({
   const match = confirmPassword === password;
 
   return (
-    <div className="flex flex-col w-full gap-5">
+    <div className="flex flex-col gap-3 md:gap-3.5 lg:gap-4 w-full">
       {/* PASSWORD */}
       <div className="relative w-full">
         <input
@@ -64,7 +59,7 @@ export default function PasswordSection({
       </div>
 
       {/* CONFIRM PASSWORD */}
-      <div className="w-full mt-4 md:mt-5">
+      <div className="flex flex-col gap-1 w-full">
         <div className="relative w-full">
           <input
             type={showConfirm ? "text" : "password"}
@@ -92,21 +87,21 @@ export default function PasswordSection({
         </div>
 
         {confirmPassword && !match && (
-          <p className="text-red-500 text-[10px] md:text-[12px] font-inter mt-1">
+          <p className="text-red-500 text-[10px] md:text-[12px] font-inter">
             Passwords do not match
           </p>
         )}
 
         {confirmPassword && match && (
-          <p className="text-green-600 text-[10px] md:text-[12px] font-inter mt-1">
+          <p className="text-green-600 text-[10px] md:text-[12px] font-inter">
             Passwords match ✔
           </p>
         )}
       </div>
 
-      {/* HINT — purple, left aligned */}
-      <p className="text-[#8C6CFF] text-[11px] md:text-[14px] font-inter text-left mt-2 md:mt-3">
-        *Use at least 8 characters, including a number and a symbol
+      {/* HINT */}
+      <p className="cna-register-hint-pad text-center lg:text-start text-[13px] md:text-[14px] text-[#8C6CFF] text-pretty">
+        *Use at least 8 characters, including a number &amp; a symbol
       </p>
     </div>
   );

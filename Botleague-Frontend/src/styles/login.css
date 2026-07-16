@@ -36,14 +36,15 @@
   --cna-font: 'Inter', system-ui, sans-serif;
 }
 
-/* ── Reset ───────────────────────────────────────────────── */
-.cna-root *,
-.cna-root *::before,
-.cna-root *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+/* ── Reset ─────────────────────────────────────────────────
+   Intentionally NOT duplicated here. AuthLayout.css already
+   defines this reset scoped to `.cna-root`, and every page that
+   loads login.css (ForgotPasswordPage) also loads AuthLayout.css
+   via the shared AuthLayout wrapper. Two copies of the same
+   `.cna-root` reset in two different stylesheets fight over
+   which one loads last, since module/import order — not
+   anything meaningful — decides the tie. Keeping a single
+   source of truth avoids that entirely. */
 
 .login {
   padding: 0.6rem 1.2rem !important;

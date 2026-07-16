@@ -19,7 +19,6 @@ const ROLE_HOME: Record<string, string> = {
 export default function useLogin() {
   const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
-  const [agreed, setAgreed] = useState(false);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -39,11 +38,6 @@ export default function useLogin() {
 
     if (!password) {
       setError("Password is required");
-      return;
-    }
-
-    if (!agreed) {
-      setError("Please accept terms");
       return;
     }
 
@@ -94,8 +88,6 @@ export default function useLogin() {
     setMobile,
     password,
     setPassword,
-    agreed,
-    setAgreed,
     isLoading,
     error,
     handleLogin,
