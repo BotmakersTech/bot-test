@@ -186,7 +186,7 @@ function AppRoutes() {
         path="/register"
         element={
           <PublicRoute>
-            <FooterShell><RegisterPage /></FooterShell>
+            <RegisterPage />
           </PublicRoute>
         }
       />
@@ -194,12 +194,12 @@ function AppRoutes() {
         path="/login"
         element={
           <PublicRoute>
-            <FooterShell><LoginPage /></FooterShell>
+            <LoginPage />
           </PublicRoute>
         }
       />
-      <Route path="/forgot-password" element={<FooterShell><ForgetPasswordPage /></FooterShell>} />
-      <Route path="/reset-password"  element={<FooterShell><ResetPasswordPage /></FooterShell>} />
+      <Route path="/forgot-password" element={<ForgetPasswordPage />} />
+      <Route path="/reset-password"  element={<ResetPasswordPage />} />
 
       {/* ========================================= */}
       {/* PROTECTED ROUTES (Navbar + Sidebar layout) */}

@@ -44,7 +44,6 @@ export default function OtpSection({
     }
   };
 
-  // Backspace on an empty box jumps to the previous one
   const handleOtpKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
     index: number
@@ -60,7 +59,6 @@ export default function OtpSection({
     }
   };
 
-  // Pasting "1234" fills all boxes at once
   const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
     const digits = e.clipboardData
@@ -78,7 +76,10 @@ export default function OtpSection({
   };
 
   return (
-    <div className="flex flex-col gap-3 md:gap-4 lg:gap-5 w-full">
+    <div
+      className="flex flex-col w-full"
+      style={{ gap: "clamp(6px, 1.5dvh, 16px)" }}
+    >
       {/* ---------- ROW 1: MOBILE + GET OTP ---------- */}
       <div className="cna-form-row">
         <div className="cna-row-left">
@@ -92,7 +93,7 @@ export default function OtpSection({
               setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))
             }
             disabled={otpVerified}
-            className="cna-register-field-input text-[14px] md:text-[16px] lg:text-[18px] xl:text-[20px] disabled:opacity-60 disabled:cursor-not-allowed"
+            className="cna-register-field-input disabled:opacity-60 disabled:cursor-not-allowed"
           />
         </div>
         <div className="cna-row-right">
@@ -130,7 +131,7 @@ export default function OtpSection({
                 onPaste={handleOtpPaste}
                 onFocus={(e) => e.target.select()}
                 disabled={!otpSent || otpVerified}
-                className="cna-register-otp-box text-[14px] md:text-[16px] lg:text-[18px] xl:text-[20px] disabled:opacity-60 disabled:cursor-not-allowed"
+                className="cna-register-otp-box disabled:opacity-60 disabled:cursor-not-allowed"
               />
             ))}
           </div>
@@ -148,13 +149,12 @@ export default function OtpSection({
       </div>
 
       {/* ---------- RESEND TIMER ---------- */}
-      <div className="cna-otp-resend-row">
+      {/* Only rendered when the countdown is active — takes zero space otherwise */}
+      {otpSent && resendTimer > 0 && (
         <span className="text-[#8C6CFF] text-[12px] md:text-[14px] lg:text-[16px] xl:text-[18px] font-semibold">
-          {otpSent && resendTimer > 0
-            ? `Resend in 0:${String(resendTimer).padStart(2, "0")}`
-            : ""}
+          Resend in 0:{String(resendTimer).padStart(2, "0")}
         </span>
-      </div>
+      )}
     </div>
   );
 }

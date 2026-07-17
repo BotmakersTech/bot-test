@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
 const inputClass =
-  "cna-register-field-input cna-has-eye text-[14px] md:text-[16px] lg:text-[18px] xl:text-[20px] " +
+  "cna-register-field-input cna-has-eye " +
   "disabled:opacity-60 disabled:cursor-not-allowed";
 
 const eyeButtonClass =
@@ -30,7 +30,10 @@ export default function PasswordSection({
   const match = confirmPassword === password;
 
   return (
-    <div className="flex flex-col gap-3 md:gap-3.5 lg:gap-4 w-full">
+    <div
+      className="flex flex-col w-full"
+      style={{ gap: "clamp(6px, 1.2dvh, 16px)" }}
+    >
       {/* PASSWORD */}
       <div className="relative w-full">
         <input

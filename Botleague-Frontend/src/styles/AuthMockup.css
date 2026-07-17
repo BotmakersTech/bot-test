@@ -89,10 +89,17 @@
   .cna-gradient-card--login { padding-top: 44px; padding-bottom: 30px; }
 }
 @media (min-width: 1280px) {
-  .cna-gradient-card--login { padding-top: 60px; padding-bottom: 40px; }
+  .cna-gradient-card--login { padding-top: 24px; padding-bottom: 18px; }
+}
+@media (min-width: 1400px) {
+  .cna-gradient-card--login { padding-top: 48px; padding-bottom: 32px; }
 }
 
-/* ── Register gradient-border card ── */
+/* ── Register gradient-border card ──
+   Vertical padding uses clamp(MIN, Ndvh, MAX) instead of a width-only
+   ladder so it also shrinks on short screens — MAX matches the old
+   1280px-breakpoint value exactly, so tall/normal screens are unchanged.
+   Horizontal padding stays width-based (unaffected by viewport height). */
 .cna-gradient-card--register {
   position: relative;
   z-index: 1;
@@ -105,11 +112,14 @@
     linear-gradient(180deg, #0162d1, #715bc0) border-box;
   background-clip: padding-box, border-box;
   background-origin: border-box;
-  padding: 16px 20px 24px;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: clamp(12px, 3dvh, 24px);
+  padding-bottom: clamp(16px, 4dvh, 36px);
 }
-@media (min-width: 768px)  { .cna-gradient-card--register { padding: 18px 32px 28px; } }
-@media (min-width: 1024px) { .cna-gradient-card--register { padding: 20px 48px 32px; } }
-@media (min-width: 1280px) { .cna-gradient-card--register { padding: 24px 72px 36px; } }
+@media (min-width: 768px)  { .cna-gradient-card--register { padding-left: 32px; padding-right: 32px; } }
+@media (min-width: 1024px) { .cna-gradient-card--register { padding-left: 48px; padding-right: 48px; } }
+@media (min-width: 1280px) { .cna-gradient-card--register { padding-left: 72px; padding-right: 72px; } }
 
 /* ── Login outline "Create new account" button ── */
 .cna-gradient-btn {
@@ -126,7 +136,9 @@
     linear-gradient(to right, #0162D1, #8C6CFF);
 }
 
-/* ── Register outline "Login" button ── */
+/* ── Register outline "Login" button ──
+   padding-top/bottom uses clamp() instead of the 10px→12px width step —
+   MAX matches the old 1024px+ value. */
 .cna-border-gradient {
   border: 2px solid transparent;
   background-image:
@@ -134,12 +146,9 @@
     linear-gradient(180deg, #0162d1, #715bc0);
   background-clip: padding-box, border-box;
   background-origin: border-box;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding-top: clamp(7px, 1.4dvh, 12px);
+  padding-bottom: clamp(7px, 1.4dvh, 12px);
   display: block;
-}
-@media (min-width: 1024px) {
-  .cna-border-gradient { padding-top: 12px; padding-bottom: 12px; }
 }
 
 /* ── Login input ── */
@@ -173,21 +182,29 @@
 .cna-login-field-input.cna-has-icon-left  { padding-left: 44px; }
 .cna-login-field-input.cna-has-icon-right { padding-right: 44px; }
 
-/* ── Register input ── */
+/* ── Register input ──
+   padding-top/bottom and font-size use clamp() (height-driven) instead of
+   the old width ladder (10px flat, then 14→16→18→20px font across
+   breakpoints) — MAX matches the old 1280px+ values, so tall screens are
+   unchanged. padding-left/right stay width-based. */
 .cna-register-field-input {
   font-family: var(--auth-inter);
   color: #999797;
   background-color: #bdbdbd2b;
   border: 1px solid #BDBDBD;
   border-radius: 0.75rem;
-  padding: 10px 12px 10px 16px;
+  padding-top: clamp(6px, 1.5dvh, 12px);
+  padding-bottom: clamp(6px, 1.5dvh, 12px);
+  padding-left: 16px;
+  padding-right: 12px;
+  font-size: clamp(13px, 1.9dvh, 20px);
   width: 100%;
   box-shadow: inset 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
   transition: box-shadow 150ms ease-in;
   box-sizing: border-box;
 }
 @media (min-width: 768px) {
-  .cna-register-field-input { padding-top: 12px; padding-bottom: 12px; padding-left: 24px; }
+  .cna-register-field-input { padding-left: 24px; }
 }
 @media (min-width: 1024px) {
   .cna-register-field-input { padding-left: 28px; }
@@ -227,7 +244,10 @@
 
 .cna-checkbox-nudge { margin-top: 5px; }
 
-/* ── Register OTP boxes ── */
+/* ── Register OTP boxes ──
+   padding-top/bottom and font-size use clamp() (height-driven) instead of
+   a flat 8px + the old separate width-ladder font-size classes — MAX
+   matches the old 1280px+ values. */
 .cna-register-otp-box {
   font-family: var(--auth-inter);
   color: #999797;
@@ -239,7 +259,11 @@
   box-sizing: border-box;
   flex: 1 1 0;
   min-width: 0;
-  padding: 10px 4px;
+  padding-top: clamp(5px, 1dvh, 10px);
+  padding-bottom: clamp(5px, 1dvh, 10px);
+  padding-left: 4px;
+  padding-right: 4px;
+  font-size: clamp(13px, 1.8dvh, 20px);
 }
 .cna-register-otp-box:focus {
   outline: none;
@@ -286,7 +310,10 @@
 @media (min-width: 1024px) { .cna-row-right { width: 120px; } }
 @media (min-width: 1280px) { .cna-row-right { width: 136px; } }
 
-/* ── Register row buttons (Get OTP / Verify) ── */
+/* ── Register row buttons (Get OTP / Verify) ──
+   padding-top/bottom and font-size use clamp() instead of the old width
+   ladder (10→11→12→13px padding, 14→15→16→18px font) — MAX matches the
+   old 1280px+ values. Horizontal padding stays fixed (was already flat). */
 .cna-register-row-btn {
   background-image: linear-gradient(360deg, #9d7df9 0%, #708bf4 50%, #5385ed 100%);
   color: #fff;
@@ -296,30 +323,29 @@
   border: none;
   cursor: pointer;
   width: 100%;
-  padding: 10px 12px;
-  font-size: 14px;
+  padding-top: clamp(7px, 1.4dvh, 13px);
+  padding-bottom: clamp(7px, 1.4dvh, 13px);
+  padding-left: 12px;
+  padding-right: 12px;
+  font-size: clamp(13px, 1.8dvh, 18px);
   transition: transform 150ms ease;
   box-shadow: 0 6px 20px rgba(83, 133, 237, 0.35);
   font-family: var(--auth-poppins);
 }
 .cna-register-row-btn:active:not(:disabled) { transform: scale(0.95); }
 .cna-register-row-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-@media (min-width: 768px)  { .cna-register-row-btn { font-size: 15px; padding: 11px 12px; } }
-@media (min-width: 1024px) { .cna-register-row-btn { font-size: 16px; padding: 12px 12px; } }
-@media (min-width: 1280px) { .cna-register-row-btn { font-size: 18px; padding: 13px 12px; } }
 
-/* ── Register "Create account" submit button ── */
+/* ── Register "Create account" submit button ──
+   padding-top/bottom uses clamp() instead of the 10px→12px width step —
+   MAX matches the old 1024px+ value. */
 .cna-register-submit-btn {
   background-image: linear-gradient(300deg, #9d7df9 40%, #5385ed 100%);
   color: #fff;
   border: none;
   cursor: pointer;
   transition: transform 300ms ease-linear;
-  padding-top: 10px;
-  padding-bottom: 10px;
-}
-@media (min-width: 1024px) {
-  .cna-register-submit-btn { padding-top: 12px; padding-bottom: 12px; }
+  padding-top: clamp(7px, 1.4dvh, 12px);
+  padding-bottom: clamp(7px, 1.4dvh, 12px);
 }
 .cna-register-submit-btn:active:not(:disabled) { transform: scale(0.98); }
 .cna-register-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
