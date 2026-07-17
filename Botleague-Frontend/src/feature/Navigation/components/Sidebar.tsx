@@ -140,52 +140,50 @@ export default function Sidebar() {
   };
 
   return (
-    // Fixed-width placeholder — reserves layout space so the page content
-    // never reflows. The actual visible sidebar is an overlay positioned
-    // on top of it that grows wider on hover, YouTube-mini-sidebar style.
-    <aside className="sticky top-0 h-[calc(100vh-4.5rem)] w-[112px] shrink-0">
-      <div
-        onMouseEnter={() => setExpanded(true)}
-        onMouseLeave={() => setExpanded(false)}
+    // The sidebar itself is the flex item that changes width on hover —
+    // its sibling `<main>` in Layout.tsx is `min-w-0 flex-1`, so it shrinks
+    // to make room instead of the sidebar overlaying on top of it.
+    <aside
+      onMouseEnter={() => setExpanded(true)}
+      onMouseLeave={() => setExpanded(false)}
+      className={[
+        "sticky top-0 z-40 flex h-[calc(100vh-4.5rem)] shrink-0 flex-col items-center overflow-hidden bg-[#eef1ff] py-8 transition-[width] duration-200 ease-out",
+        expanded ? "w-[248px] items-stretch px-4 shadow-[6px_0_24px_rgba(17,17,17,0.12)]" : "w-[112px]",
+      ].join(" ")}
+    >
+      <nav className="flex min-h-0 flex-1 w-full flex-col items-center gap-6 overflow-y-auto overflow-x-hidden px-4">
+        {navItems.map((item) => (
+          <SidebarItem
+            key={item.id}
+            item={item}
+            active={isActive(item.link)}
+            expanded={expanded}
+            onClick={() => navigate(item.link)}
+          />
+        ))}
+      </nav>
+
+      <button
+        type="button"
+        onClick={handleLogout}
+        disabled={loggingOut}
+        title="Log out"
+        aria-label="Log out"
         className={[
-          "absolute left-0 top-0 z-40 flex h-full flex-col items-center overflow-hidden bg-[#eef1ff] py-8 transition-[width] duration-200 ease-out",
-          expanded ? "w-[248px] items-stretch px-4 shadow-[6px_0_24px_rgba(17,17,17,0.12)]" : "w-[112px]",
+          "mt-8 flex h-11 shrink-0 items-center gap-3 rounded-lg text-[#3269d0] transition-[background-color,width] duration-200 hover:bg-[#e8ecff] disabled:opacity-60",
+          expanded ? "w-full px-3" : "w-11 justify-center",
         ].join(" ")}
       >
-        <nav className="flex min-h-0 flex-1 w-full flex-col items-center gap-6 overflow-y-auto overflow-x-hidden px-4">
-          {navItems.map((item) => (
-            <SidebarItem
-              key={item.id}
-              item={item}
-              active={isActive(item.link)}
-              expanded={expanded}
-              onClick={() => navigate(item.link)}
-            />
-          ))}
-        </nav>
-
-        <button
-          type="button"
-          onClick={handleLogout}
-          disabled={loggingOut}
-          title="Log out"
-          aria-label="Log out"
+        <LogoutIcon className="h-[27px] w-[27px] shrink-0" />
+        <span
           className={[
-            "mt-8 flex h-11 shrink-0 items-center gap-3 rounded-lg text-[#3269d0] transition-[background-color,width] duration-200 hover:bg-[#e8ecff] disabled:opacity-60",
-            expanded ? "w-full px-3" : "w-11 justify-center",
+            "overflow-hidden whitespace-nowrap text-sm font-medium transition-all duration-200",
+            expanded ? "max-w-[160px] opacity-100" : "max-w-0 opacity-0",
           ].join(" ")}
         >
-          <LogoutIcon className="h-[27px] w-[27px] shrink-0" />
-          <span
-            className={[
-              "overflow-hidden whitespace-nowrap text-sm font-medium transition-all duration-200",
-              expanded ? "max-w-[160px] opacity-100" : "max-w-0 opacity-0",
-            ].join(" ")}
-          >
-            {loggingOut ? "Logging out..." : "Log out"}
-          </span>
-        </button>
-      </div>
+          {loggingOut ? "Logging out..." : "Log out"}
+        </span>
+      </button>
     </aside>
   );
 }
