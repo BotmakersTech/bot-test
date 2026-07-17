@@ -1,0 +1,96 @@
+/* =========================================================
+   rankings.css — BotLeague
+   New Rankings page mockup (gradient-border filter card,
+   laurel-wreath top-3 badges, grid table on md+ / cards below).
+   Scoped under .rank-page so nothing here leaks to other pages.
+   ========================================================= */
+
+.rank-page {
+  background: #FBFBFB;
+}
+
+/* ── Gradient border cards ──────────────────────────────────────────── */
+.rank-filter-card {
+  border: 1.3px solid transparent;
+  background-image: linear-gradient(white, white),
+                    linear-gradient(180deg, #0162D1 0%, #8C6CFF 100%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  border-radius: 20px;
+}
+.rank-filter-input {
+  box-shadow: inset 4px 4px 4px 0px rgba(0,0,0,0.25);
+  border: 1.3px solid transparent;
+  background-image: linear-gradient(white, white),
+                    linear-gradient(180deg, #0162D1 0%, #8C6CFF 100%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  border-radius: 8px;
+}
+
+/* ── Laurel badge ───────────────────────────────────────────────────── */
+.rank-wreath-badge {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.rank-wreath-badge svg  { position: absolute; inset: 0; width: 44px; height: 44px; }
+.rank-wreath-badge span { position: relative; z-index: 1; font-weight: 500; font-size: 20px; }
+
+/* ── Background decoration: hidden below 1100 px (same rule as auth pages) ─ */
+.rank-bg-deco { display: none; }
+@media (min-width: 1100px) { .rank-bg-deco { display: block; } }
+
+/* Faint outline star — same clip-path technique as .dash-outline-star /
+   .notif-outline-star elsewhere in the app (no separate image asset needed). */
+.rank-outline-star { pointer-events: none; }
+.rank-outline-star::before,
+.rank-outline-star::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(50% 0, 61% 34%, 98% 35%, 68% 56%, 79% 91%, 50% 70%, 21% 91%, 32% 56%, 2% 35%, 39% 34%);
+}
+.rank-outline-star::before { background: rgba(74, 132, 230, 0.13); }
+.rank-outline-star::after  { inset: 7px; background: #FBFBFB; }
+
+/*
+  ── Shared ranking table layout ─────────────────────────────────────────
+  One CSS custom-property drives BOTH the header row and every data row
+  so they can never drift out of sync.
+
+  Column definitions:
+    [rank]   [team]   [points]  [events]  [matches]
+     120px    auto     220px     220px      220px
+*/
+.rank-page {
+  --rank-cols: 120px auto 220px 220px 220px;
+}
+
+/* The table only shows on md+ (>=768px). Below that we render cards. */
+.rank-header,
+.rank-row {
+  display: none;
+}
+@media (min-width: 768px) {
+  .rank-header,
+  .rank-row {
+    display: grid;
+    grid-template-columns: var(--rank-cols);
+    align-items: center;
+    width: 100%;
+  }
+}
+
+/* Mobile card view: shown only below md */
+.rank-card { display: flex; }
+@media (min-width: 768px) { .rank-card { display: none; } }
+
+/* Responsive column spacing ────────────────────────────────────────── */
+.rank-col-rank   { padding-left: 20px; }
+@media (min-width: 1024px) { .rank-col-rank { padding-left: 28px; } }
+@media (min-width: 1280px) { .rank-col-rank { padding-left: 36px; } }
