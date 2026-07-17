@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getPublicRobotProfile, getPublicRobotProfileByCode, type PublicRobotProfile } from "../api/robotPublic.api";
 import ShareButton from "../../../shared/components/ShareButton";
+import TeamLogo from "../../../shared/components/TeamLogo";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const BG    = "#0d0d0f";
@@ -232,13 +233,10 @@ export default function RobotPublicPage() {
                 onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(245,158,11,0.4)"}
                 onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.borderColor = BORDER}
               >
-                {profile.teamLogoUrl ? (
-                  <img src={profile.teamLogoUrl} alt="" style={{ width: 32, height: 32, borderRadius: 6, objectFit: "cover" }} />
-                ) : (
-                  <div style={{ width: 32, height: 32, borderRadius: 6, background: "rgba(245,158,11,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.9rem", fontWeight: 800, color: GOLD }}>
-                    {(profile.teamName ?? "?").charAt(0).toUpperCase()}
-                  </div>
-                )}
+                <TeamLogo
+                  src={profile.teamLogoUrl}
+                  style={{ width: 32, height: 32, borderRadius: 6, objectFit: "cover" }}
+                />
                 <div>
                   <div style={{ fontSize: "0.62rem", color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>Team</div>
                   <div style={{ fontSize: "0.85rem", fontWeight: 700, color: TEXT }}>{profile.teamName}</div>

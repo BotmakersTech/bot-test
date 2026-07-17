@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { searchAdminTeams, createAdminTeam, type AdminTeamSummary } from "../api/teamManagement.api"
 import { getUsersWithoutTeam, type UserSummary } from "../api/userManagement.api"
+import TeamLogo from "../../../shared/components/TeamLogo"
 
 function CreateTeamModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
   const [form, setForm] = useState({ teamName:"", institutionName:"", city:"", state:"", country:"India", description:"", captainUserId:"" });
@@ -215,17 +216,11 @@ export default function TeamManagementPage() {
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      {team.logoUrl ? (
-                        <img
-                          src={team.logoUrl}
-                          alt={team.teamName}
-                          className="h-8 w-8 rounded-full object-cover border border-white/10 shrink-0"
-                        />
-                      ) : (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500/20 text-orange-400 text-xs font-bold shrink-0">
-                          {team.teamName.charAt(0)}
-                        </div>
-                      )}
+                      <TeamLogo
+                        src={team.logoUrl}
+                        alt={team.teamName}
+                        className="h-8 w-8 rounded-full object-cover border border-white/10 shrink-0"
+                      />
                       <span className="font-medium text-white">{team.teamName}</span>
                     </div>
                   </td>

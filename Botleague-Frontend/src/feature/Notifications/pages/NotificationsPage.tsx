@@ -14,6 +14,8 @@ import {
   selectNotifTotalPages,
   selectNotifications,
 } from "../store/notificationSlice";
+import useTeamInvitations from "../../Team/hooks/useTeamInvitations";
+import type { TeamInvitationResponse } from "../../UserDashboard/api/userMembership.api";
 
 type TabKey = "all" | "team" | "join" | "sport" | "match";
 
@@ -133,6 +135,33 @@ function avatarClass(notification: NotificationResponse) {
   return "notif-avatar";
 }
 
+/* Team-invite notifications don't carry the invite's own id (targetId is the
+   invited user's id, not the invite's) — so we recover it by matching the
+   team name the backend embeds in the message ("... invited you to join
+   {teamName}. You have 7 days to respond.") against the user's pending
+   invites fetched separately via useTeamInvitations(). */
+function extractInvitedTeamName(message: string): string | null {
+  const match = message.match(/invited you to join (.+?)\.\s*You have/i);
+  return match ? match[1].trim() : null;
+}
+
+function resolveInviteForNotification(
+  notification: NotificationResponse,
+  invitations: TeamInvitationResponse[]
+): TeamInvitationResponse | null {
+  if (notification.type.toUpperCase() !== "TEAM_INVITE_RECEIVED") return null;
+  if (invitations.length === 0) return null;
+
+  const teamName = extractInvitedTeamName(notification.message);
+  const candidates = teamName ? invitations.filter((invite) => invite.teamName === teamName) : invitations;
+  if (candidates.length === 0) return null;
+
+  // Prefer a still-pending invite; otherwise fall back to whichever one
+  // matched (already accepted/rejected), so the notification keeps showing
+  // the outcome instead of reverting to a generic "View" button.
+  return candidates.find((invite) => invite.status === "PENDING") ?? candidates[0];
+}
+
 function getActionKind(notification: NotificationResponse) {
   const type = notification.type.toUpperCase();
   const text = `${notification.title} ${notification.message}`.toUpperCase();
@@ -166,6 +195,14 @@ export default function NotificationsPage() {
   const totalPages = useAppSelector(selectNotifTotalPages);
   const [currentPage, setCurrentPage] = useState(0);
   const [activeTab, setActiveTab] = useState<TabKey>("all");
+
+  const {
+    invitations: teamInvitations,
+    actionLoadingId,
+    acceptInvitation,
+    declineInvitation,
+  } = useTeamInvitations();
+  const [inviteErrors, setInviteErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     dispatch(fetchMyNotifications(0));
@@ -201,7 +238,65 @@ export default function NotificationsPage() {
     dispatch(markAllNotificationsRead());
   };
 
+  const handleRespondInvite = async (
+    notification: NotificationResponse,
+    invite: TeamInvitationResponse,
+    decision: "ACCEPTED" | "REJECTED"
+  ) => {
+    setInviteErrors((prev) => ({ ...prev, [invite.inviteId]: "" }));
+    try {
+      if (decision === "ACCEPTED") {
+        await acceptInvitation(invite.inviteId);
+      } else {
+        await declineInvitation(invite.inviteId);
+      }
+      if (!notification.id.startsWith("demo-") && !notification.read) {
+        dispatch(markNotificationRead(notification.id));
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong";
+      setInviteErrors((prev) => ({ ...prev, [invite.inviteId]: message }));
+    }
+  };
+
   const renderActions = (notification: NotificationResponse) => {
+    const invite = resolveInviteForNotification(notification, teamInvitations);
+    if (invite) {
+      if (invite.status !== "PENDING") {
+        return (
+          <button type="button" className="notif-btn notif-btn-plain" disabled>
+            {invite.status === "ACCEPTED" ? "Accepted" : invite.status === "REJECTED" ? "Rejected" : invite.status}
+          </button>
+        );
+      }
+
+      const busy = actionLoadingId === invite.inviteId;
+      const error = inviteErrors[invite.inviteId];
+      return (
+        <div className="notif-invite-actions">
+          <div className="notif-actions notif-actions-pair">
+            <button
+              type="button"
+              className="notif-btn notif-btn-outline"
+              disabled={busy}
+              onClick={() => handleRespondInvite(notification, invite, "REJECTED")}
+            >
+              {busy ? "..." : "Reject"}
+            </button>
+            <button
+              type="button"
+              className="notif-btn notif-btn-blue"
+              disabled={busy}
+              onClick={() => handleRespondInvite(notification, invite, "ACCEPTED")}
+            >
+              {busy ? "..." : "Accept"}
+            </button>
+          </div>
+          {error && <span className="notif-invite-error">{error}</span>}
+        </div>
+      );
+    }
+
     const actionKind = getActionKind(notification);
 
     if (actionKind === "join") {

@@ -18,8 +18,8 @@ import { getTeamMemberships } from "../api/userMembership.api";
 import { resolveDashboardAvatarSrc } from "../../Profile/constants/avatars";
 import flight from "../../../assets/Auth/flight.svg";
 import mascot from "../../../assets/mascote.png";
-import robot from "../../../assets/robot.png";
 import bLogo from "../../../assets/Dashboard/B_LOGO.png";
+import TeamLogo from "../../../shared/components/TeamLogo";
 import "../../../styles/dashboard.css";
 
 /* ─── tiny helpers ─────────────────────────────────────────────────────── */
@@ -238,7 +238,7 @@ export default function UserDashboard() {
 
         <section className="dash-team-card">
           <div className="dash-team-media">
-            {team?.teamLogo ? <img src={team.teamLogo} alt="" /> : <img src={robot} alt="" />}
+            <TeamLogo src={team?.teamLogo} alt="" />
           </div>
 
           <div className="dash-team-info">

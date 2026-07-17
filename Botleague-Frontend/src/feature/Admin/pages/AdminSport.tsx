@@ -5,6 +5,7 @@ import { useAdminEvents } from "../hooks/UseAdminEvent"
 import { type CreateEventSportRequest } from "../api/admin.api"
 import SportMediaField from "../../Organizer/components/SportMediaField"
 import { pushToGlobalRankings } from "../../Rankings/api/rankings.api"
+import TeamLogo from "../../../shared/components/TeamLogo"
 
 // ─────────────────────────────────────────────────────────────
 // DESIGN TOKENS
@@ -281,18 +282,11 @@ function TeamCard({ team, index }: { team: TeamReg; index: number }) {
             width: "36px",
             height: "36px",
             borderRadius: "8px",
-            background: "rgba(250,71,21,0.13)",
             border: "1px solid rgba(250,71,21,0.25)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
             flexShrink: 0,
             overflow: "hidden"
           }}>
-            {team.teamLogoUrl
-              ? <img src={team.teamLogoUrl} alt={team.teamName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              : <span style={{ fontSize: "1rem", fontWeight: 700, color: ACCENT }}>{(team.teamName ?? "?").charAt(0).toUpperCase()}</span>
-            }
+            <TeamLogo src={team.teamLogoUrl} alt={team.teamName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           </div>
 
           <div>

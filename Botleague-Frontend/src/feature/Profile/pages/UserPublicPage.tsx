@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../../shared/api/Base";
 import ShareButton from "../../../shared/components/ShareButton";
+import TeamLogo from "../../../shared/components/TeamLogo";
 import { resolveAvatarSrc } from "../constants/avatars";
 
 const BG   = "#0d0d0f";
@@ -135,13 +136,10 @@ export default function UserPublicPage() {
               onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(245,158,11,0.4)"}
               onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.borderColor = BORDER}
             >
-              {profile.teamLogo ? (
-                <img src={profile.teamLogo} alt="" style={{ width: 44, height: 44, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
-              ) : (
-                <div style={{ width: 44, height: 44, borderRadius: 10, background: "rgba(245,158,11,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem", fontWeight: 800, color: GOLD, flexShrink: 0 }}>
-                  {profile.teamName.charAt(0).toUpperCase()}
-                </div>
-              )}
+              <TeamLogo
+                src={profile.teamLogo}
+                style={{ width: 44, height: 44, borderRadius: 10, objectFit: "cover", flexShrink: 0 }}
+              />
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700, color: TEXT, fontSize: "0.95rem" }}>{profile.teamName}</div>
                 <div style={{ fontSize: "0.72rem", color: MUTED }}>

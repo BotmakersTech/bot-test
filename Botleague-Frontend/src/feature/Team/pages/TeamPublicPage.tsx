@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getPublicTeamProfile, getPublicTeamProfileByCode, type PublicTeamProfile } from "../api/teamPublic.api";
 import ShareButton from "../../../shared/components/ShareButton";
+import TeamLogo from "../../../shared/components/TeamLogo";
 
 // ── Design tokens (matching the dark esports aesthetic) ───────────────────────
 const BG      = "#0d0d0f";
@@ -122,7 +123,6 @@ export default function TeamPublicPage() {
     </div>
   );
 
-  const initials  = profile.teamName.split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase();
   const winRate   = profile.matchesPlayed > 0 ? Math.round((profile.totalWins / profile.matchesPlayed) * 100) : 0;
   const shareUrl  = `${window.location.origin}/team/${profile.teamCode}`;
 
@@ -205,14 +205,11 @@ export default function TeamPublicPage() {
 
           {/* RIGHT — Logo */}
           <div style={{ flexShrink: 0 }}>
-            {profile.logoUrl ? (
-              <img src={profile.logoUrl} alt={profile.teamName}
-                style={{ width: 220, height: 180, objectFit: "contain", borderRadius: 14, background: CARD, border: `1px solid ${BORDER}`, padding: 16 }} />
-            ) : (
-              <div style={{ width: 220, height: 180, background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "4rem", fontWeight: 900, color: GOLD, fontFamily: "'Orbitron', sans-serif" }}>
-                {initials}
-              </div>
-            )}
+            <TeamLogo
+              src={profile.logoUrl}
+              alt={profile.teamName}
+              style={{ width: 220, height: 180, objectFit: "contain", borderRadius: 14, background: CARD, border: `1px solid ${BORDER}`, padding: 16 }}
+            />
           </div>
         </div>
 

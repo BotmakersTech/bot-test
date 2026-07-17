@@ -18,6 +18,7 @@ import SupportContactManager from "../components/SupportContactManager"
 import { pushToGlobalRankings } from "../../Rankings/api/rankings.api"
 import type { RootState } from "../../../app/store"
 import { useAppDispatch } from "../../../app/hooks"
+import TeamLogo from "../../../shared/components/TeamLogo"
 import { hasRole, AppRole, EVENT_HEAD_AND_UP } from "../../../shared/constants/roles"
 import { fetchChatRooms, setActiveRoom } from "../../Chat/store/chatSlice"
 import { ORG } from "../theme/organizerTheme"
@@ -274,18 +275,11 @@ function TeamCard({ team, index, eventId }: { team: TeamReg; index: number; even
             width: "36px",
             height: "36px",
             borderRadius: "8px",
-            background: "rgba(140,108,255,0.12)",
             border: "1px solid rgba(140,108,255,0.28)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
             flexShrink: 0,
             overflow: "hidden"
           }}>
-            {team.teamLogoUrl
-              ? <img src={team.teamLogoUrl} alt={team.teamName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              : <span style={{ fontSize: "1rem", fontWeight: 700, color: ACCENT }}>{(team.teamName ?? "?").charAt(0).toUpperCase()}</span>
-            }
+            <TeamLogo src={team.teamLogoUrl} alt={team.teamName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           </div>
 
           <div style={{ minWidth: 0 }}>

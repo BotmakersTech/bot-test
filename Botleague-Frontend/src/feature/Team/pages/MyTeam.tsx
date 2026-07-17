@@ -13,6 +13,7 @@ import {
 import useTeam from "../hooks/useTeam";
 import { useSponsors } from "../hooks/useSponsors";
 import { resolveAvatarSrc } from "../../Profile/constants/avatars";
+import TeamLogo from "../../../shared/components/TeamLogo";
 import "../../../styles/teamDashboard.css";
 
 function useCountdown(targetDate?: string | null) {
@@ -272,7 +273,7 @@ export default function MyTeam() {
   const error = teamError || dashboardError || fallbackMembersError || sponsorsError;
   const currentTeamName = resolvedTeam?.teamName || "Your Team";
   const currentTeamCode = resolvedTeam?.teamCode || "Not assigned";
-  const teamLogo = resolvedTeam?.logoUrl || eventBg;
+  const teamLogo = resolvedTeam?.logoUrl;
   const location = [resolvedTeam?.city, resolvedTeam?.state, resolvedTeam?.country].filter(Boolean).join(", ");
   const isActive = isUsableTeamStatus(resolvedTeam?.status);
 
@@ -405,7 +406,7 @@ export default function MyTeam() {
             </div>
 
             <div className="teamdash-team-image">
-              <img src={teamLogo} alt={currentTeamName} />
+              <TeamLogo src={teamLogo} alt={currentTeamName} />
             </div>
           </section>
 
