@@ -63,6 +63,9 @@
 }
 
 .dash-hero-card {
+  /* Unlike .dash-team-card, the avatar art is taller than this card and is
+     meant to stand in front of it — clipping here would cut its feet off. */
+  overflow: visible;
   min-height: 376px;
   display: grid;
   grid-template-columns: minmax(320px, 38%) minmax(280px, 30%) minmax(340px, 32%);
