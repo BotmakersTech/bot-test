@@ -15,7 +15,7 @@ import {
 
 import useDashboard from "../hooks/useDashboardData";
 import { getTeamMemberships } from "../api/userMembership.api";
-import { resolveAvatarSrc } from "../../Profile/constants/avatars";
+import { resolveDashboardAvatarSrc } from "../../Profile/constants/avatars";
 import flight from "../../../assets/Auth/flight.svg";
 import mascot from "../../../assets/mascote.png";
 import robot from "../../../assets/robot.png";
@@ -85,7 +85,7 @@ export default function UserDashboard() {
   const profileName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "BotLeague Member";
   const displayUsername = user?.userName || profileName.split(" ")[0] || "member";
   const botLeagueId = user?.botLeagueId || "Not assigned";
-  const avatarSrc = resolveAvatarSrc(user?.profilePhotoUrl || user?.avatarUrl) || "";
+  const avatarSrc = resolveDashboardAvatarSrc(user?.profilePhotoUrl || user?.avatarUrl) || "";
   const hasAvatar = !!avatarSrc && !avatarErr;
   const winRate =
     stats.matchesPlayed > 0

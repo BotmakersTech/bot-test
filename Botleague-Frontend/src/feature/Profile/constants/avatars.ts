@@ -17,18 +17,25 @@ import brute from "../../../assets/Avatar/BRUTE.png";
 import echo from "../../../assets/Avatar/ECHO.png";
 import kira from "../../../assets/Avatar/KIRA.png";
 import nova from "../../../assets/Avatar/NOVA.png";
+import bruteDashboard from "../../../assets/Avatar/Dashboard-Avatar/Brute-dashboard.png";
+import echoDashboard from "../../../assets/Avatar/Dashboard-Avatar/Echo-dashboard.png";
+import kiraDashboard from "../../../assets/Avatar/Dashboard-Avatar/Kira-dashboard.png";
+import novaDashboard from "../../../assets/Avatar/Dashboard-Avatar/Nova-dashboard.png";
 
 export interface AvatarOption {
   key: string;
   label: string;
+  /** Small circular icon — avatar picker, navbar, chat, member lists. */
   src: string;
+  /** Full-body pose art for the User Dashboard's large hero avatar. */
+  dashboardSrc: string;
 }
 
 export const AVATAR_OPTIONS: AvatarOption[] = [
-  { key: "brute", label: "Brute", src: brute },
-  { key: "echo", label: "Echo", src: echo },
-  { key: "kira", label: "Kira", src: kira },
-  { key: "nova", label: "Nova", src: nova },
+  { key: "brute", label: "Brute", src: brute, dashboardSrc: bruteDashboard },
+  { key: "echo", label: "Echo", src: echo, dashboardSrc: echoDashboard },
+  { key: "kira", label: "Kira", src: kira, dashboardSrc: kiraDashboard },
+  { key: "nova", label: "Nova", src: nova, dashboardSrc: novaDashboard },
 ];
 
 const AVATAR_SENTINEL_PREFIX = "avatar:";
@@ -63,4 +70,18 @@ export function resolveAvatarSrc(value?: string | null): string | null {
 /** Convenience: label for a selected avatar key, e.g. for a11y / captions. */
 export function avatarLabelForKey(key: string): string | null {
   return AVATAR_OPTIONS.find((a) => a.key === key)?.label ?? null;
+}
+
+/**
+ * Like resolveAvatarSrc, but for a predefined avatar returns the full-body
+ * "dashboard" pose art instead of the small picker icon. Real uploads and
+ * "no avatar yet" resolve identically to resolveAvatarSrc.
+ */
+export function resolveDashboardAvatarSrc(value?: string | null): string | null {
+  if (!value) return null;
+  if (isAvatarSentinel(value)) {
+    const key = avatarKeyFromSentinel(value);
+    return AVATAR_OPTIONS.find((a) => a.key === key)?.dashboardSrc ?? null;
+  }
+  return value;
 }
