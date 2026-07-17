@@ -51,9 +51,11 @@ export default function OtpSection({
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       otpRefs.current[index - 1]?.focus();
     }
+
     if (e.key === "ArrowLeft" && index > 0) {
       otpRefs.current[index - 1]?.focus();
     }
+
     if (e.key === "ArrowRight" && index < OTP_LENGTH - 1) {
       otpRefs.current[index + 1]?.focus();
     }
@@ -61,17 +63,21 @@ export default function OtpSection({
 
   const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
+
     const digits = e.clipboardData
       .getData("text")
       .replace(/\D/g, "")
       .slice(0, OTP_LENGTH)
       .split("");
+
     if (!digits.length) return;
 
     const newOtp = Array(OTP_LENGTH)
       .fill("")
       .map((_, i) => digits[i] ?? "");
+
     setOtp(newOtp);
+
     otpRefs.current[Math.min(digits.length, OTP_LENGTH) - 1]?.focus();
   };
 
@@ -80,7 +86,7 @@ export default function OtpSection({
       className="flex flex-col w-full"
       style={{ gap: "clamp(6px, 1.5dvh, 16px)" }}
     >
-      {/* ---------- ROW 1: MOBILE + GET OTP ---------- */}
+      {/* ---------- ROW 1 ---------- */}
       <div className="cna-form-row">
         <div className="cna-row-left">
           <input
@@ -96,6 +102,7 @@ export default function OtpSection({
             className="cna-register-field-input disabled:opacity-60 disabled:cursor-not-allowed"
           />
         </div>
+
         <div className="cna-row-right">
           <button
             type="button"
@@ -112,7 +119,7 @@ export default function OtpSection({
         </div>
       </div>
 
-      {/* ---------- ROW 2: OTP BOXES + VERIFY ---------- */}
+      {/* ---------- ROW 2 ---------- */}
       <div className="cna-form-row">
         <div className="cna-row-left">
           <div className="cna-otp-group">
@@ -136,6 +143,7 @@ export default function OtpSection({
             ))}
           </div>
         </div>
+
         <div className="cna-row-right">
           <button
             type="button"
@@ -148,13 +156,23 @@ export default function OtpSection({
         </div>
       </div>
 
-      {/* ---------- RESEND TIMER ---------- */}
-      {/* Only rendered when the countdown is active — takes zero space otherwise */}
-      {otpSent && resendTimer > 0 && (
-        <span className="text-[#8C6CFF] text-[12px] md:text-[14px] lg:text-[16px] xl:text-[18px] font-semibold">
+      {/* ---------- RESEND TIMER (Always reserves space) ---------- */}
+      <div
+        className="flex items-center"
+        style={{
+          minHeight: "clamp(18px, 2.2dvh, 24px)",
+        }}
+      >
+        <span
+          className="text-[#8C6CFF] text-[12px] md:text-[14px] lg:text-[16px] xl:text-[18px] font-semibold transition-opacity duration-300"
+          style={{
+            visibility: otpSent && resendTimer > 0 ? "visible" : "hidden",
+            opacity: otpSent && resendTimer > 0 ? 1 : 0,
+          }}
+        >
           Resend in 0:{String(resendTimer).padStart(2, "0")}
         </span>
-      )}
+      </div>
     </div>
   );
 }

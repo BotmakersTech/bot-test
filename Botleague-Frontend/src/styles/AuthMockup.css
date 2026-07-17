@@ -190,11 +190,11 @@
 .cna-register-field-input {
   font-family: var(--auth-inter);
   color: #999797;
-  background-color: #bdbdbd2b;
+  background-color: rgba(221, 221, 221, 0.42);
   border: 1px solid #BDBDBD;
   border-radius: 0.75rem;
-  padding-top: clamp(6px, 1.5dvh, 12px);
-  padding-bottom: clamp(6px, 1.5dvh, 12px);
+  padding-top: clamp(6px, 2dvh, 18px);
+  padding-bottom: clamp(6px, 2dvh, 18px);
   padding-left: 16px;
   padding-right: 12px;
   font-size: clamp(13px, 1.9dvh, 20px);
@@ -218,6 +218,7 @@
   border-color: #BDBDBD;
   box-shadow: none;
 }
+.cna-register-field-input::placeholder { color: rgba(0, 0, 0, 0.45); }
 
 /* Small spacing utilities.
    Tailwind CDN margin/padding utilities lose the cascade tie against
@@ -251,7 +252,7 @@
 .cna-register-otp-box {
   font-family: var(--auth-inter);
   color: #999797;
-  background-color: #bdbdbd2b;
+  background-color: rgba(221, 221, 221, 0.42);
   border: 1px solid #BDBDBD;
   border-radius: 0.5rem;
   text-align: center;
