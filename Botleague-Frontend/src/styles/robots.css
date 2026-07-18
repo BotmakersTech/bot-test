@@ -7,7 +7,7 @@
     linear-gradient(132deg, transparent 0 79%, rgba(140, 108, 255, 0.05) 79% 82%, transparent 82% 100%),
     transparent;
   color: #111111;
-  padding: 74px 58px 96px;
+  padding: 32px 58px 48px;
 }
 
 .robot-build-shell {
@@ -975,3 +975,37 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* =========================================================
+   "Team Build" zero-robots empty state — a distinct full-page
+   design shown only when the team has never added a robot.
+   Prefixed robot-build-empty- to sit alongside the existing
+   robot-build-* / robot-* classes above without colliding.
+   ========================================================= */
+
+.robot-build-empty-title {
+  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+}
+
+.robot-build-empty-gradient-text {
+  background: linear-gradient(95deg, #4F6EF7 0%, #8B5CF6 60%, #7C3AED 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.robot-build-empty-stat-icon {
+  background: #F1F2F6;
+}
+
+.robot-build-empty-card {
+  border: 1.5px solid #C9CEFB;
+}
+
+.robot-build-empty-btn {
+  background: linear-gradient(90deg, #7C86F2 0%, #9B8CF6 100%);
+  box-shadow: 0 10px 25px -8px rgba(124, 92, 246, 0.55);
+  transition: transform 200ms ease, opacity 150ms ease;
+}
+.robot-build-empty-btn:active { transform: scale(0.97); }
+.robot-build-empty-btn:disabled { opacity: 0.6; cursor: not-allowed; }

@@ -12,6 +12,7 @@ import {
 } from "../../UserDashboard/api/userMembership.api";
 import useTeam from "../hooks/useTeam";
 import { useSponsors } from "../hooks/useSponsors";
+import useTeamMembership from "../TeamMembership/hooks/useTeamMembership";
 import { resolveAvatarSrc } from "../../Profile/constants/avatars";
 import TeamLogo from "../../../shared/components/TeamLogo";
 import "../../../styles/teamDashboard.css";
@@ -163,6 +164,11 @@ export default function MyTeam() {
 
   const resolvedTeamCode = resolvedTeam?.teamCode || "";
 
+  // Same hook RobotsPage already relies on for this exact captain/VC gate —
+  // it does its own independent fetch/lookup, so it isn't at the mercy of
+  // whichever of the memberships/dashboard fallbacks above happened to load.
+  const { isAdmin: isTeamAdmin } = useTeamMembership(resolvedTeamCode);
+
   // ── SPONSORS ─────────────────────────────────────────────
   const {
     sponsors,
@@ -212,13 +218,21 @@ export default function MyTeam() {
   );
 
   // Only the captain/vice-captain may edit team details — same gate the
-  // backend and the Edit Team page itself enforce.
+  // backend and the Edit Team page itself enforce. Checked two ways since
+  // they come from independent sources: the roster lookup (matching self
+  // by id/botleagueId) and resolvedTeam.memberRole (populated straight off
+  // the dashboard's own per-team role field) — either one confirming
+  // captain/VC is enough, so a gap in one path doesn't silently hide the button.
   const selfMember = members.find(
     (m: { userId?: string; botleagueId?: string }) =>
       (!!authUser?.id && m.userId === authUser.id) ||
       (!!authUser?.botleagueId && m.botleagueId === authUser.botleagueId)
   );
-  const canEditTeam = ["CAPTAIN", "VICE_CAPTAIN"].includes(memberRoleUpper(selfMember || {}));
+  const ADMIN_ROLES = ["CAPTAIN", "VICE_CAPTAIN"];
+  const canEditTeam =
+    isTeamAdmin ||
+    ADMIN_ROLES.includes(memberRoleUpper(selfMember || {})) ||
+    ADMIN_ROLES.includes(String((resolvedTeam as { memberRole?: string } | null)?.memberRole || "").toUpperCase());
 
   // Squad panel always shows 3 people (when the team has that many): self,
   // captain, vice-captain. If there's no vice-captain, or self/captain/VC
@@ -392,25 +406,7 @@ export default function MyTeam() {
               <span className="teamdash-active-pill">
               <span /> {isActive ? "Active" : toLabel(resolvedTeam?.status)}
               </span>
-              {canEditTeam && (
-                <button
-                  type="button"
-                  onClick={() => navigate("/my-team/edit")}
-                  style={{
-                    float: "right",
-                    background: "linear-gradient(135deg, #0162D1, #8C6CFF)",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "8px",
-                    padding: "6px 16px",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                  }}
-                >
-                  Edit Team
-                </button>
-              )}
+           
               <h2>{currentTeamName}</h2>
               <p>Team ID - {currentTeamCode}</p>
               <p>
@@ -431,6 +427,25 @@ export default function MyTeam() {
                   <a href="#team-info">{resolvedTeam?.institutionName || location || resolvedTeam?.memberRole || "Team profile details pending"}</a>
                 )}
               </div>
+                 {canEditTeam && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/my-team/edit")}
+                  style={{
+                    float: "right",
+                    background: "linear-gradient(135deg, #0162D1, #8C6CFF)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "8px",
+                    padding: "6px 16px",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  Edit Team
+                </button>
+              )}
             </div>
 
             <div className="teamdash-team-image">

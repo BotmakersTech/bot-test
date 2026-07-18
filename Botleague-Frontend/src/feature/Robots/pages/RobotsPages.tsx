@@ -6,6 +6,7 @@ import { useAppSelector } from "../../../app/hooks";
 import Modal from "../../../shared/components/Modal";
 import useTeamMembership from "../../Team/TeamMembership/hooks/useTeamMembership";
 import CreateRobotForm from "../components/CreateRobotFrom";
+import TeamBuildEmptyState from "../components/TeamBuildEmptyState";
 import useRobots from "../hooks/useRobots";
 import type { Robot } from "../types/types";
 import robotFallback from "../../../assets/robot.png";
@@ -142,6 +143,16 @@ export default function RobotsPage() {
     );
   }
 
+  // First time on this team, or a captain who just created it — no robots
+  // added yet. Shown instead of the (empty) carousel + filter tabs.
+  if (robots.length === 0) {
+    return (
+      <div className="robot-build-page">
+        <TeamBuildEmptyState canManageRobots={canManageRobots} onCreateClick={openCreate} />
+      </div>
+    );
+  }
+
   return (
     <div className="robot-build-page">
       <img className="robot-build-bg robot-build-bg-flight-left" src={flightDecoration} alt="" aria-hidden="true" />
@@ -203,15 +214,15 @@ export default function RobotsPage() {
           </div>
 
           {visibleRobots.length === 0 ? (
+            // robots.length is guaranteed > 0 here (the zero-robots case
+            // early-returns TeamBuildEmptyState above) — this is only the
+            // "current filter matches nothing" case.
             <div className="robot-empty-row">
               <img src={getRobotImage()} alt="" />
               <div>
-                <h2>{robots.length === 0 ? "No robots yet" : "No robots found"}</h2>
-                <p>{robots.length === 0 ? "Add your first robot to start building this team." : "Try another filter."}</p>
+                <h2>No robots found</h2>
+                <p>Try another filter.</p>
               </div>
-              {robots.length === 0 && canManageRobots && (
-                <button type="button" onClick={openCreate}>Add Robot</button>
-              )}
             </div>
           ) : (
             <div className="robot-rows">
