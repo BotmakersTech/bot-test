@@ -1,0 +1,129 @@
+/* =========================================================
+   editTeamMockup.css — BotLeague
+   New "Edit Team Profile" page mockup. Scoped under .etm-page
+   and prefixed etm- throughout — this codebase already learned
+   the hard way that generic names like .field-input/.btn-primary
+   collide with Tailwind CDN utilities or other pages' legacy CSS
+   (see profile.css's old .field-input/.form-card/.btn-primary).
+   Sarpanch/Poppins/Inter are already loaded globally in index.html.
+   ========================================================= */
+
+.etm-page {
+  --etm-custom-gradient:     linear-gradient(360deg, #9d7df9 0%, #708bf4 50%, #5385ed 100%);
+  --etm-custom-btn-gradient: linear-gradient(300deg, #9d7df9 40%, #5385ed 100%);
+  --etm-custom-shadow:       0 6px 20px rgba(83, 133, 237, 0.35);
+  --etm-custom-box-shadow:   inset 2px 2px 5px rgba(0, 0, 0, 0.08);
+
+  --etm-gradient-start: #0162d1;
+  --etm-gradient-end:   #715bc0;
+  --etm-internal-bg:    #ffffff;
+  --etm-gradient-border-bg:
+    linear-gradient(var(--etm-internal-bg), var(--etm-internal-bg)),
+    linear-gradient(180deg, var(--etm-gradient-start), var(--etm-gradient-end));
+
+  --etm-text-gradient: linear-gradient(90deg, #0162D1 0%, #8C6CFF 100%);
+
+  background: #FBFBFB;
+}
+
+.etm-font-sarpanch { font-family: "Sarpanch", sans-serif; }
+.etm-font-poppins  { font-family: "Poppins", sans-serif; }
+.etm-font-inter    { font-family: "Inter", sans-serif; }
+
+.etm-text-gradient {
+  background: var(--etm-text-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Gradient border (thin) ─────────────────────────────────────────── */
+.etm-border-gradient {
+  border: 2px solid transparent;
+  background-image: var(--etm-gradient-border-bg);
+  background-clip: padding-box, border-box;
+  background-origin: border-box;
+}
+
+/* ── Gradient border (thick — outer cards) ──────────────────────────── */
+.etm-border-gradient-thick {
+  border: 3px solid transparent;
+  background-image: var(--etm-gradient-border-bg);
+  background-clip: padding-box, border-box;
+  background-origin: border-box;
+}
+
+/* ── Shared form field input ─────────────────────────────────────────── */
+.etm-field-input {
+  font-family: "Inter", sans-serif;
+  color: #555;
+  background-color: #bdbdbd2b;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 10px 16px;
+  width: 100%;
+  box-shadow: var(--etm-custom-box-shadow) !important;
+  transition: box-shadow 150ms ease-in, border-color 150ms ease-in;
+  box-sizing: border-box;
+  font-size: clamp(13px, 1.6vw, 16px);
+}
+.etm-field-input:focus {
+  outline: none;
+  border-color: #8C6CFF;
+  box-shadow: 0 0 0 3px rgba(140, 108, 255, 0.15) !important;
+}
+.etm-field-input:read-only {
+  cursor: default;
+}
+textarea.etm-field-input { resize: vertical; min-height: 96px; }
+select.etm-field-input { appearance: none; cursor: pointer; }
+
+.etm-field-label {
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  color: #374151;
+  font-size: clamp(13px, 1.5vw, 18px);
+}
+
+/* ── Primary action button ───────────────────────────────────────────── */
+.etm-btn-primary {
+  background-image: var(--etm-custom-btn-gradient);
+  color: #fff;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 300ms ease-linear, box-shadow 150ms ease;
+  box-shadow: var(--etm-custom-shadow);
+  font-size: clamp(14px, 1.6vw, 18px);
+  padding: clamp(10px, 1.4dvh, 16px) clamp(20px, 2.5vw, 36px);
+}
+.etm-btn-primary:active { transform: scale(0.97); }
+.etm-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Change-logo style gradient button ───────────────────────────────── */
+.etm-btn-gradient {
+  background-image: var(--etm-custom-gradient);
+  color: #fff;
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 300ms ease-linear;
+  box-shadow: 0 2px 8px rgba(83, 133, 237, 0.3);
+  font-size: clamp(13px, 1.4vw, 18px);
+  padding: clamp(6px, 0.9dvh, 10px) clamp(16px, 2vw, 24px);
+}
+.etm-btn-gradient:active { transform: scale(0.97); }
+.etm-btn-gradient:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Background decorations: hidden below 1100px ─────────────────────── */
+.etm-bg-deco { display: none; }
+@media (min-width: 1100px) { .etm-bg-deco { display: block; } }
+
+.etm-page-content {
+  padding-left:  clamp(12px, 2vw, 40px);
+  padding-right: clamp(12px, 2vw, 40px);
+}

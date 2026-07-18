@@ -211,6 +211,15 @@ export default function MyTeam() {
     [effectiveMemberships]
   );
 
+  // Only the captain/vice-captain may edit team details — same gate the
+  // backend and the Edit Team page itself enforce.
+  const selfMember = members.find(
+    (m: { userId?: string; botleagueId?: string }) =>
+      (!!authUser?.id && m.userId === authUser.id) ||
+      (!!authUser?.botleagueId && m.botleagueId === authUser.botleagueId)
+  );
+  const canEditTeam = ["CAPTAIN", "VICE_CAPTAIN"].includes(memberRoleUpper(selfMember || {}));
+
   // Squad panel always shows 3 people (when the team has that many): self,
   // captain, vice-captain. If there's no vice-captain, or self/captain/VC
   // collapse onto fewer distinct people (e.g. self IS the captain), backfill
@@ -383,6 +392,25 @@ export default function MyTeam() {
               <span className="teamdash-active-pill">
               <span /> {isActive ? "Active" : toLabel(resolvedTeam?.status)}
               </span>
+              {canEditTeam && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/my-team/edit")}
+                  style={{
+                    float: "right",
+                    background: "linear-gradient(135deg, #0162D1, #8C6CFF)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "8px",
+                    padding: "6px 16px",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  Edit Team
+                </button>
+              )}
               <h2>{currentTeamName}</h2>
               <p>Team ID - {currentTeamCode}</p>
               <p>

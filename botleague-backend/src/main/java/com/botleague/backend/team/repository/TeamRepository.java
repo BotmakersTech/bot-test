@@ -15,6 +15,9 @@ public interface TeamRepository extends JpaRepository<Team, UUID> {
 
     boolean existsByTeamName(String teamName);
 
+    /** Used when updating a team's name — excludes the team's own current row. */
+    boolean existsByTeamNameAndIdNot(String teamName, UUID id);
+
     boolean existsByTeamCode(String teamCode);
 
     Optional<Team> findByTeamCode(String teamCode);
