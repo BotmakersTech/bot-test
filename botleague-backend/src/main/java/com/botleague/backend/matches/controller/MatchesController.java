@@ -86,7 +86,11 @@ public class MatchesController {
     // GET /api/v1/matches/{matchId}
     // =====================================================
 
+    // Spectator-visible — a method-level @PreAuthorize overrides the class-level
+    // isAuthenticated() for just this endpoint. SecurityConfig's permitAll for
+    // this path alone isn't enough: method security still runs on top of it.
     @GetMapping("/{matchId}")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<MatchResponseDTO> getMatchById(
             @PathVariable UUID matchId
     ) {
@@ -108,7 +112,9 @@ public class MatchesController {
     // GET /api/v1/matches/event-sport/{eventSportId}
     // =====================================================
 
+    // Spectator-visible — see note on getMatchById above.
     @GetMapping("/event-sport/{eventSportId}")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<List<MatchResponseDTO>> getMatchesByEventSport(
             @PathVariable UUID eventSportId
     ) {
@@ -120,7 +126,9 @@ public class MatchesController {
     // GET /api/v1/matches/event-sport/{eventSportId}/round/{roundNumber}
     // =====================================================
 
+    // Spectator-visible — see note on getMatchById above.
     @GetMapping("/event-sport/{eventSportId}/round/{roundNumber}")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<List<MatchResponseDTO>> getMatchesByRound(
             @PathVariable UUID eventSportId,
             @PathVariable Integer roundNumber

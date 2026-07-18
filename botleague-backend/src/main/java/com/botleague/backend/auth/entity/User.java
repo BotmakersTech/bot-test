@@ -1,5 +1,6 @@
 package com.botleague.backend.auth.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -37,6 +38,10 @@ public class User {
     @Column(unique = true, nullable = false)
     private String phone;
 
+    // Guard rail: this entity is never directly serialized today (every
+    // endpoint maps to a DTO), but if that ever changes, this field must
+    // never leak into a JSON response regardless.
+    @JsonIgnore
     @Column(name = "password_hash")
     private String passwordHash;
 

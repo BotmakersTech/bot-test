@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.botleague.backend.common.exception.ApiException;
 import com.botleague.backend.common.service.UploadService;
 import com.botleague.backend.profile.dto.ProfileResponseDTO;
 import com.botleague.backend.profile.dto.PublicProfileResponseDTO;
@@ -213,7 +214,7 @@ public class ProfileController {
         String fileUrl = body.get("fileUrl");
 
         if (fileUrl == null || fileUrl.isEmpty()) {
-            throw new RuntimeException("fileUrl is required");
+            throw ApiException.badRequest("fileUrl is required");
         }
 
         userProfileService.updateProfilePhoto(authentication, fileUrl);

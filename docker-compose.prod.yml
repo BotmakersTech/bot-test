@@ -34,6 +34,11 @@ services:
       # Mail
       SPRING_MAIL_USERNAME:       ${MAIL_USERNAME}
       SPRING_MAIL_PASSWORD:       ${MAIL_PASSWORD}
+      # MSG91 (OTP provider) — previously NOT passed through here, meaning
+      # production silently ran on the credentials hardcoded as a fallback
+      # in application.properties. Must be set in the server's real .env.
+      MSG91_AUTH_KEY:             ${MSG91_AUTH_KEY}
+      MSG91_TEMPLATE_ID:          ${MSG91_TEMPLATE_ID}
       # App
       APP_FRONTEND_URL:           ${FRONTEND_URL}
       APP_COOKIE_SECURE:          "true"

@@ -1,6 +1,7 @@
 package com.botleague.backend.common.security;
 
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -63,8 +64,10 @@ public class SecurityConfig {
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/sponsors/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/event-sponsors/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/sport-sponsors/**").permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/event-sponsors/upload/logo").permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/sport-sponsors/upload/logo").permitAll()
+                // Live bracket/match results — spectators should be able to watch a
+                // tournament without an account, matching what the platform already
+                // does for live/completed event listings above.
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/matches/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
@@ -79,8 +82,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public PasswordEncoder passwordEncoder(@Value("${security.bcrypt.strength:10}") int strength) {
+        return new BCryptPasswordEncoder(strength);
     }
 
     @Bean

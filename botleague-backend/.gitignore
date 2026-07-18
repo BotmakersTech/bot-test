@@ -37,3 +37,7 @@ hs_err_pid*.log
 replay_pid*.log
 .env
 *.env
+
+### Runtime / dev logs — never commit; can contain phone numbers, generated
+### passwords, and other operational data logged at startup ###
+*.log

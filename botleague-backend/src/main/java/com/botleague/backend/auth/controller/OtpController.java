@@ -48,6 +48,9 @@ public class OtpController {
         String phone = body.getPhone();
         String otp   = body.getOtp();
         if (phone == null || phone.isBlank()) throw ApiException.badRequest("Phone number is required");
+        if (!phone.matches("^[0-9]{10}$")) {
+            throw ApiException.badRequest("Invalid phone number — must be exactly 10 digits");
+        }
         if (otp   == null || otp.isBlank())   throw ApiException.badRequest("OTP is required");
 
         // throws ApiException.badRequest() if OTP is wrong/expired

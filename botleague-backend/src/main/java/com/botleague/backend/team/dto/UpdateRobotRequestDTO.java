@@ -8,6 +8,7 @@ import com.botleague.backend.team.enums.RobotCategory;
 import com.botleague.backend.team.enums.RobotStatus;
 
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 /**
  * Partial update — every field is optional. Only non-null fields are applied
@@ -16,6 +17,7 @@ import jakarta.validation.constraints.Positive;
  */
 public class UpdateRobotRequestDTO {
 
+    @Size(max = 100, message = "Robot name must be at most 100 characters")
     private String robotName;
 
     private RobotCategory robotType;
@@ -41,6 +43,7 @@ public class UpdateRobotRequestDTO {
 
     private Map<String, String> attributes;
 
+    @Size(max = 2000, message = "Description must be at most 2000 characters")
     private String description;
 
     private RobotStatus status;

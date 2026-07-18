@@ -9,10 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import com.botleague.backend.auth.entity.User;
-import com.botleague.backend.common.service.UploadService;
+import com.botleague.backend.common.exception.ApiException;
 import com.botleague.backend.profile.dto.UploadResponse;
-import com.botleague.backend.profile.service.FileKeyService;
 import com.botleague.backend.team.dto.CreateTeamRequestDTO;
 import com.botleague.backend.team.dto.CreateTeamResponseDTO;
 import com.botleague.backend.team.dto.GetTeamMembersDTO;
@@ -32,15 +30,10 @@ public class TeamController {
     private static final Logger log = LoggerFactory.getLogger(TeamController.class);
 
     private final TeamService       teamService;
-    private final FileKeyService    fileKeyService;
-    private final UploadService     uploadService;
     private final PublicTeamService publicTeamService;
 
-    public TeamController(TeamService teamService, FileKeyService fileKeyService,
-                          UploadService uploadService, PublicTeamService publicTeamService) {
+    public TeamController(TeamService teamService, PublicTeamService publicTeamService) {
         this.teamService       = teamService;
-        this.fileKeyService    = fileKeyService;
-        this.uploadService     = uploadService;
         this.publicTeamService = publicTeamService;
     }
 
@@ -69,7 +62,7 @@ public class TeamController {
     @PatchMapping("/updateTeam")
     public ResponseEntity<GetTeamResponseDTO> updateTeam(
             Authentication authentication,
-            @RequestBody UpdateTeamRequestDTO request) {
+            @Valid @RequestBody UpdateTeamRequestDTO request) {
 
         return ResponseEntity.ok(teamService.updateTeam(authentication, request));
     }
@@ -77,12 +70,13 @@ public class TeamController {
 
     @GetMapping("/{teamId}/members")
     public ResponseEntity<GetTeamMembersDTO> getTeamMembers(
+            Authentication authentication,
             @PathVariable String teamId) {
 
-        GetTeamMembersDTO response = teamService.getTeamMembers(teamId);
+        GetTeamMembersDTO response = teamService.getTeamMembers(authentication, teamId);
         return ResponseEntity.ok(response);
     }
-    
+
     @PostMapping("/upload/{teamId}/logo")
     public ResponseEntity<UploadResponse> getTeamLogoUploadUrl(
 
@@ -95,17 +89,8 @@ public class TeamController {
             @RequestParam long fileSize
     ) {
 
-        // Generate unique storage key
-        String key =
-                fileKeyService.generateTeamLogoKey(teamId,fileType);
-
-        // Generate presigned upload URL
         UploadResponse response =
-                uploadService.generateUploadUrl(
-                        key,
-                        fileType,
-                        fileSize
-                );
+                teamService.generateLogoUploadUrl(authentication, teamId, fileType, fileSize);
 
         return ResponseEntity.ok(response);
     }
@@ -142,7 +127,7 @@ public class TeamController {
         String fileUrl = body.get("key");
 
         if (fileUrl == null || fileUrl.isBlank()) {
-            throw new RuntimeException("key is required");
+            throw ApiException.badRequest("key is required");
         }
 
         UpdateTeamRequestDTO request =

@@ -232,12 +232,18 @@ public class RobotService {
     }
 
     // ================= GET ALL ROBOTS BY TEAM =================
+    // Team-internal roster (full spec detail) — restricted to that team's own
+    // active members. Strangers should use PublicRobotService instead.
 
     @Transactional(readOnly = true)
-    public List<RobotResponseDTO> getAllRobotsByTeam(String teamCode) {
+    public List<RobotResponseDTO> getAllRobotsByTeam(Authentication authentication, String teamCode) {
+
+        UUID userId = extractUserId(authentication);
 
         Team team = teamRepository.findByTeamCode(teamCode)
                 .orElseThrow(() -> ApiException.notFound("Team not found"));
+
+        teamMembershipService.validateTeamMember(userId, team.getId());
 
         return robotRepository.findByTeamIdAndDeletedAtIsNull(team.getId())
                 .stream()
@@ -248,10 +254,14 @@ public class RobotService {
     // ================= GET ONE ROBOT =================
 
     @Transactional(readOnly = true)
-    public RobotResponseDTO getRobotById(UUID robotId) {
+    public RobotResponseDTO getRobotById(Authentication authentication, UUID robotId) {
+
+        UUID userId = extractUserId(authentication);
 
         Robot robot = robotRepository.findByIdAndDeletedAtIsNull(robotId)
                 .orElseThrow(() -> ApiException.notFound("Robot not found"));
+
+        teamMembershipService.validateTeamMember(userId, robot.getTeamId());
 
         return mapRobot(robot);
     }

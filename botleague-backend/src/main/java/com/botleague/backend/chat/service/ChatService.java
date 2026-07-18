@@ -389,8 +389,19 @@ public class ChatService {
         return sendMessage(chatRoomId, senderId, content, null, null);
     }
 
+    private static final int MAX_MESSAGE_LENGTH = 4000;
+
     public ChatMessageResponse sendMessage(UUID chatRoomId, UUID senderId, String content,
                                             String attachmentUrl, String attachmentFileType) {
+        // This arrives over a WebSocket @MessageMapping, not a REST @RequestBody,
+        // so @Valid/@Size on the DTO never runs — enforce it here instead.
+        if ((content == null || content.isBlank()) && attachmentUrl == null) {
+            throw ApiException.badRequest("Message content is required");
+        }
+        if (content != null && content.length() > MAX_MESSAGE_LENGTH) {
+            throw ApiException.badRequest("Message must be at most " + MAX_MESSAGE_LENGTH + " characters");
+        }
+
         ChatParticipant participant = chatParticipantRepository
                 .findByChatRoomIdAndUserId(chatRoomId, senderId)
                 .orElseThrow(() -> ApiException.forbidden("You are not a participant in this chat"));

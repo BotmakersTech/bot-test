@@ -73,9 +73,12 @@ public class SportSponsorController {
 
     /**
      * POST /api/sport-sponsors/upload/logo?sportId=...&fileType=...&fileSize=...
-     * Returns a presigned R2 URL for direct browser upload.
+     * Returns a presigned R2 URL for direct browser upload. Was previously
+     * permitAll() with no auth check at all — same authorization bar as
+     * add/update/delete above.
      */
     @PostMapping("/upload/logo")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<UploadResponse> getLogoUploadUrl(
             @RequestParam UUID sportId,
             @RequestParam String fileType,

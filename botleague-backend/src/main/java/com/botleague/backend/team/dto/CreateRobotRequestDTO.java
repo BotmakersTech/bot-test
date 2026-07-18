@@ -9,10 +9,12 @@ import com.botleague.backend.team.enums.RobotCategory;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 public class CreateRobotRequestDTO {
 
     @NotBlank
+    @Size(max = 100, message = "Robot name must be at most 100 characters")
     private String robotName;
 
     // Broad robot type — user selects from 9 predefined types.
@@ -55,6 +57,7 @@ public class CreateRobotRequestDTO {
     // Aircraft: {"aircraftType":"FIXED_WING"}
     private Map<String, String> attributes;
 
+    @Size(max = 2000, message = "Description must be at most 2000 characters")
     private String description;
 
     // getters & setters

@@ -77,6 +77,26 @@ public class TeamMembershipService {
         }
     }
 
+    // ================= VALIDATE TEAM MEMBER (any role) =================
+    // Weaker than validateTeamAdmin — used to gate team-internal read views
+    // (roster, robot list) to that team's own active members, without
+    // requiring captain/vice-captain. Throws 403 (not 404) so callers can't
+    // distinguish "team doesn't exist" from "you're not on it".
+
+    @Transactional(readOnly = true)
+    public boolean isActiveMember(UUID userId, UUID teamId) {
+        return teamMembershipRepository
+                .findByTeamIdAndUserIdAndStatus(teamId, userId, TeamMembershipStatus.ACTIVE)
+                .isPresent();
+    }
+
+    @Transactional(readOnly = true)
+    public void validateTeamMember(UUID userId, UUID teamId) {
+        if (!isActiveMember(userId, teamId)) {
+            throw ApiException.forbidden("You are not an active member of this team");
+        }
+    }
+
     // ================= ASSIGN ROLE (CAPTAIN + VICE_CAPTAIN) =================
 
     public void assignRole(

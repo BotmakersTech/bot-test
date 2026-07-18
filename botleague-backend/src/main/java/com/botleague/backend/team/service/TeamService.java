@@ -15,6 +15,9 @@ import com.botleague.backend.chat.service.ChatService;
 import com.botleague.backend.common.exception.ApiException;
 import com.botleague.backend.common.service.BotleagueIdService;
 import com.botleague.backend.common.service.GetFileService;
+import com.botleague.backend.common.service.UploadService;
+import com.botleague.backend.profile.dto.UploadResponse;
+import com.botleague.backend.profile.service.FileKeyService;
 import com.botleague.backend.role.service.UserRoleService;
 import com.botleague.backend.team.dto.CreateTeamRequestDTO;
 import com.botleague.backend.team.dto.CreateTeamResponseDTO;
@@ -41,6 +44,8 @@ public class TeamService {
     private final UserRepository userRepository;
     private final ChatService chatService;
     private final GetFileService getFileService;
+    private final FileKeyService fileKeyService;
+    private final UploadService uploadService;
 
     private static final String CDN_BASE_URL = "https://media.botleague.in/";
 
@@ -52,7 +57,9 @@ public class TeamService {
             TeamMembershipRepository teamMembershipRepository,
             UserRepository userRepository,
             ChatService chatService,
-            GetFileService getFileService) {
+            GetFileService getFileService,
+            FileKeyService fileKeyService,
+            UploadService uploadService) {
 
         this.teamRepository = teamRepository;
         this.botleagueIdService = botleagueIdService;
@@ -62,6 +69,8 @@ public class TeamService {
         this.userRepository = userRepository;
         this.chatService = chatService;
         this.getFileService = getFileService;
+        this.fileKeyService = fileKeyService;
+        this.uploadService = uploadService;
     }
 
     // ================= CREATE TEAM =================
@@ -159,6 +168,9 @@ public class TeamService {
                 .orElseThrow(() -> ApiException.notFound("Team not found"));
 
         if (request.getTeamName() != null) {
+            if (teamRepository.existsByTeamNameAndIdNot(request.getTeamName(), teamId)) {
+                throw ApiException.conflict("Team name already exists");
+            }
             team.setTeamName(request.getTeamName());
         }
         if (request.getLogo_Url() != null) {
@@ -195,6 +207,25 @@ public class TeamService {
         return response;
     }
 
+    // ================= TEAM LOGO UPLOAD URL =================
+    // Previously took an Authentication param but never used it — any
+    // authenticated user could mint an upload URL into any team's storage
+    // namespace by guessing/enumerating {teamId}. Now requires the caller to
+    // be captain/vice-captain of THIS team.
+
+    public UploadResponse generateLogoUploadUrl(
+            Authentication authentication,
+            UUID teamId,
+            String fileType,
+            long fileSize) {
+
+        UUID userId = extractUserId(authentication);
+        teamMembershipService.validateTeamAdmin(userId, teamId);
+
+        String key = fileKeyService.generateTeamLogoKey(teamId, fileType);
+        return uploadService.generateUploadUrl(key, fileType, fileSize);
+    }
+
     // ================= GET TEAM =================
 
     @Transactional(readOnly = true)
@@ -220,12 +251,20 @@ public class TeamService {
     }
 
     // ================= GET TEAM MEMBERS =================
+    // Full roster includes DOB / address / city / state / country — restricted
+    // to that team's own active members (any role) so a stranger with just a
+    // valid session can't enumerate every team's members' PII, including
+    // minors' in the JUNIOR_INNOVATORS category.
 
     @Transactional(readOnly = true)
-    public GetTeamMembersDTO getTeamMembers(String teamCode) {
+    public GetTeamMembersDTO getTeamMembers(Authentication authentication, String teamCode) {
+
+        UUID userId = extractUserId(authentication);
 
         Team team = teamRepository.findByTeamCode(teamCode)
                 .orElseThrow(() -> ApiException.notFound("Team not found"));
+
+        teamMembershipService.validateTeamMember(userId, team.getId());
 
         List<TeamMembership> memberships = teamMembershipRepository
                 .findByTeamIdAndStatus(team.getId(), TeamMembershipStatus.ACTIVE);

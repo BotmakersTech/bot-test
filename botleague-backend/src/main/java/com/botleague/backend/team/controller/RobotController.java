@@ -85,19 +85,24 @@ public class RobotController {
 	}
 	
 	
+	// Team-internal roster view (full spec detail) — restricted to that team's
+	// own active members. Anyone else wanting robot info should use the
+	// public-profile endpoints above.
 	@GetMapping("/{teamCode}/all-robots")
 	public ResponseEntity<List<RobotResponseDTO>> getAllRobotsOfTeam(
+	        Authentication authentication,
 	        @PathVariable String teamCode
 	) {
-	    List<RobotResponseDTO> robots = robotService.getAllRobotsByTeam(teamCode);
+	    List<RobotResponseDTO> robots = robotService.getAllRobotsByTeam(authentication, teamCode);
 	    return ResponseEntity.ok(robots);
 	}
-	
+
 	@GetMapping("/{robotId}/robot")
 	public ResponseEntity<RobotResponseDTO> getRobots(
+	        Authentication authentication,
 	        @PathVariable UUID robotId
 	) {
-	    RobotResponseDTO robots = robotService.getRobotById(robotId);
+	    RobotResponseDTO robots = robotService.getRobotById(authentication, robotId);
 	    return ResponseEntity.ok(robots);
 	}
 	
@@ -113,6 +118,10 @@ public class RobotController {
 	// =========================
     // Generate Upload URL
     // =========================
+	// Delegates to RobotService.uploadRobot(), which validates the caller is a
+	// captain/vice-captain of the robot's OWN team before minting a key inside
+	// that team's storage namespace — previously this built the key straight
+	// from the path {robotId} with no ownership check at all (IDOR).
 	@PostMapping("/{robotId}/upload-url")
 	public ResponseEntity<UploadResponse> getRobotUploadUrl(
 	        Authentication authentication,
@@ -120,29 +129,24 @@ public class RobotController {
 	        @RequestParam String fileType,
 	        @RequestParam long fileSize
 	) {
-
-	    UUID userId = UUID.fromString((String) authentication.getPrincipal());
-
-	    String key = fileKeyService.generateRobotImageKey(userId, robotId, fileType);
-
-	    UploadResponse response =
-	            uploadService.generateUploadUrl(key, fileType, fileSize);
-
+	    UploadResponse response = robotService.uploadRobot(authentication, robotId, fileType, fileSize);
 	    return ResponseEntity.ok(response);
 	}
 
-	
 	@PostMapping("/{robotId}/media")
 	public ResponseEntity<String> confirmUpload(
+	        Authentication authentication,
 	        @PathVariable UUID robotId,
 	        @RequestBody MediaRequest request
 	) {
-
 	    MediaType type = request.getFileType().startsWith("image")
 	            ? MediaType.IMAGE
 	            : MediaType.VIDEO;
 
-	    robotMediaService.saveMedia(robotId, request.getFileUrl(), type);
+	    // NOTE: despite the field name, the frontend actually sends the R2
+	    // storage KEY here (e.g. "robots/{teamId}/{robotId}/images/{uuid}.png"),
+	    // never a full URL — RobotMediaService validates it as such.
+	    robotMediaService.saveMedia(authentication, robotId, request.getFileUrl(), type);
 
 	    return ResponseEntity.ok("Media saved");
 	}

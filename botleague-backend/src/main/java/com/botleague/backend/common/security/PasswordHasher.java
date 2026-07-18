@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 
 import com.botleague.backend.common.exception.ApiException;
 
+import jakarta.annotation.PostConstruct;
+
 /**
  * Wraps BCrypt so that no more than N hashes run at once. BCrypt is CPU-heavy by
  * design; on a 2-core box an unbounded login storm would peg both cores and stall
@@ -30,6 +32,16 @@ public class PasswordHasher {
         this.semaphore = new Semaphore(maxConcurrent, true); // fair
     }
 
+    // Computed once at startup — a fixed BCrypt hash that no real password
+    // will ever match, used purely to burn the same CPU time a real
+    // verification would cost. See matchesDummy() below.
+    private String dummyHash;
+
+    @PostConstruct
+    void initDummyHash() {
+        dummyHash = encoder.encode("timing-safety-dummy-password");
+    }
+
     public String hash(String raw) {
         return withPermit(() -> encoder.encode(raw));
     }
@@ -37,6 +49,18 @@ public class PasswordHasher {
     public boolean matches(String raw, String hash) {
         // BCrypt verification costs the same as hashing, so bound it too.
         return withPermit(() -> encoder.matches(raw, hash));
+    }
+
+    /**
+     * Call this instead of matches() when the identifier being logged in with
+     * doesn't correspond to any real user. Login used to skip BCrypt entirely
+     * in that case, making a non-existent phone/email respond measurably
+     * faster than a real one with a wrong password — an account-enumeration
+     * timing channel. Always returns false.
+     */
+    public boolean matchesDummy(String raw) {
+        matches(raw, dummyHash);
+        return false;
     }
 
     private <T> T withPermit(java.util.function.Supplier<T> work) {

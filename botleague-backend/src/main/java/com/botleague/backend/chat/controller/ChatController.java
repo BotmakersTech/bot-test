@@ -5,6 +5,7 @@ import com.botleague.backend.chat.dto.ChatRoomListResponse;
 import com.botleague.backend.chat.dto.ChatRoomResponse;
 import com.botleague.backend.chat.entity.ChatRoom;
 import com.botleague.backend.chat.service.ChatService;
+import com.botleague.backend.common.exception.ApiException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -159,7 +160,16 @@ public class ChatController {
             @RequestBody Map<String, String> body,
             Authentication authentication) {
         UUID userId = extractUserId(authentication);
-        UUID targetUserId = UUID.fromString(body.get("userId"));
+        String targetUserIdRaw = body.get("userId");
+        if (targetUserIdRaw == null || targetUserIdRaw.isBlank()) {
+            throw ApiException.badRequest("userId is required");
+        }
+        UUID targetUserId;
+        try {
+            targetUserId = UUID.fromString(targetUserIdRaw);
+        } catch (IllegalArgumentException e) {
+            throw ApiException.badRequest("userId is not a valid UUID");
+        }
         chatService.addTeamMemberToEventTeamChat(roomId, userId, targetUserId);
         return ResponseEntity.ok().build();
     }

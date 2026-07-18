@@ -16,6 +16,8 @@ public class RegisterRequestDTO {
 
     @NotBlank(message = "Password is required")
     @Size(min = 8, message = "Password must be at least 8 characters")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$",
+             message = "Password must include an uppercase letter, a lowercase letter, and a digit")
     private String password;
 
 	public String getPhone() {

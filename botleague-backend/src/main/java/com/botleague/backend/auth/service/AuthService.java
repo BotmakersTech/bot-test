@@ -80,17 +80,18 @@ public class AuthService {
     @Transactional
     public AuthTokensDTO register(RegisterRequestDTO request) {
 
+        // Prove phone ownership BEFORE revealing anything about whether that
+        // number is already registered — otherwise an unauthenticated caller
+        // could probe arbitrary phone numbers against this endpoint and use
+        // the 409-vs-not response as a registered-phone-number oracle. This
+        // also mirrors the OTP flow already required for resetPassword's
+        // phone branch.
+        otpService.verifyOtp(request.getPhone(), request.getOtp());
+
         if (userRepository.existsByPhone(request.getPhone())) {
             // 409, not a generic 500.
             throw ApiException.conflict("User already exists");
         }
-
-        // Prove phone ownership before creating the account — otherwise anyone
-        // could register with someone else's number and permanently squat it
-        // (existsByPhone above would then block the real owner from ever
-        // registering). This mirrors the OTP flow already required for
-        // resetPassword's phone branch.
-        otpService.verifyOtp(request.getPhone(), request.getOtp());
 
         String botleagueId = botleagueIdService.generateBotleagueUserId();
         // hashing is bounded so a registration burst can't pin both cores
@@ -118,11 +119,18 @@ public class AuthService {
             throw ApiException.badRequest("Login type required");
         }
 
-        User user = (request.getLoginType() == LoginType.PHONE)
+        var userOpt = (request.getLoginType() == LoginType.PHONE)
                 ? userRepository.findByPhone(request.getIdentifier())
-                        .orElseThrow(() -> ApiException.unauthorized("Invalid credentials"))
-                : userRepository.findByEmailIgnoreCase(request.getIdentifier())
-                        .orElseThrow(() -> ApiException.unauthorized("Invalid credentials"));
+                : userRepository.findByEmailIgnoreCase(request.getIdentifier());
+
+        if (userOpt.isEmpty()) {
+            // Still pay the BCrypt cost so a non-existent identifier doesn't
+            // respond measurably faster than a wrong password for a real one
+            // — see PasswordHasher.matchesDummy().
+            passwordHasher.matchesDummy(request.getPassword());
+            throw ApiException.unauthorized("Invalid credentials");
+        }
+        User user = userOpt.get();
 
         if (!passwordHasher.matches(request.getPassword(), user.getPasswordHash())) {
             throw ApiException.unauthorized("Invalid credentials");

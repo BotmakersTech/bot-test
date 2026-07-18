@@ -88,13 +88,18 @@ public class EventSponsorController {
 
     /**
      * POST /api/event-sponsors/upload/logo?eventId=...&fileType=...&fileSize=...
-     * Returns a presigned R2 URL for direct browser upload.
+     * Returns a presigned R2 URL for direct browser upload. Was previously
+     * permitAll() with no auth check at all — same authorization bar as
+     * add/update/delete above.
      */
     @PostMapping("/upload/logo")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<UploadResponse> getLogoUploadUrl(
             @RequestParam UUID eventId,
             @RequestParam String fileType,
-            @RequestParam long fileSize) {
+            @RequestParam long fileSize,
+            Authentication auth) {
+        service.assertCanManage(eventId, SecurityUtils.currentUserId(auth), extractRoles(auth));
         String key = fileKeyService.generateEventSponsorLogoKey(eventId, fileType);
         return ResponseEntity.ok(uploadService.generateUploadUrl(key, fileType, fileSize));
     }

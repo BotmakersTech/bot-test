@@ -1,6 +1,7 @@
 package com.botleague.backend.auth.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class ChangePasswordRequestDTO {
@@ -10,6 +11,8 @@ public class ChangePasswordRequestDTO {
 
     @NotBlank(message = "New password is required")
     @Size(min = 8, message = "Password must be at least 8 characters")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$",
+             message = "Password must include an uppercase letter, a lowercase letter, and a digit")
     private String newPassword;
 
 	public String getOldPassword() {

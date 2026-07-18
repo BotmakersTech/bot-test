@@ -5,6 +5,7 @@ import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.botleague.backend.common.exception.ApiException;
 import com.botleague.backend.profile.dto.UploadResponse;
 
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -51,10 +52,16 @@ public class UploadService {
         // =========================
         // 2. Build Put Request
         // =========================
+        // Binding contentType + contentLength into the signed request means
+        // the presigned URL only validates a PUT whose actual headers match
+        // exactly what was declared here — previously neither was bound, so
+        // a caller could request a URL for a 1KB PNG and then PUT an
+        // arbitrarily large file of any type through it.
         PutObjectRequest putRequest = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)
-                //.contentType(contentType)
+                .contentType(contentType)
+                .contentLength(fileSize)
                 .build();
 
         // =========================
@@ -92,25 +99,33 @@ public class UploadService {
     private void validateContentType(String contentType) {
 
         if (contentType == null) {
-            throw new RuntimeException("Content type is required");
+            throw ApiException.badRequest("Content type is required");
         }
 
         if (!(contentType.startsWith("image") || contentType.startsWith("video"))) {
-            throw new RuntimeException("Only image and video uploads are allowed");
+            throw ApiException.badRequest("Only image and video uploads are allowed");
+        }
+
+        // SVG can embed <script>/event-handler attributes — if it's ever served
+        // inline instead of as a forced download, that's stored XSS off the
+        // public media CDN. Raster formats cover every real upload use case
+        // here (logos, robot photos), so it's simplest to just disallow it.
+        if (contentType.equalsIgnoreCase("image/svg+xml")) {
+            throw ApiException.badRequest("SVG uploads are not allowed");
         }
     }
 
     private void validateFileSize(long fileSize, String contentType) {
 
         if (fileSize <= 0) {
-            throw new RuntimeException("Invalid file size");
+            throw ApiException.badRequest("Invalid file size");
         }
 
         boolean isVideo = contentType != null && contentType.startsWith("video");
         long limit = isVideo ? maxVideoSize : maxImageSize;
 
         if (fileSize > limit) {
-            throw new RuntimeException("File size exceeds limit of " + (limit / (1024 * 1024)) + "MB");
+            throw ApiException.badRequest("File size exceeds limit of " + (limit / (1024 * 1024)) + "MB");
         }
     }
 }
