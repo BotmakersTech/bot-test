@@ -12,6 +12,7 @@ import {
 } from "../api/uploadTeamLogo.api";
 
 import { useNavigate } from "react-router-dom";
+import { useMinimalProfileComplete } from "../../../../shared/hooks/useProfileComplete";
 
 // ======================================================
 // HOOK
@@ -20,6 +21,11 @@ import { useNavigate } from "react-router-dom";
 export default function useCreateTeam() {
 
   const navigate = useNavigate();
+
+  const { isComplete, missingFields } = useMinimalProfileComplete();
+
+  // Controls the "complete your profile" gate modal for the create-team action
+  const [showProfileGate, setShowProfileGate] = useState(false);
 
   // ======================================================
   // FORM STATE
@@ -38,7 +44,7 @@ export default function useCreateTeam() {
 
       state: "",
 
-      country: "",
+      country: "India",
     });
 
   // ======================================================
@@ -74,6 +80,18 @@ export default function useCreateTeam() {
       ...prev,
 
       [e.target.name]: e.target.value,
+    }));
+  };
+
+  // Same update as handleChange, but for callback-style inputs (e.g.
+  // LocationSelects) that hand back a plain value instead of an event.
+  const setField = (
+    name: keyof CreateTeamPayload,
+    value: string
+  ) => {
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
     }));
   };
 
@@ -123,6 +141,13 @@ export default function useCreateTeam() {
   // ======================================================
 
   const handleSubmit = async () => {
+
+    // Minimum profile requirements gate — username + DOB must be set
+    // before a team can be created (mirrors the join-team gate).
+    if (!isComplete) {
+      setShowProfileGate(true);
+      return;
+    }
 
     try {
 
@@ -203,7 +228,13 @@ export default function useCreateTeam() {
 
     // actions
     handleChange,
+    setField,
     handleLogoUpload,
     handleSubmit,
+
+    // profile gate
+    showProfileGate,
+    missingFields,
+    closeProfileGate: () => setShowProfileGate(false),
   };
 }
