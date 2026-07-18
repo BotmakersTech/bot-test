@@ -1,0 +1,66 @@
+/* =========================================================
+   profileMockup.css — BotLeague
+   New "Edit Profile" page mockup. Scoped under .pfm-page and
+   prefixed pfm- throughout so nothing collides with the legacy
+   profile.css (still used by ProfileForm.tsx elsewhere, e.g.
+   SuperAdmin's UserDetailPage).
+   ========================================================= */
+
+.pfm-page {
+  background-color: #ffffff;
+  font-family: "Poppins", sans-serif;
+}
+
+.pfm-font-sarpanch {
+  font-family: "Sarpanch", sans-serif;
+}
+
+/* ── Form inputs — inset shadow, light-grey fill, matches mockup exactly ── */
+.pfm-form input,
+.pfm-form select,
+.pfm-form textarea {
+  background-color: #f0f0f0;
+  border: 1px solid #bdbdbd;
+  box-shadow: inset 4px 4px 4px rgba(0, 0, 0, 0.25) !important;
+  border-radius: 8px;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+  font-family: "Poppins", sans-serif;
+}
+.pfm-form input:focus,
+.pfm-form select:focus,
+.pfm-form textarea:focus {
+  outline: none;
+  background-color: #ffffff;
+  box-shadow: none !important;
+}
+.pfm-form select {
+  cursor: pointer;
+}
+
+.pfm-form input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.5;
+}
+
+/* ── Inline username-edit input — same visual weight as the text it replaces ── */
+.pfm-username-input {
+  background: #f0f0f0;
+  border: 1px solid #bdbdbd;
+  border-radius: 6px;
+  padding: 2px 8px;
+  outline: none;
+}
+
+.pfm-error {
+  color: #dc2626;
+  font-size: 0.75rem;
+  margin-top: 2px;
+}
+
+.pfm-hint {
+  color: #4f46e5;
+  font-size: 0.75rem;
+  margin-top: 4px;
+}

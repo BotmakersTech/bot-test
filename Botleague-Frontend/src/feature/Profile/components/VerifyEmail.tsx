@@ -32,9 +32,13 @@ console.log("token from url:", token);
 
         setSuccess(true);
 
-        // redirect after success
+        // Redirect back to the profile page — this link is only ever sent
+        // from the "change email" flow on an already-logged-in profile, so
+        // there's nothing to log in to. If the session in this tab isn't
+        // valid (e.g. link opened on a different device), ProtectedRoute
+        // itself falls back to /login.
         setTimeout(() => {
-          navigate("/login", { replace: true });
+          navigate("/profile", { replace: true });
         }, 2000);
 
       } catch (err: unknown) {
@@ -107,7 +111,7 @@ console.log("token from url:", token);
         </h1>
 
         <p className="text-gray-600">
-          Redirecting to login...
+          Redirecting to your profile...
         </p>
       </div>
     );

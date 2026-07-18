@@ -9,6 +9,8 @@ interface LocationSelectsProps {
   onState: (v: string) => void
   onCity: (v: string) => void
   required?: boolean
+  /** Hide the Country field — use when the page fixes country itself (e.g. always "India") and only wants State + City. */
+  hideCountry?: boolean
   // Use className-based styling (e.g. "profile-input") — skips inline defaults
   selectClassName?: string
   inputClassName?: string
@@ -62,6 +64,7 @@ export default function LocationSelects({
   country, state, city,
   onCountry, onState, onCity,
   required,
+  hideCountry,
   selectClassName, inputClassName, labelClassName,
   selectStyle, inputStyle, labelStyle,
   itemStyle,
@@ -87,21 +90,23 @@ export default function LocationSelects({
   }
 
   return (
-    <div style={gridStyle ?? { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "18px" }}>
+    <div style={gridStyle ?? { display: "grid", gridTemplateColumns: `repeat(${hideCountry ? 2 : 3}, 1fr)`, gap: "18px" }}>
 
-      <div style={itemStyle}>
-        <label style={lblStyle} className={labelClassName}>Country</label>
-        <select
-          required={required}
-          value={country}
-          onChange={e => handleCountry(e.target.value)}
-          style={selStyle}
-          className={selectClassName}
-        >
-          <option value="">Select country…</option>
-          {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
-      </div>
+      {!hideCountry && (
+        <div style={itemStyle}>
+          <label style={lblStyle} className={labelClassName}>Country</label>
+          <select
+            required={required}
+            value={country}
+            onChange={e => handleCountry(e.target.value)}
+            style={selStyle}
+            className={selectClassName}
+          >
+            <option value="">Select country…</option>
+            {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+      )}
 
       <div style={itemStyle}>
         <label style={lblStyle} className={labelClassName}>State / Province</label>
