@@ -32,3 +32,29 @@ export function useProfileComplete(): {
     missingFields,
   };
 }
+
+/**
+ * Narrower gate used specifically for create/join-team actions — only
+ * username and date of birth are strictly required to form or join a team,
+ * unlike the full profile (name + photo too) checked by useProfileComplete.
+ */
+export function useMinimalProfileComplete(): {
+  isComplete:    boolean;
+  missingFields: MissingField[];
+} {
+  const user = useSelector((s: RootState) => s.auth.user);
+
+  const missingFields: MissingField[] = [];
+
+  if (!user?.userName?.trim()) {
+    missingFields.push({ key: "username", label: "Username",       icon: "🏷️" });
+  }
+  if (!user?.dateOfBirth) {
+    missingFields.push({ key: "dob",      label: "Date of Birth",  icon: "🎂" });
+  }
+
+  return {
+    isComplete:    missingFields.length === 0,
+    missingFields,
+  };
+}

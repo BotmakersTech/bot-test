@@ -196,6 +196,10 @@ const user = await getProfile();
 // update redux auth state
 dispatch(loginSuccess(user));
 
+// flag this session so the "you made it" welcome popup shows once,
+// as soon as they land on their (empty) profile
+localStorage.setItem("botleague_welcome_pending", "1");
+
 // redirect
 navigate("/profile", { replace: true });
 } catch (err: unknown) {

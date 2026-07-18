@@ -16,6 +16,7 @@ import {
 } from "../store/notificationSlice";
 import useTeamInvitations from "../../Team/hooks/useTeamInvitations";
 import type { TeamInvitationResponse } from "../../UserDashboard/api/userMembership.api";
+import ProfileIncompleteModal from "../../../shared/components/ProfileIncompleteModal";
 
 type TabKey = "all" | "team" | "join" | "sport" | "match";
 
@@ -201,6 +202,9 @@ export default function NotificationsPage() {
     actionLoadingId,
     acceptInvitation,
     declineInvitation,
+    showProfileGate,
+    missingFields,
+    closeProfileGate,
   } = useTeamInvitations();
   const [inviteErrors, setInviteErrors] = useState<Record<string, string>>({});
 
@@ -413,6 +417,14 @@ export default function NotificationsPage() {
           </div>
         )}
       </div>
+
+      {showProfileGate && (
+        <ProfileIncompleteModal
+          missingFields={missingFields}
+          action="join a team"
+          onClose={closeProfileGate}
+        />
+      )}
     </div>
   );
 }
