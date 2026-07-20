@@ -19,6 +19,7 @@ import com.botleague.backend.admin.dto.PagedResponse;
 import com.botleague.backend.admin.dto.UpdateTeamRequest;
 import com.botleague.backend.auth.entity.User;
 import com.botleague.backend.auth.repository.UserRepository;
+import com.botleague.backend.chat.service.ChatService;
 import com.botleague.backend.common.exception.ApiException;
 import com.botleague.backend.common.service.BotleagueIdService;
 import com.botleague.backend.team.entity.Team;
@@ -37,17 +38,20 @@ public class AdminTeamService {
     private final TeamMembershipRepository teamMembershipRepository;
     private final UserRepository userRepository;
     private final BotleagueIdService botleagueIdService;
+    private final ChatService chatService;
 
     public AdminTeamService(
             TeamRepository teamRepository,
             TeamMembershipRepository teamMembershipRepository,
             UserRepository userRepository,
-            BotleagueIdService botleagueIdService
+            BotleagueIdService botleagueIdService,
+            ChatService chatService
     ) {
         this.teamRepository = teamRepository;
         this.teamMembershipRepository = teamMembershipRepository;
         this.userRepository = userRepository;
         this.botleagueIdService = botleagueIdService;
+        this.chatService = chatService;
     }
 
     // ── Create team (admin) ───────────────────────────────────────────────────
@@ -89,6 +93,12 @@ public class AdminTeamService {
         membership.setStatus(TeamMembershipStatus.ACTIVE);
         membership.setJoinedAt(LocalDateTime.now());
         teamMembershipRepository.save(membership);
+
+        // Create team chat room (best-effort — chat failure must not block team creation)
+        try {
+            chatService.createTeamChat(saved.getId(), saved.getTeamName(), List.of(captain.getId()));
+        } catch (Exception ignored) {
+        }
 
         return getTeamDetail(saved.getId());
     }
@@ -153,6 +163,11 @@ public class AdminTeamService {
                 .orElseThrow(() -> new ResourceNotFoundException("Membership not found"));
         membership.setStatus(TeamMembershipStatus.LEFT);
         teamMembershipRepository.save(membership);
+
+        try {
+            chatService.removeMemberFromTeamChat(teamId, userId, "was removed from the team.");
+        } catch (Exception ignored) {
+        }
     }
 
     // ── Update team info ──────────────────────────────────────────────────────

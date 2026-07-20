@@ -13,9 +13,11 @@ import com.botleague.backend.chat.repository.ChatMessageRepository;
 import com.botleague.backend.chat.repository.ChatParticipantRepository;
 import com.botleague.backend.chat.repository.ChatRoomRepository;
 import com.botleague.backend.common.exception.ApiException;
+import com.botleague.backend.team.entity.Team;
 import com.botleague.backend.team.entity.TeamMembership;
 import com.botleague.backend.team.enums.TeamMembershipStatus;
 import com.botleague.backend.team.repository.TeamMembershipRepository;
+import com.botleague.backend.team.repository.TeamRepository;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -39,6 +41,7 @@ public class ChatService {
     private final ChatMessageRepository chatMessageRepository;
     private final UserRepository userRepository;
     private final TeamMembershipRepository teamMembershipRepository;
+    private final TeamRepository teamRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final com.botleague.backend.common.service.GetFileService getFileService;
 
@@ -48,6 +51,7 @@ public class ChatService {
             ChatMessageRepository chatMessageRepository,
             UserRepository userRepository,
             TeamMembershipRepository teamMembershipRepository,
+            TeamRepository teamRepository,
             SimpMessagingTemplate messagingTemplate,
             com.botleague.backend.common.service.GetFileService getFileService) {
         this.chatRoomRepository = chatRoomRepository;
@@ -55,6 +59,7 @@ public class ChatService {
         this.chatMessageRepository = chatMessageRepository;
         this.userRepository = userRepository;
         this.teamMembershipRepository = teamMembershipRepository;
+        this.teamRepository = teamRepository;
         this.messagingTemplate = messagingTemplate;
         this.getFileService = getFileService;
     }
@@ -79,15 +84,34 @@ public class ChatService {
     }
 
     /**
+     * Builds the team chat room on demand for a team that should have had one
+     * created at team-creation time but doesn't (see {@link #addMemberToTeamChat}).
+     * Seeds it with every currently-active team member, not just the caller,
+     * so a late self-heal doesn't leave existing members missing from the room.
+     */
+    private ChatRoom createMissingTeamChat(UUID teamId) {
+        Team team = teamRepository.findById(teamId).orElse(null);
+        String teamName = team != null ? team.getTeamName() : "Team";
+        List<UUID> activeMemberIds = teamMembershipRepository
+                .findByTeamIdAndStatus(teamId, TeamMembershipStatus.ACTIVE)
+                .stream()
+                .map(TeamMembership::getUserId)
+                .collect(Collectors.toList());
+        return createTeamChat(teamId, teamName, activeMemberIds);
+    }
+
+    /**
      * Called when a user accepts a team invitation.
      * Adds (or reactivates) them in the team chat and broadcasts an appropriate system message.
+     * Self-healing: if the team has no chat room yet (e.g. it was created via the
+     * admin-only team-creation path, which historically skipped chat setup), one is
+     * created here on demand, seeded with every currently-active team member.
      * Returns true if this was a rejoin (participant record previously existed but was inactive).
      */
     public boolean addMemberToTeamChat(UUID teamId, UUID userId) {
-        var roomOpt = chatRoomRepository.findByTypeAndReferenceId(ChatRoomType.TEAM, teamId);
-        if (roomOpt.isEmpty()) return false;
+        ChatRoom room = chatRoomRepository.findByTypeAndReferenceId(ChatRoomType.TEAM, teamId)
+                .orElseGet(() -> createMissingTeamChat(teamId));
 
-        ChatRoom room = roomOpt.get();
         boolean alreadyActive = chatParticipantRepository
                 .existsByChatRoomIdAndUserIdAndIsActiveTrue(room.getId(), userId);
         if (alreadyActive) return false;
