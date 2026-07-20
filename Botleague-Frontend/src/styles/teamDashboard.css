@@ -963,3 +963,47 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================================
+   /my-team zero-team empty state — shown instead of the team
+   dashboard when the logged-in user isn't part of any team yet.
+   Prefixed myteam-empty- to mirror robots.css's robot-build-empty-*
+   pattern (same "you haven't set this up yet" design language).
+   ========================================================= */
+
+.myteam-empty-title {
+  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+}
+
+.myteam-empty-star {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+}
+
+.myteam-empty-gradient-text {
+  background: linear-gradient(95deg, #4F6EF7 0%, #8B5CF6 60%, #7C3AED 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.myteam-empty-stat-icon {
+  background: #F1F2F6;
+}
+
+.myteam-empty-card {
+  border: 1.5px solid #C9CEFB;
+}
+
+.myteam-empty-art {
+  background: radial-gradient(120% 100% at 50% 15%, #10151f 0%, #050709 60%, #000 100%);
+}
+
+.myteam-empty-btn {
+  background: linear-gradient(135deg, #7C86F2 0%, #9B8CF6 100%);
+  box-shadow: 0 10px 25px -8px rgba(124, 92, 246, 0.55);
+  transition: transform 200ms ease, opacity 150ms ease;
+}
+.myteam-empty-btn:active { transform: scale(0.97); }
+.myteam-empty-btn:disabled { opacity: 0.6; cursor: not-allowed; }

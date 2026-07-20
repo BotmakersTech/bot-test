@@ -15,6 +15,7 @@ import { useSponsors } from "../hooks/useSponsors";
 import useTeamMembership from "../TeamMembership/hooks/useTeamMembership";
 import { resolveAvatarSrc } from "../../Profile/constants/avatars";
 import TeamLogo from "../../../shared/components/TeamLogo";
+import MyTeamEmptyState from "../components/MyTeamEmptyState";
 import "../../../styles/teamDashboard.css";
 
 function useCountdown(targetDate?: string | null) {
@@ -321,14 +322,17 @@ export default function MyTeam() {
 
   if (!resolvedTeam) {
     return (
-      <main className="teamdash-page teamdash-state">
-        <h1>No active team found</h1>
-        <p>Create a team or accept an invitation to see your team dashboard.</p>
-        <div className="teamdash-state-actions">
-          <button type="button" onClick={() => navigate("/create-team")}>Create Team</button>
-          <button type="button" onClick={handleRefresh}>Refresh</button>
-        </div>
-        {error && <span>{error}</span>}
+      <main className="teamdash-page">
+        <MyTeamEmptyState onCreateClick={() => navigate("/create-team")} />
+        {error && (
+          <div className="teamdash-error" style={{ maxWidth: "1152px", margin: "0 auto" }}>
+            <span>{error}</span>
+            <button type="button" onClick={handleRefresh}>
+              <RefreshCw size={15} />
+              Retry
+            </button>
+          </div>
+        )}
       </main>
     );
   }
