@@ -24,7 +24,6 @@ public class RankingResponse {
     private int eventsPlayed;
     private int wins;
     private int losses;
-    private int draws;
     private int goldMedals;
     private int silverMedals;
     private int bronzeMedals;
@@ -88,9 +87,6 @@ public class RankingResponse {
 
     public int getLosses() { return losses; }
     public void setLosses(int losses) { this.losses = losses; }
-
-    public int getDraws() { return draws; }
-    public void setDraws(int draws) { this.draws = draws; }
 
     public int getGoldMedals() { return goldMedals; }
     public void setGoldMedals(int goldMedals) { this.goldMedals = goldMedals; }

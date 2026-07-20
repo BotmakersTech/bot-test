@@ -104,9 +104,6 @@ public class Ranking {
     @Column(nullable = false)
     private int losses = 0;
 
-    @Column(nullable = false)
-    private int draws = 0;
-
     /** Computed on save: wins / matchesPlayed * 100 (stored for fast sort). */
     @Column(name = "win_percentage")
     private double winPercentage = 0.0;
@@ -144,6 +141,16 @@ public class Ranking {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    /**
+     * updateGlobalRankings()/fullRecalculate() do read-modify-write
+     * accumulation (totalPoints += x etc.) — without this, two concurrent
+     * admin-triggered pushes/recalcs for the same robot can lose an update
+     * (part of audit finding B-6).
+     */
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
 
     @PrePersist
     protected void onCreate() {
@@ -215,9 +222,6 @@ public class Ranking {
     public int getLosses() { return losses; }
     public void setLosses(int losses) { this.losses = losses; }
 
-    public int getDraws() { return draws; }
-    public void setDraws(int draws) { this.draws = draws; }
-
     public int getGoldMedals() { return goldMedals; }
     public void setGoldMedals(int goldMedals) { this.goldMedals = goldMedals; }
 
@@ -244,4 +248,5 @@ public class Ranking {
 
     public LocalDateTime getLastUpdated() { return lastUpdated; }
     public LocalDateTime getCreatedAt()   { return createdAt; }
+    public Long getVersion()              { return version; }
 }

@@ -52,6 +52,7 @@ public class SportChangeRequestService {
     private final AuthorizationService authorizationService;
     private final NotificationService notificationService;
     private final ObjectMapper objectMapper;
+    private final com.botleague.backend.matches.repository.MatchRepository matchRepository;
 
     public SportChangeRequestService(
             SportChangeRequestRepository changeRequestRepository,
@@ -61,7 +62,8 @@ public class SportChangeRequestService {
             EventSportsService eventSportsService,
             AuthorizationService authorizationService,
             NotificationService notificationService,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            com.botleague.backend.matches.repository.MatchRepository matchRepository) {
         this.changeRequestRepository = changeRequestRepository;
         this.eventSportsRepository = eventSportsRepository;
         this.eventRepository = eventRepository;
@@ -70,6 +72,7 @@ public class SportChangeRequestService {
         this.authorizationService = authorizationService;
         this.notificationService = notificationService;
         this.objectMapper = objectMapper;
+        this.matchRepository = matchRepository;
     }
 
     @Transactional
@@ -123,6 +126,31 @@ public class SportChangeRequestService {
     public SportChangeRequestResponseDTO approve(UUID changeRequestId, UUID approverId) {
         SportChangeRequest request = loadPending(changeRequestId);
         assertCanReview(request, approverId);
+
+        // Previously this blindly re-applied the exact snapshot captured at
+        // submission time with zero re-validation against current state — a
+        // weight-limit change could sit pending while the bracket got
+        // generated, then get approved anyway, changing the rules underneath
+        // an already-seeded bracket. Reject instead of silently applying
+        // stale data if the sport has moved on since the request was filed.
+        EventSports currentSport = eventSportsRepository.findById(request.getEventSportId())
+                .orElseThrow(() -> ApiException.notFound("Sport not found"));
+
+        boolean bracketExists = !matchRepository
+                .findByEventSportIdAndDeletedAtIsNull(request.getEventSportId()).isEmpty();
+        if (bracketExists) {
+            throw ApiException.conflict(
+                    "This sport's bracket has already been generated since this change request was submitted — "
+                    + "applying it now could change the rules underneath an already-seeded bracket. "
+                    + "Ask the requester to resubmit against the current state.");
+        }
+        if (currentSport.getStatus() != SportEventStatus.REGISTRATION_CLOSED
+                && currentSport.getStatus() != SportEventStatus.APPROVED
+                && currentSport.getStatus() != SportEventStatus.REGISTRATION_OPEN) {
+            throw ApiException.conflict(
+                    "This sport's status has changed since this change request was submitted (now "
+                    + currentSport.getStatus() + ") — ask the requester to resubmit against the current state.");
+        }
 
         UpdateSportsDTO dto = deserialize(request.getProposedChangesJson());
         dto.setEventId(request.getEventId());
@@ -205,6 +233,13 @@ public class SportChangeRequestService {
 
     /** SPORT_HEAD-tier requests need EVENT_HEAD/ORGANISER/ADMIN sign-off; EVENT_HEAD/ORGANISER-tier requests need ADMIN sign-off. */
     private void assertCanReview(SportChangeRequest request, UUID approverId) {
+        // No guard previously stopped a dual-role user (e.g. SPORT_HEAD and
+        // EVENT_HEAD of the same event) from submitting a request and then
+        // immediately approving their own — self-review defeats the entire
+        // point of a tiered approval chain.
+        if (approverId != null && approverId.equals(request.getRequestedBy())) {
+            throw ApiException.conflict("You submitted this change request — it must be reviewed by someone else.");
+        }
         if (TIER_SPORT_HEAD.equals(request.getRequesterTier())) {
             authorizationService.assertCanManageEvent(approverId, request.getEventId());
         } else {

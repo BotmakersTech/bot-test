@@ -289,6 +289,24 @@ public class MatchesController {
     }
 
     // =====================================================
+    // STATUS — CORRECT RESULT
+    // PATCH /api/v1/matches/{matchId}/correct
+    //
+    // Reopens a COMPLETED match that was scored wrong: voids its already-
+    // awarded ranking points and returns it to PENDING_APPROVAL so it can
+    // go through submit-then-approve again with the right result.
+    // =====================================================
+
+    @PatchMapping("/{matchId}/correct")
+    public ResponseEntity<MatchResponseDTO> correctMatchResult(
+            @PathVariable UUID matchId,
+            @RequestBody com.botleague.backend.matches.dto.RejectMatchResultDTO request,
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(matchService.correctMatchResult(matchId, request.getReason(), authentication));
+    }
+
+    // =====================================================
     // DELETE — SOFT DELETE
     // DELETE /api/v1/matches/{matchId}
     // =====================================================

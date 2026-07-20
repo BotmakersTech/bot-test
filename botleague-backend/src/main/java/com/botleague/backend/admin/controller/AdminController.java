@@ -120,8 +120,12 @@ public class AdminController {
 
     @DeleteMapping("/events/{eventId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
-    public ResponseEntity<Void> deleteEvent(@PathVariable UUID eventId) {
-        adminService.softDeleteEvent(eventId);
+    public ResponseEntity<Void> deleteEvent(
+            @PathVariable UUID eventId,
+            @RequestParam(required = false, defaultValue = "false") boolean force,
+            @RequestParam(required = false) String reason
+    ) {
+        adminService.softDeleteEvent(eventId, force, reason);
         return ResponseEntity.noContent().build();
     }
 

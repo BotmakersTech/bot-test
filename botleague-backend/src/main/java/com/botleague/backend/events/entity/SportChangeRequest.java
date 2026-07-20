@@ -56,6 +56,11 @@ public class SportChangeRequest {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    /** Guards concurrent review attempts on the same request. */
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -93,4 +98,6 @@ public class SportChangeRequest {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public Long getVersion() { return version; }
 }

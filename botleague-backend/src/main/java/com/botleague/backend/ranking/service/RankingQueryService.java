@@ -9,6 +9,7 @@ import com.botleague.backend.ranking.entity.GlobalRankingHistory;
 import com.botleague.backend.ranking.entity.Ranking;
 import com.botleague.backend.ranking.entity.RankingPointTransaction;
 import com.botleague.backend.ranking.repository.*;
+import com.botleague.backend.ranking.util.RankingMath;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -84,8 +85,7 @@ public class RankingQueryService {
             row.losses        = e.getLosses();
             row.matchesPlayed = e.getMatchesPlayed();
             row.pointsEarned  = e.getPointsEarned();
-            row.winPercentage = e.getMatchesPlayed() > 0
-                    ? (e.getWins() * 100.0 / e.getMatchesPlayed()) : 0.0;
+            row.winPercentage = RankingMath.winPercentage(e.getWins(), e.getMatchesPlayed());
             row.isFinalized   = Boolean.TRUE.equals(e.getIsFinalized());
             res.entries.add(row);
         }

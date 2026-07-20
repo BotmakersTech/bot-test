@@ -359,6 +359,21 @@ public class Match {
     private Boolean autoAdvanced = false;
 
     // =====================================================
+    // RANKING-POOL SNAPSHOT
+    // Captured from EventSports at bracket-generation time. Sport specs
+    // (weight class / age group) stay editable at any lifecycle stage by
+    // design — awardMatchPoints() must use THESE, not a live read of the
+    // sport, so a mid-tournament edit can't retroactively move an
+    // already-played match's points into a different ranking pool.
+    // =====================================================
+
+    @Column(name = "weight_class_snapshot", length = 20)
+    private String weightClassSnapshot;
+
+    @Column(name = "age_group_snapshot", length = 30)
+    private String ageGroupSnapshot;
+
+    // =====================================================
     // WIN METHOD
     // How the match result was decided.
     // SCORE | TAPOUT | JUDGE_DECISION | FORFEIT | DISQUALIFICATION | BYE
@@ -430,6 +445,17 @@ public class Match {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    // =====================================================
+    // OPTIMISTIC LOCKING
+    // approveMatchResult() etc. are read-check-write on status; without
+    // this, two concurrent approvals of the same match can both pass the
+    // status guard before either commits, double-awarding ranking points.
+    // =====================================================
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
 
     // =====================================================
     // LIFECYCLE
@@ -759,6 +785,26 @@ public class Match {
 
     public void setAutoAdvanced(Boolean autoAdvanced) {
         this.autoAdvanced = autoAdvanced;
+    }
+
+    public String getWeightClassSnapshot() {
+        return weightClassSnapshot;
+    }
+
+    public void setWeightClassSnapshot(String weightClassSnapshot) {
+        this.weightClassSnapshot = weightClassSnapshot;
+    }
+
+    public String getAgeGroupSnapshot() {
+        return ageGroupSnapshot;
+    }
+
+    public void setAgeGroupSnapshot(String ageGroupSnapshot) {
+        this.ageGroupSnapshot = ageGroupSnapshot;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 
     public MatchResultType getWinMethod() {

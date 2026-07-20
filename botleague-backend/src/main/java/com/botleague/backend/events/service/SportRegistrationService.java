@@ -83,6 +83,7 @@ public class SportRegistrationService {
     private final EventRegistrationLineupRepository lineupRepository;
     private final SportRegistrationLineupService    lineupService;
     private final com.botleague.backend.matches.repository.MatchRepository matchRepository;
+    private final com.botleague.backend.common.security.AuthorizationService authorizationService;
 
     // =====================================================
     // CONSTRUCTOR
@@ -103,7 +104,8 @@ public class SportRegistrationService {
             RealtimePublisher                    realtimePublisher,
             EventRegistrationLineupRepository    lineupRepository,
             SportRegistrationLineupService       lineupService,
-            com.botleague.backend.matches.repository.MatchRepository matchRepository
+            com.botleague.backend.matches.repository.MatchRepository matchRepository,
+            com.botleague.backend.common.security.AuthorizationService authorizationService
     ) {
         this.sportRegistrationRepository = sportRegistrationRepository;
         this.eventSportsRepository       = eventSportsRepository;
@@ -120,6 +122,7 @@ public class SportRegistrationService {
         this.lineupRepository            = lineupRepository;
         this.lineupService               = lineupService;
         this.matchRepository             = matchRepository;
+        this.authorizationService        = authorizationService;
     }
 
     // =====================================================
@@ -186,6 +189,9 @@ public class SportRegistrationService {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Event sport not found: " + eventSportId));
 
+        // See AuthorizationService.assertEventActiveForSport javadoc — B-16.
+        authorizationService.assertEventActiveForSport(eventSportId);
+
         // =================================================
         // 2. STATUS CHECK
         // =================================================
@@ -200,7 +206,9 @@ public class SportRegistrationService {
         // 3. DATE WINDOW CHECK
         // =================================================
 
-        LocalDate today = LocalDate.now();
+        // India-wide platform — compare against IST, not the server's local
+        // clock (a UTC server would roll deadlines up to ~5.5h early).
+        LocalDate today = com.botleague.backend.common.utils.AppClock.today();
         if (!eventSport.isRegistrationOpen(today)) {
             throw new IllegalStateException(
                     "Registration window is not active. " +
@@ -414,10 +422,7 @@ public class SportRegistrationService {
                 );
             } catch (Exception ignored) {}
 
-            int curr = eventSport.getRegisteredTeamsCount() == null
-                    ? 0 : eventSport.getRegisteredTeamsCount();
-            eventSport.setRegisteredTeamsCount(curr + 1);
-            eventSportsRepository.save(eventSport);
+            adjustRegisteredTeamsCount(eventSport.getId(), 1);
 
             return reactivated;
         }
@@ -542,11 +547,7 @@ public class SportRegistrationService {
         //     registeredTeamsCount counts robot-entries for this competition.
         // =================================================
 
-        int current = eventSport.getRegisteredTeamsCount() == null
-                ? 0
-                : eventSport.getRegisteredTeamsCount();
-        eventSport.setRegisteredTeamsCount(current + 1);
-        eventSportsRepository.save(eventSport);
+        adjustRegisteredTeamsCount(eventSport.getId(), 1);
 
         return saved;
     }
@@ -565,6 +566,9 @@ public class SportRegistrationService {
                 .findById(registrationId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Registration not found: " + registrationId));
+
+        // See AuthorizationService.assertEventActiveForSport javadoc — B-16.
+        authorizationService.assertEventActiveForSport(registration.getEventSportId());
 
         // Ownership: only a CAPTAIN or VICE_CAPTAIN of the team that owns this
         // registration may cancel it (unless caller is the team itself via admin path).
@@ -608,14 +612,7 @@ public class SportRegistrationService {
         } catch (Exception ignored) {}
 
         // Free the slot on the competition
-        eventSportsRepository.findById(registration.getEventSportId())
-                .ifPresent(eventSport -> {
-                    int current = eventSport.getRegisteredTeamsCount() == null
-                            ? 0
-                            : eventSport.getRegisteredTeamsCount();
-                    eventSport.setRegisteredTeamsCount(Math.max(0, current - 1));
-                    eventSportsRepository.save(eventSport);
-                });
+        adjustRegisteredTeamsCount(registration.getEventSportId(), -1);
     }
 
     // =====================================================
@@ -633,6 +630,9 @@ public class SportRegistrationService {
                 .findById(registrationId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Registration not found: " + registrationId));
+
+        // See AuthorizationService.assertEventActiveForSport javadoc — B-16.
+        authorizationService.assertEventActiveForSport(registration.getEventSportId());
 
         RegistrationStatus current = registration.getStatus();
 
@@ -663,6 +663,18 @@ public class SportRegistrationService {
             }
         }
 
+        // WAITLISTED -> REGISTERED must not push past capacity — registerRobot()
+        // already checks isFull() on the original registration path; this
+        // transition previously had no equivalent check at all.
+        if (current == RegistrationStatus.WAITLISTED && newStatus == RegistrationStatus.REGISTERED) {
+            EventSports eventSport = eventSportsRepository.findById(registration.getEventSportId()).orElse(null);
+            if (eventSport != null && eventSport.isFull()) {
+                throw new IllegalStateException(
+                        "Cannot promote this registration to REGISTERED: this competition is already full "
+                        + "(max " + eventSport.getMaxTeams() + " entries).");
+            }
+        }
+
         boolean heldSlotBefore = current == RegistrationStatus.REGISTERED || current == RegistrationStatus.CHECKED_IN;
         boolean holdsSlotAfter = newStatus == RegistrationStatus.REGISTERED || newStatus == RegistrationStatus.CHECKED_IN;
 
@@ -670,13 +682,7 @@ public class SportRegistrationService {
         SportRegistration saved = sportRegistrationRepository.save(registration);
 
         if (heldSlotBefore != holdsSlotAfter) {
-            eventSportsRepository.findById(registration.getEventSportId())
-                    .ifPresent(eventSport -> {
-                        int count = eventSport.getRegisteredTeamsCount() == null
-                                ? 0 : eventSport.getRegisteredTeamsCount();
-                        eventSport.setRegisteredTeamsCount(Math.max(0, count + (holdsSlotAfter ? 1 : -1)));
-                        eventSportsRepository.save(eventSport);
-                    });
+            adjustRegisteredTeamsCount(registration.getEventSportId(), holdsSlotAfter ? 1 : -1);
         }
 
         try {
@@ -703,6 +709,35 @@ public class SportRegistrationService {
         } catch (Exception ignored) {}
 
         return saved;
+    }
+
+    // =====================================================
+    // REGISTERED-TEAMS-COUNT — read-modify-write with retry
+    // =====================================================
+
+    /**
+     * Applies a delta to EventSports.registeredTeamsCount with a single
+     * retry on optimistic-lock conflict — the counter now carries @Version
+     * (see EventSports javadoc), so two concurrent registration actions
+     * racing on the same competition retry once instead of silently losing
+     * an update. A lost race here is transient contention, not a real
+     * conflict needing user intervention (unlike e.g. Match approval, where
+     * surfacing the conflict to the caller is the correct behavior).
+     */
+    private void adjustRegisteredTeamsCount(UUID eventSportId, int delta) {
+        for (int attempt = 0; attempt < 2; attempt++) {
+            EventSports fresh = eventSportsRepository.findById(eventSportId).orElse(null);
+            if (fresh == null) return;
+            int current = fresh.getRegisteredTeamsCount() == null ? 0 : fresh.getRegisteredTeamsCount();
+            fresh.setRegisteredTeamsCount(Math.max(0, current + delta));
+            try {
+                eventSportsRepository.save(fresh);
+                return;
+            } catch (org.springframework.orm.ObjectOptimisticLockingFailureException e) {
+                if (attempt == 1) throw e;
+                // retry once against a fresh read
+            }
+        }
     }
 
     // =====================================================

@@ -114,7 +114,6 @@ public class RankingService {
         if (req.getEventsPlayed() != null) ranking.setEventsPlayed(req.getEventsPlayed());
         if (req.getWins()         != null) ranking.setWins(req.getWins());
         if (req.getLosses()       != null) ranking.setLosses(req.getLosses());
-        if (req.getDraws()        != null) ranking.setDraws(req.getDraws());
         if (req.getGoldMedals()   != null) ranking.setGoldMedals(req.getGoldMedals());
         if (req.getSilverMedals() != null) ranking.setSilverMedals(req.getSilverMedals());
         if (req.getBronzeMedals() != null) ranking.setBronzeMedals(req.getBronzeMedals());
@@ -148,7 +147,6 @@ public class RankingService {
         res.setEventsPlayed(r.getEventsPlayed());
         res.setWins(r.getWins());
         res.setLosses(r.getLosses());
-        res.setDraws(r.getDraws());
         res.setGoldMedals(r.getGoldMedals());
         res.setSilverMedals(r.getSilverMedals());
         res.setBronzeMedals(r.getBronzeMedals());

@@ -88,16 +88,36 @@ public class RankingEngineService {
     // =========================================================================
 
     public void awardMatchPoints(Match match) {
-        // Guard: BYE, CANCELLED, or already processed
-        if (match.getIsBye() || match.getStatus() != MatchStatus.COMPLETED) return;
+        // Guard: genuine bye (auto-advanced with no real competition), CANCELLED,
+        // or already processed.
+        //
+        // NOTE: this deliberately checks autoAdvanced, not isBye. isBye means
+        // "this match was GENERATED with an empty slot" (a structural/seeding
+        // fact set once at bracket-build time and never cleared) — it stays
+        // true even for a TRIPLE_THREAT/FATAL_FOUR match with 2-3 real
+        // competitors and one empty slot, once that match is genuinely played
+        // and approved. autoAdvanced means "this match was RESOLVED without
+        // real competition" (set only by the bracket generator's
+        // autoResolveByes(), only when exactly 1 real team was present) — the
+        // correct signal for whether points should be awarded.
+        if (Boolean.TRUE.equals(match.getAutoAdvanced()) || match.getStatus() != MatchStatus.COMPLETED) return;
         if (match.getWinnerRegistrationId() == null) return;
 
         EventSports sport = eventSportsRepository.findById(match.getEventSportId()).orElse(null);
         if (sport == null) return;
 
         String sportName    = sport.getSport();
-        String ageGroup     = sport.getAgeGroup() != null ? sport.getAgeGroup().name() : "UNKNOWN";
-        String weightClass  = sport.getWeightClass();
+        // Prefer the snapshot captured at bracket-generation time (see
+        // Match.weightClassSnapshot javadoc) so a mid-tournament sport edit
+        // can't retroactively move an already-played match's points into a
+        // different pool (B-9). Falls back to a live read only for matches
+        // created before these columns existed.
+        String ageGroup     = match.getAgeGroupSnapshot() != null
+                ? match.getAgeGroupSnapshot()
+                : (sport.getAgeGroup() != null ? sport.getAgeGroup().name() : "UNKNOWN");
+        String weightClass  = match.getWeightClassSnapshot() != null
+                ? match.getWeightClassSnapshot()
+                : sport.getWeightClass();
 
         RoundType roundType = detectRoundType(match);
         UUID winnerRegId    = match.getWinnerRegistrationId();
@@ -140,7 +160,19 @@ public class RankingEngineService {
             tx.setIsWinner(isWin);
             tx.setPointsAwarded(pts);
             tx.setOpponentRegistrationId(opponentRegId);
-            transactionRepository.save(tx);
+
+            try {
+                transactionRepository.save(tx);
+            } catch (org.springframework.dao.DataIntegrityViolationException e) {
+                // DB-level backstop for the (match, robot) idempotency check
+                // above — a concurrent awardMatchPoints() call for this exact
+                // match+robot won the race and committed first (partial unique
+                // index uk_rpt_match_robot_active). Already awarded — skip,
+                // matching the fail-open idempotent behavior of the check above.
+                log.info("[RankingEngine] Concurrent award detected for match {} robot {} — already recorded, skipping",
+                        match.getId(), robotId);
+                continue;
+            }
 
             // Update event leaderboard entry
             updateLeaderboardEntry(sport, robotId, teamId, reg, pts, isWin, sportName, ageGroup, weightClass);
@@ -155,6 +187,49 @@ public class RankingEngineService {
         } catch (Exception ignored) {}
 
         log.info("[RankingEngine] Awarded points for match {} ({}), roundType={}", match.getId(), sportName, roundType);
+    }
+
+    // =========================================================================
+    // CORRECTION — void all points previously awarded for a match
+    // Used when a COMPLETED match's result needs to be reopened and re-scored
+    // (see MatchService.correctMatchResult). Voids the RankingPointTransaction
+    // rows AND reverses their contribution to the affected EventLeaderboardEntry
+    // rows, so the leaderboard doesn't keep stale stats around after the
+    // transactions themselves are voided. Idempotent — re-running against a
+    // match with no live (non-voided) transactions is a no-op.
+    // =========================================================================
+
+    public void voidPointsForMatch(UUID matchId) {
+        List<RankingPointTransaction> live = transactionRepository.findByMatchId(matchId).stream()
+                .filter(t -> !Boolean.TRUE.equals(t.getIsVoided()))
+                .collect(Collectors.toList());
+
+        if (live.isEmpty()) return;
+
+        UUID eventSportId = null;
+
+        for (RankingPointTransaction tx : live) {
+            eventSportId = tx.getEventSportId();
+            leaderboardEntryRepository.findByEventSportIdAndRobotId(tx.getEventSportId(), tx.getRobotId())
+                    .ifPresent(entry -> {
+                        entry.setPointsEarned(entry.getPointsEarned() - tx.getPointsAwarded());
+                        entry.setMatchesPlayed(Math.max(0, entry.getMatchesPlayed() - 1));
+                        if (Boolean.TRUE.equals(tx.getIsWinner())) {
+                            entry.setWins(Math.max(0, entry.getWins() - 1));
+                        } else {
+                            entry.setLosses(Math.max(0, entry.getLosses() - 1));
+                        }
+                        leaderboardEntryRepository.save(entry);
+                    });
+        }
+
+        transactionRepository.voidAllForMatch(matchId);
+
+        if (eventSportId != null) {
+            recalculateLeaderboardRanks(eventSportId);
+        }
+
+        log.info("[RankingEngine] Voided {} point transaction(s) for match {}", live.size(), matchId);
     }
 
     // =========================================================================
@@ -274,8 +349,9 @@ public class RankingEngineService {
             else if (Integer.valueOf(3).equals(entry.getEventRank())) global.setBronzeMedals(global.getBronzeMedals() + 1);
 
             // Win percentage
-            int mp = global.getMatchesPlayed();
-            global.setWinPercentage(mp > 0 ? (global.getWins() * 100.0 / mp) : 0.0);
+            global.setWinPercentage(
+                    com.botleague.backend.ranking.util.RankingMath.winPercentage(
+                            global.getWins(), global.getMatchesPlayed()));
 
             rankingRepository.save(global);
         }
@@ -294,7 +370,9 @@ public class RankingEngineService {
                 .findByEventSportIdAndDeletedAtIsNull(eventSportId)
                 .stream()
                 .filter(m -> m.getStatus() == MatchStatus.COMPLETED)
-                .filter(m -> !Boolean.TRUE.equals(m.getIsBye()))
+                // See awardMatchPoints() — autoAdvanced, not isBye, is the correct
+                // "no real competition occurred" signal.
+                .filter(m -> !Boolean.TRUE.equals(m.getAutoAdvanced()))
                 .filter(m -> m.getWinnerRegistrationId() != null)
                 .collect(Collectors.toList());
 
@@ -330,12 +408,49 @@ public class RankingEngineService {
                 .collect(Collectors.toMap(RankingPointTransaction::getRobotId,
                         RankingPointTransaction::getTeamId, (a, b) -> a));
 
+        // Grouped once up front — previously "full" recalculate only rebuilt
+        // totalPoints, leaving wins/losses/matchesPlayed/eventsPlayed/medals
+        // stale after a correction.
+        Map<UUID, List<RankingPointTransaction>> txsByRobot = txs.stream()
+                .filter(t -> t.getRobotId() != null)
+                .collect(Collectors.groupingBy(RankingPointTransaction::getRobotId));
+
         for (Map.Entry<UUID, UUID> e : robotToTeam.entrySet()) {
             UUID robotId = e.getKey();
             UUID teamId  = e.getValue();
             int totalPts = transactionRepository.sumPointsByRobotAndPool(robotId, sport, ageGroup, weightClass);
+
+            List<RankingPointTransaction> robotTxs = txsByRobot.getOrDefault(robotId, List.of());
+            int wins    = (int) robotTxs.stream().filter(t -> Boolean.TRUE.equals(t.getIsWinner())).count();
+            int losses  = robotTxs.size() - wins;
+            int eventsPlayed = (int) robotTxs.stream()
+                    .map(RankingPointTransaction::getEventId)
+                    .filter(Objects::nonNull)
+                    .distinct().count();
+
+            // Medals aren't transaction-derivable (they're an event-level
+            // outcome, not a per-match one) — recount from this robot's
+            // finalized EventLeaderboardEntry rows in this same pool.
+            int gold = 0, silver = 0, bronze = 0;
+            for (EventLeaderboardEntry entry : leaderboardEntryRepository.findByRobotIdAndIsFinalized(robotId, true)) {
+                if (!Objects.equals(entry.getSport(), sport)) continue;
+                if (!Objects.equals(entry.getAgeGroup(), ageGroup)) continue;
+                if (!Objects.equals(entry.getWeightClass(), weightClass)) continue;
+                if (Integer.valueOf(1).equals(entry.getEventRank())) gold++;
+                else if (Integer.valueOf(2).equals(entry.getEventRank())) silver++;
+                else if (Integer.valueOf(3).equals(entry.getEventRank())) bronze++;
+            }
+
             Ranking r = findOrCreateGlobalRanking(robotId, teamId, null, sport, ageGroup, weightClass);
             r.setTotalPoints(totalPts);
+            r.setWins(wins);
+            r.setLosses(losses);
+            r.setMatchesPlayed(robotTxs.size());
+            r.setEventsPlayed(eventsPlayed);
+            r.setGoldMedals(gold);
+            r.setSilverMedals(silver);
+            r.setBronzeMedals(bronze);
+            r.setWinPercentage(com.botleague.backend.ranking.util.RankingMath.winPercentage(wins, robotTxs.size()));
             rankingRepository.save(r);
         }
 
@@ -366,7 +481,11 @@ public class RankingEngineService {
 
         int maxRound = matchRepository.findByEventSportIdAndDeletedAtIsNull(match.getEventSportId())
                 .stream()
-                .filter(m -> !Boolean.TRUE.equals(m.getIsBye()))
+                // See awardMatchPoints() — autoAdvanced, not isBye, is the correct
+                // "no real competition occurred" signal; excluding isBye here
+                // wrongly dropped genuinely-played TRIPLE_THREAT/FATAL_FOUR
+                // matches from the round count, misclassifying rounds.
+                .filter(m -> !Boolean.TRUE.equals(m.getAutoAdvanced()))
                 .filter(m -> m.getLeaderboardPosition() == null || m.getLeaderboardPosition() != 3)
                 .mapToInt(m -> m.getRoundNumber() != null ? m.getRoundNumber() : 1)
                 .max()
@@ -424,16 +543,48 @@ public class RankingEngineService {
      * 1. Total points (higher = better)
      * 2. Total wins (higher = better)
      * 3. Win percentage (higher = better)
-     * 4. Events played (more = better — wider participation)
+     * 4. Head-to-head result, if the two tied robots played each other directly
+     *    within this event sport (standard tournament tie-break practice).
+     *
+     * NOTE: an EventLeaderboardEntry is scoped to a single event sport by
+     * definition, so "events played" (used at the global-scope comparator
+     * below) doesn't apply here — an earlier version of this comment claimed
+     * a 4th "events played" tier that was never actually implemented.
      */
     private int compareLeaderboardEntries(EventLeaderboardEntry a, EventLeaderboardEntry b) {
         if (!Objects.equals(a.getPointsEarned(), b.getPointsEarned()))
             return Integer.compare(b.getPointsEarned(), a.getPointsEarned());
         if (!Objects.equals(a.getWins(), b.getWins()))
             return Integer.compare(b.getWins(), a.getWins());
-        double wpA = a.getMatchesPlayed() > 0 ? (a.getWins() * 100.0 / a.getMatchesPlayed()) : 0;
-        double wpB = b.getMatchesPlayed() > 0 ? (b.getWins() * 100.0 / b.getMatchesPlayed()) : 0;
-        return Double.compare(wpB, wpA);
+        double wpA = com.botleague.backend.ranking.util.RankingMath.winPercentage(a.getWins(), a.getMatchesPlayed());
+        double wpB = com.botleague.backend.ranking.util.RankingMath.winPercentage(b.getWins(), b.getMatchesPlayed());
+        if (Double.compare(wpB, wpA) != 0) return Double.compare(wpB, wpA);
+        return headToHeadResult(a, b);
+    }
+
+    /**
+     * Looks for a direct match between the two robots within this event sport
+     * (via RankingPointTransaction.opponentRegistrationId) and, if found,
+     * ranks the winner of that match ahead. Returns 0 (still tied) if they
+     * never played each other, or if either side's robotId is missing.
+     */
+    private int headToHeadResult(EventLeaderboardEntry a, EventLeaderboardEntry b) {
+        if (a.getRobotId() == null || b.getRobotId() == null) return 0;
+
+        List<RankingPointTransaction> aTxs = transactionRepository
+                .findByRobotIdAndIsVoidedFalseOrderByCreatedAtDesc(a.getRobotId());
+
+        for (RankingPointTransaction tx : aTxs) {
+            if (!Objects.equals(tx.getEventSportId(), a.getEventSportId())) continue;
+            if (tx.getOpponentRegistrationId() == null) continue;
+
+            SportRegistration opponentReg = sportRegistrationRepository
+                    .findById(tx.getOpponentRegistrationId()).orElse(null);
+            if (opponentReg == null || !Objects.equals(opponentReg.getRobotId(), b.getRobotId())) continue;
+
+            return Boolean.TRUE.equals(tx.getIsWinner()) ? -1 : 1;
+        }
+        return 0;
     }
 
     /**
@@ -510,32 +661,43 @@ public class RankingEngineService {
                                                String sport, String ageGroup, String weightClass) {
         com.botleague.backend.events.enums.AgeCategory cat = parseCategory(ageGroup);
 
-        // Try to find existing by exact key including weight class
-        Ranking r = rankingRepository
+        java.util.Optional<Ranking> existing = rankingRepository
                 .findByRobotIdAndSportAndWeightClassAndScopeAndSeason(
-                        robotId, sport, weightClass, SCOPE_NATIONAL, SEASON_GLOBAL)
-                .orElseGet(() -> {
-                    Ranking nr = new Ranking();
-                    nr.setEntityType("TEAM");
-                    nr.setRobotId(robotId);
-                    nr.setRobotName(robotName);
-                    nr.setTeamId(teamId);
-                    nr.setScope(SCOPE_NATIONAL);
-                    nr.setSeason(SEASON_GLOBAL);
-                    nr.setSport(sport);
-                    nr.setCategory(cat);
-                    nr.setWeightClass(weightClass);
-                    if (teamId != null) {
-                        teamRepository.findById(teamId).ifPresent(t -> {
-                            nr.setDisplayName(t.getTeamName());
-                            nr.setState(t.getState());
-                            nr.setCity(t.getCity());
-                        });
-                    }
-                    return nr;
-                });
+                        robotId, sport, weightClass, SCOPE_NATIONAL, SEASON_GLOBAL);
+        if (existing.isPresent()) return existing.get();
 
-        return r;
+        Ranking nr = new Ranking();
+        nr.setEntityType("TEAM");
+        nr.setRobotId(robotId);
+        nr.setRobotName(robotName);
+        nr.setTeamId(teamId);
+        nr.setScope(SCOPE_NATIONAL);
+        nr.setSeason(SEASON_GLOBAL);
+        nr.setSport(sport);
+        nr.setCategory(cat);
+        nr.setWeightClass(weightClass);
+        if (teamId != null) {
+            teamRepository.findById(teamId).ifPresent(t -> {
+                nr.setDisplayName(t.getTeamName());
+                nr.setState(t.getState());
+                nr.setCity(t.getCity());
+            });
+        }
+
+        // Insert immediately (rather than returning a transient object for the
+        // caller to save later) so a concurrent caller racing to create the
+        // same natural-key row (uk_ranking_natural_key) is caught HERE, before
+        // any stats have been accumulated onto an object that's about to be
+        // discarded — audit finding B-10. Classic "insert, on-conflict
+        // re-select": if we lost the race, fetch the row the winner created.
+        try {
+            return rankingRepository.save(nr);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            return rankingRepository
+                    .findByRobotIdAndSportAndWeightClassAndScopeAndSeason(
+                            robotId, sport, weightClass, SCOPE_NATIONAL, SEASON_GLOBAL)
+                    .orElseThrow(() -> e);
+        }
     }
 
     private com.botleague.backend.events.enums.AgeCategory parseCategory(String ageGroup) {

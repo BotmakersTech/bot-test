@@ -68,6 +68,36 @@ public class AuthorizationService {
                 userId, ResourceRoleAssignment.SCOPE_EVENT, eventId, ResourceRoleAssignment.STATUS_APPROVED);
     }
 
+    // ── Active-event guard (audit finding B-16) ─────────────────────────────
+    //
+    // Even a cascaded soft-delete on Match/SportRegistration doesn't fully
+    // close this hole by itself: submitMatchResult/completeMatch/
+    // approveMatchResult/registerRobot/cancelRegistration/updateRegistrationStatus
+    // all load their target via a plain findById(), which does NOT filter
+    // deletedAt (only the custom findByXAndDeletedAtIsNull() methods do). So
+    // a "deleted" or cancelled event's matches/registrations could still be
+    // mutated through those endpoints even after being cascaded. This is the
+    // actual fix — called at the top of each of those methods.
+
+    public void assertEventActiveForSport(UUID eventSportId) {
+        if (eventSportId == null) return;
+
+        EventSports sport = eventSportsRepository.findById(eventSportId).orElse(null);
+        if (sport == null) return; // let the caller's own not-found handling take over
+
+        com.botleague.backend.events.entity.Event event = eventRepository.findById(sport.getEventId()).orElse(null);
+        if (event == null) return;
+
+        if (event.getDeletedAt() != null) {
+            throw ApiException.conflict("This event has been deleted — no further action can be taken on it.");
+        }
+        if (event.getStatus() == com.botleague.backend.events.enums.EventStatus.ARCHIVED
+                || event.getStatus() == com.botleague.backend.events.enums.EventStatus.CANCELLED) {
+            throw ApiException.conflict(
+                    "This event is " + event.getStatus() + " — no further action can be taken on it.");
+        }
+    }
+
     /**
      * Read-only visibility: everything canManageEvent() allows, plus a
      * SPORT_HEAD who holds no event-level assignment but has an approved

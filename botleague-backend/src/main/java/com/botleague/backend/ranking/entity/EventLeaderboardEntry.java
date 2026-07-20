@@ -70,6 +70,15 @@ public class EventLeaderboardEntry {
     @Column(name = "created_at", nullable = false) private LocalDateTime createdAt;
     @Column(name = "updated_at")                   private LocalDateTime updatedAt;
 
+    /**
+     * updateLeaderboardEntry() does pointsEarned += x as a read-modify-write —
+     * without this, two matches for the same robot approved concurrently by
+     * different threads can lose an update (part of audit finding B-6).
+     */
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
+
     @PrePersist  public void onCreate() { if (id==null) id=UUID.randomUUID(); createdAt=updatedAt=LocalDateTime.now(); }
     @PreUpdate   public void onUpdate() { updatedAt = LocalDateTime.now(); }
 
@@ -109,4 +118,5 @@ public class EventLeaderboardEntry {
     public void setIsFinalized(Boolean v)  { this.isFinalized = v; }
     public LocalDateTime getCreatedAt()    { return createdAt; }
     public LocalDateTime getUpdatedAt()    { return updatedAt; }
+    public Long getVersion()               { return version; }
 }

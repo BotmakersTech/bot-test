@@ -121,6 +121,16 @@ public class Event {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    /**
+     * softDeleteEvent()/changeEventStatus() are read-check-write on
+     * status/deletedAt — without this, two concurrent admin actions on the
+     * same event (e.g. a status change racing a delete) could both pass
+     * their guard before either commits.
+     */
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
+
     // =========================
     // Lifecycle Hooks
     // =========================
@@ -345,5 +355,9 @@ public class Event {
 
     public void setDeletedAt(LocalDateTime deletedAt) {
         this.deletedAt = deletedAt;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 }

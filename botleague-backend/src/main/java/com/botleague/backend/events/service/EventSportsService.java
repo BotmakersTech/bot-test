@@ -153,6 +153,12 @@ public class EventSportsService {
     // =========================
     @Transactional
     public String updateSportsRegistration(UUID sportId, UUID eventId, UUID callerId, List<String> callerRoles) {
+        return updateSportsRegistration(sportId, eventId, callerId, callerRoles, null);
+    }
+
+    @Transactional
+    public String updateSportsRegistration(UUID sportId, UUID eventId, UUID callerId, List<String> callerRoles,
+                                            LocalDate newRegistrationEndDate) {
 
         assertCanManage(eventId, sportId, callerId, callerRoles);
 
@@ -160,20 +166,28 @@ public class EventSportsService {
                 .findByIdAndEventId(sportId, eventId)
                 .orElseThrow(() -> new IllegalArgumentException("Sport not found"));
 
+        // India-wide platform — IST, not the server's local clock.
+        LocalDate today = com.botleague.backend.common.utils.AppClock.today();
+
         com.botleague.backend.realtime.enums.RealtimeEventType realtimeType;
         if (sport.getStatus() == SportEventStatus.REGISTRATION_OPEN) {
             sport.setStatus(SportEventStatus.REGISTRATION_CLOSED);
             // Stamp actual close date only if no end date was pre-configured
             if (sport.getRegistrationEndDate() == null) {
-                sport.setRegistrationEndDate(LocalDate.now());
+                sport.setRegistrationEndDate(today);
             }
             realtimeType = com.botleague.backend.realtime.enums.RealtimeEventType.SPORT_REGISTRATION_CLOSED;
         } else if (sport.getStatus() == SportEventStatus.APPROVED
                 || sport.getStatus() == SportEventStatus.REGISTRATION_CLOSED) {
             sport.setStatus(SportEventStatus.REGISTRATION_OPEN);
-            if (sport.getRegistrationEndDate() == null) {
-                sport.setRegistrationEndDate(LocalDate.now().plusDays(7));
-            }
+            // Reopening must ALWAYS produce a future-dated window — previously
+            // this only back-filled when the end date was null, so reopening a
+            // sport that already had a past end date (the common case: it was
+            // set on close, or during initial creation) flipped status to
+            // "open" in the UI while every registration attempt kept silently
+            // failing the date check underneath.
+            sport.setRegistrationEndDate(
+                    newRegistrationEndDate != null ? newRegistrationEndDate : today.plusDays(7));
             realtimeType = com.botleague.backend.realtime.enums.RealtimeEventType.SPORT_REGISTRATION_OPENED;
         } else {
             throw new IllegalStateException(
@@ -571,7 +585,7 @@ public class EventSportsService {
             }
         }
 
-        if (enforceNotPast && start != null && start.isBefore(LocalDate.now())) {
+        if (enforceNotPast && start != null && start.isBefore(com.botleague.backend.common.utils.AppClock.today())) {
             throw new IllegalArgumentException("Start date cannot be in the past");
         }
     }

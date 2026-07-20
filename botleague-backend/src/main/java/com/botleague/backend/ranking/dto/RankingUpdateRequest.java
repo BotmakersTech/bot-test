@@ -19,7 +19,6 @@ public class RankingUpdateRequest {
     private Integer eventsPlayed;
     private Integer wins;
     private Integer losses;
-    private Integer draws;
     private Integer goldMedals;
     private Integer silverMedals;
     private Integer bronzeMedals;
@@ -71,9 +70,6 @@ public class RankingUpdateRequest {
 
     public Integer getLosses() { return losses; }
     public void setLosses(Integer losses) { this.losses = losses; }
-
-    public Integer getDraws() { return draws; }
-    public void setDraws(Integer draws) { this.draws = draws; }
 
     public Integer getGoldMedals() { return goldMedals; }
     public void setGoldMedals(Integer goldMedals) { this.goldMedals = goldMedals; }

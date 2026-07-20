@@ -7,6 +7,9 @@ import java.util.UUID;
 import com.botleague.backend.common.exception.ResourceNotFoundException;
 import com.botleague.backend.common.exception.ApiException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,6 +56,8 @@ import com.botleague.backend.common.exception.ResourceNotFoundException;
 
 @Service
 public class MatchService {
+
+    private static final Logger log = LoggerFactory.getLogger(MatchService.class);
 
     // =====================================================
     // DEPENDENCIES
@@ -178,6 +183,8 @@ public class MatchService {
             throw ApiException.conflict("Bracket already exists for this event sport");
         }
 
+        logBracketRegenerationIfAny(request.getEventSportId());
+
         if (request.getTeamRegistrationIds() == null
                 || request.getTeamRegistrationIds().isEmpty()) {
             throw ApiException.badRequest("At least one team registration ID is required");
@@ -233,6 +240,33 @@ public class MatchService {
     }
 
     // =====================================================
+    // AUDIT — regenerating a bracket after a soft-delete-all
+    //
+    // The duplicate-generation guard above only looks at non-deleted
+    // matches, so soft-deleting every match for a sport and then
+    // generating/creating a new bracket previously left no trace of the
+    // discarded original. This records that trace.
+    // =====================================================
+
+    private void logBracketRegenerationIfAny(UUID eventSportId) {
+        List<Match> discarded = matchRepository.findByEventSportIdAndDeletedAtIsNotNull(eventSportId);
+        if (discarded.isEmpty()) return;
+
+        String discardedIds = discarded.stream()
+                .map(m -> m.getId().toString())
+                .collect(java.util.stream.Collectors.joining(", "));
+
+        auditLogService.log(
+                "BRACKET_REGENERATED",
+                "EVENT_SPORT",
+                eventSportId,
+                null,
+                discarded.size() + " previously soft-deleted match(es)",
+                discardedIds
+        );
+    }
+
+    // =====================================================
     // PRIVATE — SINGLE ELIMINATION DISPATCHER
     //
     // All three MatchTypes (ONE_VS_ONE, TRIPLE_THREAT, FATAL_FOUR)
@@ -264,15 +298,25 @@ public class MatchService {
                     }
                 }
 
-                matchRepository.saveAll(matches);
-
                 UUID sportId = request.getEventSportId();
                 if (sportId != null) {
                     eventSportsRepository.findById(sportId).ifPresent(sport -> {
+                        // Ranking-pool snapshot — see Match.weightClassSnapshot javadoc.
+                        // Captured now, at generation time, so a later sport-spec edit
+                        // can't retroactively move an already-played match's points.
+                        String weightClassSnapshot = sport.getWeightClass();
+                        String ageGroupSnapshot = sport.getAgeGroup() != null ? sport.getAgeGroup().name() : null;
+                        for (Match m : matches) {
+                            m.setWeightClassSnapshot(weightClassSnapshot);
+                            m.setAgeGroupSnapshot(ageGroupSnapshot);
+                        }
+
                         sport.setBracketGenerated(true);
                         eventSportsRepository.save(sport);
                     });
                 }
+
+                matchRepository.saveAll(matches);
 
                 // Push each match individually so spectators can add them directly to Redux
                 // without needing a separate REST fetch.
@@ -331,11 +375,49 @@ public class MatchService {
             throw ApiException.conflict("Bracket already exists for this event sport");
         }
 
+        logBracketRegenerationIfAny(eventSportId);
+
+        // Same eligibility guard generateBracket() applies (lines ~186-204) —
+        // this manual/bulk path trusted whatever registration IDs were supplied
+        // in each request with no validation at all.
+        java.util.Set<UUID> suppliedIds = new java.util.HashSet<>();
+        for (CreateMatchRequestDTO request : requests) {
+            if (request.getTeamARegistrationId() != null) suppliedIds.add(request.getTeamARegistrationId());
+            if (request.getTeamBRegistrationId() != null) suppliedIds.add(request.getTeamBRegistrationId());
+            if (request.getTeamCRegistrationId() != null) suppliedIds.add(request.getTeamCRegistrationId());
+            if (request.getTeamDRegistrationId() != null) suppliedIds.add(request.getTeamDRegistrationId());
+        }
+        if (!suppliedIds.isEmpty()) {
+            List<com.botleague.backend.events.entity.SportRegistration> suppliedRegistrations =
+                    eventRegistrationRepository.findAllById(suppliedIds);
+            if (suppliedRegistrations.size() != suppliedIds.size()) {
+                throw ApiException.badRequest("One or more team registration IDs were not found");
+            }
+            List<String> ineligible = suppliedRegistrations.stream()
+                    .filter(r -> !eventSportId.equals(r.getEventSportId())
+                              || r.getStatus() != com.botleague.backend.events.enums.RegistrationStatus.REGISTERED)
+                    .map(r -> (r.getRobotName() != null ? r.getRobotName() : r.getId().toString())
+                            + " (" + r.getStatus() + ")")
+                    .collect(java.util.stream.Collectors.toList());
+            if (!ineligible.isEmpty()) {
+                throw ApiException.badRequest(
+                        "Cannot create bracket: not eligible (not REGISTERED for this sport): "
+                        + String.join(", ", ineligible));
+            }
+        }
+
         UUID currentUserId = extractUserId(authentication);
+
+        // Ranking-pool snapshot — see Match.weightClassSnapshot javadoc.
+        String weightClassSnapshot = eventSports.getWeightClass();
+        String ageGroupSnapshot = eventSports.getAgeGroup() != null ? eventSports.getAgeGroup().name() : null;
 
         List<Match> matches = new ArrayList<>();
         for (CreateMatchRequestDTO request : requests) {
-            matches.add(buildMatchFromCreateRequest(request, currentUserId));
+            Match m = buildMatchFromCreateRequest(request, currentUserId);
+            m.setWeightClassSnapshot(weightClassSnapshot);
+            m.setAgeGroupSnapshot(ageGroupSnapshot);
+            matches.add(m);
         }
 
         List<Match> savedMatches = matchRepository.saveAll(matches);
@@ -452,6 +534,17 @@ public class MatchService {
 
         validateAdminOrOrganizerForSport(authentication, match.getEventSportId());
 
+        // A COMPLETED match may already have ranking points/leaderboard stats
+        // written against it — silently rewriting it here (including which
+        // teams occupy which slot) would leave those stale with no
+        // correction. Use correctMatchResult() instead, which properly voids
+        // the old points before reopening the match.
+        if (match.getStatus() == MatchStatus.COMPLETED) {
+            throw ApiException.conflict(
+                    "This match is COMPLETED and may have ranking points already awarded — "
+                    + "use the correct-result endpoint instead of a direct update.");
+        }
+
         if (request.getTournamentFormat()    != null) match.setTournamentFormat(request.getTournamentFormat());
         if (request.getMatchType()           != null) match.setMatchType(request.getMatchType());
         if (request.getFormat()              != null) match.setFormat(request.getFormat());
@@ -497,12 +590,68 @@ public class MatchService {
 
         validateAdminOrOrganizerForSport(authentication, match.getEventSportId());
 
+        // See updateMatch()'s identical guard.
+        if (match.getStatus() == MatchStatus.COMPLETED) {
+            throw ApiException.conflict(
+                    "This match is COMPLETED and may have ranking points already awarded — "
+                    + "use the correct-result endpoint instead of a direct update.");
+        }
+
         if (request.getTeamARegistrationId() != null) match.setTeamARegistrationId(request.getTeamARegistrationId());
         if (request.getTeamBRegistrationId() != null) match.setTeamBRegistrationId(request.getTeamBRegistrationId());
         if (request.getTeamCRegistrationId() != null) match.setTeamCRegistrationId(request.getTeamCRegistrationId());
         if (request.getTeamDRegistrationId() != null) match.setTeamDRegistrationId(request.getTeamDRegistrationId());
 
         return mapToResponseDTO(matchRepository.save(match));
+    }
+
+    // =====================================================
+    // CORRECT MATCH RESULT
+    // PATCH /v1/matches/:matchId/correct
+    //
+    // The explicit "I know this needs fixing" path for a COMPLETED match
+    // that was scored wrong. Voids any ranking points already awarded for
+    // it, reopens it to PENDING_APPROVAL, and requires the normal
+    // submit-then-approve cycle to re-award points correctly — reuses the
+    // same voidAllForMatch() infrastructure the ranking module already had
+    // (previously unused by anything).
+    // =====================================================
+
+    @Transactional
+    public MatchResponseDTO correctMatchResult(
+            UUID matchId,
+            String reason,
+            Authentication authentication
+    ) {
+        Match match = matchRepository
+                .findById(matchId)
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+
+        authorizationService.assertCanApproveMatchResult(extractUserId(authentication), match.getEventSportId());
+
+        if (match.getStatus() != MatchStatus.COMPLETED) {
+            throw ApiException.conflict(
+                    "Only a COMPLETED match can be corrected; current status: " + match.getStatus());
+        }
+
+        if (rankingEngineService != null) {
+            rankingEngineService.voidPointsForMatch(match.getId());
+        }
+
+        match.setStatus(MatchStatus.PENDING_APPROVAL);
+        match.setApprovedBy(null);
+        match.setApprovedAt(null);
+        match.setRejectionReason(reason);
+
+        Match savedMatch = matchRepository.save(match);
+
+        auditLogService.log("MATCH_RESULT_CORRECTION_OPENED", "MATCH", savedMatch.getId(), null,
+                "COMPLETED", "PENDING_APPROVAL", reason);
+
+        MatchResponseDTO dto = mapToResponseDTO(savedMatch);
+        realtimePublisher.pushMatchUpdate(savedMatch.getId(), savedMatch.getEventSportId(),
+                RealtimeEventType.MATCH_UPDATED, dto);
+        return dto;
     }
 
     // =====================================================
@@ -648,6 +797,11 @@ public class MatchService {
                 .findById(matchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
 
+        // findById() above does NOT filter deletedAt/parent-event state (B-16)
+        // — this is the actual check that stops a deleted/cancelled event's
+        // matches from still being mutated.
+        authorizationService.assertEventActiveForSport(match.getEventSportId());
+
         validateCanScoreMatchForSport(authentication, match.getEventSportId());
 
         if (match.getStatus() != MatchStatus.LIVE) {
@@ -764,6 +918,11 @@ public class MatchService {
                 .findById(matchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
 
+        // findById() above does NOT filter deletedAt/parent-event state (B-16)
+        // — this is the actual check that stops a deleted/cancelled event's
+        // matches from still being mutated.
+        authorizationService.assertEventActiveForSport(match.getEventSportId());
+
         validateCanScoreMatchForSport(authentication, match.getEventSportId());
 
         if (match.getStatus() != MatchStatus.LIVE) {
@@ -851,6 +1010,9 @@ public class MatchService {
                 .findById(matchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
 
+        // See submitMatchResult/completeMatch's identical guard — B-16.
+        authorizationService.assertEventActiveForSport(match.getEventSportId());
+
         UUID currentUserId = extractUserId(authentication);
         authorizationService.assertCanApproveMatchResult(currentUserId, match.getEventSportId());
 
@@ -866,14 +1028,32 @@ public class MatchService {
         match.setApprovedAt(LocalDateTime.now());
         match.setRejectionReason(null);
 
-        Match savedMatch = matchRepository.save(match);
+        Match savedMatch;
+        try {
+            savedMatch = matchRepository.save(match);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            // Someone else's approve/reject/cancel of this exact match committed
+            // first (Match now carries @Version). Without this, two concurrent
+            // approvals could both pass the PENDING_APPROVAL check above and
+            // double-award ranking points.
+            throw ApiException.conflict(
+                    "This match was already approved (or otherwise updated) by someone else — refresh and retry.");
+        }
 
         if (rankingEngineService != null) {
             try {
                 rankingEngineService.awardMatchPoints(savedMatch);
                 autoFinalizeIfLastMatch(savedMatch.getEventSportId());
+            } catch (Exception e) {
+                // Ranking failure must never roll back the approval (fail-open,
+                // by design) — but it must not be invisible either. Previously
+                // this was a bare `catch (Exception ignored)`.
+                log.error("[MatchService] Ranking award failed for match {} after approval — " +
+                        "match stays COMPLETED with zero points awarded until this is corrected.",
+                        savedMatch.getId(), e);
+                auditLogService.log("RANKING_AWARD_FAILED", "MATCH", savedMatch.getId(), null,
+                        null, null, e.getMessage());
             }
-            catch (Exception ignored) { /* ranking failure must never roll back the approval */ }
         }
 
         auditLogService.log("MATCH_RESULT_APPROVED", "MATCH", savedMatch.getId(), null,
@@ -901,9 +1081,9 @@ public class MatchService {
     //
     // Reverts to LIVE (not a dead-end state) so the result can be
     // resubmitted, mirroring the existing sport-approval precedent.
-    // Does not unwind any optimistic bracket advancement that already
-    // happened at submit time — that stays a manual-correction path via
-    // updateMatch/updateMatchTeams.
+    // Also unwinds the optimistic bracket advancement done at submit time
+    // (see unwindOptimisticAdvancement) — a rejected result shouldn't leave
+    // its winner sitting in the next round's slot.
     // =====================================================
 
     @Transactional
@@ -930,6 +1110,8 @@ public class MatchService {
         match.setRejectionReason(reason);
 
         Match savedMatch = matchRepository.save(match);
+
+        unwindOptimisticAdvancement(savedMatch);
 
         auditLogService.log("MATCH_RESULT_REJECTED", "MATCH", savedMatch.getId(), null,
                 "PENDING_APPROVAL", "LIVE", reason);
@@ -966,7 +1148,13 @@ public class MatchService {
 
         match.setStatus(MatchStatus.CANCELLED);
 
-        return mapToResponseDTO(matchRepository.save(match));
+        Match savedMatch = matchRepository.save(match);
+
+        // Retract any winner optimistically advanced into the next round —
+        // mirrors rejectMatchResult (see unwindOptimisticAdvancement).
+        unwindOptimisticAdvancement(savedMatch);
+
+        return mapToResponseDTO(savedMatch);
     }
 
     // =====================================================
@@ -1290,6 +1478,42 @@ public class MatchService {
     // PRIVATE — ASSIGN REGISTRATION ID TO A TEAM SLOT
     // Slot mapping: 1 = A  2 = B  3 = C  4 = D
     // =====================================================
+
+    // =====================================================
+    // PRIVATE — UNWIND OPTIMISTIC ADVANCEMENT
+    //
+    // submitMatchResult/completeMatch push the winner into the next round's
+    // slot BEFORE approval (optimistic, so live tournaments don't stall).
+    // rejectMatchResult and cancelMatch previously left that push in place —
+    // called from both, so a rejected/cancelled result doesn't leave a stale
+    // participant wired into the next round.
+    //
+    // Only clears the slot if the next match is still SCHEDULED — if it has
+    // already been played past that point, forcibly clearing a slot would
+    // corrupt a match that already has a real result, so this logs a warning
+    // and leaves it for manual correction instead.
+    // =====================================================
+
+    private void unwindOptimisticAdvancement(Match match) {
+        if (match.getWinnerRegistrationId() == null) return;
+        if (match.getNextMatchId() == null) return;
+
+        Match nextMatch = matchRepository.findById(match.getNextMatchId()).orElse(null);
+        if (nextMatch == null) return;
+
+        if (nextMatch.getStatus() != MatchStatus.SCHEDULED) {
+            log.warn("[MatchService] Not unwinding optimistic advancement of match {} into {} — " +
+                    "downstream match is already {} (past SCHEDULED). Leaving as-is for manual review.",
+                    match.getId(), nextMatch.getId(), nextMatch.getStatus());
+            return;
+        }
+
+        assignToSlot(nextMatch, match.getNextMatchSlot(), null);
+        matchRepository.save(nextMatch);
+
+        realtimePublisher.pushMatchUpdate(nextMatch.getId(), nextMatch.getEventSportId(),
+                RealtimeEventType.MATCH_UPDATED, mapToResponseDTO(nextMatch));
+    }
 
     private void assignToSlot(Match match, Integer slot, UUID registrationId) {
         if (slot == null) return;

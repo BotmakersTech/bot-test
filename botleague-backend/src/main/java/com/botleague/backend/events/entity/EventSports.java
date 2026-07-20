@@ -184,6 +184,16 @@ public class EventSports {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    /**
+     * registeredTeamsCount is a read-modify-write increment/decrement from
+     * three call sites (registerRobot, cancelRegistration,
+     * updateRegistrationStatus) — without this, two concurrent registration
+     * actions can race and lose an update to the capacity counter.
+     */
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
+
     // =========================
     // LIFECYCLE
     // =========================
@@ -327,6 +337,8 @@ public class EventSports {
 
     public Integer getRegisteredTeamsCount() { return registeredTeamsCount; }
     public void setRegisteredTeamsCount(Integer registeredTeamsCount) { this.registeredTeamsCount = registeredTeamsCount; }
+
+    public Long getVersion() { return version; }
 
     public boolean isBracketGenerated() { return bracketGenerated; }
     public void setBracketGenerated(boolean bracketGenerated) { this.bracketGenerated = bracketGenerated; }

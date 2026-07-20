@@ -23,9 +23,14 @@ import jakarta.persistence.*;
 @Table(
     name = "sport_registrations",
     uniqueConstraints = @UniqueConstraint(
-        // stop the same team entering the same-named robot twice in one competition
+        // Keyed on robot_id, not team_id+robot_name — a robot rename could
+        // otherwise double-register, or two unrelated robots sharing a name
+        // could be wrongly blocked. robotId is a real FK to a persistent
+        // Robot record, so it's the actual natural key here; the
+        // application's own dedup/reactivation logic (registerRobot) was
+        // already robot_id-based even before this constraint caught up.
         name = "uk_registration_robot",
-        columnNames = {"event_sport_id", "team_id", "robot_name"}
+        columnNames = {"event_sport_id", "robot_id"}
     ),
     indexes = {
         @Index(name = "idx_reg_event_sport", columnList = "event_sport_id"),
@@ -118,8 +123,11 @@ public class SportRegistration {
     /**
      * Validates this robot against the competition's constraints: weight, the
      * three dimensions, and control type. Limits that are null on the
-     * competition are simply skipped (so a drone / project sport with no size
-     * rule passes automatically).
+     * COMPETITION are simply skipped (so a drone / project sport with no size
+     * rule passes automatically) — but if the competition DOES have a limit
+     * and the ROBOT's value for that same field is missing, this fails
+     * closed rather than silently letting incomplete robot data bypass a
+     * real, active limit.
      *
      * NOTE: age and "max bots per team" need data this row doesn't hold
      * (the participant's date of birth, and a count of the team's existing
@@ -134,9 +142,16 @@ public class SportRegistration {
         }
 
         Double weightLimit = eventSport.getWeightLimitKg();
-        if (weightLimit != null && weightKg != null && weightKg > weightLimit) {
-            throw new IllegalArgumentException(
-                "Robot weight " + weightKg + "kg exceeds the limit of " + weightLimit + "kg");
+        if (weightLimit != null) {
+            if (weightKg == null) {
+                throw new IllegalArgumentException(
+                    "This competition has a weight limit of " + weightLimit
+                        + "kg, but the robot's weight was not provided.");
+            }
+            if (weightKg > weightLimit) {
+                throw new IllegalArgumentException(
+                    "Robot weight " + weightKg + "kg exceeds the limit of " + weightLimit + "kg");
+            }
         }
 
         checkDimension("length", lengthCm, eventSport.getMaxLengthCm());
@@ -154,7 +169,13 @@ public class SportRegistration {
     }
 
     private void checkDimension(String name, Double value, Double max) {
-        if (max != null && value != null && value > max) {
+        if (max == null) return; // competition doesn't constrain this dimension
+        if (value == null) {
+            throw new IllegalArgumentException(
+                "This competition has a " + name + " limit of " + max
+                    + "cm, but the robot's " + name + " was not provided.");
+        }
+        if (value > max) {
             throw new IllegalArgumentException(
                 "Robot " + name + " " + value + "cm exceeds the limit of " + max + "cm");
         }

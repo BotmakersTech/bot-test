@@ -17,6 +17,7 @@ import com.botleague.backend.events.dto.EventSportsRequestDTO;
 import com.botleague.backend.events.dto.GetEventSportsDTO;
 import com.botleague.backend.events.dto.SportChangeRequestResponseDTO;
 import com.botleague.backend.events.dto.SportUpdateResultDTO;
+import com.botleague.backend.events.dto.ToggleRegistrationRequest;
 import com.botleague.backend.events.dto.UpdateSportsDTO;
 import com.botleague.backend.events.entity.EventSports;
 import com.botleague.backend.events.enums.SportEventStatus;
@@ -111,9 +112,11 @@ public class EventSportsController {
     public ResponseEntity<String> toggleRegistration(
             @PathVariable UUID eventId,
             @PathVariable UUID sportId,
+            @RequestBody(required = false) ToggleRegistrationRequest request,
             Authentication auth) {
 
-        String status = service.updateSportsRegistration(sportId, eventId, extractUserId(auth), extractRoles(auth));
+        String status = service.updateSportsRegistration(sportId, eventId, extractUserId(auth), extractRoles(auth),
+                request != null ? request.getNewRegistrationEndDate() : null);
         return ResponseEntity.ok("Registration status updated to " + status);
     }
 

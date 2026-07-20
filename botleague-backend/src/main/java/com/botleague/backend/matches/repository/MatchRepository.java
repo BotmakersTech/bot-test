@@ -20,6 +20,14 @@ public interface MatchRepository
             UUID eventSportId
     );
 
+    // Used only to detect "this bracket was soft-deleted and is being
+    // regenerated" for the audit trail — the duplicate-generation guard
+    // itself only ever looks at non-deleted matches.
+    List<Match>
+    findByEventSportIdAndDeletedAtIsNotNull(
+            UUID eventSportId
+    );
+
     List<Match>
     findByEventSportIdAndDeletedAtIsNullOrderByRoundNumberAscMatchNumberAsc(
             UUID eventSportId

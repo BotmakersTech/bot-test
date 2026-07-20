@@ -54,10 +54,15 @@ public class AdminService {
     static {
         ALLOWED_TRANSITIONS = new EnumMap<>(EventStatus.class);
         ALLOWED_TRANSITIONS.put(EventStatus.DRAFT,      EnumSet.of(EventStatus.PUBLISHED));
-        ALLOWED_TRANSITIONS.put(EventStatus.PUBLISHED,  EnumSet.of(EventStatus.LIVE, EventStatus.ARCHIVED));
-        ALLOWED_TRANSITIONS.put(EventStatus.LIVE,       EnumSet.of(EventStatus.COMPLETED));
+        ALLOWED_TRANSITIONS.put(EventStatus.PUBLISHED,  EnumSet.of(EventStatus.LIVE, EventStatus.ARCHIVED, EventStatus.CANCELLED));
+        // CANCELLED is the safe abort of a tournament that's actually
+        // running — previously the only way out of LIVE besides COMPLETED
+        // was the non-cascading delete, with no "abort mid-tournament"
+        // path at all.
+        ALLOWED_TRANSITIONS.put(EventStatus.LIVE,       EnumSet.of(EventStatus.COMPLETED, EventStatus.CANCELLED));
         ALLOWED_TRANSITIONS.put(EventStatus.COMPLETED,  EnumSet.of(EventStatus.ARCHIVED));
         ALLOWED_TRANSITIONS.put(EventStatus.ARCHIVED,   EnumSet.noneOf(EventStatus.class));
+        ALLOWED_TRANSITIONS.put(EventStatus.CANCELLED,  EnumSet.noneOf(EventStatus.class));
     }
 
     // =====================================================
@@ -276,19 +281,77 @@ public class AdminService {
     // SOFT DELETE EVENT
     // =====================================================
 
-    public void softDeleteEvent(UUID eventId) {
+    @org.springframework.transaction.annotation.Transactional
+    public void softDeleteEvent(UUID eventId, boolean force, String reason) {
         Event event = eventRepository
                 .findByIdAndDeletedAtIsNull(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+
+        // B-16: previously this stamped deletedAt with zero cascade and no
+        // active-state guard, so a "deleted" LIVE event kept running exactly
+        // as before — every match/leaderboard/ranking endpoint queried by ID
+        // directly, never checking the parent's deleted state (see
+        // AuthorizationService.assertEventActiveForSport, which now closes
+        // that hole at the mutation entry points themselves).
+        boolean alreadyTerminal = event.getStatus() == EventStatus.COMPLETED
+                || event.getStatus() == EventStatus.ARCHIVED
+                || event.getStatus() == EventStatus.CANCELLED;
+        if (!alreadyTerminal && !force) {
+            throw new IllegalStateException(
+                    "This event is still " + event.getStatus() + " — deleting it would silently orphan any "
+                    + "live matches/registrations underneath it. Pass force=true (with a reason) if you're "
+                    + "certain, or transition it to COMPLETED/ARCHIVED/CANCELLED first.");
+        }
+
+        EventStatus oldStatus = event.getStatus();
         event.setDeletedAt(LocalDateTime.now());
-        eventRepository.save(event);
-        auditLogService.log("EVENT_DELETED", "EVENT", event.getId(), event.getEventName(), null, null);
+        Event saved = eventRepository.save(event);
+
+        cascadeEventTermination(saved.getId());
+
+        auditLogService.log("EVENT_DELETED", "EVENT", event.getId(), event.getEventName(),
+                oldStatus.name(), "DELETED", reason);
+    }
+
+    // =====================================================
+    // CASCADE — stop every match/registration under an event that's being
+    // deleted or cancelled. Doesn't touch EventLeaderboardEntry/Ranking —
+    // those are a historical record of what already happened, not something
+    // to hide; new activity against them is prevented because the matches
+    // that would generate it are gone/blocked (see assertEventActiveForSport).
+    // =====================================================
+
+    private void cascadeEventTermination(UUID eventId) {
+        List<com.botleague.backend.events.entity.EventSports> sports = eventSportRepository.findByEventId(eventId);
+        LocalDateTime now = LocalDateTime.now();
+
+        for (com.botleague.backend.events.entity.EventSports sport : sports) {
+            List<com.botleague.backend.matches.entity.Match> matches =
+                    matchRepository.findByEventSportIdAndDeletedAtIsNull(sport.getId());
+            for (com.botleague.backend.matches.entity.Match m : matches) {
+                m.setDeletedAt(now);
+            }
+            matchRepository.saveAll(matches);
+
+            List<com.botleague.backend.events.entity.SportRegistration> regs =
+                    sportRegistrationRepository.findByEventSportId(sport.getId());
+            for (com.botleague.backend.events.entity.SportRegistration r : regs) {
+                if (r.getStatus() == com.botleague.backend.events.enums.RegistrationStatus.CANCELLED
+                        || r.getStatus() == com.botleague.backend.events.enums.RegistrationStatus.REJECTED
+                        || r.getStatus() == com.botleague.backend.events.enums.RegistrationStatus.WITHDRAWN) {
+                    continue;
+                }
+                r.setStatus(com.botleague.backend.events.enums.RegistrationStatus.CANCELLED);
+            }
+            sportRegistrationRepository.saveAll(regs);
+        }
     }
 
     // =====================================================
     // CHANGE EVENT STATUS
     // =====================================================
 
+    @org.springframework.transaction.annotation.Transactional
     public AdminAllEventResponse changeEventStatus(UUID eventId, ChangeEventStatusRequest request) {
         Event event = eventRepository
                 .findByIdAndDeletedAtIsNull(eventId)
@@ -326,6 +389,16 @@ public class AdminService {
         Event saved = eventRepository.save(event);
         auditLogService.log("EVENT_STATUS_CHANGED", "EVENT", saved.getId(),
                 saved.getEventName(), oldStatus.name(), newStatus.name(), request.getNotes());
+
+        if (newStatus == EventStatus.CANCELLED) {
+            // Same cascade as the force-delete path, but WITHOUT setting
+            // deletedAt — the event stays visible/queryable as "cancelled"
+            // instead of vanishing from listings. This is the safe abort of
+            // a live tournament the audit's competitive-benchmark section
+            // asked for.
+            cascadeEventTermination(saved.getId());
+        }
+
         realtimePublisher.pushEventStatusChange(saved.getId(), mapToResponse(saved));
         dispatchEventStatusNotification(saved, newStatus);
 
@@ -363,6 +436,13 @@ public class AdminService {
                     NotificationType.EVENT_COMPLETED, NotificationPriority.MEDIUM,
                     NotificationTargetType.PLATFORM_ADMINS, event.getId(),
                     "/admin/event/" + event.getId()
+            );
+            case CANCELLED -> notificationService.systemNotify(
+                    event.getEventName() + " has been cancelled",
+                    "This event was cancelled by an organiser/admin. Any in-progress matches were stopped.",
+                    NotificationType.EVENT_COMPLETED, NotificationPriority.HIGH,
+                    NotificationTargetType.ALL_USERS, event.getId(),
+                    "/events/" + event.getId()
             );
             default -> { /* no auto-notification for DRAFT, ARCHIVED */ }
         }
@@ -419,6 +499,34 @@ public class AdminService {
                 blockers.add(label + ": tournament bracket not generated");
                 continue;
             }
+
+            // Pre-go-live re-verification: the bracket's originally-seeded
+            // participants (round 1's team slots) must still match who's
+            // currently REGISTERED. Previously nothing re-checked this, so a
+            // registration change after bracket generation (a robot cancelled,
+            // or a new one registered) went live with a stale seeded bracket.
+            java.util.Set<UUID> seeded = matchRepository
+                    .findByEventSportIdAndRoundNumberAndDeletedAtIsNull(sport.getId(), 1)
+                    .stream()
+                    .flatMap(m -> java.util.stream.Stream.of(
+                            m.getTeamARegistrationId(), m.getTeamBRegistrationId(),
+                            m.getTeamCRegistrationId(), m.getTeamDRegistrationId()))
+                    .filter(java.util.Objects::nonNull)
+                    .collect(java.util.stream.Collectors.toSet());
+
+            java.util.Set<UUID> currentlyRegistered = sportRegistrationRepository
+                    .findByEventSportIdAndStatus(sport.getId(),
+                            com.botleague.backend.events.enums.RegistrationStatus.REGISTERED)
+                    .stream()
+                    .map(com.botleague.backend.events.entity.SportRegistration::getId)
+                    .collect(java.util.stream.Collectors.toSet());
+
+            if (!seeded.isEmpty() && !seeded.equals(currentlyRegistered)) {
+                blockers.add(label + ": registrations have changed since the bracket was generated "
+                        + "(the bracket must be regenerated before going live)");
+                continue;
+            }
+
             long unscheduled = matchRepository
                     .findByEventSportIdAndDeletedAtIsNull(sport.getId())
                     .stream()
