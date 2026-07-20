@@ -1,0 +1,183 @@
+/* =========================================================
+   eventsUser.css — the logged-in "Browse Events" dashboard page
+   (UserEventPage.tsx, route /browse-events). Distinct from
+   eventsLanding.css, which styles the public marketing page at /events —
+   different audience, different shell, deliberately not shared.
+   Scoped under .evt-page so nothing here leaks elsewhere.
+   ========================================================= */
+
+.evt-page {
+  background: #FBFBFB;
+}
+
+.evt-font-sarpanch { font-family: "Sarpanch", sans-serif; }
+.evt-font-poppins  { font-family: "Poppins", sans-serif; }
+
+.evt-text-gradient {
+  background: linear-gradient(90deg, #0162D1 0%, #8C6CFF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Gradient-border cards / inputs — same recipe as rankings.css /
+   editTeamMockup.css so every "browse + filter" page in the app matches. */
+.evt-card {
+  border: 1.3px solid transparent;
+  background-image: linear-gradient(white, white),
+                    linear-gradient(180deg, #0162D1 0%, #8C6CFF 100%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  border-radius: 18px;
+}
+
+.evt-input {
+  border: 1.3px solid transparent;
+  background-image: linear-gradient(white, white),
+                    linear-gradient(180deg, #0162D1 0%, #8C6CFF 100%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  border-radius: 10px;
+  font-family: "Poppins", sans-serif;
+}
+.evt-input:focus { outline: none; }
+
+/* Decorative outline star — same clip-path technique as .rank-outline-star /
+   .dash-outline-star elsewhere, no separate image asset needed. */
+.evt-outline-star { pointer-events: none; position: absolute; }
+.evt-outline-star::before,
+.evt-outline-star::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(50% 0, 61% 34%, 98% 35%, 68% 56%, 79% 91%, 50% 70%, 21% 91%, 32% 56%, 2% 35%, 39% 34%);
+}
+.evt-outline-star::before { background: rgba(74, 132, 230, 0.10); }
+.evt-outline-star::after  { inset: 6px; background: #FBFBFB; }
+
+/* ── Event card ─────────────────────────────────────────────────────── */
+.evt-event-card {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid #E7E9F5;
+  border-radius: 16px;
+  padding: 18px 22px 18px 26px;
+  cursor: pointer;
+  transition: border-color 180ms ease, transform 150ms ease, box-shadow 180ms ease;
+  overflow: hidden;
+}
+.evt-event-card::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #0162D1 0%, #8C6CFF 100%);
+}
+.evt-event-card:hover {
+  border-color: #C9CEFB;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -8px rgba(20, 30, 80, 0.16);
+}
+
+.evt-event-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.3rem;
+  background: linear-gradient(135deg, #0162D1, #8C6CFF);
+  box-shadow: 0 6px 16px -4px rgba(79, 108, 234, 0.45);
+}
+
+.evt-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #F4F6FF;
+  border: 1px solid #E7E9F5;
+  color: #4B5169;
+  border-radius: 7px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 3px 10px;
+  font-family: "Poppins", sans-serif;
+}
+
+.evt-view-btn {
+  background: rgba(79, 108, 234, 0.08);
+  border: 1px solid rgba(79, 108, 234, 0.22);
+  color: #0162D1;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: "Poppins", sans-serif;
+  transition: background 150ms ease;
+}
+.evt-view-btn:hover { background: rgba(79, 108, 234, 0.16); }
+
+/* ── Status pills — semantic colors, kept separate from the brand accent ── */
+.evt-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  white-space: nowrap;
+  font-family: "Poppins", sans-serif;
+}
+.evt-status .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.evt-status--live      { color: #0EA65A; background: rgba(14, 166, 90, 0.1);  border: 1px solid rgba(14, 166, 90, 0.25); }
+.evt-status--open      { color: #0EA65A; background: rgba(14, 166, 90, 0.1);  border: 1px solid rgba(14, 166, 90, 0.25); }
+.evt-status--published { color: #4F6EF7; background: rgba(79, 108, 234, 0.1); border: 1px solid rgba(79, 108, 234, 0.25); }
+.evt-status--closed    { color: #B8860B; background: rgba(184, 134, 11, 0.1); border: 1px solid rgba(184, 134, 11, 0.25); }
+.evt-status--completed { color: #6b7280; background: rgba(107, 114, 128, 0.1); border: 1px solid rgba(107, 114, 128, 0.22); }
+.evt-status--cancelled { color: #DC2626; background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.25); }
+
+/* ── Search suggestions dropdown ───────────────────────────────────────── */
+.evt-suggest {
+  position: absolute;
+  width: 100%;
+  top: calc(100% + 8px);
+  background: #ffffff;
+  border: 1.3px solid #E7E9F5;
+  border-radius: 14px;
+  box-shadow: 0 20px 48px -12px rgba(20, 30, 80, 0.22);
+  max-height: 280px;
+  overflow-y: auto;
+  z-index: 50;
+}
+.evt-suggest-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 18px;
+  cursor: pointer;
+  border-bottom: 1px solid #F1F2F6;
+  transition: background 120ms ease;
+  font-family: "Poppins", sans-serif;
+}
+.evt-suggest-row:last-child { border-bottom: none; }
+.evt-suggest-row:hover { background: #F4F6FF; }
+
+@keyframes evt-fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.evt-fade-in { animation: evt-fade-in 250ms ease; }
+
+@keyframes evt-spin { to { transform: rotate(360deg); } }
+.evt-spinner {
+  display: inline-block;
+  border: 2.5px solid rgba(79, 108, 234, 0.15);
+  border-top-color: #4F6EF7;
+  border-radius: 50%;
+  animation: evt-spin 700ms linear infinite;
+}

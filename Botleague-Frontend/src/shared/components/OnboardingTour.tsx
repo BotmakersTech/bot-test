@@ -54,7 +54,7 @@ const STEPS: Step[] = [
     title: "Find Events",
     desc: "Browse upcoming tournaments here and register your team to compete.",
     ctaLabel: "Go to Events",
-    ctaPath: "/events",
+    ctaPath: "/browse-events",
   },
 ];
 

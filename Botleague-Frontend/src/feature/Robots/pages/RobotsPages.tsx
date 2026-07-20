@@ -254,7 +254,7 @@ export default function RobotsPage() {
     </div>
 
     {/* Row 2: BotID, Weight, Sport side by side */}
-    <div className="flex items-center gap-6">
+    <div className="flex items-center gap-6 justify-center">
       <div className="robot-row-field">
         <span>BotID</span>
         <strong>{robot.robotCode || "-"}</strong>
