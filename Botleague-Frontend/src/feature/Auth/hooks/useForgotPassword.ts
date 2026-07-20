@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { forgotPassword, resendOTP, resetPassword, verifyOtp } from "../api/auth.api";
+import { forgotPassword, resendOTP, resetPassword } from "../api/auth.api";
 
 const OTP_LENGTH = 4;
 
@@ -14,11 +14,20 @@ const err = (e: unknown): string => {
 /**
  * Forgot-password flow — two modes, matching the mockup:
  *
- * "mobile" (default): mobile number -> Get OTP -> Verify (real backend check,
- *   same otpService.verifyOtp() call register() itself re-checks at final
- *   submission, so verifying here and again inside resetPassword's OTP
- *   branch is the same proven double-verify pattern register already uses
- *   in production) -> new password + confirm -> Update password.
+ * "mobile" (default): mobile number -> Get OTP -> Verify -> new password +
+ *   confirm -> Update password.
+ *
+ *   IMPORTANT: MSG91's OTP codes are single-use — once otpService.verifyOtp()
+ *   succeeds for a code, that exact code is consumed and a second verify call
+ *   with the same code fails ("already verified"). resetPassword()'s OTP
+ *   branch already re-verifies the code server-side as part of the atomic
+ *   reset, so the "Verify" button here is deliberately a client-side format
+ *   check only (4 digits present), not a real API call — calling
+ *   otpService.verifyOtp() here too would consume the code before Update
+ *   Password's own verify ever runs, and every reset would fail with
+ *   "already verified". This mirrors the original implementation's own
+ *   comment before this flow was restyled: "the backend verifies it
+ *   atomically with the new password" — that constraint was correct.
  * "email": enter email -> forgotPassword(email) sends a reset-link email
  *   (silent on non-existent accounts, same as the mobile branch).
  */
@@ -111,8 +120,8 @@ export default function useForgotPassword() {
     }
   };
 
-  // ── VERIFY OTP ────────────────────────────────────────────────────────
-  const handleVerifyOtp = async () => {
+  // ── VERIFY OTP (client-side format check only — see hook-level comment) ─
+  const handleVerifyOtp = () => {
     setError(null);
 
     const fullOtp = otp.join("");
@@ -121,16 +130,7 @@ export default function useForgotPassword() {
       return;
     }
 
-    try {
-      setIsOtpBusy(true);
-      await verifyOtp(mobile, fullOtp);
-      setOtpVerified(true);
-    } catch (e) {
-      setOtpVerified(false);
-      setError(err(e));
-    } finally {
-      setIsOtpBusy(false);
-    }
+    setOtpVerified(true);
   };
 
   // ── UPDATE PASSWORD ───────────────────────────────────────────────────
