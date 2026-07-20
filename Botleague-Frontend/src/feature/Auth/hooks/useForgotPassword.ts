@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { forgotPassword, resetPassword } from "../api/auth.api";
+import { forgotPassword, resendOTP, resetPassword, verifyOtp } from "../api/auth.api";
 
 const OTP_LENGTH = 4;
 
@@ -11,108 +11,224 @@ const err = (e: unknown): string => {
   return "Something went wrong";
 };
 
-const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-const isPhone = (v: string) => /^[0-9]{10}$/.test(v);
-
 /**
- * Forgot-password flow — two paths:
+ * Forgot-password flow — two modes, matching the mockup:
  *
- * EMAIL path:  step 1 → "link sent" (user clicks email link → /reset-password page)
- * PHONE path:  step 1 → step 2 (enter OTP) → step 3 (set new password)
+ * "mobile" (default): mobile number -> Get OTP -> Verify (real backend check,
+ *   same otpService.verifyOtp() call register() itself re-checks at final
+ *   submission, so verifying here and again inside resetPassword's OTP
+ *   branch is the same proven double-verify pattern register already uses
+ *   in production) -> new password + confirm -> Update password.
+ * "email": enter email -> forgotPassword(email) sends a reset-link email
+ *   (silent on non-existent accounts, same as the mobile branch).
  */
 export default function useForgotPassword() {
   const navigate = useNavigate();
 
-  // 1 = enter identifier, 2 = enter OTP (phone), 3 = set password (phone)
-  // "email_sent" = email link dispatched
-  const [step, setStep] = useState<1 | 2 | 3 | "email_sent">(1);
+  const [mode, setMode] = useState<"mobile" | "email">("mobile");
 
-  const [identifier, setIdentifier]       = useState("");
-  const [otp,        setOtp]              = useState<string[]>(Array(OTP_LENGTH).fill(""));
-  const [password,   setPassword]         = useState("");
-  const [confirmPw,  setConfirmPw]        = useState("");
-  const [loading,    setLoading]          = useState(false);
-  const [error,      setError]            = useState<string | null>(null);
-  const [success,    setSuccess]          = useState<string | null>(null);
+  // ── mobile + OTP ──────────────────────────────────────────────────────
+  const [mobile, setMobile] = useState("");
+  const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
 
-  // ── step 1: send OTP or email link ──────────────────────────────────────
-  const handleSend = async () => {
+  // ── new password ──────────────────────────────────────────────────────
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  // ── email mode ────────────────────────────────────────────────────────
+  const [email, setEmail] = useState("");
+  const [emailSent, setEmailSent] = useState(false);
+
+  // Separate loading flags per action — sharing one flag across independent
+  // buttons (send/resend/verify OTP vs. update password vs. email-mode send)
+  // made unrelated buttons flash each other's "loading" label/disabled state.
+  const [isOtpBusy, setIsOtpBusy] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  // ⏱ OTP resend timer — same pattern as useRegister.ts
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer((v) => v - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendTimer]);
+
+  // ── SEND OTP ──────────────────────────────────────────────────────────
+  const handleSendOtp = async () => {
     setError(null);
     setSuccess(null);
-    if (!identifier.trim()) { setError("Enter phone or email"); return; }
-    if (!isPhone(identifier) && !isEmail(identifier)) {
-      setError("Enter a valid 10-digit phone or email address");
+
+    if (mobile.length !== 10) {
+      setError("Enter valid 10-digit mobile number");
       return;
     }
+
     try {
-      setLoading(true);
-      await forgotPassword(identifier.trim());
-      if (isPhone(identifier)) {
-        setSuccess("OTP sent to your phone");
-        setStep(2);
-      } else {
-        setStep("email_sent");
-      }
+      setIsOtpBusy(true);
+      // forgotPassword() is deliberately silent on whether the number is
+      // registered — it still returns 200 either way and only actually
+      // dispatches an OTP (via the same MSG91-backed otpService.sendOtp()
+      // used by registration) when the account exists.
+      await forgotPassword(mobile);
+
+      setOtpSent(true);
+      setResendTimer(30);
+      setOtp(Array(OTP_LENGTH).fill(""));
+      setOtpVerified(false);
     } catch (e) {
       setError(err(e));
     } finally {
-      setLoading(false);
+      setIsOtpBusy(false);
     }
   };
 
-  // ── step 2 (phone): verify OTP only — don't set password yet ─────────
-  const handleVerifyOtp = async () => {
+  // ── RESEND OTP ────────────────────────────────────────────────────────
+  const handleResendOtp = async () => {
     setError(null);
-    const fullOtp = otp.join("");
-    if (fullOtp.length !== OTP_LENGTH) { setError("Enter complete OTP"); return; }
-    // We don't have a standalone "verify OTP" endpoint for password reset —
-    // the backend verifies it atomically with the new password in step 3.
-    // We just advance the UI here after basic client-side validation.
-    setSuccess("OTP accepted — set your new password");
-    setStep(3);
+
+    if (mobile.length !== 10) {
+      setError("Enter valid mobile number");
+      return;
+    }
+    if (resendTimer > 0) return;
+
+    try {
+      setIsOtpBusy(true);
+      await resendOTP(mobile);
+      setOtp(Array(OTP_LENGTH).fill(""));
+      setOtpVerified(false);
+      setResendTimer(30);
+    } catch (e) {
+      setError(err(e));
+    } finally {
+      setIsOtpBusy(false);
+    }
   };
 
-  // ── step 3 (phone): submit new password ──────────────────────────────
-  const handleSetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // ── VERIFY OTP ────────────────────────────────────────────────────────
+  const handleVerifyOtp = async () => {
+    setError(null);
+
+    const fullOtp = otp.join("");
+    if (fullOtp.length !== OTP_LENGTH) {
+      setError("Enter complete OTP");
+      return;
+    }
+
+    try {
+      setIsOtpBusy(true);
+      await verifyOtp(mobile, fullOtp);
+      setOtpVerified(true);
+    } catch (e) {
+      setOtpVerified(false);
+      setError(err(e));
+    } finally {
+      setIsOtpBusy(false);
+    }
+  };
+
+  // ── UPDATE PASSWORD ───────────────────────────────────────────────────
+  const handleUpdatePassword = async () => {
     setError(null);
     setSuccess(null);
-    if (password.length < 8) { setError("Password must be at least 8 characters"); return; }
-    if (password !== confirmPw) { setError("Passwords do not match"); return; }
+
+    if (!otpVerified) {
+      setError("Verify your OTP first");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
     try {
-      setLoading(true);
-      await resetPassword({ phone: identifier, otp: otp.join(""), newPassword: password });
-      setSuccess("Password reset successful! Redirecting to login…");
+      setIsUpdatingPassword(true);
+      await resetPassword({ phone: mobile, otp: otp.join(""), newPassword: password });
+      setSuccess("Password updated — redirecting to login…");
       setTimeout(() => navigate("/login"), 1500);
     } catch (e) {
       setError(err(e));
     } finally {
-      setLoading(false);
+      setIsUpdatingPassword(false);
     }
   };
 
-  const reset = () => {
-    setStep(1);
-    setIdentifier("");
-    setOtp(Array(OTP_LENGTH).fill(""));
-    setPassword("");
-    setConfirmPw("");
+  // ── EMAIL MODE ────────────────────────────────────────────────────────
+  // Same handler for the initial "Verify" click and the "Resend" link below
+  // it — both just (re)send the reset-link email. Kept as one persistent
+  // form (not swapped for a separate "check your inbox" screen) to match
+  // the mockup, which shows the Resend line alongside the form itself.
+  const handleSendEmailReset = async () => {
+    setError(null);
+    setSuccess(null);
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Enter a valid email address");
+      return;
+    }
+
+    try {
+      setIsSendingEmail(true);
+      await forgotPassword(email);
+      setEmailSent(true);
+      setSuccess("Reset link sent — check your inbox.");
+    } catch (e) {
+      setError(err(e));
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
+  const switchMode = (next: "mobile" | "email") => {
+    setMode(next);
     setError(null);
     setSuccess(null);
   };
 
   return {
-    step, setStep,
-    identifier, setIdentifier,
-    otp, setOtp,
-    password, setPassword,
-    confirmPw, setConfirmPw,
-    loading, error, success,
-    handleSend,
+    mode,
+    setMode: switchMode,
+
+    // mobile + OTP
+    mobile,
+    setMobile,
+    otp,
+    setOtp,
+    otpSent,
+    otpVerified,
+    resendTimer,
+
+    // password
+    password,
+    setPassword,
+    confirmPassword,
+    setConfirmPassword,
+
+    // email
+    email,
+    setEmail,
+    emailSent,
+
+    isOtpBusy,
+    isUpdatingPassword,
+    isSendingEmail,
+    error,
+    success,
+
+    handleSendOtp,
+    handleResendOtp,
     handleVerifyOtp,
-    handleSetPassword,
-    reset,
-    isEmail: isEmail(identifier),
-    isPhone: isPhone(identifier),
+    handleUpdatePassword,
+    handleSendEmailReset,
   };
 }

@@ -17,12 +17,18 @@ export default function PasswordSection({
   confirmPassword,
   setConfirmPassword,
   disabled,
+  labels,
+  hideHint = false,
 }: {
   password: string;
   setPassword: (value: string) => void;
   confirmPassword: string;
   setConfirmPassword: (value: string) => void;
   disabled: boolean;
+  /** Optional labels shown above each field (e.g. reset-password's mockup) — omit for the register flow's placeholder-only look. */
+  labels?: { password: string; confirm: string };
+  /** Reset-password's mockup has no "*Use at least 8 characters…" hint line — register's does. */
+  hideHint?: boolean;
 }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -35,34 +41,46 @@ export default function PasswordSection({
       style={{ gap: "clamp(6px, 1.2dvh, 16px)" }}
     >
       {/* PASSWORD */}
-      <div className="relative w-full">
-        <input
-          type={showPassword ? "text" : "password"}
-          autoComplete="new-password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          disabled={disabled}
-          className={inputClass}
-        />
-        <button
-          type="button"
-          tabIndex={-1}
-          aria-label={showPassword ? "Hide password" : "Show password"}
-          onClick={() => setShowPassword((v) => !v)}
-          disabled={disabled}
-          className={eyeButtonClass}
-        >
-          {showPassword ? (
-            <EyeOff className="w-4.5 h-4.5 md:w-5 md:h-5" />
-          ) : (
-            <Eye className="w-4.5 h-4.5 md:w-5 md:h-5" />
-          )}
-        </button>
+      <div className="flex flex-col gap-1.5 w-full">
+        {labels && (
+          <label className="text-[14px] md:text-[15px] font-inter text-gray-700">
+            {labels.password}
+          </label>
+        )}
+        <div className="relative w-full">
+          <input
+            type={showPassword ? "text" : "password"}
+            autoComplete="new-password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={disabled}
+            className={inputClass}
+          />
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            onClick={() => setShowPassword((v) => !v)}
+            disabled={disabled}
+            className={eyeButtonClass}
+          >
+            {showPassword ? (
+              <EyeOff className="w-4.5 h-4.5 md:w-5 md:h-5" />
+            ) : (
+              <Eye className="w-4.5 h-4.5 md:w-5 md:h-5" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* CONFIRM PASSWORD */}
-      <div className="flex flex-col gap-1 w-full">
+      <div className="flex flex-col gap-1.5 w-full">
+        {labels && (
+          <label className="text-[14px] md:text-[15px] font-inter text-gray-700">
+            {labels.confirm}
+          </label>
+        )}
         <div className="relative w-full">
           <input
             type={showConfirm ? "text" : "password"}
@@ -103,9 +121,11 @@ export default function PasswordSection({
       </div>
 
       {/* HINT */}
-      <p className="cna-register-hint-pad text-center lg:text-start text-[13px] md:text-[14px] text-[#8C6CFF] text-pretty">
-        *Use at least 8 characters, including a number &amp; a symbol
-      </p>
+      {!hideHint && (
+        <p className="cna-register-hint-pad text-center lg:text-start text-[13px] md:text-[14px] text-[#8C6CFF] text-pretty">
+          *Use at least 8 characters, including a number &amp; a symbol
+        </p>
+      )}
     </div>
   );
 }

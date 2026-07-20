@@ -12,7 +12,7 @@ import "../styles/AuthMockup.css";
 
 interface Props {
   children: React.ReactNode;
-  variant?: "default" | "login" | "register";
+  variant?: "default" | "login" | "register" | "forgot";
 }
 
 export default function AuthLayout({ children, variant = "default" }: Props) {
@@ -55,7 +55,7 @@ export default function AuthLayout({ children, variant = "default" }: Props) {
         </>
       )}
 
-      {(variant === "register" || variant === "login") && (
+      {(variant === "register" || variant === "login" || variant === "forgot") && (
         <>
           <img src={starTwo} alt="" aria-hidden="true" className="cna-auth-deco absolute top-0 left-130 w-[107px] h-[108px]" />
           <img src={starTwo} alt="" aria-hidden="true" className="cna-auth-deco absolute inset-y-100 w-[248px] h-[231px]" />
@@ -76,7 +76,7 @@ export default function AuthLayout({ children, variant = "default" }: Props) {
             src={LOGO_URL}
             alt="BotLeague"
             className={
-              variant === "login" || variant === "register"
+              variant === "login" || variant === "register" || variant === "forgot"
                 ? "cna-logo cna-logo--auth object-contain"
                 : "cna-logo h-10 object-contain md:h-14"
             }
@@ -101,7 +101,7 @@ export default function AuthLayout({ children, variant = "default" }: Props) {
           </div>
         )}
 
-        {variant === "register" && (
+        {(variant === "register" || variant === "forgot") && (
           <div className="cna-gradient-card--register rounded-xl w-full max-w-[692px] mx-auto">
             {children}
           </div>

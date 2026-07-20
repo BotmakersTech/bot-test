@@ -1,61 +1,51 @@
 import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { Check } from "lucide-react";
 import AuthLayout from "../../../layouts/AuthLayout";
 import AuthCard from "../components/AuthCard";
+import PasswordSection from "../components/PasswordSection";
 import { resetPasswordWithToken } from "../api/auth.api";
 
-const inp: React.CSSProperties = {
-  width: "100%",
-  background: "rgba(255,255,255,0.06)",
-  border: "1px solid rgba(255,255,255,0.15)",
-  borderRadius: "0.5rem",
-  color: "#fff",
-  fontSize: "0.9rem",
-  padding: "0.7rem 1rem",
-  outline: "none",
-  boxSizing: "border-box",
-  fontFamily: "inherit",
+const TITLE = (
+  <>
+    <span className="text-[#1a1a2e]">Forget </span>Password
+  </>
+);
+
+const err = (e: unknown): string => {
+  if (axios.isAxiosError(e))
+    return e.response?.data?.message ?? e.response?.data?.error ?? "Reset failed. The link may have expired.";
+  return "Something went wrong";
 };
 
-const primaryBtn = (disabled?: boolean): React.CSSProperties => ({
-  width: "100%",
-  padding: "0.75rem",
-  border: "none",
-  borderRadius: "0.5rem",
-  background: disabled ? "rgba(250,71,21,0.4)" : "linear-gradient(135deg,#ff4d4d,#fa4715)",
-  color: "#fff",
-  fontSize: "0.9rem",
-  fontWeight: 700,
-  cursor: disabled ? "not-allowed" : "pointer",
-  fontFamily: "inherit",
-  transition: "opacity 0.15s",
-});
-
 export default function ResetPasswordPage() {
-  const [params]   = useSearchParams();
-  const navigate   = useNavigate();
-  const token      = params.get("token") ?? "";
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const token = params.get("token") ?? "";
 
-  const [password,  setPassword]  = useState("");
-  const [confirmPw, setConfirmPw] = useState("");
-  const [loading,   setLoading]   = useState(false);
-  const [error,     setError]     = useState<string | null>(null);
-  const [done,      setDone]      = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
 
   // Invalid / missing token
   if (!token) {
     return (
-      <AuthLayout>
-        <AuthCard title="Invalid Link" subtitle="This reset link is missing or malformed">
-          <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: "16px" }}>
-            <div style={{ fontSize: "2.5rem" }}>⚠️</div>
-            <p style={{ margin: 0, fontSize: "0.85rem", color: "#9ca3af" }}>
-              The password reset link is invalid or has expired.
-              Please request a new one.
+      <AuthLayout variant="forgot">
+        <AuthCard title={TITLE} variant="forgot">
+          <div className="flex flex-col items-center text-center" style={{ gap: "clamp(10px, 1.8dvh, 20px)" }}>
+            <p className="text-[15px] md:text-[16px] font-inter text-gray-700">
+              This reset link is invalid or has expired. Please request a new one.
             </p>
-            <a href="/forgot-password"
-               style={{ color: "#fa4715", fontWeight: 700, fontSize: "0.88rem", textDecoration: "none" }}>
-              Request new link →
+            <a
+              href="/forgot-password"
+              className="cna-register-submit-btn w-full rounded-lg font-semibold tracking-tight text-center
+                text-[16px] md:text-[17px] lg:text-[18px]"
+              style={{ fontFamily: "var(--auth-poppins)" }}
+            >
+              Request New Link
             </a>
           </div>
         </AuthCard>
@@ -63,36 +53,63 @@ export default function ResetPasswordPage() {
     );
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setError(null);
-    if (password.length < 8) { setError("Password must be at least 8 characters"); return; }
-    if (password !== confirmPw) { setError("Passwords do not match"); return; }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
     try {
-      setLoading(true);
+      setIsLoading(true);
       await resetPasswordWithToken({ token, newPassword: password });
       setDone(true);
       setTimeout(() => navigate("/login"), 2000);
-    } catch (e: any) {
-      setError(
-        e?.response?.data?.message ??
-        e?.response?.data?.error ??
-        "Reset failed. The link may have expired."
-      );
+    } catch (e) {
+      setError(err(e));
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   if (done) {
     return (
-      <AuthLayout>
-        <AuthCard title="Password Reset" subtitle="Your password has been updated">
-          <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: "16px" }}>
-            <div style={{ fontSize: "2.5rem" }}>✅</div>
-            <p style={{ margin: 0, fontSize: "0.85rem", color: "#4ade80", fontWeight: 600 }}>
-              Password reset successful! Redirecting to login…
+      <AuthLayout variant="forgot">
+        <AuthCard title={TITLE} variant="forgot">
+          <div className="flex flex-col items-center text-center" style={{ gap: "clamp(14px, 2.4dvh, 28px)" }}>
+            <div
+              className="flex items-center justify-center rounded-full"
+              style={{
+                width: 78,
+                height: 78,
+                background: "#E4E7FC",
+                border: "2px solid #6f79f0",
+              }}
+            >
+              <Check className="w-9 h-9" style={{ color: "#4F6EF7" }} strokeWidth={2.5} />
+            </div>
+
+            <p
+              className="font-semibold text-[#4F6EF7]"
+              style={{ fontFamily: "var(--auth-poppins)", fontSize: "clamp(17px, 2.6dvh, 22px)" }}
+            >
+              Password reset successfully
             </p>
+
+            <button
+              type="button"
+              onClick={() => navigate("/login")}
+              className="cna-register-submit-btn w-full rounded-lg font-semibold tracking-tight uppercase
+                text-[16px] md:text-[17px] lg:text-[18px]"
+              style={{ fontFamily: "var(--auth-poppins)" }}
+            >
+              Login
+            </button>
           </div>
         </AuthCard>
       </AuthLayout>
@@ -100,67 +117,30 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <AuthLayout>
-      <AuthCard title="Set New Password" subtitle="Enter and confirm your new password">
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+    <AuthLayout variant="forgot">
+      <AuthCard title={TITLE} variant="forgot">
+        <PasswordSection
+          password={password}
+          setPassword={setPassword}
+          confirmPassword={confirmPassword}
+          setConfirmPassword={setConfirmPassword}
+          disabled={false}
+          labels={{ password: "Enter new password", confirm: "confirm password" }}
+          hideHint
+        />
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            <label style={{ fontSize: "0.72rem", color: "#9ca3af", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase" }}>
-              New Password
-            </label>
-            <input
-              type="password"
-              placeholder="At least 8 characters"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              style={inp}
-              autoFocus
-            />
-          </div>
+        {error && <p className="cna-field-error text-center">{error}</p>}
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            <label style={{ fontSize: "0.72rem", color: "#9ca3af", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase" }}>
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              placeholder="Repeat password"
-              value={confirmPw}
-              onChange={e => setConfirmPw(e.target.value)}
-              style={{
-                ...inp,
-                borderColor: confirmPw && confirmPw !== password
-                  ? "#f87171"
-                  : confirmPw && confirmPw === password
-                    ? "#4ade80"
-                    : "rgba(255,255,255,0.15)",
-              }}
-            />
-            {confirmPw && confirmPw !== password && (
-              <span style={{ fontSize: "0.75rem", color: "#f87171" }}>Passwords do not match</span>
-            )}
-          </div>
-
-          {error && (
-            <div style={{ padding: "10px 14px", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", borderRadius: "8px", fontSize: "0.82rem", color: "#f87171" }}>
-              ⚠️ {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading || password.length < 8 || password !== confirmPw}
-            style={primaryBtn(loading || password.length < 8 || password !== confirmPw)}
-          >
-            {loading ? "Resetting…" : "Set New Password ✓"}
-          </button>
-
-          <p style={{ textAlign: "center", fontSize: "0.82rem", color: "#6b7280", margin: 0 }}>
-            <a href="/forgot-password" style={{ color: "#fa4715", fontWeight: 700, textDecoration: "none" }}>
-              ← Request a new link
-            </a>
-          </p>
-        </form>
+        <button
+          type="button"
+          onClick={() => void handleSubmit()}
+          disabled={isLoading}
+          className="cna-register-submit-btn w-full rounded-lg font-semibold tracking-tight uppercase
+            text-[16px] md:text-[17px] lg:text-[18px]"
+          style={{ fontFamily: "var(--auth-poppins)" }}
+        >
+          {isLoading ? "Updating…" : "Update"}
+        </button>
       </AuthCard>
     </AuthLayout>
   );

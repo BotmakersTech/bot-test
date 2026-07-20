@@ -1,8 +1,8 @@
 interface Props {
-  title: string;
+  title: React.ReactNode;
   subtitle?: string;
   children: React.ReactNode;
-  variant?: "default" | "login" | "register";
+  variant?: "default" | "login" | "register" | "forgot";
 }
 
 export default function AuthCard({
@@ -49,7 +49,7 @@ export default function AuthCard({
     );
   }
 
-  if (variant === "register") {
+  if (variant === "register" || variant === "forgot") {
     return (
       <div
         className="relative flex flex-col w-full"
