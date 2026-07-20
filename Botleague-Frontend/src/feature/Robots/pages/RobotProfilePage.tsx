@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Pencil, Percent, Share2, Swords, Trophy } from "lucide-react";
+import { ArrowLeft, Pencil, Percent, Share2, Star, Swords, Trophy } from "lucide-react";
 
 import { useAppSelector } from "../../../app/hooks";
 import useTeamMembership from "../../Team/TeamMembership/hooks/useTeamMembership";
@@ -153,6 +153,14 @@ export default function RobotProfilePage() {
                 </button>
               )}
             </div>
+
+            {profile && (profile.goldMedals + profile.silverMedals + profile.bronzeMedals) > 0 && (
+              <div className="rprofile-medals">
+                {profile.goldMedals > 0 && <span className="gold">🥇 {profile.goldMedals}× Gold</span>}
+                {profile.silverMedals > 0 && <span className="silver">🥈 {profile.silverMedals}× Silver</span>}
+                {profile.bronzeMedals > 0 && <span className="bronze">🥉 {profile.bronzeMedals}× Bronze</span>}
+              </div>
+            )}
           </div>
 
           <div className="rprofile-avatar-stage">
@@ -185,8 +193,48 @@ export default function RobotProfilePage() {
               <strong>{winRate}%</strong>
               <span>Win Rate</span>
             </div>
+            <div className="rprofile-stat-ribbon">
+              <span className="rprofile-stat-icon"><Star size={35} /></span>
+              <strong>{profile?.totalPoints ?? 0}</strong>
+              <span>Points</span>
+            </div>
           </div>
         </section>
+
+        {(profile?.sport || profile?.ageCategory || profile?.controlType || profile?.controlMode ||
+          profile?.weightKg || profile?.lengthCm || profile?.description) && (
+          <section className="rprofile-specs">
+            <h2>Specifications</h2>
+            <div className="rprofile-specs-grid">
+              <div className="rprofile-specs-card">
+                <h3>Technical</h3>
+                <div className="rprofile-spec-row"><span>Sport</span><span>{toLabel(profile?.sport)}</span></div>
+                <div className="rprofile-spec-row"><span>Age Category</span><span>{toLabel(profile?.ageCategory)}</span></div>
+                <div className="rprofile-spec-row"><span>Robot Type</span><span>{toLabel(profile?.robotType)}</span></div>
+                <div className="rprofile-spec-row"><span>Control</span><span>{toLabel(profile?.controlType)}</span></div>
+                <div className="rprofile-spec-row"><span>Connection</span><span>{toLabel(profile?.controlMode)}</span></div>
+                <div className="rprofile-spec-row"><span>Weight Class</span><span>{toLabel(profile?.weightClass)}</span></div>
+              </div>
+
+              {(profile?.weightKg || profile?.lengthCm || profile?.widthCm || profile?.heightCm) && (
+                <div className="rprofile-specs-card">
+                  <h3>Physical</h3>
+                  {profile?.weightKg != null && <div className="rprofile-spec-row"><span>Weight</span><span>{profile.weightKg} kg</span></div>}
+                  {profile?.lengthCm != null && <div className="rprofile-spec-row"><span>Length</span><span>{profile.lengthCm} cm</span></div>}
+                  {profile?.widthCm != null && <div className="rprofile-spec-row"><span>Width</span><span>{profile.widthCm} cm</span></div>}
+                  {profile?.heightCm != null && <div className="rprofile-spec-row"><span>Height</span><span>{profile.heightCm} cm</span></div>}
+                </div>
+              )}
+
+              {profile?.description && (
+                <div className="rprofile-specs-card">
+                  <h3>About</h3>
+                  <p className="rprofile-specs-about">{profile.description}</p>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         <section className="rprofile-records">
           <h2>Tournament Records</h2>
@@ -199,15 +247,19 @@ export default function RobotProfilePage() {
             <div className="rprofile-table">
               <div className="rprofile-table-head">
                 <span>Tournament</span>
+                <span>Matches</span>
+                <span>Wins</span>
+                <span>Losses</span>
                 <span>Points</span>
-                <span>Sports</span>
                 <span>Position</span>
               </div>
               {profile.records.map((rec, i) => (
                 <div className="rprofile-table-row" key={`${rec.eventSportId}-${i}`}>
                   <span className="rprofile-table-tournament">{rec.eventName ?? "Unknown Event"}</span>
+                  <span>{rec.matchesPlayed}</span>
+                  <span>{rec.wins}</span>
+                  <span>{rec.losses}</span>
                   <span>{rec.pointsEarned}</span>
-                  <span>{toLabel(rec.sport)}</span>
                   <span>{rec.eventRank ? ordinal(rec.eventRank) : "-"}</span>
                 </div>
               ))}

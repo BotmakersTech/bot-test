@@ -132,6 +132,18 @@
   margin-top: 62px;
 }
 
+.rprofile-medals {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.rprofile-medals .gold   { color: #b45309; }
+.rprofile-medals .silver { color: #6b7280; }
+.rprofile-medals .bronze { color: #92400e; }
+
 .rprofile-actions button {
   display: inline-flex;
   min-width: 126px;
@@ -270,6 +282,73 @@
   font-weight: 700;
 }
 
+/* ── Specs section — shared by the editable (/robots/:id) and public
+   (/robot/:id) pages so both render identically; only the Edit button's
+   presence differs between them. ─────────────────────────────────────── */
+.rprofile-specs {
+  margin-bottom: 34px;
+}
+
+.rprofile-specs h2 {
+  margin: 0 0 18px;
+  color: #536be9;
+  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.rprofile-specs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.rprofile-specs-card {
+  border: 1.5px solid #7c66ff;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 20px 24px;
+}
+
+.rprofile-specs-card h3 {
+  margin: 0 0 12px;
+  color: #8c6cff;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.rprofile-spec-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid #ece9ff;
+}
+.rprofile-spec-row:last-child { border-bottom: none; }
+
+.rprofile-spec-row span:first-child {
+  font-size: 14px;
+  color: #7e7e7e;
+  flex-shrink: 0;
+}
+.rprofile-spec-row span:last-child {
+  font-size: 15px;
+  font-weight: 700;
+  color: #2c2c2c;
+  text-align: right;
+}
+
+.rprofile-specs-about {
+  margin: 0;
+  color: #4d4d4d;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
 .rprofile-records h2 {
   margin: 0 0 18px;
   color: #536be9;
@@ -300,7 +379,7 @@
 .rprofile-table-head,
 .rprofile-table-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
+  grid-template-columns: 2fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr;
   align-items: center;
   gap: 16px;
   padding: 16px 24px;
@@ -461,25 +540,29 @@
 }
 
 @media (max-width: 900px) {
+  /* Drop Wins/Losses — Tournament, Matches, Points, Position remain. */
   .rprofile-table-head,
   .rprofile-table-row {
-    grid-template-columns: 1.4fr 1fr 1fr;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
   }
 
   .rprofile-table-head span:nth-child(3),
-  .rprofile-table-row span:nth-child(3) {
+  .rprofile-table-row span:nth-child(3),
+  .rprofile-table-head span:nth-child(4),
+  .rprofile-table-row span:nth-child(4) {
     display: none;
   }
 }
 
 @media (max-width: 560px) {
+  /* Also drop Matches — Tournament, Points, Position remain. */
   .rprofile-table-head,
   .rprofile-table-row {
-    grid-template-columns: 1.4fr 1fr;
+    grid-template-columns: 1.6fr 1fr 1fr;
   }
 
-  .rprofile-table-head span:nth-child(4),
-  .rprofile-table-row span:nth-child(4) {
+  .rprofile-table-head span:nth-child(2),
+  .rprofile-table-row span:nth-child(2) {
     display: none;
   }
 }
