@@ -23,7 +23,7 @@ function StatItem({ icon, value, label }: StatItemProps) {
         {icon}
       </div>
       <div>
-        <div className="text-2xl font-extrabold text-gray-900 leading-none" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{value}</div>
+        <div className="text-2xl font-extrabold text-gray-900 leading-none" style={{ fontFamily: "Poppins, sans-serif" }}>{value}</div>
         <div className="text-[11px] font-bold tracking-wider text-gray-500 mt-1">{label}</div>
       </div>
     </div>

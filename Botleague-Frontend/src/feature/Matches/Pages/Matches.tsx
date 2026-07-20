@@ -117,7 +117,7 @@ function MatchCard({ match, onClick }: { match: PublicMatchView; onClick: () => 
         {/* Robot A */}
         <div style={{ flex: 1 }}>
           <div style={{
-            fontWeight: 800, fontSize: "0.92rem", fontFamily: "'Orbitron', sans-serif",
+            fontWeight: 800, fontSize: "0.92rem", fontFamily: "'Sarpanch', sans-serif",
             color: won(match.teamARegistrationId) ? "#4ade80" : TEXT,
             display: "flex", alignItems: "center", gap: "5px",
           }}>
@@ -137,18 +137,18 @@ function MatchCard({ match, onClick }: { match: PublicMatchView; onClick: () => 
           borderRadius: "8px", padding: "6px 14px", textAlign: "center", minWidth: "80px", flexShrink: 0,
         }}>
           {match.teamAScore != null && match.teamBScore != null ? (
-            <div style={{ fontFamily: "'Orbitron', sans-serif", fontWeight: 900, fontSize: "1.05rem", color: ACCENT, letterSpacing: "0.05em" }}>
+            <div style={{ fontFamily: "'Sarpanch', sans-serif", fontWeight: 900, fontSize: "1.05rem", color: ACCENT, letterSpacing: "0.05em" }}>
               {match.teamAScore} — {match.teamBScore}
             </div>
           ) : (
-            <div style={{ fontFamily: "'Orbitron', sans-serif", fontWeight: 700, fontSize: "0.78rem", color: MUTED }}>VS</div>
+            <div style={{ fontFamily: "'Sarpanch', sans-serif", fontWeight: 700, fontSize: "0.78rem", color: MUTED }}>VS</div>
           )}
         </div>
 
         {/* Robot B */}
         <div style={{ flex: 1, textAlign: "right" }}>
           <div style={{
-            fontWeight: 800, fontSize: "0.92rem", fontFamily: "'Orbitron', sans-serif",
+            fontWeight: 800, fontSize: "0.92rem", fontFamily: "'Sarpanch', sans-serif",
             color: won(match.teamBRegistrationId) ? "#4ade80" : TEXT,
             display: "flex", alignItems: "center", gap: "5px", justifyContent: "flex-end",
           }}>
@@ -361,7 +361,7 @@ export default function SearchMatches() {
         <div style={{ marginBottom: "24px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "4px" }}>
             <div style={{ width: "4px", height: "30px", background: `linear-gradient(to bottom, ${ACCENT}, ${ACCENT2})`, borderRadius: "2px", boxShadow: "0 0 10px rgba(250,71,21,0.5)" }} />
-            <h1 style={{ margin: 0, fontSize: "1.65rem", fontFamily: "'Orbitron', sans-serif", fontWeight: 700, letterSpacing: "0.06em" }}>MATCHES</h1>
+            <h1 style={{ margin: 0, fontSize: "1.65rem", fontFamily: "'Sarpanch', sans-serif", fontWeight: 700, letterSpacing: "0.06em" }}>MATCHES</h1>
           </div>
           <p style={{ margin: 0, color: MUTED, fontSize: "0.8rem", marginLeft: "16px" }}>All tournament matches, grouped by sport</p>
         </div>
@@ -376,7 +376,7 @@ export default function SearchMatches() {
               { label: "Completed", val: totalCompleted,  color: MUTED },
             ].map(s => (
               <div key={s.label} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: "10px", padding: "7px 14px", display: "flex", alignItems: "center", gap: "7px" }}>
-                <span style={{ fontSize: "1rem", fontWeight: 800, fontFamily: "'Orbitron', sans-serif", color: s.color }}>{s.val}</span>
+                <span style={{ fontSize: "1rem", fontWeight: 800, fontFamily: "'Sarpanch', sans-serif", color: s.color }}>{s.val}</span>
                 <span style={{ fontSize: "0.65rem", color: MUTED, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>{s.label}</span>
               </div>
             ))}
@@ -460,7 +460,7 @@ export default function SearchMatches() {
             {sortedSportIds.length === 0 ? (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "60px 24px", gap: "12px", textAlign: "center" }}>
                 <div style={{ fontSize: "2.4rem" }}>⚔️</div>
-                <div style={{ fontFamily: "'Orbitron', sans-serif", fontWeight: 700, fontSize: "0.88rem", letterSpacing: "0.08em", color: "#e5e7eb" }}>NO MATCHES FOUND</div>
+                <div style={{ fontFamily: "'Sarpanch', sans-serif", fontWeight: 700, fontSize: "0.88rem", letterSpacing: "0.08em", color: "#e5e7eb" }}>NO MATCHES FOUND</div>
                 <div style={{ color: MUTED, fontSize: "0.78rem" }}>Try adjusting your search or filters.</div>
               </div>
             ) : (

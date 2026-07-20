@@ -472,7 +472,7 @@ function SportsPanel({
             display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem",
           }}>🏅</div>
           <div>
-            <div style={{ color: TEXT, fontWeight: 700, fontSize: "0.88rem", fontFamily: "'Orbitron', sans-serif", letterSpacing: "0.05em" }}>
+            <div style={{ color: TEXT, fontWeight: 700, fontSize: "0.88rem", fontFamily: "'Sarpanch', sans-serif", letterSpacing: "0.05em" }}>
               {event.eventName}
             </div>
             <div style={{ color: MUTED, fontSize: "0.73rem", marginTop: "1px" }}>
@@ -599,7 +599,7 @@ function LineupModal({
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <div style={{ width: "4px", height: "36px", background: isCaptain ? `linear-gradient(to bottom, ${ACCENT}, ${ACCENT2})` : `linear-gradient(to bottom, ${INFO}, rgba(96,165,250,0.4))`, borderRadius: "2px" }} />
             <div>
-              <h2 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700, fontFamily: "'Orbitron', sans-serif", color: TEXT, letterSpacing: "0.08em" }}>
+              <h2 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700, fontFamily: "'Sarpanch', sans-serif", color: TEXT, letterSpacing: "0.08em" }}>
                 {isCaptain ? "LINEUP MANAGER" : "TEAM LINEUP"}
               </h2>
               <p style={{ margin: "3px 0 0", color: MUTED, fontSize: "0.78rem" }}>{registration.teamName}</p>
@@ -772,7 +772,7 @@ function RobotPickerModal({ sport, robots, busy, onConfirm, onClose }: RobotPick
       <div style={{ background: "linear-gradient(160deg, #2e2e2e 0%, #1e1e1e 100%)", border: "1px solid rgba(250,71,21,0.22)", borderRadius: "18px", padding: "28px", width: "100%", maxWidth: "420px", boxShadow: "0 28px 70px rgba(0,0,0,0.65)", animation: "fadeSlideIn 0.22s ease" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, fontFamily: "'Orbitron', sans-serif", color: TEXT, letterSpacing: "0.07em" }}>SELECT ROBOT</h2>
+            <h2 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, fontFamily: "'Sarpanch', sans-serif", color: TEXT, letterSpacing: "0.07em" }}>SELECT ROBOT</h2>
             <p style={{ margin: "4px 0 0", color: MUTED, fontSize: "0.76rem" }}>Registering for: {sport.sport}</p>
           </div>
           <button onClick={onClose} style={{ background: "rgba(255,255,255,0.07)", border: "none", color: MUTED, borderRadius: "50%", width: "30px", height: "30px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px" }}>✕</button>
@@ -971,7 +971,7 @@ export default function SearchEvents() {
         <div style={{ marginBottom: "28px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "6px" }}>
             <div style={{ width: "4px", height: "34px", background: `linear-gradient(to bottom, ${ACCENT}, ${ACCENT2})`, borderRadius: "2px", boxShadow: "0 0 10px rgba(250,71,21,0.5)" }} />
-            <h1 style={{ margin: 0, fontSize: "1.9rem", fontFamily: "'Orbitron', sans-serif", fontWeight: 700, letterSpacing: "0.1em" }}>FIND EVENTS</h1>
+            <h1 style={{ margin: 0, fontSize: "1.9rem", fontFamily: "'Sarpanch', sans-serif", fontWeight: 700, letterSpacing: "0.1em" }}>FIND EVENTS</h1>
           </div>
           <div style={{ marginLeft: "16px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
             <p style={{ margin: 0, color: MUTED, fontSize: "0.85rem" }}>Discover, register, and build your competition lineup</p>
@@ -1054,7 +1054,7 @@ export default function SearchEvents() {
             {/* Events column */}
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-                <span style={{ fontSize: "0.67rem", fontWeight: 700, letterSpacing: "0.12em", color: ACCENT, textTransform: "uppercase", fontFamily: "'Orbitron', sans-serif" }}>Live Events</span>
+                <span style={{ fontSize: "0.67rem", fontWeight: 700, letterSpacing: "0.12em", color: ACCENT, textTransform: "uppercase", fontFamily: "'Sarpanch', sans-serif" }}>Live Events</span>
                 <span style={{ background: "rgba(250,71,21,0.13)", border: "1px solid rgba(250,71,21,0.25)", color: ACCENT, borderRadius: "999px", fontSize: "0.7rem", padding: "1px 9px", fontWeight: 700 }}>{filteredEvents.length}</span>
               </div>
               {filteredEvents.length === 0 ? (
@@ -1082,7 +1082,7 @@ export default function SearchEvents() {
             {selectedEvent && (
               <div style={{ animation: "fadeSlideIn 0.25s ease", position: "sticky", top: "20px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-                  <span style={{ fontSize: "0.67rem", fontWeight: 700, letterSpacing: "0.12em", color: ACCENT, textTransform: "uppercase", fontFamily: "'Orbitron', sans-serif" }}>Sport Categories</span>
+                  <span style={{ fontSize: "0.67rem", fontWeight: 700, letterSpacing: "0.12em", color: ACCENT, textTransform: "uppercase", fontFamily: "'Sarpanch', sans-serif" }}>Sport Categories</span>
                   {eventSports.length > 0 && <span style={{ background: "rgba(250,71,21,0.13)", border: "1px solid rgba(250,71,21,0.25)", color: ACCENT, borderRadius: "999px", fontSize: "0.7rem", padding: "1px 9px", fontWeight: 700 }}>{eventSports.length}</span>}
                 </div>
                 <SportsPanel
@@ -1109,7 +1109,7 @@ export default function SearchEvents() {
         {!loading && !eventsError && events.length === 0 && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "35vh", textAlign: "center" }}>
             <div style={{ width: "80px", height: "80px", borderRadius: "18px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(250,71,21,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.5rem", marginBottom: "16px" }}>🏟️</div>
-            <h3 style={{ margin: "0 0 8px", fontSize: "0.95rem", fontFamily: "'Orbitron', sans-serif", color: LABEL, letterSpacing: "0.06em" }}>NO LIVE EVENTS</h3>
+            <h3 style={{ margin: "0 0 8px", fontSize: "0.95rem", fontFamily: "'Sarpanch', sans-serif", color: LABEL, letterSpacing: "0.06em" }}>NO LIVE EVENTS</h3>
             <p style={{ color: MUTED, fontSize: "0.82rem", maxWidth: "240px" }}>Check back soon for upcoming competitions</p>
           </div>
         )}

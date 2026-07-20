@@ -774,7 +774,7 @@ export default function TournamentBracket() {
                 fill={ri === rounds.length - 1 ? T.accent : T.textMuted}
                 fontSize={11}
                 fontWeight={700}
-                fontFamily="'Syne', 'Inter', sans-serif"
+                fontFamily="'Inter', sans-serif"
                 letterSpacing={1.5}
                 style={{ textTransform: "uppercase" }}
               >
@@ -848,7 +848,7 @@ export default function TournamentBracket() {
                       x={x + w - 8} y={y + 13}
                       fontSize={8} fontWeight={700}
                       fill={match.matchType === "FATAL_FOUR" ? T.purple : T.gold}
-                      fontFamily="'Syne', 'Inter', sans-serif"
+                      fontFamily="'Inter', sans-serif"
                       textAnchor="end" letterSpacing={0.5}
                     >
                       {matchTypeLabel(match.matchType).toUpperCase()}
@@ -878,7 +878,7 @@ export default function TournamentBracket() {
                           fontSize={11}
                           fontWeight={isWinner ? 700 : 400}
                           fill={nameColor}
-                          fontFamily="'Syne', 'Inter', sans-serif"
+                          fontFamily="'Inter', sans-serif"
                         >
                           {team.name || (team.id ? "…" : "TBD")}
                         </text>
@@ -888,7 +888,7 @@ export default function TournamentBracket() {
                             y={rowY + rowH / 2 + 5}
                             fontSize={12} fontWeight={700}
                             fill={isWinner ? T.green : T.textSub}
-                            fontFamily="'Syne', 'Inter', sans-serif"
+                            fontFamily="'Inter', sans-serif"
                             textAnchor="end"
                           >
                             {team.score ?? 0}
@@ -903,7 +903,7 @@ export default function TournamentBracket() {
                       x={x + w - 10} y={y + h / 2 + 4}
                       fontSize={9} fontWeight={700}
                       fill={T.textMuted}
-                      fontFamily="'Syne', 'Inter', sans-serif"
+                      fontFamily="'Inter', sans-serif"
                       textAnchor="end" letterSpacing={1}
                     >BYE</text>
                   )}
@@ -986,7 +986,7 @@ export default function TournamentBracket() {
                     <span style={{
                       fontSize: 11, fontWeight: isWinner ? 700 : 400,
                       color: isWinner ? T.green : team.name ? T.text : T.textMuted,
-                      fontFamily: "'Syne','Inter',sans-serif",
+                      fontFamily: "'Inter',sans-serif",
                     }}>
                       {team.name || "TBD"}
                     </span>
@@ -994,7 +994,7 @@ export default function TournamentBracket() {
                   {showScore && (
                     <span style={{
                       fontSize: 14, fontWeight: 800, lineHeight: 1,
-                      fontFamily: "'Syne','Inter',sans-serif",
+                      fontFamily: "'Inter',sans-serif",
                       color: isWinner ? T.green : T.textSub,
                     }}>
                       {team.score ?? 0}
@@ -1541,7 +1541,7 @@ const styles: Record<string, React.CSSProperties> = {
   page: {
     background: T.bg, minHeight: "100vh",
     padding: "28px 32px",
-    fontFamily: "'Syne', 'Inter', system-ui, sans-serif",
+    fontFamily: "'Inter', system-ui, sans-serif",
     color: T.text,
   },
 
@@ -1713,7 +1713,7 @@ const styles: Record<string, React.CSSProperties> = {
   thirdPlaceTypeBadge: {
     position: "absolute" as const, right: 10, top: 8,
     fontSize: 7, fontWeight: 700, color: T.purple,
-    fontFamily: "'Syne', 'Inter', sans-serif",
+    fontFamily: "'Inter', sans-serif",
     letterSpacing: "0.05em",
   },
   thirdPlaceStatus: {

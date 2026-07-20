@@ -551,7 +551,7 @@ const styles: Record<string, React.CSSProperties> = {
     minHeight: "100vh",
     background: "#282727",
     color: "#e2e8f0",
-    fontFamily: "'Syne', 'Inter', system-ui, sans-serif",
+    fontFamily: "'Inter', system-ui, sans-serif",
     position: "relative",
     overflow: "hidden"
   },

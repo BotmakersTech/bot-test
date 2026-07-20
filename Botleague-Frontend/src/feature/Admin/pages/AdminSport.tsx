@@ -192,7 +192,7 @@ function StatBox({
           fontSize: "1.5rem",
           fontWeight: 700,
           color,
-          fontFamily: "'Orbitron', sans-serif"
+          fontFamily: "'Sarpanch', sans-serif"
         }}>
           {value}
         </div>
@@ -687,7 +687,7 @@ function EditSportModal({
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <Edit2 size={16} style={{ color: ACCENT }} />
-            <span style={{ fontWeight: 700, fontSize: "0.95rem", fontFamily: "'Orbitron', sans-serif", letterSpacing: "0.06em" }}>
+            <span style={{ fontWeight: 700, fontSize: "0.95rem", fontFamily: "'Sarpanch', sans-serif", letterSpacing: "0.06em" }}>
               EDIT SPORT
             </span>
           </div>
@@ -1157,7 +1157,7 @@ export default function AdminSport() {
           <h1 style={{
             margin: 0,
             fontSize: "1.8rem",
-            fontFamily: "'Orbitron', sans-serif",
+            fontFamily: "'Sarpanch', sans-serif",
             fontWeight: 700,
             letterSpacing: "0.08em"
           }}>

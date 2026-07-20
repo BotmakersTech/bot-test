@@ -224,7 +224,7 @@ function StatCard({ label, value, icon }: { label: string; value: string | numbe
       <div style={{ display: "flex", alignItems: "center", gap: "7px", color: MUTED, fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.09em" }}>
         <span>{icon}</span>{label}
       </div>
-      <div style={{ fontSize: "1.5rem", fontWeight: 700, color: TEXT, fontFamily: "'Orbitron', sans-serif" }}>
+      <div style={{ fontSize: "1.5rem", fontWeight: 700, color: TEXT, fontFamily: "'Sarpanch', sans-serif" }}>
         {value}
       </div>
     </div>
@@ -417,7 +417,7 @@ function AddSportModal({ eventId: _eventId, onAddSport, submitting, onClose }: A
         {/* HEADER */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 22px", borderBottom: `1px solid ${BORDER}`, background: "rgba(250,71,21,0.04)", borderRadius: "18px 18px 0 0", flexShrink: 0 }}>
           <div>
-            <div style={{ fontFamily: "'Orbitron', sans-serif", fontWeight: 700, fontSize: "1rem", letterSpacing: "0.06em" }}>ADD SPORT</div>
+            <div style={{ fontFamily: "'Sarpanch', sans-serif", fontWeight: 700, fontSize: "1rem", letterSpacing: "0.06em" }}>ADD SPORT</div>
             <div style={{ fontSize: "0.72rem", color: MUTED, marginTop: "2px" }}>Configure a new sport for this event</div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -559,14 +559,14 @@ function SportCard({ sport, index, eventId, navigate, onApprove, onReject, busy 
             <Trophy size={13} style={{ color: WARNING, flexShrink: 0 }} />
             <div>
               <div style={{ fontSize: "0.62rem", color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>Teams</div>
-              <div style={{ fontSize: "1rem", fontWeight: 700, color: TEXT, fontFamily: "'Orbitron', sans-serif" }}>{teamCount}</div>
+              <div style={{ fontSize: "1rem", fontWeight: 700, color: TEXT, fontFamily: "'Sarpanch', sans-serif" }}>{teamCount}</div>
             </div>
           </div>
           <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "8px 12px", display: "flex", alignItems: "center", gap: "7px" }}>
             <Users size={13} style={{ color: SUCCESS, flexShrink: 0 }} />
             <div>
               <div style={{ fontSize: "0.62rem", color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>Players</div>
-              <div style={{ fontSize: "1rem", fontWeight: 700, color: TEXT, fontFamily: "'Orbitron', sans-serif" }}>{playerCount}</div>
+              <div style={{ fontSize: "1rem", fontWeight: 700, color: TEXT, fontFamily: "'Sarpanch', sans-serif" }}>{playerCount}</div>
             </div>
           </div>
         </div>
@@ -774,7 +774,7 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange, limited
         {/* header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 22px", borderBottom: `1px solid ${BORDER}`, background: "rgba(250,71,21,0.04)", borderRadius: "18px 18px 0 0" }}>
           <div>
-            <div style={{ fontFamily: "'Orbitron', sans-serif", fontWeight: 700, fontSize: "1rem", letterSpacing: "0.06em" }}>EDIT EVENT</div>
+            <div style={{ fontFamily: "'Sarpanch', sans-serif", fontWeight: 700, fontSize: "1rem", letterSpacing: "0.06em" }}>EDIT EVENT</div>
             <div style={{ fontSize: "0.72rem", color: MUTED, marginTop: "2px" }}>
               {limitedEdit ? "Basic info only — event is published" : "Update event details"}
             </div>
@@ -1326,7 +1326,7 @@ export default function AdminEventPage() {
              onClick={e => { if (e.target === e.currentTarget) setPublishConfirm(false) }}>
           <div style={{ background: "#2a2a2a", border: `1px solid rgba(250,71,21,0.3)`, borderRadius: "16px", padding: "28px 28px 24px", width: "100%", maxWidth: "420px", boxShadow: "0 24px 60px rgba(0,0,0,0.5)" }}>
             <div style={{ fontSize: "1.6rem", marginBottom: "12px" }}>📣</div>
-            <h2 style={{ margin: "0 0 8px", fontFamily: "'Orbitron', sans-serif", fontSize: "1rem", fontWeight: 700 }}>Publish Event?</h2>
+            <h2 style={{ margin: "0 0 8px", fontFamily: "'Sarpanch', sans-serif", fontSize: "1rem", fontWeight: 700 }}>Publish Event?</h2>
             <p style={{ margin: "0 0 20px", color: MUTED, fontSize: "0.82rem", lineHeight: 1.6 }}>
               Move <strong style={{ color: TEXT }}>{event.eventName}</strong> from <strong style={{ color: WARNING }}>DRAFT</strong> to <strong style={{ color: ACCENT }}>PUBLISHED</strong>.
             </p>
@@ -1347,7 +1347,7 @@ export default function AdminEventPage() {
              onClick={e => { if (e.target === e.currentTarget) setShowDeleteConfirm(false) }}>
           <div style={{ background: "#2a2a2a", border: "1px solid rgba(248,113,113,0.3)", borderRadius: "16px", padding: "28px 28px 24px", width: "100%", maxWidth: "420px", boxShadow: "0 24px 60px rgba(0,0,0,0.5)" }}>
             <div style={{ fontSize: "1.6rem", marginBottom: "12px" }}>🗑️</div>
-            <h2 style={{ margin: "0 0 8px", fontFamily: "'Orbitron', sans-serif", fontSize: "1rem", fontWeight: 700, color: DANGER }}>Delete Event?</h2>
+            <h2 style={{ margin: "0 0 8px", fontFamily: "'Sarpanch', sans-serif", fontSize: "1rem", fontWeight: 700, color: DANGER }}>Delete Event?</h2>
             <p style={{ margin: "0 0 20px", color: MUTED, fontSize: "0.82rem", lineHeight: 1.6 }}>
               <strong style={{ color: TEXT }}>{event.eventName}</strong> will be permanently removed. This cannot be undone.
             </p>
@@ -1374,7 +1374,7 @@ export default function AdminEventPage() {
       {/* HEADER */}
       <div style={{ marginBottom: "32px" }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
-          <h1 style={{ margin: 0, fontSize: "1.9rem", fontFamily: "'Orbitron', sans-serif", fontWeight: 700, letterSpacing: "0.08em" }}>{event.eventName}</h1>
+          <h1 style={{ margin: 0, fontSize: "1.9rem", fontFamily: "'Sarpanch', sans-serif", fontWeight: 700, letterSpacing: "0.08em" }}>{event.eventName}</h1>
           <div style={{ display: "flex", gap: "10px", flexShrink: 0, flexWrap: "wrap" }}>
             {/* Edit button — ORGANIZER+ */}
             {canEdit && (

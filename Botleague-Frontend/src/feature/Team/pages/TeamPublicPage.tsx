@@ -151,7 +151,7 @@ export default function TeamPublicPage() {
           <div style={{ flex: 1, minWidth: 280 }}>
             {/* Team name + status */}
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 6 }}>
-              <h1 style={{ margin: 0, fontSize: "clamp(1.8rem, 4vw, 2.6rem)", fontWeight: 900, color: GOLD, fontFamily: "'Orbitron', Inter, sans-serif", letterSpacing: "0.02em", lineHeight: 1.1 }}>
+              <h1 style={{ margin: 0, fontSize: "clamp(1.8rem, 4vw, 2.6rem)", fontWeight: 900, color: GOLD, fontFamily: "'Sarpanch', Inter, sans-serif", letterSpacing: "0.02em", lineHeight: 1.1 }}>
                 {profile.teamName}
               </h1>
               {profile.status && (

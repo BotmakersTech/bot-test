@@ -98,7 +98,7 @@ function EmptyState({ icon, title, subtitle }: { icon: string; title: string; su
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "64px 24px", textAlign: "center", gap: "14px" }}>
       <div style={{ width: "80px", height: "80px", borderRadius: "18px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(250,71,21,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.2rem" }}>{icon}</div>
-      <div style={{ fontSize: "0.9rem", fontFamily: "'Orbitron', sans-serif", color: LABEL, letterSpacing: "0.06em", fontWeight: 700 }}>{title}</div>
+      <div style={{ fontSize: "0.9rem", fontFamily: "'Sarpanch', sans-serif", color: LABEL, letterSpacing: "0.06em", fontWeight: 700 }}>{title}</div>
       <div style={{ fontSize: "0.82rem", color: MUTED, maxWidth: "260px", lineHeight: 1.6 }}>{subtitle}</div>
     </div>
   );
@@ -178,7 +178,7 @@ export default function RankingsTab({
             <div style={{ fontSize: "0.62rem", color: GOLD, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>
               Champion
             </div>
-            <div style={{ fontSize: "1.15rem", fontWeight: 800, color: GOLD, fontFamily: "'Orbitron', sans-serif" }}>
+            <div style={{ fontSize: "1.15rem", fontWeight: 800, color: GOLD, fontFamily: "'Sarpanch', sans-serif" }}>
               {championRobotName || championTeamName}
             </div>
             {championRobotName && championTeamName && (
@@ -320,7 +320,7 @@ function EntryRow({ entry, index }: { entry: LeaderboardEntryDTO; index: number 
         ) : (
           <span style={{
             fontSize: "0.95rem", fontWeight: 800, color: LABEL,
-            fontFamily: "'Orbitron', sans-serif",
+            fontFamily: "'Sarpanch', sans-serif",
           }}>
             {entry.rank}
           </span>
@@ -373,17 +373,17 @@ function EntryRow({ entry, index }: { entry: LeaderboardEntryDTO; index: number 
       </div>
 
       {/* Wins */}
-      <span style={{ fontSize: "0.88rem", fontWeight: 700, color: entry.wins > 0 ? SUCCESS : MUTED, fontFamily: "'Orbitron', sans-serif" }}>
+      <span style={{ fontSize: "0.88rem", fontWeight: 700, color: entry.wins > 0 ? SUCCESS : MUTED, fontFamily: "'Sarpanch', sans-serif" }}>
         {entry.wins}
       </span>
 
       {/* Losses */}
-      <span style={{ fontSize: "0.88rem", fontWeight: 700, color: entry.losses > 0 ? DANGER : MUTED, fontFamily: "'Orbitron', sans-serif" }}>
+      <span style={{ fontSize: "0.88rem", fontWeight: 700, color: entry.losses > 0 ? DANGER : MUTED, fontFamily: "'Sarpanch', sans-serif" }}>
         {entry.losses}
       </span>
 
       {/* Played */}
-      <span style={{ fontSize: "0.88rem", fontWeight: 600, color: LABEL, fontFamily: "'Orbitron', sans-serif" }}>
+      <span style={{ fontSize: "0.88rem", fontWeight: 600, color: LABEL, fontFamily: "'Sarpanch', sans-serif" }}>
         {entry.played}
       </span>
 
@@ -391,7 +391,7 @@ function EntryRow({ entry, index }: { entry: LeaderboardEntryDTO; index: number 
       <span style={{
         fontSize: "0.88rem", fontWeight: 700,
         color: diffColor(entry.pointDifferential),
-        fontFamily: "'Orbitron', sans-serif",
+        fontFamily: "'Sarpanch', sans-serif",
       }}>
         {diffLabel(entry.pointDifferential)}
       </span>
@@ -454,7 +454,7 @@ function StatsCard({ entry }: { entry: LeaderboardEntryDTO }) {
             <div style={{ fontSize: "0.54rem", color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "2px" }}>
               {s.label}
             </div>
-            <div style={{ fontSize: "0.85rem", fontWeight: 700, color: s.color, fontFamily: "'Orbitron', sans-serif" }}>
+            <div style={{ fontSize: "0.85rem", fontWeight: 700, color: s.color, fontFamily: "'Sarpanch', sans-serif" }}>
               {s.value}
             </div>
           </div>

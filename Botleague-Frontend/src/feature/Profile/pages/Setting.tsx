@@ -281,7 +281,7 @@ export default function SettingsPage() {
           margin: 0,
           fontSize: "1.2rem",
           fontWeight: 700,
-          fontFamily: "Orbitron, sans-serif",
+          fontFamily: "Sarpanch, sans-serif",
         }}>
           Settings
         </h1>
@@ -395,7 +395,7 @@ export default function SettingsPage() {
                           fontWeight: 700,
                           textAlign: "center",
                           outline: "none",
-                          fontFamily: "Orbitron, sans-serif",
+                          fontFamily: "Sarpanch, sans-serif",
                         }}
                       />
                     ))}

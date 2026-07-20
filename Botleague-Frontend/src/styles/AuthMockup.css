@@ -25,34 +25,14 @@
   src: url("../assets/fonts/Inter_18pt-Medium.ttf") format("truetype");
 }
 @font-face {
-  font-family: "AuthOrbitron";
-  src: url("../assets/fonts/Orbitron-Regular.ttf") format("truetype");
-}
-@font-face {
   font-family: "AuthPoppins";
   src: url("../assets/fonts/Poppins-Medium.ttf") format("truetype");
-}
-@font-face {
-  font-family: "AuthRacingSansOne";
-  src: url("../assets/fonts/RacingSansOne-Regular.ttf") format("truetype");
-}
-@font-face {
-  font-family: "AuthSarpanch";
-  src: url("../assets/fonts/Sarpanch-Regular.ttf") format("truetype");
-}
-@font-face {
-  font-family: "AuthSpaceGrotesk";
-  src: url("../assets/fonts/SpaceGrotesk-Regular.ttf") format("truetype");
 }
 
 .cna-gradient-card--login,
 .cna-gradient-card--register {
   --auth-inter: "AuthInter", sans-serif;
-  --auth-orbitron: "AuthOrbitron", sans-serif;
   --auth-poppins: "AuthPoppins", sans-serif;
-  --auth-racing: "AuthRacingSansOne", sans-serif;
-  --auth-sarpanch: "AuthSarpanch", sans-serif;
-  --auth-spacegrotesk: "AuthSpaceGrotesk", sans-serif;
 }
 
 /* ── Background decorations (register only, hidden below 1100px) ── */

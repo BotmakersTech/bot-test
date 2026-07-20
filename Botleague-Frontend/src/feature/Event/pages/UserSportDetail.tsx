@@ -164,7 +164,7 @@ function StatBox({ icon, label, value, color = TEXT }: { icon: string; label: st
       <span style={{ fontSize: "1.4rem", flexShrink: 0 }}>{icon}</span>
       <div>
         <div style={{ fontSize: "0.62rem", color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</div>
-        <div style={{ fontSize: "1.4rem", fontWeight: 700, color, fontFamily: "'Orbitron', sans-serif" }}>{value}</div>
+        <div style={{ fontSize: "1.4rem", fontWeight: 700, color, fontFamily: "'Sarpanch', sans-serif" }}>{value}</div>
       </div>
     </div>
   );
@@ -186,7 +186,7 @@ function EmptyState({ icon, title, subtitle }: { icon: string; title: string; su
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "64px 24px", textAlign: "center", gap: "14px" }}>
       <div style={{ width: "80px", height: "80px", borderRadius: "18px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(250,71,21,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.2rem" }}>{icon}</div>
-      <div style={{ fontSize: "0.9rem", fontFamily: "'Orbitron', sans-serif", color: LABEL, letterSpacing: "0.06em", fontWeight: 700 }}>{title}</div>
+      <div style={{ fontSize: "0.9rem", fontFamily: "'Sarpanch', sans-serif", color: LABEL, letterSpacing: "0.06em", fontWeight: 700 }}>{title}</div>
       <div style={{ fontSize: "0.82rem", color: MUTED, maxWidth: "260px", lineHeight: 1.6 }}>{subtitle}</div>
     </div>
   );
@@ -1234,7 +1234,7 @@ function MatchCard({ m, accent }: { m: PublicMatchView; accent?: string }) {
           {m.teamARobotName && m.teamAName && <span style={{ fontSize: "0.65rem", color: MUTED }}>{m.teamAName}</span>}
           {m.winnerRegistrationId === m.teamARegistrationId && <span style={{ fontSize: "0.6rem", color: accent ?? SUCCESS, fontWeight: 700 }}>{accent ? "🥉 3rd" : "🏆 Winner"}</span>}
         </div>
-        <span style={{ background: "rgba(0,0,0,0.3)", border: `1px solid ${isLive ? "rgba(250,71,21,0.3)" : BORDER}`, borderRadius: "6px", padding: "4px 12px", fontWeight: 800, color: isLive ? ACCENT : statusColor, fontFamily: "'Orbitron', sans-serif", fontSize: "0.9rem", minWidth: "64px", textAlign: "center" }}>
+        <span style={{ background: "rgba(0,0,0,0.3)", border: `1px solid ${isLive ? "rgba(250,71,21,0.3)" : BORDER}`, borderRadius: "6px", padding: "4px 12px", fontWeight: 800, color: isLive ? ACCENT : statusColor, fontFamily: "'Sarpanch', sans-serif", fontSize: "0.9rem", minWidth: "64px", textAlign: "center" }}>
           {m.teamAScore != null && m.teamBScore != null ? `${m.teamAScore} — ${m.teamBScore}` : "VS"}
         </span>
         <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "flex-end", minWidth: "80px" }}>
@@ -1275,7 +1275,7 @@ function MatchesTab({ matches, loading, error }: { matches: PublicMatchView[]; l
         <div key={round}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
             <div style={{ height: "1px", flex: 1, background: BORDER }} />
-            <span style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", color: ACCENT, textTransform: "uppercase", fontFamily: "'Orbitron', sans-serif" }}>{matchRoundLabel(round)}</span>
+            <span style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", color: ACCENT, textTransform: "uppercase", fontFamily: "'Sarpanch', sans-serif" }}>{matchRoundLabel(round)}</span>
             <div style={{ height: "1px", flex: 1, background: BORDER }} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -1287,7 +1287,7 @@ function MatchesTab({ matches, loading, error }: { matches: PublicMatchView[]; l
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
             <div style={{ height: "1px", flex: 1, background: `${BRONZE}40` }} />
-            <span style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", color: BRONZE, textTransform: "uppercase", fontFamily: "'Orbitron', sans-serif" }}>🥉 3rd Place Match</span>
+            <span style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", color: BRONZE, textTransform: "uppercase", fontFamily: "'Sarpanch', sans-serif" }}>🥉 3rd Place Match</span>
             <div style={{ height: "1px", flex: 1, background: `${BRONZE}40` }} />
           </div>
           <div style={{ background: `rgba(205,127,50,0.06)`, border: `1px solid rgba(205,127,50,0.2)`, borderRadius: "8px", padding: "8px 14px", marginBottom: "10px", fontSize: "0.75rem", color: MUTED }}>
@@ -1339,7 +1339,7 @@ function ScheduleTab({ matches, loading, error }: { matches: PublicMatchView[]; 
       <div style={{ overflowX: "auto", background: "rgba(0,0,0,0.2)", border: `1px solid ${BORDER}`, borderRadius: "14px", padding: "20px", scrollbarWidth: "thin" }}>
         <svg width={svgW + 40} height={svgH + 60} style={{ display: "block", overflow: "visible" }}>
           <defs><filter id="pub-glow"><feGaussianBlur stdDeviation="2.5" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs>
-          {rounds.map((_, ri) => (<text key={ri} x={ri * (BOX_W + H_GAP) + BOX_W / 2 + 20} y={16} textAnchor="middle" fill={ri === rounds.length - 1 ? ACCENT : MUTED} fontSize={11} fontWeight={700} fontFamily="'Orbitron', 'Syne', 'Inter', sans-serif" letterSpacing={1.5}>{roundLabel(ri, rounds.length)}</text>))}
+          {rounds.map((_, ri) => (<text key={ri} x={ri * (BOX_W + H_GAP) + BOX_W / 2 + 20} y={16} textAnchor="middle" fill={ri === rounds.length - 1 ? ACCENT : MUTED} fontSize={11} fontWeight={700} fontFamily="'Sarpanch', 'Inter', sans-serif" letterSpacing={1.5}>{roundLabel(ri, rounds.length)}</text>))}
           <g transform="translate(20, 28)">
             {lines.map((l, i) => { const mx = l.x1 + H_GAP / 2; return <path key={i} d={`M${l.x1},${l.y1} C${mx},${l.y1} ${mx},${l.y2} ${l.x2},${l.y2}`} fill="none" stroke={l.completed ? ACCENT : "rgba(255,255,255,0.1)"} strokeWidth={l.completed ? 1.5 : 1} opacity={l.completed ? 0.65 : 0.3} filter={l.completed ? "url(#pub-glow)" : undefined} />; })}
             {matches.map(match => {
@@ -1356,15 +1356,15 @@ function ScheduleTab({ matches, loading, error }: { matches: PublicMatchView[]; 
                 <g key={match.matchId}>
                   <rect x={x} y={y} width={BOX_W} height={BOX_H} rx={13} ry={13} fill={isBye ? "rgba(255,255,255,0.02)" : is3rd ? "rgba(205,127,50,0.07)" : "rgba(0,0,0,0.35)"} stroke={is3rd ? `rgba(205,127,50,0.35)` : isLive ? "rgba(250,71,21,0.4)" : "rgba(255,255,255,0.07)"} strokeWidth={1} />
                   <rect x={x} y={y} width={3} height={BOX_H} rx={2} ry={2} fill={sc} opacity={isBye ? 0.2 : 0.8} />
-                  {is3rd && <text x={x + BOX_W / 2} y={y - 8} textAnchor="middle" fontSize={9} fontWeight={700} fill={BRONZE} fontFamily="'Orbitron', sans-serif" letterSpacing={1.2}>🥉 3RD PLACE</text>}
-                  <text x={x + 16} y={y + 22} fontSize={12} fontWeight={winnerRegId === teamARegId ? 700 : 400} fill={isBye ? MUTED : winnerRegId === teamARegId ? (is3rd ? BRONZE : SUCCESS) : displayNameA ? TEXT : MUTED} fontFamily="'Syne', 'Inter', sans-serif">{displayNameA ? (displayNameA.length > 16 ? displayNameA.slice(0, 15) + "…" : displayNameA) : (teamARegId ? "…" : "TBD")}</text>
+                  {is3rd && <text x={x + BOX_W / 2} y={y - 8} textAnchor="middle" fontSize={9} fontWeight={700} fill={BRONZE} fontFamily="'Sarpanch', sans-serif" letterSpacing={1.2}>🥉 3RD PLACE</text>}
+                  <text x={x + 16} y={y + 22} fontSize={12} fontWeight={winnerRegId === teamARegId ? 700 : 400} fill={isBye ? MUTED : winnerRegId === teamARegId ? (is3rd ? BRONZE : SUCCESS) : displayNameA ? TEXT : MUTED} fontFamily="'Inter', sans-serif">{displayNameA ? (displayNameA.length > 16 ? displayNameA.slice(0, 15) + "…" : displayNameA) : (teamARegId ? "…" : "TBD")}</text>
                   {match.teamAName && match.teamARobotName && <text x={x + 16} y={y + 33} fontSize={9} fill={MUTED} fontFamily="'Inter', sans-serif">{match.teamAName.length > 18 ? match.teamAName.slice(0, 17) + "…" : match.teamAName}</text>}
-                  {(isCompleted || isLive) && <text x={x + BOX_W - 14} y={y + 24} fontSize={13} fontWeight={700} fill={winnerRegId === teamARegId ? (is3rd ? BRONZE : SUCCESS) : MUTED} fontFamily="'Syne', 'Inter', sans-serif" textAnchor="end">{match.teamAScore ?? 0}</text>}
+                  {(isCompleted || isLive) && <text x={x + BOX_W - 14} y={y + 24} fontSize={13} fontWeight={700} fill={winnerRegId === teamARegId ? (is3rd ? BRONZE : SUCCESS) : MUTED} fontFamily="'Inter', sans-serif" textAnchor="end">{match.teamAScore ?? 0}</text>}
                   <line x1={x + 10} y1={y + BOX_H / 2} x2={x + BOX_W - 10} y2={y + BOX_H / 2} stroke={is3rd ? "rgba(205,127,50,0.15)" : "rgba(255,255,255,0.06)"} strokeWidth={1} />
-                  <text x={x + 16} y={y + BOX_H - 16} fontSize={12} fontWeight={winnerRegId === teamBRegId ? 700 : 400} fill={isBye ? MUTED : winnerRegId === teamBRegId ? (is3rd ? BRONZE : SUCCESS) : displayNameB ? TEXT : MUTED} fontFamily="'Syne', 'Inter', sans-serif">{displayNameB ? (displayNameB.length > 16 ? displayNameB.slice(0, 15) + "…" : displayNameB) : (teamBRegId ? "…" : "TBD")}</text>
+                  <text x={x + 16} y={y + BOX_H - 16} fontSize={12} fontWeight={winnerRegId === teamBRegId ? 700 : 400} fill={isBye ? MUTED : winnerRegId === teamBRegId ? (is3rd ? BRONZE : SUCCESS) : displayNameB ? TEXT : MUTED} fontFamily="'Inter', sans-serif">{displayNameB ? (displayNameB.length > 16 ? displayNameB.slice(0, 15) + "…" : displayNameB) : (teamBRegId ? "…" : "TBD")}</text>
                   {match.teamBName && match.teamBRobotName && <text x={x + 16} y={y + BOX_H - 5} fontSize={9} fill={MUTED} fontFamily="'Inter', sans-serif">{match.teamBName.length > 18 ? match.teamBName.slice(0, 17) + "…" : match.teamBName}</text>}
-                  {(isCompleted || isLive) && <text x={x + BOX_W - 14} y={y + BOX_H - 14} fontSize={13} fontWeight={700} fill={winnerRegId === teamBRegId ? (is3rd ? BRONZE : SUCCESS) : MUTED} fontFamily="'Syne', 'Inter', sans-serif" textAnchor="end">{match.teamBScore ?? 0}</text>}
-                  {isBye && <text x={x + BOX_W - 10} y={y + BOX_H / 2 + 4} fontSize={9} fontWeight={700} fill={MUTED} fontFamily="'Syne', 'Inter', sans-serif" textAnchor="end" letterSpacing={1}>BYE</text>}
+                  {(isCompleted || isLive) && <text x={x + BOX_W - 14} y={y + BOX_H - 14} fontSize={13} fontWeight={700} fill={winnerRegId === teamBRegId ? (is3rd ? BRONZE : SUCCESS) : MUTED} fontFamily="'Inter', sans-serif" textAnchor="end">{match.teamBScore ?? 0}</text>}
+                  {isBye && <text x={x + BOX_W - 10} y={y + BOX_H / 2 + 4} fontSize={9} fontWeight={700} fill={MUTED} fontFamily="'Inter', sans-serif" textAnchor="end" letterSpacing={1}>BYE</text>}
                   {isLive && <circle cx={x + BOX_W - 10} cy={y + 10} r={4} fill={ACCENT} opacity={0.9}><animate attributeName="opacity" values="0.9;0.3;0.9" dur="1.2s" repeatCount="indefinite" /></circle>}
                   {isCompleted && !is3rd && !match.nextMatchId && winnerRegId && <text x={x + BOX_W / 2} y={y - 8} textAnchor="middle" fontSize={14}>🏆</text>}
                   {is3rd && isCompleted && winnerRegId && <text x={x + BOX_W / 2} y={y - 22} textAnchor="middle" fontSize={14}>🥉</text>}
@@ -1384,7 +1384,7 @@ function ScheduleTab({ matches, loading, error }: { matches: PublicMatchView[]; 
           return (
             <div key={ri} style={{ background: CARD, border: `1px solid ${isFinalRound ? "rgba(250,71,21,0.2)" : BORDER}`, borderRadius: "10px", padding: "12px 14px" }}>
               <div style={{ fontSize: "0.62rem", color: isFinalRound ? ACCENT : MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>{label}</div>
-              <div style={{ fontSize: "1.2rem", fontWeight: 800, color: TEXT, fontFamily: "'Orbitron', sans-serif" }}>{completed}/{round.length}</div>
+              <div style={{ fontSize: "1.2rem", fontWeight: 800, color: TEXT, fontFamily: "'Sarpanch', sans-serif" }}>{completed}/{round.length}</div>
               <div style={{ fontSize: "0.7rem", color: MUTED, marginTop: "2px" }}>matches done{live > 0 && <span style={{ color: ACCENT, marginLeft: "6px" }}>· {live} live</span>}</div>
             </div>
           );
@@ -1392,7 +1392,7 @@ function ScheduleTab({ matches, loading, error }: { matches: PublicMatchView[]; 
         {thirdPlaceMatch && (
           <div style={{ background: `rgba(205,127,50,0.06)`, border: `1px solid rgba(205,127,50,0.25)`, borderRadius: "10px", padding: "12px 14px" }}>
             <div style={{ fontSize: "0.62rem", color: BRONZE, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>🥉 3rd Place</div>
-            <div style={{ fontSize: "1.2rem", fontWeight: 800, color: TEXT, fontFamily: "'Orbitron', sans-serif" }}>{thirdPlaceMatch.status === "COMPLETED" ? "1/1" : "0/1"}</div>
+            <div style={{ fontSize: "1.2rem", fontWeight: 800, color: TEXT, fontFamily: "'Sarpanch', sans-serif" }}>{thirdPlaceMatch.status === "COMPLETED" ? "1/1" : "0/1"}</div>
             <div style={{ fontSize: "0.7rem", color: MUTED, marginTop: "2px" }}>{thirdPlaceMatch.status === "COMPLETED" ? "match done" : (thirdPlaceMatch.status === "LIVE" || thirdPlaceMatch.status === "ONGOING") ? <span style={{ color: ACCENT }}>live now</span> : "match pending"}</div>
           </div>
         )}
@@ -1732,7 +1732,7 @@ export default function UserSportDetail() {
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px", marginBottom: "12px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <div style={{ width: "4px", height: "34px", background: `linear-gradient(to bottom, ${ACCENT}, ${ACCENT2})`, borderRadius: "2px", boxShadow: "0 0 10px rgba(250,71,21,0.5)", flexShrink: 0 }} />
-              <h1 style={{ margin: 0, fontSize: "1.85rem", fontFamily: "'Orbitron', sans-serif", fontWeight: 700, letterSpacing: "0.06em" }}>
+              <h1 style={{ margin: 0, fontSize: "1.85rem", fontFamily: "'Sarpanch', sans-serif", fontWeight: 700, letterSpacing: "0.06em" }}>
                 {toLabel(sport.sport)}
               </h1>
             </div>

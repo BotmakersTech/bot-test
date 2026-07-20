@@ -143,11 +143,11 @@ function SportCard({
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
           <div style={{ background: "rgba(0,0,0,0.2)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "8px 10px" }}>
             <div style={{ color: MUTED, fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "3px" }}>Teams</div>
-            <div style={{ color: WARNING, fontWeight: 700, fontSize: "0.95rem", fontFamily: "'Orbitron', sans-serif" }}>{sport.registeredTeamsCount}</div>
+            <div style={{ color: WARNING, fontWeight: 700, fontSize: "0.95rem", fontFamily: "'Sarpanch', sans-serif" }}>{sport.registeredTeamsCount}</div>
           </div>
           <div style={{ background: "rgba(0,0,0,0.2)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "8px 10px" }}>
             <div style={{ color: MUTED, fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "3px" }}>Slots</div>
-            <div style={{ color: isFull ? DANGER : SUCCESS, fontWeight: 700, fontSize: "0.95rem", fontFamily: "'Orbitron', sans-serif" }}>{isFull ? "Full" : spotsLeft}</div>
+            <div style={{ color: isFull ? DANGER : SUCCESS, fontWeight: 700, fontSize: "0.95rem", fontFamily: "'Sarpanch', sans-serif" }}>{isFull ? "Full" : spotsLeft}</div>
           </div>
           <div style={{ background: "rgba(0,0,0,0.2)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "8px 10px" }}>
             <div style={{ color: MUTED, fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "3px" }}>Entry</div>
@@ -313,7 +313,7 @@ export default function UserEventDetail() {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
                 <div style={{ width: "4px", height: "34px", background: `linear-gradient(to bottom, ${ACCENT}, ${ACCENT2})`, borderRadius: "2px", boxShadow: "0 0 10px rgba(250,71,21,0.5)", flexShrink: 0 }} />
-                <h1 style={{ margin: 0, fontSize: "1.85rem", fontFamily: "'Orbitron', sans-serif", fontWeight: 700, letterSpacing: "0.06em" }}>
+                <h1 style={{ margin: 0, fontSize: "1.85rem", fontFamily: "'Sarpanch', sans-serif", fontWeight: 700, letterSpacing: "0.06em" }}>
                   {event.eventName}
                 </h1>
               </div>
