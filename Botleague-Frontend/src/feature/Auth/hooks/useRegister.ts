@@ -1,11 +1,22 @@
 import { useState, useEffect } from "react";
-import { sendOtp, verifyOtp, resendOTP, register } from "../api/auth.api";
+import { sendOtp, resendOTP, register } from "../api/auth.api";
 import { useNavigate } from "react-router-dom";
 import { getProfile } from "../../Profile/api/profile.api";
 import { loginSuccess } from "../store/authSlice";
 import { useAppDispatch } from "../../../app/hooks";
 const OTP_LENGTH = 4;
 
+/**
+ * IMPORTANT: MSG91's OTP codes are single-use — once otpService.verifyOtp()
+ * succeeds for a code, that exact code is consumed and a second verify call
+ * with the same code fails ("already verified"). AuthService.register()
+ * already re-verifies the code server-side before creating the account, so
+ * the "Verify" button here is deliberately a client-side format check only
+ * (4 digits present), not a real API call — calling verifyOtp() here too
+ * would consume the code before Register's own verify ever runs, and every
+ * registration would fail with "already verified". Same fix as
+ * useForgotPassword's mobile-OTP flow.
+ */
 export default function useRegister() {
 
    const dispatch = useAppDispatch();
@@ -57,7 +68,8 @@ export default function useRegister() {
     }
   };
 
- const handleVerifyOtp = async () => {
+ // Client-side format check only — see hook-level comment above.
+ const handleVerifyOtp = () => {
   setError(null);
 
   const fullOtp = otp.join("");
@@ -67,47 +79,7 @@ export default function useRegister() {
     return;
   }
 
-  try {
-    setIsLoading(true);
-
-    const res = await verifyOtp(mobile, fullOtp);
-
-    console.log("OTP success response:", res);
-
-    if (res.success) {
-      setOtpVerified(true);
-    } else {
-      setOtpVerified(false);
-      setError(res.message);
-    }
-
-  } catch (err: unknown) {
-    const isResponseError =
-      typeof err === "object" &&
-      err !== null &&
-      "response" in err;
-
-    const errorMessage = isResponseError
-      ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
-      : undefined;
-
-    console.log(
-      "OTP error response:",
-      isResponseError
-        ? (err as { response?: { data?: unknown } }).response?.data
-        : undefined
-    );
-
-    setOtpVerified(false);
-
-    // 🔥 THIS IS IMPORTANT
-    setError(
-      errorMessage || "OTP verification failed"
-    );
-
-  } finally {
-    setIsLoading(false);
-  }
+  setOtpVerified(true);
 };
 
 const handleResendOtp = async () => {
