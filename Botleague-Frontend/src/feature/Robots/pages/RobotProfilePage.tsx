@@ -6,7 +6,7 @@ import { useAppSelector } from "../../../app/hooks";
 import useTeamMembership from "../../Team/TeamMembership/hooks/useTeamMembership";
 import { getRobotById } from "../api/robot.api";
 import { getPublicRobotProfile, type PublicRobotProfile } from "../api/robotPublic.api";
-import RobotDetailModal from "../components/RobotDetailModal";
+import RobotEditPanel from "../components/RobotEditPanel";
 import type { Robot } from "../types/types";
 import robotFallback from "../../../assets/robot.png";
 import flightDecoration from "../../../assets/Auth/flight.svg";
@@ -16,14 +16,6 @@ import "../../../styles/robotProfile.css";
 
 function OutlineStar({ className = "" }: { className?: string }) {
   return <span className={`rprofile-outline-star ${className}`} aria-hidden="true" />;
-}
-
-function toLabel(value?: string | null) {
-  if (!value) return "-";
-  return value
-    .replace(/_/g, " ")
-    .toLowerCase()
-    .replace(/\b\w/g, char => char.toUpperCase());
 }
 
 function ordinal(n: number) {
@@ -121,165 +113,122 @@ export default function RobotProfilePage() {
       <img className="rprofile-bg rprofile-bg-drone" src={droneDecoration} alt="" aria-hidden="true" />
 
       <div className="rprofile-shell">
-        <button type="button" className="rprofile-back" onClick={() => navigate("/robots")}>
-          <ArrowLeft size={18} />
-          Back to Robots
-        </button>
+        {editing ? (
+          <RobotEditPanel
+            robot={robot}
+            onCancel={() => setEditing(false)}
+            onSaved={() => {
+              load();
+              setEditing(false);
+            }}
+          />
+        ) : (
+          <>
+            <button type="button" className="rprofile-back" onClick={() => navigate("/robots")}>
+              <ArrowLeft size={18} />
+              Back to Robots
+            </button>
 
-        <section className="rprofile-hero">
-          <OutlineStar className="rprofile-card-star-a" />
-          <OutlineStar className="rprofile-card-star-b" />
+            <section className="rprofile-hero">
+              <OutlineStar className="rprofile-card-star-a" />
+              <OutlineStar className="rprofile-card-star-b" />
 
-          <div className="rprofile-hero-copy">
-            <div className="rprofile-name-row">
-              <h2>{robot.robotName}</h2>
-              <span className={`rprofile-active-pill${active ? "" : " inactive"}`}>
-                <span /> {active ? "Active" : "Inactive"}
-              </span>
-            </div>
-            <p><span className="rprofile-info-label">BotID</span> - <span className="rprofile-info-value">{robot.robotCode || "-"}</span></p>
-            <p><span className="rprofile-info-label">Team Name</span> - <span className="rprofile-info-value">{teamName || "No Team"}</span></p>
-            <p><span className="rprofile-info-label">Created on</span> - <span className="rprofile-info-value">{formatDate(robot.createdAt)}</span></p>
+              <div className="rprofile-hero-copy">
+                <div className="rprofile-name-row">
+                  <h2>{robot.robotName}</h2>
+                  <span className={`rprofile-active-pill${active ? "" : " inactive"}`}>
+                    <span /> {active ? "Active" : "Inactive"}
+                  </span>
+                </div>
+                <p><span className="rprofile-info-label">BotID</span> - <span className="rprofile-info-value">{robot.robotCode || "-"}</span></p>
+                <p><span className="rprofile-info-label">Team Name</span> - <span className="rprofile-info-value">{teamName || "No Team"}</span></p>
+                <p><span className="rprofile-info-label">Created on</span> - <span className="rprofile-info-value">{formatDate(robot.createdAt)}</span></p>
 
-            <div className="rprofile-actions">
-              <button type="button" onClick={shareRobot}>
-                <Share2 size={16} />
-                Share
-              </button>
-              {canManageRobots && (
-                <button type="button" onClick={() => setEditing(true)}>
-                  <Pencil size={16} />
-                  Edit
-                </button>
-              )}
-            </div>
-
-            {profile && (profile.goldMedals + profile.silverMedals + profile.bronzeMedals) > 0 && (
-              <div className="rprofile-medals">
-                {profile.goldMedals > 0 && <span className="gold">🥇 {profile.goldMedals}× Gold</span>}
-                {profile.silverMedals > 0 && <span className="silver">🥈 {profile.silverMedals}× Silver</span>}
-                {profile.bronzeMedals > 0 && <span className="bronze">🥉 {profile.bronzeMedals}× Bronze</span>}
-              </div>
-            )}
-          </div>
-
-          <div className="rprofile-avatar-stage">
-            <img src={bLogo} alt="" aria-hidden="true" className="rprofile-big-b" />
-            {robot.robotIMG && !imgErr ? (
-              <img
-                src={robot.robotIMG}
-                alt={robot.robotName}
-                className="rprofile-avatar"
-                onError={() => setImgErr(true)}
-              />
-            ) : (
-              <img src={robotFallback} alt={robot.robotName} className="rprofile-avatar rprofile-avatar-fallback" />
-            )}
-          </div>
-
-          <div className="rprofile-stats" aria-label="Robot stats">
-            <div className="rprofile-stat-ribbon">
-              <span className="rprofile-stat-icon"><Trophy size={35} /></span>
-              <strong>{profile?.eventsPlayed ?? 0}</strong>
-              <span>Events</span>
-            </div>
-            <div className="rprofile-stat-ribbon">
-              <span className="rprofile-stat-icon"><Swords size={35} /></span>
-              <strong>{profile?.totalMatches ?? 0}</strong>
-              <span>Matches</span>
-            </div>
-            <div className="rprofile-stat-ribbon">
-              <span className="rprofile-stat-icon"><Percent size={35} /></span>
-              <strong>{winRate}%</strong>
-              <span>Win Rate</span>
-            </div>
-            <div className="rprofile-stat-ribbon">
-              <span className="rprofile-stat-icon"><Star size={35} /></span>
-              <strong>{profile?.totalPoints ?? 0}</strong>
-              <span>Points</span>
-            </div>
-          </div>
-        </section>
-
-        {(profile?.sport || profile?.ageCategory || profile?.controlType || profile?.controlMode ||
-          profile?.weightKg || profile?.lengthCm || profile?.description) && (
-          <section className="rprofile-specs">
-            <h2>Specifications</h2>
-            <div className="rprofile-specs-grid">
-              <div className="rprofile-specs-card">
-                <h3>Technical</h3>
-                <div className="rprofile-spec-row"><span>Sport</span><span>{toLabel(profile?.sport)}</span></div>
-                <div className="rprofile-spec-row"><span>Age Category</span><span>{toLabel(profile?.ageCategory)}</span></div>
-                <div className="rprofile-spec-row"><span>Robot Type</span><span>{toLabel(profile?.robotType)}</span></div>
-                <div className="rprofile-spec-row"><span>Control</span><span>{toLabel(profile?.controlType)}</span></div>
-                <div className="rprofile-spec-row"><span>Connection</span><span>{toLabel(profile?.controlMode)}</span></div>
-                <div className="rprofile-spec-row"><span>Weight Class</span><span>{toLabel(profile?.weightClass)}</span></div>
+                <div className="rprofile-actions">
+                  <button type="button" onClick={shareRobot}>
+                    <Share2 size={16} />
+                    Share
+                  </button>
+                  {canManageRobots && (
+                    <button type="button" onClick={() => setEditing(true)}>
+                      <Pencil size={16} />
+                      Edit
+                    </button>
+                  )}
+                </div>
               </div>
 
-              {(profile?.weightKg || profile?.lengthCm || profile?.widthCm || profile?.heightCm) && (
-                <div className="rprofile-specs-card">
-                  <h3>Physical</h3>
-                  {profile?.weightKg != null && <div className="rprofile-spec-row"><span>Weight</span><span>{profile.weightKg} kg</span></div>}
-                  {profile?.lengthCm != null && <div className="rprofile-spec-row"><span>Length</span><span>{profile.lengthCm} cm</span></div>}
-                  {profile?.widthCm != null && <div className="rprofile-spec-row"><span>Width</span><span>{profile.widthCm} cm</span></div>}
-                  {profile?.heightCm != null && <div className="rprofile-spec-row"><span>Height</span><span>{profile.heightCm} cm</span></div>}
-                </div>
-              )}
+              <div className="rprofile-avatar-stage">
+                <img src={bLogo} alt="" aria-hidden="true" className="rprofile-big-b" />
+                {robot.robotIMG && !imgErr ? (
+                  <img
+                    src={robot.robotIMG}
+                    alt={robot.robotName}
+                    className="rprofile-avatar"
+                    onError={() => setImgErr(true)}
+                  />
+                ) : (
+                  <img src={robotFallback} alt={robot.robotName} className="rprofile-avatar rprofile-avatar-fallback" />
+                )}
+              </div>
 
-              {profile?.description && (
-                <div className="rprofile-specs-card">
-                  <h3>About</h3>
-                  <p className="rprofile-specs-about">{profile.description}</p>
+              <div className="rprofile-stats" aria-label="Robot stats">
+                <div className="rprofile-stat-ribbon">
+                  <span className="rprofile-stat-icon"><Trophy size={35} /></span>
+                  <strong>{profile?.eventsPlayed ?? 0}</strong>
+                  <span>Events</span>
+                </div>
+                <div className="rprofile-stat-ribbon">
+                  <span className="rprofile-stat-icon"><Swords size={35} /></span>
+                  <strong>{profile?.totalMatches ?? 0}</strong>
+                  <span>Matches</span>
+                </div>
+                <div className="rprofile-stat-ribbon">
+                  <span className="rprofile-stat-icon"><Percent size={35} /></span>
+                  <strong>{winRate}%</strong>
+                  <span>Win Rate</span>
+                </div>
+                <div className="rprofile-stat-ribbon">
+                  <span className="rprofile-stat-icon"><Star size={35} /></span>
+                  <strong>{profile?.totalPoints ?? 0}</strong>
+                  <span>Points</span>
+                </div>
+              </div>
+            </section>
+
+            <section className="rprofile-records">
+              <h2>Tournament Records</h2>
+
+              {!profile || profile.records.length === 0 ? (
+                <div className="rprofile-records-empty">
+                  <p>No tournament records yet.</p>
+                </div>
+              ) : (
+                <div className="rprofile-table">
+                  <div className="rprofile-table-head">
+                    <span>Tournament</span>
+                    <span>Matches</span>
+                    <span>Wins</span>
+                    <span>Losses</span>
+                    <span>Points</span>
+                    <span>Position</span>
+                  </div>
+                  {profile.records.map((rec, i) => (
+                    <div className="rprofile-table-row" key={`${rec.eventSportId}-${i}`}>
+                      <span className="rprofile-table-tournament">{rec.eventName ?? "Unknown Event"}</span>
+                      <span>{rec.matchesPlayed}</span>
+                      <span>{rec.wins}</span>
+                      <span>{rec.losses}</span>
+                      <span>{rec.pointsEarned}</span>
+                      <span>{rec.eventRank ? ordinal(rec.eventRank) : "-"}</span>
+                    </div>
+                  ))}
                 </div>
               )}
-            </div>
-          </section>
+            </section>
+          </>
         )}
-
-        <section className="rprofile-records">
-          <h2>Tournament Records</h2>
-
-          {!profile || profile.records.length === 0 ? (
-            <div className="rprofile-records-empty">
-              <p>No tournament records yet.</p>
-            </div>
-          ) : (
-            <div className="rprofile-table">
-              <div className="rprofile-table-head">
-                <span>Tournament</span>
-                <span>Matches</span>
-                <span>Wins</span>
-                <span>Losses</span>
-                <span>Points</span>
-                <span>Position</span>
-              </div>
-              {profile.records.map((rec, i) => (
-                <div className="rprofile-table-row" key={`${rec.eventSportId}-${i}`}>
-                  <span className="rprofile-table-tournament">{rec.eventName ?? "Unknown Event"}</span>
-                  <span>{rec.matchesPlayed}</span>
-                  <span>{rec.wins}</span>
-                  <span>{rec.losses}</span>
-                  <span>{rec.pointsEarned}</span>
-                  <span>{rec.eventRank ? ordinal(rec.eventRank) : "-"}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
       </div>
-
-      {editing && (
-        <RobotDetailModal
-          robot={robot}
-          onClose={() => setEditing(false)}
-          canEdit={canManageRobots}
-          startInEditing
-          onUpdated={() => {
-            load();
-            setEditing(false);
-          }}
-        />
-      )}
     </div>
   );
 }
