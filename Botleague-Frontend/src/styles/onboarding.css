@@ -138,8 +138,70 @@
 }
 .onb-btn-secondary:hover { background: #E9EBF7; }
 
+/* ── Spotlight tour — anchored to the real nav element, not a centered
+   modal. The highlight box tracks the target's live position (sidebar
+   width changes on hover, so this can't be a static layout). ─────────── */
+
+.onb-spotlight-highlight {
+  position: fixed;
+  z-index: 9998;
+  border-radius: 12px;
+  box-shadow: 0 0 0 9999px rgba(15, 17, 30, 0.6);
+  pointer-events: none;
+}
+.onb-spotlight-highlight::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 16px;
+  border: 2px solid #8C6CFF;
+  box-shadow: 0 0 0 4px rgba(140, 108, 255, 0.25);
+  animation: onb-spotlight-pulse 1.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .onb-spotlight-highlight::after { animation: none; }
+}
+@keyframes onb-spotlight-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.55; transform: scale(1.05); }
+}
+
+.onb-spotlight-popover {
+  position: fixed;
+  z-index: 9999;
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  background: #ffffff;
+  border: 1.5px solid #C9CEFB;
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(20, 30, 80, 0.32);
+  padding: 20px 22px 18px;
+  font-family: "Poppins", sans-serif;
+}
+
+.onb-spotlight-arrow {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #ffffff;
+  transform: rotate(45deg);
+}
+.onb-spotlight-arrow--left {
+  left: -8px;
+  top: 22px;
+  border-left: 1.5px solid #C9CEFB;
+  border-bottom: 1.5px solid #C9CEFB;
+  border-radius: 0 0 0 3px;
+}
+.onb-spotlight-arrow--top {
+  top: -8px;
+  right: 26px;
+  border-top: 1.5px solid #C9CEFB;
+  border-left: 1.5px solid #C9CEFB;
+  border-radius: 3px 0 0 0;
+}
+
 /* ── Tour ─────────────────────────────────────────────── */
-.onb-tour-card { max-width: 460px; }
 
 .onb-tour-progress {
   display: flex;

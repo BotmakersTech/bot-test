@@ -87,9 +87,11 @@ function CompetitorNavActions({
         <ChatIcon className="h-5 w-5" />
       </IconButton>
       <NotificationButton unreadCount={unreadCount} onClick={() => navigate("/notifications")} />
-      <IconButton label="Profile" onClick={() => navigate("/profile")}>
-        <UserCircleIcon className="h-[22px] w-[22px]" />
-      </IconButton>
+      <span data-tour="navbar-profile">
+        <IconButton label="Profile" onClick={() => navigate("/profile")}>
+          <UserCircleIcon className="h-[22px] w-[22px]" />
+        </IconButton>
+      </span>
       <IconButton label="Settings" onClick={() => navigate("/settings")}>
         <SettingsGearIcon className="h-5 w-5" />
       </IconButton>

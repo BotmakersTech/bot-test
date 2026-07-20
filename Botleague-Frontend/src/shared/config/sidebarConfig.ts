@@ -118,7 +118,7 @@ export const NAV_CONFIG: NavItem[] = [
   // COMPETITOR  — regular platform user / competitor
   // ══════════════════════════════════════════════════════════════════════════
   { id: "c-dash",     label: "Dashboard",    link: "/user-dashboard",  iconName: "dashboard",   roles: [CMP] },
-  { id: "c-events",   label: "Events",       link: "/browse-events",   iconName: "calendar",    roles: [CMP] },
+  { id: "c-events",   label: "Events",       link: "/events",          iconName: "calendar",    roles: [CMP] },
   { id: "c-team",     label: "My Team",      link: "/my-team",         iconName: "teams",       roles: [CMP] },
   { id: "c-robots",   label: "My Robots",    link: "/robots",          iconName: "robot",       roles: [CMP] },
   { id: "c-matches",  label: "My Matches",   link: "/matches",         iconName: "matches",     roles: [CMP] },

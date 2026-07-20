@@ -230,36 +230,48 @@ export default function RobotsPage() {
                 const active = robot.status === "ACTIVE";
 
                 return (
-                  <article className="robot-data-row" key={robot.id}>
-                    <img className="robot-row-image" src={getRobotImage(robot)} alt={robot.robotName} />
+                 <article className="robot-data-row" key={robot.id}>
+  <img className="robot-row-image" src={getRobotImage(robot)} alt={robot.robotName} />
 
-                    <div className="robot-row-name">
-                      <h2>{robot.robotName}</h2>
-                      <span className={`robot-status-pill${active ? " active" : " inactive"}`}>
-                        <span />
-                        {active ? "Active" : "Inactive"}
-                      </span>
-                    </div>
+  <div className="flex flex-col gap-2 flex-1">
+    {/* Row 1: name + status pill, View Profile pinned to the right */}
+    <div className="flex items-center justify-between">
+      <div className="robot-row-name flex items-center gap-2">
+        <h2>{robot.robotName}</h2>
+        <span className={`robot-status-pill${active ? " active" : " inactive"}`}>
+          <span />
+          {active ? "Active" : "Inactive"}
+        </span>
+      </div>
 
-                    <div className="robot-row-field">
-                      <span>BotID</span>
-                      <strong>{robot.robotCode || "-"}</strong>
-                    </div>
+      <button
+        type="button"
+        className="robot-profile-link"
+        onClick={() => navigate(`/robots/${robot.id}`)}
+      >
+        View Profile
+      </button>
+    </div>
 
-                    <div className="robot-row-field">
-                      <span>Weight</span>
-                      <strong>{getWeight(robot)}</strong>
-                    </div>
+    {/* Row 2: BotID, Weight, Sport side by side */}
+    <div className="flex items-center gap-6">
+      <div className="robot-row-field">
+        <span>BotID</span>
+        <strong>{robot.robotCode || "-"}</strong>
+      </div>
 
-                    <div className="robot-row-field">
-                      <span>Sports</span>
-                      <strong>{toLabel(robot.sport)}</strong>
-                    </div>
+      <div className="robot-row-field">
+        <span>Weight</span>
+        <strong>{getWeight(robot)}</strong>
+      </div>
 
-                    <button type="button" className="robot-profile-link" onClick={() => navigate(`/robots/${robot.id}`)}>
-                      View Profile
-                    </button>
-                  </article>
+      <div className="robot-row-field">
+        <span>Sports</span>
+        <strong>{toLabel(robot.sport)}</strong>
+      </div>
+    </div>
+  </div>
+</article>
                 );
               })}
             </div>

@@ -89,6 +89,10 @@ function SidebarItem({
       title={item.label}
       aria-label={item.label}
       aria-current={active ? "page" : undefined}
+      // Stable anchor the site tour (OnboardingTour) spotlights onto — not
+      // used for styling, just a query target so the tour can point at the
+      // real nav button instead of a generic centered popup.
+      data-tour={`sidebar-${item.id}`}
       className={[
         "flex h-11 shrink-0 items-center gap-3 rounded-lg transition-[background-color,color,width] duration-200",
         expanded ? "w-full px-3" : "w-11 justify-center",

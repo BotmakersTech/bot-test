@@ -1,12 +1,18 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { X, User, Users, Bot, CalendarDays, ArrowRight, ArrowLeft } from "lucide-react";
 import "../../styles/onboarding.css";
 
 export const TOUR_DONE_FLAG = "botleague_tour_done";
 
+type Placement = "right" | "bottom-end";
+
 interface Step {
-  icon: ReactNode;
+  /** CSS selector for the real nav element to spotlight — see the
+   * data-tour attributes on Sidebar.tsx / Navbar.tsx. */
+  target: string;
+  placement: Placement;
+  icon: React.ReactNode;
   title: string;
   desc: string;
   ctaLabel: string;
@@ -15,34 +21,93 @@ interface Step {
 
 const STEPS: Step[] = [
   {
-    icon: <User size={26} />,
+    target: '[data-tour="navbar-profile"]',
+    placement: "bottom-end",
+    icon: <User size={22} />,
     title: "Complete Your Profile",
-    desc: "Add your name, username, date of birth and photo — the essentials every teammate and organiser will see.",
+    desc: "Click here to add your name, username, date of birth and photo.",
     ctaLabel: "Go to Profile",
     ctaPath: "/profile",
   },
   {
-    icon: <Users size={26} />,
+    target: '[data-tour="sidebar-c-team"]',
+    placement: "right",
+    icon: <Users size={22} />,
     title: "Create or Join a Team",
-    desc: "Start your own squad or accept an invite. Username and date of birth must be set first.",
-    ctaLabel: "Create a Team",
-    ctaPath: "/create-team",
+    desc: "This is where you start your own squad or accept an invite. Username and date of birth must be set first.",
+    ctaLabel: "Go to My Team",
+    ctaPath: "/my-team",
   },
   {
-    icon: <Bot size={26} />,
+    target: '[data-tour="sidebar-c-robots"]',
+    placement: "right",
+    icon: <Bot size={22} />,
     title: "Add Your Robot",
-    desc: "Register your build — pick its category and get it competition-ready.",
-    ctaLabel: "Add a Robot",
+    desc: "Register your build here — pick its category and get it competition-ready.",
+    ctaLabel: "Go to My Robots",
     ctaPath: "/robots",
   },
   {
-    icon: <CalendarDays size={26} />,
+    target: '[data-tour="sidebar-c-events"]',
+    placement: "right",
+    icon: <CalendarDays size={22} />,
     title: "Find Events",
-    desc: "Browse upcoming tournaments and register your team to compete.",
-    ctaLabel: "Browse Events",
-    ctaPath: "/browse-events",
+    desc: "Browse upcoming tournaments here and register your team to compete.",
+    ctaLabel: "Go to Events",
+    ctaPath: "/events",
   },
 ];
+
+const POPOVER_WIDTH = 320;
+const GAP = 14;
+const HIGHLIGHT_PAD = 6;
+const VIEWPORT_MARGIN = 12;
+
+interface Rect {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+}
+
+/** Tracks the target element's live position via rAF — the sidebar's width
+ * changes on hover (112px collapsed / 248px expanded), so a one-time
+ * measurement would go stale the moment the user's cursor drifts near it. */
+function useLiveTargetRect(selector: string): Rect | null {
+  const [rect, setRect] = useState<Rect | null>(null);
+  const frame = useRef<number>(0);
+
+  useEffect(() => {
+    // Resets the previous step's stale rect while this rAF loop's first
+    // tick resolves the new selector's real position — a genuine
+    // subscribe-to-an-external-system effect (the DOM layout), not a pure
+    // derivation from props/state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setRect(null);
+
+    const tick = () => {
+      const el = document.querySelector(selector);
+      if (el) {
+        const r = el.getBoundingClientRect();
+        setRect((prev) =>
+          prev && prev.top === r.top && prev.left === r.left && prev.width === r.width && prev.height === r.height
+            ? prev
+            : { top: r.top, left: r.left, width: r.width, height: r.height }
+        );
+      }
+      frame.current = requestAnimationFrame(tick);
+    };
+    frame.current = requestAnimationFrame(tick);
+
+    return () => cancelAnimationFrame(frame.current);
+  }, [selector]);
+
+  return rect;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
 
 interface Props {
   onClose: () => void;
@@ -54,6 +119,7 @@ export default function OnboardingTour({ onClose }: Props) {
 
   const isLast = step === STEPS.length - 1;
   const current = STEPS[step];
+  const rect = useLiveTargetRect(current.target);
 
   const finish = () => {
     localStorage.setItem(TOUR_DONE_FLAG, "1");
@@ -65,60 +131,87 @@ export default function OnboardingTour({ onClose }: Props) {
     finish();
   };
 
+  if (!rect) return null; // target not mounted on this page (e.g. still loading) — wait for it
+
+  const highlightStyle: React.CSSProperties = {
+    top: rect.top - HIGHLIGHT_PAD,
+    left: rect.left - HIGHLIGHT_PAD,
+    width: rect.width + HIGHLIGHT_PAD * 2,
+    height: rect.height + HIGHLIGHT_PAD * 2,
+  };
+
+  const rectRight = rect.left + rect.width;
+  const rectBottom = rect.top + rect.height;
+
+  let popoverTop: number;
+  let popoverLeft: number;
+  if (current.placement === "right") {
+    popoverTop = rect.top;
+    popoverLeft = rectRight + GAP;
+  } else {
+    popoverTop = rectBottom + GAP;
+    popoverLeft = rectRight - POPOVER_WIDTH;
+  }
+  popoverTop = clamp(popoverTop, VIEWPORT_MARGIN, window.innerHeight - VIEWPORT_MARGIN - 40);
+  popoverLeft = clamp(popoverLeft, VIEWPORT_MARGIN, window.innerWidth - POPOVER_WIDTH - VIEWPORT_MARGIN);
+
   return (
-    <div className="onb-overlay" onClick={(e) => { if (e.target === e.currentTarget) finish(); }}>
-      <div className="onb-card onb-tour-card">
-        <button className="onb-close-btn" onClick={finish} aria-label="Close tour">
-          <X size={16} />
+    <>
+      <div className="onb-spotlight-highlight" style={highlightStyle} />
+
+      <div className="onb-spotlight-popover" style={{ top: popoverTop, left: popoverLeft }}>
+        <span
+          className={
+            current.placement === "right" ? "onb-spotlight-arrow onb-spotlight-arrow--left" : "onb-spotlight-arrow onb-spotlight-arrow--top"
+          }
+        />
+
+        <button className="onb-close-btn" onClick={finish} aria-label="Close tour" style={{ top: 10, right: 10 }}>
+          <X size={14} />
         </button>
 
-        <div style={{ padding: "32px 28px 6px", textAlign: "center" }}>
-          <div className="onb-icon-badge" style={{ margin: "0 auto 16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+          <div className="onb-icon-badge" style={{ width: 40, height: 40, flexShrink: 0 }}>
             {current.icon}
           </div>
-          <p
-            style={{
-              margin: "0 0 6px",
-              fontSize: "0.7rem",
-              fontWeight: 700,
-              color: "#8C6CFF",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              fontFamily: "Poppins, sans-serif",
-            }}
-          >
-            Step {step + 1} of {STEPS.length}
-          </p>
-          <h2 className="onb-title" style={{ fontSize: "1.2rem", margin: 0 }}>
-            {current.title}
-          </h2>
-          <p className="onb-subtitle" style={{ margin: "10px 0 0", fontSize: "0.87rem" }}>
-            {current.desc}
-          </p>
-        </div>
-
-        <div style={{ padding: "22px 28px 0" }}>
-          <div className="onb-tour-progress">
-            {STEPS.map((s, i) => (
-              <span
-                key={s.title}
-                className={
-                  "onb-tour-dot" +
-                  (i === step ? " onb-tour-dot--active" : i < step ? " onb-tour-dot--done" : "")
-                }
-              />
-            ))}
+          <div>
+            <p
+              style={{
+                margin: 0,
+                fontSize: "0.68rem",
+                fontWeight: 700,
+                color: "#8C6CFF",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+              }}
+            >
+              Step {step + 1} of {STEPS.length}
+            </p>
+            <h3 className="onb-title" style={{ fontSize: "0.98rem", margin: 0 }}>
+              {current.title}
+            </h3>
           </div>
         </div>
 
-        <div style={{ padding: "18px 28px 6px" }}>
-          <button onClick={goToStepPage} className="onb-btn-primary" style={{ width: "100%" }}>
-            {current.ctaLabel}
-            <ArrowRight size={15} style={{ display: "inline", verticalAlign: "-2px", marginLeft: 6 }} />
-          </button>
+        <p className="onb-subtitle" style={{ fontSize: "0.83rem", margin: "0 0 14px" }}>
+          {current.desc}
+        </p>
+
+        <button onClick={goToStepPage} className="onb-btn-primary" style={{ width: "100%", padding: "9px", fontSize: "0.83rem", marginBottom: 12 }}>
+          {current.ctaLabel}
+          <ArrowRight size={14} style={{ display: "inline", verticalAlign: "-2px", marginLeft: 6 }} />
+        </button>
+
+        <div className="onb-tour-progress" style={{ marginBottom: 12 }}>
+          {STEPS.map((s, i) => (
+            <span
+              key={s.target}
+              className={"onb-tour-dot" + (i === step ? " onb-tour-dot--active" : i < step ? " onb-tour-dot--done" : "")}
+            />
+          ))}
         </div>
 
-        <div style={{ padding: "10px 28px 26px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button className="onb-tour-skip" onClick={finish}>
             Skip tour
           </button>
@@ -126,7 +219,7 @@ export default function OnboardingTour({ onClose }: Props) {
           <div style={{ display: "flex", gap: 8 }}>
             {step > 0 && (
               <button className="onb-tour-nav-btn onb-tour-nav-btn--back" onClick={() => setStep((s) => s - 1)}>
-                <ArrowLeft size={14} style={{ marginRight: 4 }} /> Back
+                <ArrowLeft size={13} style={{ marginRight: 4 }} /> Back
               </button>
             )}
             <button
@@ -138,6 +231,6 @@ export default function OnboardingTour({ onClose }: Props) {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
