@@ -1,12 +1,17 @@
 package com.botleague.backend.common.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 @Service
 public class EmailService {
+
+    private static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
     private final JavaMailSender mailSender;
 
@@ -66,6 +71,17 @@ public class EmailService {
 
     // ================= GENERIC EMAIL =================
 
+    /**
+     * Both callers (password-reset and email-verification) fire this from an
+     * afterCommit() callback specifically so a slow/failing SMTP call can
+     * never hold a pooled DB connection or block the request it's a side
+     * effect of — forgotPassword() in particular is documented to always
+     * respond 200 regardless of outcome, mirroring how OtpService.sendOtp()
+     * already swallows its own failures for the same reason. Letting a mail
+     * exception (e.g. bad/expired SMTP credentials) propagate out of here
+     * would turn that into an unhandled 500 on every request, which is
+     * exactly what was happening before this catch existed.
+     */
     private void sendEmail(String to, String subject, String body) {
 
         SimpleMailMessage message = new SimpleMailMessage();
@@ -74,6 +90,10 @@ public class EmailService {
         message.setSubject(subject);
         message.setText(body);
 
-        mailSender.send(message);
+        try {
+            mailSender.send(message);
+        } catch (MailException e) {
+            log.error("Failed to send email to {}: {}", to, e.getMessage());
+        }
     }
 }
