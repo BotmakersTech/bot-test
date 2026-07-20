@@ -998,7 +998,7 @@
 }
 
 .robot-build-empty-btn {
-  background: linear-gradient(90deg, #7C86F2 0%, #9B8CF6 100%);
+  background: linear-gradient(135deg, #7C86F2 0%, #9B8CF6 100%);
   box-shadow: 0 10px 25px -8px rgba(124, 92, 246, 0.55);
   transition: transform 200ms ease, opacity 150ms ease;
 }

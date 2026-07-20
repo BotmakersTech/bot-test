@@ -126,14 +126,14 @@
   border: 1.5px solid transparent;
   background-image:
     linear-gradient(#ffffff, #ffffff),
-    linear-gradient(to right, #0162D1, #8C6CFF);
+    linear-gradient(180deg, #0162D1, #8C6CFF);
   background-origin: border-box;
   background-clip: padding-box, border-box;
 }
 .cna-gradient-btn:hover {
   background-image:
     linear-gradient(#f8faff, #f8faff),
-    linear-gradient(to right, #0162D1, #8C6CFF);
+    linear-gradient(180deg, #0162D1, #8C6CFF);
 }
 
 /* ── Register outline "Login" button ──
