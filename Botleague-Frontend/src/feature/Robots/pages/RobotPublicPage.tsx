@@ -18,11 +18,6 @@ function OutlineStar({ className = "" }: { className?: string }) {
   return <span className={`rprofile-outline-star ${className}`} aria-hidden="true" />;
 }
 
-function toLabel(value?: string | null) {
-  if (!value) return "-";
-  return value.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
-}
-
 function ordinal(n: number) {
   if (n === 1) return "1st";
   if (n === 2) return "2nd";
@@ -132,14 +127,6 @@ export default function RobotPublicPage() {
                 Share
               </button>
             </div>
-
-            {(profile.goldMedals + profile.silverMedals + profile.bronzeMedals) > 0 && (
-              <div className="rprofile-medals">
-                {profile.goldMedals > 0 && <span className="gold">🥇 {profile.goldMedals}× Gold</span>}
-                {profile.silverMedals > 0 && <span className="silver">🥈 {profile.silverMedals}× Silver</span>}
-                {profile.bronzeMedals > 0 && <span className="bronze">🥉 {profile.bronzeMedals}× Bronze</span>}
-              </div>
-            )}
           </div>
 
           <div className="rprofile-avatar-stage">
@@ -179,41 +166,6 @@ export default function RobotPublicPage() {
             </div>
           </div>
         </section>
-
-        {(profile.sport || profile.ageCategory || profile.controlType || profile.controlMode ||
-          profile.weightKg || profile.lengthCm || profile.description) && (
-          <section className="rprofile-specs">
-            <h2>Specifications</h2>
-            <div className="rprofile-specs-grid">
-              <div className="rprofile-specs-card">
-                <h3>Technical</h3>
-                <div className="rprofile-spec-row"><span>Sport</span><span>{toLabel(profile.sport)}</span></div>
-                <div className="rprofile-spec-row"><span>Age Category</span><span>{toLabel(profile.ageCategory)}</span></div>
-                <div className="rprofile-spec-row"><span>Robot Type</span><span>{toLabel(profile.robotType)}</span></div>
-                <div className="rprofile-spec-row"><span>Control</span><span>{toLabel(profile.controlType)}</span></div>
-                <div className="rprofile-spec-row"><span>Connection</span><span>{toLabel(profile.controlMode)}</span></div>
-                <div className="rprofile-spec-row"><span>Weight Class</span><span>{toLabel(profile.weightClass)}</span></div>
-              </div>
-
-              {(profile.weightKg || profile.lengthCm || profile.widthCm || profile.heightCm) && (
-                <div className="rprofile-specs-card">
-                  <h3>Physical</h3>
-                  {profile.weightKg != null && <div className="rprofile-spec-row"><span>Weight</span><span>{profile.weightKg} kg</span></div>}
-                  {profile.lengthCm != null && <div className="rprofile-spec-row"><span>Length</span><span>{profile.lengthCm} cm</span></div>}
-                  {profile.widthCm != null && <div className="rprofile-spec-row"><span>Width</span><span>{profile.widthCm} cm</span></div>}
-                  {profile.heightCm != null && <div className="rprofile-spec-row"><span>Height</span><span>{profile.heightCm} cm</span></div>}
-                </div>
-              )}
-
-              {profile.description && (
-                <div className="rprofile-specs-card">
-                  <h3>About</h3>
-                  <p className="rprofile-specs-about">{profile.description}</p>
-                </div>
-              )}
-            </div>
-          </section>
-        )}
 
         <section className="rprofile-records">
           <h2>Tournament Records</h2>
