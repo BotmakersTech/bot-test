@@ -196,10 +196,26 @@
   gap: 22px;
 }
 
-.robot-data-row,
+/* Each row is just [image | content] now — the name/status/View-Profile
+   line and the BotID/Weight/Sports line are both inside the content
+   column as their own flex rows (see RobotsPages.tsx), not flat grid
+   siblings. Keep .robot-empty-row's own 3-column override below intact —
+   it's a genuinely different layout (image, message, action). */
+.robot-data-row {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  align-items: center;
+  gap: 28px;
+  min-height: 158px;
+  border: 1.5px solid #7c66ff;
+  border-left-color: #006bc7;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.88);
+  padding: 11px 39px 11px 11px;
+}
+
 .robot-empty-row {
   display: grid;
-  grid-template-columns: 150px minmax(200px, 1.15fr) minmax(110px, 0.78fr) minmax(110px, 0.78fr) minmax(150px, 0.95fr) 140px;
   align-items: center;
   gap: 30px;
   min-height: 158px;
@@ -242,17 +258,16 @@
   display: inline-flex;
   min-width: 72px;
   height: 25px;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   gap: 5px;
-  margin-left: 22px;
   border: 1.5px solid #25d64a;
   border-radius: 999px;
   color: #0ebf31;
   background: #ffffff;
   font-size: 14px;
   font-weight: 700;
-  vertical-align: 8px;
 }
 
 .robot-status-pill span {
@@ -291,7 +306,6 @@
 }
 
 .robot-profile-link {
-  justify-self: end;
   border: 0;
   color: #006bc7;
   background: transparent;
@@ -425,13 +439,8 @@
   }
 
   .robot-data-row {
-    grid-template-columns: 132px minmax(180px, 1fr) repeat(3, minmax(100px, 0.75fr));
+    grid-template-columns: 132px 1fr;
     gap: 20px;
-  }
-
-  .robot-profile-link {
-    grid-column: 2 / -1;
-    justify-self: start;
   }
 
   .robot-row-image {
@@ -509,18 +518,8 @@
     font-size: 30px;
   }
 
-  .robot-status-pill {
-    margin-left: 10px;
-    vertical-align: 5px;
-  }
-
   .robot-row-field {
     text-align: left;
-  }
-
-  .robot-profile-link {
-    grid-column: 1 / -1;
-    justify-self: end;
   }
 }
 
@@ -579,10 +578,6 @@
   .robot-empty-row img {
     width: 100%;
     height: 170px;
-  }
-
-  .robot-profile-link {
-    justify-self: start;
   }
 }
 
