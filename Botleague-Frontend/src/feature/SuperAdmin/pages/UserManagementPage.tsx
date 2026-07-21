@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { Search, Plus, ChevronLeft, ChevronRight, Users as UsersIcon } from "lucide-react";
+import { Search, Plus, ChevronLeft, ChevronRight, ChevronDown, X, Users as UsersIcon } from "lucide-react";
 import type { AppDispatch } from "../../../app/store";
 import {
   fetchUsers,
@@ -19,6 +19,17 @@ import "../../../styles/organizerTheme.css";
 
 const ALL_ROLES = ["COMPETITOR","SPORT_HEAD","EVENT_HEAD","ORGANISER","ADMIN","SUPER_ADMIN","JUDGE","VOLUNTEER"];
 const PAGE_SIZES = [10, 25, 50];
+
+// Vertical gradient-stroke border (matches the app-wide border-gradient
+// convention — e.g. .etm-border-gradient, .cna-border-gradient — always
+// 180deg, never the horizontal stroke a pasted mockup might show).
+const gradientBorderStyle: React.CSSProperties = {
+  border: "2px solid transparent",
+  borderRadius: "0.5rem",
+  backgroundImage: "linear-gradient(#fff, #fff), linear-gradient(180deg, #8C6CFF 0%, #0162D1 100%)",
+  backgroundOrigin: "border-box",
+  backgroundClip: "padding-box, border-box",
+};
 
 function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
   const [form, setForm] = useState({ firstName:"", lastName:"", phone:"", email:"", password:"", role:"COMPETITOR" });
@@ -41,35 +52,72 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
     } finally { setSaving(false); }
   };
 
-  const inp = "w-full rounded-lg bg-[#f8f9ff] border border-[rgba(75,134,232,0.3)] px-4 py-2.5 text-sm text-[#111111] placeholder-gray-400 focus:outline-none focus:border-[#4b86e8]";
-  const lbl = "block mb-1.5 text-xs font-bold text-[#5d5d5d] uppercase tracking-wide";
+  const inp = "w-full px-4 py-3 text-[15px] text-slate-700 placeholder-slate-400 outline-none focus:shadow-[0_0_0_3px_rgba(140,108,255,0.18)]";
+  const lbl = "block mb-2 text-sm font-semibold text-slate-600";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="w-full max-w-lg rounded-2xl border-[1.5px] border-[#4b86e8] bg-white p-6 shadow-2xl">
-        <h2 className="mb-5 text-lg font-bold" style={{ fontFamily: ORG.fontHeading, color: ORG.blueHeading }}>Create User</h2>
-        <form onSubmit={handle} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div><label className={lbl}>First Name *</label><input className={inp} value={form.firstName} onChange={e=>set("firstName",e.target.value)} placeholder="First name" /></div>
-            <div><label className={lbl}>Last Name *</label><input className={inp} value={form.lastName} onChange={e=>set("lastName",e.target.value)} placeholder="Last name" /></div>
+      <div className="w-full max-w-[650px] rounded-2xl bg-white p-8 shadow-2xl">
+        <div className="mb-8 flex items-start justify-between">
+          <h2 className="text-2xl font-bold" style={{ fontFamily: ORG.fontHeading, color: ORG.blueHeading }}>Create User</h2>
+          <button type="button" onClick={onClose} aria-label="Close" className="mt-1 text-slate-400 hover:text-slate-600">
+            <X size={22} />
+          </button>
+        </div>
+
+        <form onSubmit={handle} className="space-y-5">
+          <div className="grid grid-cols-2 gap-5">
+            <div>
+              <label className={lbl}>First Name <span className="text-slate-400">*</span></label>
+              <input style={gradientBorderStyle} className={inp} value={form.firstName} onChange={e=>set("firstName",e.target.value)} placeholder="Enter First Name" />
+            </div>
+            <div>
+              <label className={lbl}>Last Name <span className="text-slate-400">*</span></label>
+              <input style={gradientBorderStyle} className={inp} value={form.lastName} onChange={e=>set("lastName",e.target.value)} placeholder="Enter Last Name" />
+            </div>
           </div>
-          <div><label className={lbl}>Phone * (10 digits)</label><input className={inp} value={form.phone} onChange={e=>set("phone",e.target.value)} placeholder="9XXXXXXXXX" maxLength={10} /></div>
-          <div><label className={lbl}>Email (optional)</label><input className={inp} type="email" value={form.email} onChange={e=>set("email",e.target.value)} placeholder="email@example.com" /></div>
-          <div><label className={lbl}>Password *</label><input className={inp} type="password" value={form.password} onChange={e=>set("password",e.target.value)} placeholder="Min 8 characters" /></div>
+
           <div>
-            <label className={lbl}>Initial Role *</label>
-            <select className={`${inp} cursor-pointer`} value={form.role} onChange={e=>set("role",e.target.value)}>
-              {ALL_ROLES.map(r => <option key={r} value={r}>{r.replace(/_/g," ")}</option>)}
-            </select>
+            <label className={lbl}>Phone Number <span className="text-slate-400">*</span></label>
+            <input style={gradientBorderStyle} className={inp} value={form.phone} onChange={e=>set("phone",e.target.value)} placeholder="90XXXXXXXX" maxLength={10} />
           </div>
-          {err && <p className="rounded-lg bg-red-50 border border-red-200 px-4 py-2.5 text-sm text-red-600">{err}</p>}
-          <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} className="rounded-lg bg-[#f8f9ff] border border-[rgba(75,134,232,0.3)] px-5 py-2.5 text-sm font-semibold text-[#5d5d5d] hover:bg-[#eef1ff]">Cancel</button>
+
+          <div>
+            <label className={lbl}>Email (Optional)</label>
+            <input style={gradientBorderStyle} className={inp} type="email" value={form.email} onChange={e=>set("email",e.target.value)} placeholder="name@example.com" />
+          </div>
+
+          <div>
+            <label className={lbl}>Password <span className="text-slate-400">*</span></label>
+            <input style={gradientBorderStyle} className={inp} type="password" value={form.password} onChange={e=>set("password",e.target.value)} placeholder="Min 8 characters" />
+          </div>
+
+          <div>
+            <label className={lbl}>Initial Role</label>
+            <div className="relative">
+              <select
+                className="w-full cursor-pointer appearance-none rounded-lg px-4 py-3 pr-10 font-medium text-slate-800 outline-none"
+                style={{ background: "linear-gradient(90deg, rgba(75,134,232,0.14), rgba(140,108,255,0.14))" }}
+                value={form.role}
+                onChange={e=>set("role",e.target.value)}
+              >
+                {ALL_ROLES.map(r => <option key={r} value={r}>{r.replace(/_/g," ")}</option>)}
+              </select>
+              <ChevronDown size={18} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-500" />
+            </div>
+          </div>
+
+          {err && <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">{err}</p>}
+
+          <div className="flex items-center justify-center gap-4 pt-4">
+            <button type="button" onClick={onClose} className="rounded-lg bg-slate-200 px-8 py-3 font-medium text-slate-700 hover:bg-slate-300">
+              Cancel
+            </button>
             <button
               type="submit"
               disabled={saving}
-              className="rounded-lg px-6 py-2.5 text-sm font-bold text-white disabled:opacity-50"
-              style={{ background: ORG.gradientCta, boxShadow: ORG.btnShadow }}
+              className="rounded-lg px-8 py-3 font-semibold text-white shadow-sm disabled:opacity-50"
+              style={{ background: ORG.gradientCta }}
             >
               {saving ? "Creating…" : "Create User"}
             </button>
