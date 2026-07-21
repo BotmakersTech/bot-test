@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { Link } from 'react-router-dom'
+import logo from '../../assets/logo.png'
 
 /* ---------- Types ---------- */
 
@@ -44,7 +45,7 @@ const Footer: React.FC = () => {
 
         {/* Logo */}
         <div style={{ maxWidth: 250 }}>
-          <img src="/logo/bot.png" alt="BotLeague" style={{ width: '100%' }} />
+          <img src={logo} alt="BotLeague" style={{ width: '100%' }} />
         </div>
 
         {/* Navigation */}

@@ -1,6 +1,7 @@
 import { useState, useEffect, } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../app/store";
+import logo from "../../assets/logo.png";
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface CategoryCard {
   color: string;
@@ -450,7 +451,7 @@ const { isAuthenticated } = useSelector(
         <div className="container">
           <div className="logo">
             <img
-              src="./logo/bot.png"
+              src={logo}
               alt="BotLeague Logo"
               onClick={() => (window.location.href = "/")}
               onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
@@ -616,7 +617,7 @@ const { isAuthenticated } = useSelector(
           <div className="footer-logo_rpz">
             <div className="footer-logo-section_rpz">
               <div className="footer-logo-text_rpz">
-                <img src="./logo/bot.png" alt="Bot-League Logo" onError={(e) => { (e.target as HTMLImageElement).alt = "BotLeague"; }} />
+                <img src={logo} alt="Bot-League Logo" onError={(e) => { (e.target as HTMLImageElement).alt = "BotLeague"; }} />
               </div>
             </div>
           </div>

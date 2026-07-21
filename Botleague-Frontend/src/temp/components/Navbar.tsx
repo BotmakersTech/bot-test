@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import logo from '../../assets/logo.png'
 
 /* ---------- Types ---------- */
 
@@ -41,7 +42,7 @@ const Navbar: React.FC<NavbarProps> = ({ links }) => {
       <nav style={{ ...navStyle, boxShadow: scrolled ? '0 10px 40px rgba(255,76,76,0.1)' : 'none' }}>
         <div style={navInner}>
           <Link to="/">
-            <img src="/logo/bot.png" alt="BotLeague" style={logoStyle} />
+            <img src={logo} alt="BotLeague" style={logoStyle} />
           </Link>
 
           {/* Desktop */}

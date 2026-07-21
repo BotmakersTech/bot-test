@@ -19,8 +19,7 @@ import { myInvitations } from "../../UserDashboard/api/userMembership.api"
 import type { RootState } from "../../../app/store"
 import { getPrimaryRole } from "../../../shared/config/sidebarConfig"
 import { AppRole } from "../../../shared/constants/roles"
-
-const LOGO_URL = "https://botleague.in/logo/bot.png"
+import LOGO_URL from "../../../assets/logo-white.png"
 
 function IconButton({
   children,

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import logo from "../../assets/logo.png";
 
 // ─── Footer Social SVGs ───────────────────────────────────────────────────────
 const InstagramSVG = () => (
@@ -376,7 +377,7 @@ export default function ContactUs() {
             className="logo"
             onClick={() => (window.location.href = "/")}
           >
-            <img src="../logo/bot.png" alt="BotLeague Logo" />
+            <img src={logo} alt="BotLeague Logo" />
           </div>
 
           <ul className={`nav-links${menuOpen ? " active" : ""}`}>
@@ -509,7 +510,7 @@ export default function ContactUs() {
           <div className="footer-logo_rpz">
             <div className="footer-logo-section_rpz">
               <div className="footer-logo-text_rpz">
-                <img src="../../../public/logo/bot.png" alt="Bot-League Logo" />
+                <img src={logo} alt="Bot-League Logo" />
               </div>
             </div>
           </div>

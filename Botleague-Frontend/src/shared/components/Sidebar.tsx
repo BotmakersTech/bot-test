@@ -17,6 +17,7 @@ import {
   clearTeam,
 } from "../../feature/Team/store/TeamSlice";
 import { GrDashboard } from "react-icons/gr";
+import logo from "../../assets/logo-white.png";
 
 // ── Icons ──────────────────────────────────────────────
 
@@ -222,7 +223,7 @@ export default function Sidebar() {
         onClick={() => navigate("/")}
       >
         <img
-          src="https://botleague.in/logo/bot.png"
+          src={logo}
           alt="BotLeague"
         />
       </div>
