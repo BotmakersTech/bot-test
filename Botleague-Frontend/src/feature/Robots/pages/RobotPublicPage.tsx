@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Percent, Share2, Star, Swords, Trophy } from "lucide-react";
+import { Percent, Share2, Swords, Trophy } from "lucide-react";
 
 import { getPublicRobotProfile, getPublicRobotProfileByCode, type PublicRobotProfile } from "../api/robotPublic.api";
 import robotFallback from "../../../assets/robot.png";
@@ -159,11 +159,7 @@ export default function RobotPublicPage() {
               <strong>{winRate}%</strong>
               <span>Win Rate</span>
             </div>
-            <div className="rprofile-stat-ribbon">
-              <span className="rprofile-stat-icon"><Star size={35} /></span>
-              <strong>{profile.totalPoints}</strong>
-              <span>Points</span>
-            </div>
+           
           </div>
         </section>
 

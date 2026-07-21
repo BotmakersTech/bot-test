@@ -1,27 +1,34 @@
 import React from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ArrowLeft, Users, Trophy, Calendar, Tag, Swords, Weight, Zap, DollarSign, Award, Cpu, Ruler, Bot, Edit2, X } from "lucide-react"
+import {
+  ArrowLeft, Users, Trophy, Calendar, Tag, Swords, Weight, Zap, DollarSign, Award, Cpu, Ruler, Bot,
+  Edit2, X, FileEdit, PlayCircle, RefreshCw, CheckCircle2, XCircle, Lock, Unlock, Globe,
+} from "lucide-react"
 import { useAdminEvents } from "../hooks/UseAdminEvent"
 import { type CreateEventSportRequest } from "../api/admin.api"
 import SportMediaField from "../../Organizer/components/SportMediaField"
 import { pushToGlobalRankings } from "../../Rankings/api/rankings.api"
 import TeamLogo from "../../../shared/components/TeamLogo"
+import { ORG } from "../../Organizer/theme/organizerTheme"
+import PageWrapper from "../../Organizer/components/PageWrapper"
+import StatChip from "../../Organizer/components/StatChip"
+import PrimaryButton from "../../Organizer/components/PrimaryButton"
 
 // ─────────────────────────────────────────────────────────────
-// DESIGN TOKENS
+// DESIGN TOKENS — same light theme as the Organizer Sport Detail
+// page (organizerTheme.ts), which itself matches the User
+// Dashboard / Team Dashboard / Robot Profile reference pages.
 // ─────────────────────────────────────────────────────────────
 
-const BG      = "#3a3a3a"
-const CARD    = "rgba(0,0,0,0.25)"
-const CARD2   = "rgba(0,0,0,0.35)"
-const BORDER  = "rgba(255,255,255,0.08)"
-const ACCENT  = "#fa4715"
-const TEXT    = "#ffffff"
-const MUTED   = "#9ca3af"
-const LABEL   = "#e5e7eb"
-const SUCCESS = "#4ade80"
-const WARNING = "#fbbf24"
-const DANGER  = "#f87171"
+const CARD2   = "#ffffff"
+const BORDER  = "rgba(75,134,232,0.28)"
+const ACCENT  = ORG.violet
+const TEXT    = ORG.text
+const MUTED   = ORG.muted
+const LABEL   = "#374151"
+const SUCCESS = ORG.success
+const WARNING = "#a16207"
+const DANGER  = ORG.danger
 
 // ─────────────────────────────────────────────────────────────
 // TYPES
@@ -108,10 +115,10 @@ function Spinner({ size = 16, color = ACCENT }: { size?: number; color?: string 
       display: "inline-block",
       width: size,
       height: size,
-      border: `2px solid rgba(255,255,255,0.12)`,
+      border: `2px solid rgba(75,134,232,0.15)`,
       borderTop: `2px solid ${color}`,
       borderRadius: "50%",
-      animation: "spin 0.7s linear infinite",
+      animation: "admin-sport-spin 0.7s linear infinite",
       flexShrink: 0
     }} />
   )
@@ -122,20 +129,23 @@ function Spinner({ size = 16, color = ACCENT }: { size?: number; color?: string 
 // ─────────────────────────────────────────────────────────────
 
 function StatusPill({ status }: { status?: string }) {
-  const MAP: Record<string, { bg: string; border: string; color: string; icon: string }> = {
-    PUBLISHED:           { bg: "rgba(250,71,21,0.11)",  border: "rgba(250,71,21,0.28)",   color: ACCENT,  icon: "📣" },
-    DRAFT:               { bg: "rgba(251,191,36,0.1)",  border: "rgba(251,191,36,0.28)",  color: WARNING, icon: "📝" },
-    LIVE:                { bg: "rgba(74,222,128,0.1)",  border: "rgba(74,222,128,0.28)",  color: SUCCESS, icon: "🟢" },
-    ONGOING:             { bg: "rgba(74,222,128,0.1)",  border: "rgba(74,222,128,0.28)",  color: SUCCESS, icon: "🔄" },
-    COMPLETED:           { bg: "rgba(156,163,175,0.1)", border: "rgba(156,163,175,0.25)", color: MUTED,   icon: "✅" },
-    CANCELLED:           { bg: "rgba(248,113,113,0.1)", border: "rgba(248,113,113,0.28)", color: DANGER,  icon: "🚫" },
-    REGISTRATION_OPEN:   { bg: "rgba(74,222,128,0.1)",  border: "rgba(74,222,128,0.28)",  color: SUCCESS, icon: "🔓" },
-    REGISTRATION_CLOSED: { bg: "rgba(251,191,36,0.1)",  border: "rgba(251,191,36,0.28)",  color: WARNING, icon: "🔒" }
+  const MAP: Record<string, { bg: string; border: string; color: string; icon: React.ReactNode }> = {
+    PUBLISHED:           { bg: "rgba(75,134,232,0.1)",  border: "rgba(75,134,232,0.3)",  color: ORG.blueHeading, icon: <Globe size={11} /> },
+    DRAFT:               { bg: "rgba(161,98,7,0.1)",    border: "rgba(161,98,7,0.28)",   color: WARNING,         icon: <FileEdit size={11} /> },
+    LIVE:                { bg: "rgba(31,169,82,0.1)",   border: "rgba(31,169,82,0.28)",  color: SUCCESS,         icon: <PlayCircle size={11} /> },
+    ONGOING:             { bg: "rgba(31,169,82,0.1)",   border: "rgba(31,169,82,0.28)",  color: SUCCESS,         icon: <RefreshCw size={11} /> },
+    COMPLETED:           { bg: "rgba(93,93,93,0.08)",   border: "rgba(93,93,93,0.22)",   color: MUTED,           icon: <CheckCircle2 size={11} /> },
+    CANCELLED:           { bg: "rgba(224,75,75,0.1)",   border: "rgba(224,75,75,0.28)",  color: DANGER,          icon: <XCircle size={11} /> },
+    REGISTRATION_OPEN:   { bg: "rgba(31,169,82,0.1)",   border: "rgba(31,169,82,0.28)",  color: SUCCESS,         icon: <Unlock size={11} /> },
+    REGISTRATION_CLOSED: { bg: "rgba(161,98,7,0.1)",    border: "rgba(161,98,7,0.28)",   color: WARNING,         icon: <Lock size={11} /> },
   }
   const key = status?.toUpperCase() || "DRAFT"
   const s   = MAP[key] || MAP["DRAFT"]
   return (
     <span style={{
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "5px",
       background: s.bg,
       border: `1px solid ${s.border}`,
       color: s.color,
@@ -147,57 +157,6 @@ function StatusPill({ status }: { status?: string }) {
     }}>
       {s.icon} {key.replace(/_/g, " ")}
     </span>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────
-// STAT BOX
-// ─────────────────────────────────────────────────────────────
-
-function StatBox({
-  icon,
-  label,
-  value,
-  color = TEXT
-}: {
-  icon: React.ReactNode
-  label: string
-  value: string | number
-  color?: string
-}) {
-  return (
-    <div style={{
-      background: CARD,
-      border: `1px solid ${BORDER}`,
-      borderRadius: "12px",
-      padding: "16px 20px",
-      display: "flex",
-      alignItems: "center",
-      gap: "14px",
-      flex: 1,
-      minWidth: "130px"
-    }}>
-      <span style={{ color, flexShrink: 0 }}>{icon}</span>
-      <div>
-        <div style={{
-          fontSize: "0.65rem",
-          color: MUTED,
-          fontWeight: 700,
-          textTransform: "uppercase",
-          letterSpacing: "0.08em"
-        }}>
-          {label}
-        </div>
-        <div style={{
-          fontSize: "1.5rem",
-          fontWeight: 700,
-          color,
-          fontFamily: "'Sarpanch', sans-serif"
-        }}>
-          {value}
-        </div>
-      </div>
-    </div>
   )
 }
 
@@ -217,7 +176,7 @@ function MetaChip({
   if (value == null || value === "") return null
   return (
     <div style={{
-      background: "rgba(0,0,0,0.25)",
+      background: "rgba(75,134,232,0.05)",
       border: `1px solid ${BORDER}`,
       borderRadius: "9px",
       padding: "10px 14px",
@@ -256,14 +215,14 @@ function TeamCard({ team, index }: { team: TeamReg; index: number }) {
   return (
     <div
       style={{
-        background: "rgba(0,0,0,0.28)",
-        border: `1px solid rgba(255,255,255,0.09)`,
+        background: "#ffffff",
+        border: `1.5px solid rgba(75,134,232,0.25)`,
         borderRadius: "12px",
         overflow: "hidden",
         transition: "border-color 0.15s"
       }}
-      onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(250,71,21,0.3)"}
-      onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.09)"}
+      onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.borderColor = ORG.blue}
+      onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(75,134,232,0.25)"}
     >
       {/* HEADER */}
       <div
@@ -282,7 +241,7 @@ function TeamCard({ team, index }: { team: TeamReg; index: number }) {
             width: "36px",
             height: "36px",
             borderRadius: "8px",
-            border: "1px solid rgba(250,71,21,0.25)",
+            border: "1px solid rgba(140,108,255,0.28)",
             flexShrink: 0,
             overflow: "hidden"
           }}>
@@ -312,7 +271,7 @@ function TeamCard({ team, index }: { team: TeamReg; index: number }) {
           <span style={{
             color: MUTED,
             fontSize: "0.7rem",
-            background: "rgba(255,255,255,0.06)",
+            background: "rgba(75,134,232,0.06)",
             border: `1px solid ${BORDER}`,
             borderRadius: "5px",
             padding: "2px 8px",
@@ -340,7 +299,7 @@ function TeamCard({ team, index }: { team: TeamReg; index: number }) {
                 alignItems: "center",
                 justifyContent: "space-between",
                 padding: "6px 10px",
-                background: "rgba(255,255,255,0.03)",
+                background: "rgba(75,134,232,0.04)",
                 borderRadius: "7px"
               }}
             >
@@ -354,8 +313,8 @@ function TeamCard({ team, index }: { team: TeamReg; index: number }) {
               </div>
               {p.role && (
                 <span style={{
-                  background: "rgba(250,71,21,0.1)",
-                  border: "1px solid rgba(250,71,21,0.2)",
+                  background: "rgba(140,108,255,0.1)",
+                  border: "1px solid rgba(140,108,255,0.25)",
                   color: ACCENT,
                   borderRadius: "5px",
                   fontSize: "0.6rem",
@@ -373,27 +332,6 @@ function TeamCard({ team, index }: { team: TeamReg; index: number }) {
   )
 }
 
-
-// ─────────────────────────────────────────────────────────────
-// PAGE WRAPPER
-// ─────────────────────────────────────────────────────────────
-
-function PageWrapper({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{
-      minHeight: "100vh",
-      background: BG,
-      color: TEXT,
-      padding: "40px 48px",
-      position: "relative"
-    }}>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-        {children}
-      </div>
-    </div>
-  )
-}
 
 // ─────────────────────────────────────────────────────────────
 // EDIT SPORT MODAL
@@ -637,8 +575,8 @@ function EditSportModal({
 
   const inputStyle: React.CSSProperties = {
     width: "100%",
-    background: "rgba(0,0,0,0.3)",
-    border: `1px solid rgba(255,255,255,0.12)`,
+    background: "#f8f9ff",
+    border: `1px solid rgba(75,134,232,0.3)`,
     borderRadius: "8px",
     color: TEXT,
     padding: "9px 12px",
@@ -661,7 +599,7 @@ function EditSportModal({
     <div
       style={{
         position: "fixed", inset: 0,
-        background: "rgba(0,0,0,0.72)",
+        background: "rgba(8,8,8,0.6)",
         zIndex: 1000,
         display: "flex", alignItems: "flex-start", justifyContent: "center",
         padding: "32px 16px",
@@ -670,8 +608,8 @@ function EditSportModal({
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div style={{
-        background: "#2a2a2a",
-        border: "1px solid rgba(250,71,21,0.25)",
+        background: "#ffffff",
+        border: `1.5px solid ${ORG.blue}`,
         borderRadius: "16px",
         width: "100%",
         maxWidth: "680px",
@@ -681,13 +619,13 @@ function EditSportModal({
         {/* Header */}
         <div style={{
           padding: "18px 24px",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
-          background: "rgba(250,71,21,0.06)",
+          borderBottom: "1px solid rgba(75,134,232,0.15)",
+          background: "rgba(75,134,232,0.06)",
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <Edit2 size={16} style={{ color: ACCENT }} />
-            <span style={{ fontWeight: 700, fontSize: "0.95rem", fontFamily: "'Sarpanch', sans-serif", letterSpacing: "0.06em" }}>
+            <span style={{ fontWeight: 700, fontSize: "0.95rem", fontFamily: ORG.fontHeading, letterSpacing: "0.06em" }}>
               EDIT SPORT
             </span>
           </div>
@@ -704,11 +642,11 @@ function EditSportModal({
 
           {/* Sport Media */}
           <div style={{
-            background: "rgba(0,0,0,0.3)", border: `1px solid ${BORDER}`, borderRadius: "10px",
+            background: "#f8f9ff", border: "1px solid rgba(75,134,232,0.3)", borderRadius: "10px",
             padding: "14px 16px", display: "flex", flexDirection: "column", gap: "16px",
           }}>
-            <SportMediaField eventId={eventId} sportId={sportId} slot="THUMBNAIL" kind="image" label="Sport Thumbnail" currentUrl={sport.sportThumbnailUrl} onMediaChange={onMediaChange} colors={{ border: BORDER, muted: MUTED, accent: ACCENT, danger: DANGER, uploadBg: "rgba(255,255,255,0.06)" }} />
-            <SportMediaField eventId={eventId} sportId={sportId} slot="TEASER" kind="video" label="Teaser Video" currentUrl={sport.sportTeaserVideoUrl} onMediaChange={onMediaChange} colors={{ border: BORDER, muted: MUTED, accent: ACCENT, danger: DANGER, uploadBg: "rgba(255,255,255,0.06)" }} />
+            <SportMediaField eventId={eventId} sportId={sportId} slot="THUMBNAIL" kind="image" label="Sport Thumbnail" currentUrl={sport.sportThumbnailUrl} onMediaChange={onMediaChange} colors={{ border: "rgba(75,134,232,0.3)", muted: MUTED, accent: ACCENT, danger: DANGER, uploadBg: "#f8f9ff" }} />
+            <SportMediaField eventId={eventId} sportId={sportId} slot="TEASER" kind="video" label="Teaser Video" currentUrl={sport.sportTeaserVideoUrl} onMediaChange={onMediaChange} colors={{ border: "rgba(75,134,232,0.3)", muted: MUTED, accent: ACCENT, danger: DANGER, uploadBg: "#f8f9ff" }} />
           </div>
 
           {/* Row 1: Age Group */}
@@ -780,7 +718,7 @@ function EditSportModal({
             return (
               <div style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
-                background: "rgba(250,71,21,0.06)", border: "1px solid rgba(250,71,21,0.2)",
+                background: "rgba(75,134,232,0.06)", border: "1px solid rgba(75,134,232,0.25)",
                 borderRadius: "8px", padding: "10px 14px",
               }}>
                 <div style={{ fontSize: "0.74rem", color: TEXT }}>
@@ -800,7 +738,7 @@ function EditSportModal({
                     maxBotsPerTeam: preset.maxBotsPerTeam ?? prev.maxBotsPerTeam,
                   }))}
                   style={{
-                    flexShrink: 0, background: ACCENT, border: "none", color: "#fff",
+                    flexShrink: 0, background: ORG.gradientCta, border: "none", color: "#fff",
                     borderRadius: "6px", padding: "6px 12px", fontSize: "0.72rem", fontWeight: 700,
                     cursor: "pointer", whiteSpace: "nowrap",
                   }}
@@ -943,8 +881,8 @@ function EditSportModal({
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
               <label style={{ ...labelStyle, marginBottom: 0 }}>Extra Rules</label>
               <button type="button" onClick={addRule} style={{
-                background: "rgba(250,71,21,0.12)",
-                border: "1px solid rgba(250,71,21,0.3)",
+                background: "rgba(140,108,255,0.12)",
+                border: "1px solid rgba(140,108,255,0.3)",
                 color: ACCENT,
                 borderRadius: "6px",
                 padding: "4px 10px",
@@ -973,8 +911,8 @@ function EditSportModal({
           {/* Actions */}
           <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", paddingTop: "4px" }}>
             <button type="button" onClick={onClose} style={{
-              background: "rgba(255,255,255,0.05)",
-              border: `1px solid rgba(255,255,255,0.12)`,
+              background: "#f8f9ff",
+              border: `1px solid rgba(75,134,232,0.3)`,
               color: MUTED,
               borderRadius: "8px",
               padding: "9px 20px",
@@ -983,7 +921,7 @@ function EditSportModal({
               cursor: "pointer",
             }}>Cancel</button>
             <button type="submit" disabled={saving} style={{
-              background: saving ? "rgba(250,71,21,0.4)" : ACCENT,
+              background: saving ? "rgba(140,108,255,0.5)" : ORG.gradientCta,
               border: "none",
               color: "#fff",
               borderRadius: "8px",
@@ -1120,6 +1058,8 @@ export default function AdminSport() {
         />
       )}
 
+      <style>{`@keyframes admin-sport-spin { to { transform: rotate(360deg); } }`}</style>
+
       {/* ── BACK ── */}
       <button
         onClick={() => navigate(-1)}
@@ -1127,7 +1067,7 @@ export default function AdminSport() {
           display: "flex",
           alignItems: "center",
           gap: "8px",
-          background: "rgba(255,255,255,0.05)",
+          background: "#ffffff",
           border: `1px solid ${BORDER}`,
           color: MUTED,
           borderRadius: "8px",
@@ -1157,9 +1097,10 @@ export default function AdminSport() {
           <h1 style={{
             margin: 0,
             fontSize: "1.8rem",
-            fontFamily: "'Sarpanch', sans-serif",
+            fontFamily: ORG.fontHeading,
             fontWeight: 700,
-            letterSpacing: "0.08em"
+            letterSpacing: "0.02em",
+            color: ORG.blueHeading,
           }}>
             {toLabel(sport.sport)}
           </h1>
@@ -1167,35 +1108,19 @@ export default function AdminSport() {
           <StatusPill status={sport.status} />
 
           {/* EDIT SPORT BUTTON */}
-          <button
-            onClick={() => setShowEditSport(true)}
-            style={{
-              background: "rgba(255,255,255,0.07)",
-              border: "1px solid rgba(255,255,255,0.12)",
-              color: "#e5e7eb",
-              borderRadius: "8px",
-              padding: "7px 14px",
-              fontSize: "0.74rem",
-              fontWeight: 700,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "7px",
-              transition: "all 0.15s",
-            }}
-          >
+          <PrimaryButton variant="outline" onClick={() => setShowEditSport(true)} style={{ padding: "7px 14px", fontSize: "0.74rem" }}>
             <Edit2 size={13} /> Edit Sport
-          </button>
+          </PrimaryButton>
 
           {/* TOGGLE REGISTRATION BUTTON */}
           <button
             onClick={handleToggleRegistration}
             disabled={registrationLoading}
             style={{
-              background: isOpen ? "rgba(248,113,113,0.12)" : "rgba(74,222,128,0.12)",
+              background: isOpen ? "rgba(224,75,75,0.1)" : "rgba(31,169,82,0.1)",
               border: isOpen
-                ? "1px solid rgba(248,113,113,0.3)"
-                : "1px solid rgba(74,222,128,0.3)",
+                ? "1px solid rgba(224,75,75,0.3)"
+                : "1px solid rgba(31,169,82,0.3)",
               color: isOpen ? DANGER : SUCCESS,
               borderRadius: "8px",
               padding: "7px 14px",
@@ -1211,7 +1136,7 @@ export default function AdminSport() {
           >
             {registrationLoading
               ? <><Spinner size={12} color="currentColor" />Updating…</>
-              : isOpen ? "🔒 Close Registration" : "🔓 Open Registration"
+              : isOpen ? <><Lock size={13} />Close Registration</> : <><Unlock size={13} />Open Registration</>
             }
           </button>
 
@@ -1221,8 +1146,8 @@ export default function AdminSport() {
             disabled={finalizing}
             title="Recalculate and publish results to the Global Rankings page"
             style={{
-              background: "rgba(250,71,21,0.12)",
-              border: "1px solid rgba(250,71,21,0.3)",
+              background: "rgba(140,108,255,0.12)",
+              border: "1px solid rgba(140,108,255,0.3)",
               color: ACCENT,
               borderRadius: "8px",
               padding: "7px 14px",
@@ -1236,7 +1161,7 @@ export default function AdminSport() {
               transition: "all 0.15s",
             }}
           >
-            {finalizing ? <><Spinner size={12} color={ACCENT} />Publishing…</> : "🌐 Publish to Global Rankings"}
+            {finalizing ? <><Spinner size={12} color={ACCENT} />Publishing…</> : <><Globe size={13} />Publish to Global Rankings</>}
           </button>
         </div>
 
@@ -1244,8 +1169,8 @@ export default function AdminSport() {
         {finalizeMsg && (
           <div style={{
             padding: "8px 14px",
-            background: finalizeMsg.startsWith("✓") ? "rgba(74,222,128,0.08)" : "rgba(248,113,113,0.08)",
-            border: `1px solid ${finalizeMsg.startsWith("✓") ? "rgba(74,222,128,0.25)" : "rgba(248,113,113,0.25)"}`,
+            background: finalizeMsg.startsWith("✓") ? "rgba(31,169,82,0.08)" : "rgba(224,75,75,0.08)",
+            border: `1px solid ${finalizeMsg.startsWith("✓") ? "rgba(31,169,82,0.25)" : "rgba(224,75,75,0.25)"}`,
             borderRadius: "8px",
             fontSize: "0.82rem",
             color: finalizeMsg.startsWith("✓") ? SUCCESS : DANGER,
@@ -1268,7 +1193,7 @@ export default function AdminSport() {
             fontSize: "0.88rem",
             lineHeight: 1.6,
             maxWidth: "700px",
-            background: "rgba(0,0,0,0.2)",
+            background: "rgba(75,134,232,0.05)",
             border: `1px solid ${BORDER}`,
             borderRadius: "8px",
             padding: "10px 14px"
@@ -1280,17 +1205,17 @@ export default function AdminSport() {
 
       {/* ── STAT BOXES ── */}
       <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "28px" }}>
-        <StatBox icon={<Trophy size={20} />}      label="Teams"      value={totalTeams}                        color={WARNING} />
-        <StatBox icon={<Users size={20} />}       label="Players"    value={totalPlayers}                     color={SUCCESS} />
-        {sport.maxTeams    != null && <StatBox icon={<Tag size={20} />}        label="Max Teams"  value={sport.maxTeams}                       color={LABEL}   />}
-        {sport.entryFee    != null && <StatBox icon={<DollarSign size={20} />} label="Entry Fee"  value={formatCurrency(sport.entryFee)}        color={WARNING} />}
-        {sport.prizeMoney  != null && <StatBox icon={<Award size={20} />}      label="Prize Pool" value={formatCurrency(sport.prizeMoney)}      color={SUCCESS} />}
+        <StatChip icon={<Trophy size={20} />}      label="Teams"      value={totalTeams}                        color={WARNING} />
+        <StatChip icon={<Users size={20} />}       label="Players"    value={totalPlayers}                     color={SUCCESS} />
+        {sport.maxTeams    != null && <StatChip icon={<Tag size={20} />}        label="Max Teams"  value={sport.maxTeams}                       color={LABEL}   />}
+        {sport.entryFee    != null && <StatChip icon={<DollarSign size={20} />} label="Entry Fee"  value={formatCurrency(sport.entryFee)}        color={WARNING} />}
+        {sport.prizeMoney  != null && <StatChip icon={<Award size={20} />}      label="Prize Pool" value={formatCurrency(sport.prizeMoney)}      color={SUCCESS} />}
       </div>
 
       {/* ── SPORT DETAILS GRID ── */}
       <div style={{
         background: CARD2,
-        border: "1px solid rgba(250,71,21,0.14)",
+        border: "1.5px solid rgba(75,134,232,0.3)",
         borderRadius: "16px",
         overflow: "hidden",
         marginBottom: "28px"
@@ -1298,7 +1223,7 @@ export default function AdminSport() {
         <div style={{
           padding: "14px 20px",
           borderBottom: `1px solid ${BORDER}`,
-          background: "rgba(250,71,21,0.04)",
+          background: "rgba(75,134,232,0.04)",
           fontWeight: 700,
           letterSpacing: "0.06em",
           fontSize: "0.85rem",
@@ -1347,7 +1272,7 @@ export default function AdminSport() {
           {/* extra rules */}
           {sport.extraRules && Object.keys(sport.extraRules).length > 0 && (
             <div style={{
-              background: "rgba(0,0,0,0.2)",
+              background: "rgba(75,134,232,0.05)",
               border: `1px solid ${BORDER}`,
               borderRadius: "9px",
               padding: "12px 16px"
@@ -1369,8 +1294,8 @@ export default function AdminSport() {
           {/* registration window */}
           {sport.registrationStartDate && sport.registrationEndDate && (
             <div style={{
-              background: "rgba(250,71,21,0.05)",
-              border: "1px solid rgba(250,71,21,0.15)",
+              background: "rgba(75,134,232,0.05)",
+              border: "1px solid rgba(75,134,232,0.2)",
               borderRadius: "9px",
               padding: "12px 16px",
               display: "flex",
@@ -1400,42 +1325,25 @@ export default function AdminSport() {
         </div>
       </div>
 
-          
+      {/* ── BRACKET / SCORING / RANKING ACTIONS — only once registration is not open ── */}
       {!isOpen && (
-  <div className="m-4 flex  gap-3 rounded-lg p-4 shadow-md">
-    <div>
-      <button
-        onClick={() => navigate(`${location.pathname}/create-match`)}
-        className="w-full rounded-md bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700"
-      >
-        Create Match
-      </button>
-    </div>
-
-    <div>
-      <button
-        onClick={() => navigate(`${location.pathname}/update-score`)}
-        className="w-full rounded-md bg-green-600 px-4 py-2 text-white transition hover:bg-green-700"
-      >
-        Update Score
-      </button>
-    </div>
-
-    <div>
-      <button
-        onClick={() => navigate(`${location.pathname}/ranking`)}
-        className="w-full rounded-md bg-purple-600 px-4 py-2 text-white transition hover:bg-purple-700"
-      >
-        Ranking
-      </button>
-    </div>
-  </div>
-)}
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "28px" }}>
+          <PrimaryButton onClick={() => navigate(`${location.pathname}/create-match`)} style={{ padding: "11px 20px", fontSize: "0.82rem" }}>
+            <Swords size={14} /> Create Match
+          </PrimaryButton>
+          <PrimaryButton variant="outline" onClick={() => navigate(`${location.pathname}/update-score`)} style={{ padding: "11px 20px", fontSize: "0.82rem" }}>
+            <RefreshCw size={14} /> Update Score
+          </PrimaryButton>
+          <PrimaryButton variant="outline" onClick={() => navigate(`${location.pathname}/ranking`)} style={{ padding: "11px 20px", fontSize: "0.82rem" }}>
+            <Trophy size={14} /> Ranking
+          </PrimaryButton>
+        </div>
+      )}
 
       {/* ── REGISTERED TEAMS ── */}
       <div style={{
         background: CARD2,
-        border: "1px solid rgba(250,71,21,0.14)",
+        border: "1.5px solid rgba(75,134,232,0.3)",
         borderRadius: "16px",
         overflow: "hidden"
       }}>
@@ -1443,18 +1351,18 @@ export default function AdminSport() {
         <div style={{
           padding: "14px 20px",
           borderBottom: `1px solid ${BORDER}`,
-          background: "rgba(250,71,21,0.04)",
+          background: "rgba(75,134,232,0.04)",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between"
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ fontWeight: 700, letterSpacing: "0.06em", fontSize: "0.85rem" }}>
+            <span style={{ fontWeight: 700, letterSpacing: "0.06em", fontSize: "0.85rem", color: ORG.blueHeading }}>
               REGISTERED TEAMS
             </span>
             <span style={{
-              background: "rgba(250,71,21,0.13)",
-              border: "1px solid rgba(250,71,21,0.28)",
+              background: "rgba(140,108,255,0.13)",
+              border: "1px solid rgba(140,108,255,0.28)",
               color: ACCENT,
               borderRadius: "999px",
               fontSize: "0.65rem",
@@ -1479,7 +1387,7 @@ export default function AdminSport() {
               alignItems: "center",
               gap: "10px"
             }}>
-              <div style={{ fontSize: "2.5rem" }}>🤖</div>
+              <Bot size={40} style={{ color: "rgba(140,108,255,0.4)" }} />
               <div style={{ color: MUTED, fontSize: "0.85rem", fontWeight: 600 }}>
                 No teams registered yet
               </div>
