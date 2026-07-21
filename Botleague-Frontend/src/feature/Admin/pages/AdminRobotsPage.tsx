@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
+import { Search, Plus, ChevronLeft, ChevronRight, Bot as BotIcon } from "lucide-react"
 import {
   searchAdminRobots,
   createAdminRobot,
@@ -8,12 +9,16 @@ import {
   type TeamOption,
 } from "../../SuperAdmin/api/robotManagement.api"
 import { getWeightClassOptions, weightClassLabel } from "../../Robots/constants/weightClasses"
+import { ORG } from "../../Organizer/theme/organizerTheme"
+import PrimaryButton from "../../Organizer/components/PrimaryButton"
+import "../../../styles/organizerTheme.css"
 
 const ROBOT_TYPES_CREATE = ["COMBAT_ROBOT","SOCCER_ROBOT","SUMO_ROBOT","LINE_FOLLOWER_ROBOT","TASK_ROBOT","RC_VEHICLE","DRONE","AIRCRAFT","INNOVATION_PROJECT"]
 const SPORTS_CREATE = ["ROBOWAR_1_5KG","ROBOWAR_8KG","ROBOWAR_15KG","ROBOWAR_30KG","ROBOWAR_60KG","ROBO_SOCCER","ROBO_SUMO","LINE_FOLLOWER","LINE_FOLLOWER_AUTO","MANUAL_TASK","THEME_BASED_TASKING","DRONE_RACING","DRONE_SOCCER","RC_RACING","AEROMODELLING","PROJECT_BASED"]
 const AGE_CATS = ["JUNIOR_INNOVATORS","YOUNG_ENGINEERS","ROBO_MINDS"]
 const CTRL_TYPES = ["MANUAL","AUTONOMOUS","HYBRID"]
 const CTRL_MODES = ["WIRELESS","WIRED"]
+const PAGE_SIZE = 20
 
 function CreateRobotModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
   const [form, setForm] = useState({ robotName:"", teamId:"", robotType:"COMBAT_ROBOT", sport:"ROBOWAR_1_5KG", ageCategory:"JUNIOR_INNOVATORS", controlType:"MANUAL", controlMode:"WIRELESS", weightClass:"", weightKg:"", description:"" });
@@ -45,14 +50,14 @@ function CreateRobotModal({ onClose, onCreated }: { onClose: () => void; onCreat
     } finally { setSaving(false); }
   };
 
-  const inp = "w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-[#fa4715]/50";
-  const lbl = "block mb-1 text-xs font-semibold text-neutral-400 uppercase tracking-wide";
+  const inp = "w-full rounded-lg bg-[#f8f9ff] border border-[rgba(75,134,232,0.3)] px-4 py-2.5 text-sm text-[#111111] placeholder-gray-400 focus:outline-none focus:border-[#4b86e8]";
+  const lbl = "block mb-1.5 text-xs font-bold text-[#5d5d5d] uppercase tracking-wide";
   const sel = `${inp} cursor-pointer`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#111113] p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-        <h2 className="mb-5 text-lg font-bold text-white">Create Robot</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border-[1.5px] border-[#4b86e8] bg-white p-6 shadow-2xl">
+        <h2 className="mb-5 text-lg font-bold" style={{ fontFamily: ORG.fontHeading, color: ORG.blueHeading }}>Create Robot</h2>
         <form onSubmit={handle} className="space-y-4">
           <div><label className={lbl}>Robot Name *</label><input className={inp} value={form.robotName} onChange={e=>set("robotName",e.target.value)} placeholder="Thunderstrike" /></div>
           <div>
@@ -90,10 +95,15 @@ function CreateRobotModal({ onClose, onCreated }: { onClose: () => void; onCreat
             <div><label className={lbl}>Weight (kg)</label><input className={inp} type="number" step="0.1" min="0" value={form.weightKg} onChange={e=>set("weightKg",e.target.value)} placeholder="1.4" /></div>
           </div>
           <div><label className={lbl}>Description</label><textarea className={`${inp} resize-none`} rows={2} value={form.description} onChange={e=>set("description",e.target.value)} placeholder="Short robot description…" /></div>
-          {err && <p className="rounded-lg bg-red-500/10 px-4 py-2.5 text-sm text-red-400">{err}</p>}
+          {err && <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">{err}</p>}
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} className="rounded-xl bg-white/5 px-5 py-2.5 text-sm font-semibold text-neutral-300 hover:bg-white/10">Cancel</button>
-            <button type="submit" disabled={saving} className="rounded-xl bg-[#fa4715] px-6 py-2.5 text-sm font-bold text-white hover:bg-orange-500 disabled:opacity-50">
+            <button type="button" onClick={onClose} className="rounded-lg bg-[#f8f9ff] border border-[rgba(75,134,232,0.3)] px-5 py-2.5 text-sm font-semibold text-[#5d5d5d] hover:bg-[#eef1ff]">Cancel</button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded-lg px-6 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+              style={{ background: ORG.gradientCta, boxShadow: ORG.btnShadow }}
+            >
               {saving ? "Creating…" : "Create Robot"}
             </button>
           </div>
@@ -108,13 +118,13 @@ const ROBOT_TYPES = ["ALL", "COMBAT_ROBOT", "SOCCER_ROBOT", "SUMO_ROBOT", "LINE_
   "TASK_ROBOT", "RC_VEHICLE", "DRONE", "AIRCRAFT", "INNOVATION_PROJECT"]
 
 function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    ACTIVE:      "bg-green-500/15 text-green-400 border border-green-500/30",
-    INACTIVE:    "bg-gray-500/15 text-gray-400 border border-gray-500/30",
-    MAINTENANCE: "bg-yellow-500/15 text-yellow-400 border border-yellow-500/30",
+  const bg: Record<string, string> = {
+    ACTIVE: "#1fa952",
+    INACTIVE: "#9ca3af",
+    MAINTENANCE: "#a16207",
   }
   return (
-    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${map[status] ?? "bg-gray-500/15 text-gray-400 border border-gray-500/30"}`}>
+    <span className="inline-block rounded-full px-4 py-1 text-xs font-semibold text-white" style={{ background: bg[status] ?? "#9ca3af" }}>
       {status}
     </span>
   )
@@ -143,7 +153,7 @@ export default function AdminRobotsPage() {
         type !== "ALL" ? type : undefined,
         status !== "ALL" ? status : undefined,
         p,
-        20
+        PAGE_SIZE
       )
       setRobots(res.content)
       setTotalPages(res.totalPages)
@@ -167,190 +177,233 @@ export default function AdminRobotsPage() {
   const handleStatusChange = (s: string) => { setStatusFilter(s); setPage(0) }
   const handleTypeChange   = (t: string) => { setTypeFilter(t);   setPage(0) }
 
+  // Numbered page buttons with an ellipsis once there are more pages than fit —
+  // always show first, last, current, and current's immediate neighbors.
+  const pageNumbers = (() => {
+    if (totalPages <= 1) return []
+    const pages = new Set<number>([0, totalPages - 1, page, page - 1, page + 1])
+    return [...pages].filter(p => p >= 0 && p < totalPages).sort((a, b) => a - b)
+  })()
+
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-white p-6">
-      {showCreate && (
-        <CreateRobotModal
-          onClose={() => setShowCreate(false)}
-          onCreated={id => { setShowCreate(false); navigate(`/admin/robots/${id}`); }}
-        />
-      )}
+    <div className="org-page-bg" style={{ padding: "40px 48px" }}>
+      <div style={{ maxWidth: "1400px", margin: "0 auto", position: "relative", zIndex: 1 }}>
 
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Robot Management</h1>
-          <p className="text-gray-400 text-sm mt-1">
-            {totalElements} robot{totalElements !== 1 ? "s" : ""} registered across all teams
-          </p>
-        </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="rounded-xl bg-[#fa4715] px-5 py-2.5 text-sm font-bold text-white hover:bg-orange-500 transition-colors"
-        >
-          + Create Robot
-        </button>
-      </div>
-
-      {/* Search + status filter row */}
-      <div className="flex flex-wrap gap-3 mb-4">
-        <div className="flex flex-1 min-w-60 gap-2">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            placeholder="Search by robot name…"
-            className="flex-1 rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50"
+        {showCreate && (
+          <CreateRobotModal
+            onClose={() => setShowCreate(false)}
+            onCreated={id => { setShowCreate(false); navigate(`/admin/robots/${id}`); }}
           />
-          <button
-            onClick={handleSearch}
-            className="rounded-xl bg-[#fa4715] hover:bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition"
-          >
-            Search
-          </button>
+        )}
+
+        {/* Header */}
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-4xl font-bold tracking-wide" style={{ fontFamily: ORG.fontHeading, color: ORG.blueHeading }}>
+              Robot Management
+            </h1>
+            <p className="mt-1 text-sm text-gray-400">
+              {totalElements} robot{totalElements !== 1 ? "s" : ""} registered across all teams
+            </p>
+          </div>
+          <PrimaryButton type="button" onClick={() => setShowCreate(true)} style={{ padding: "14px 26px", fontSize: "0.9rem", flexShrink: 0 }}>
+            <Plus size={16} /> Create Robot
+          </PrimaryButton>
         </div>
 
-        {/* Status chips */}
-        <div className="flex flex-wrap gap-1.5">
-          {STATUSES.map((s) => (
+        {/* Search + status filter row */}
+        <div className="mb-3 flex flex-wrap gap-3">
+          <div
+            className="flex min-w-[300px] flex-1 items-center overflow-hidden rounded-xl border shadow-sm"
+            style={{ borderColor: "rgba(75,134,232,0.3)" }}
+          >
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              placeholder="Search by robot name…"
+              className="flex-1 px-5 py-3 text-[15px] text-[#374151] placeholder-gray-400 outline-none"
+            />
             <button
-              key={s}
-              onClick={() => handleStatusChange(s)}
-              className={`rounded-xl px-3 py-2 text-xs font-semibold transition ${
-                statusFilter === s
-                  ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
-                  : "bg-white/5 text-gray-400 border border-white/10 hover:text-white"
-              }`}
+              onClick={handleSearch}
+              className="flex h-full items-center justify-center self-stretch px-6"
+              style={{ background: ORG.gradientCta }}
+              aria-label="Search"
             >
-              {s}
+              <Search size={18} className="text-white" />
+            </button>
+          </div>
+
+          {/* Status chips */}
+          <div className="flex flex-wrap gap-1.5">
+            {STATUSES.map((s) => (
+              <button
+                key={s}
+                onClick={() => handleStatusChange(s)}
+                className="rounded-xl px-3.5 py-2 text-xs font-semibold transition"
+                style={
+                  statusFilter === s
+                    ? { background: "rgba(140,108,255,0.12)", color: ORG.violet, border: `1px solid ${ORG.violet}55` }
+                    : { background: "#f8f9ff", color: ORG.muted, border: "1px solid rgba(75,134,232,0.2)" }
+                }
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Type filter */}
+        <div className="mb-5 flex flex-wrap gap-1.5">
+          {ROBOT_TYPES.map((t) => (
+            <button
+              key={t}
+              onClick={() => handleTypeChange(t)}
+              className="rounded-xl px-3 py-1.5 text-xs font-medium transition"
+              style={
+                typeFilter === t
+                  ? { background: "rgba(75,134,232,0.12)", color: ORG.blueHeading, border: `1px solid ${ORG.blue}55` }
+                  : { background: "#f8f9ff", color: ORG.muted, border: "1px solid rgba(75,134,232,0.2)" }
+              }
+            >
+              {t === "ALL" ? "All Types" : t.replace(/_/g, " ")}
             </button>
           ))}
         </div>
-      </div>
 
-      {/* Type filter */}
-      <div className="flex flex-wrap gap-1.5 mb-5">
-        {ROBOT_TYPES.map((t) => (
-          <button
-            key={t}
-            onClick={() => handleTypeChange(t)}
-            className={`rounded-xl px-3 py-1.5 text-xs font-medium transition ${
-              typeFilter === t
-                ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                : "bg-white/5 text-gray-400 border border-white/10 hover:text-white"
-            }`}
-          >
-            {t === "ALL" ? "All Types" : t.replace(/_/g, " ")}
-          </button>
-        ))}
-      </div>
-
-      {/* Table */}
-      {error ? (
-        <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-6 text-red-400 text-sm text-center">
-          {error}
-        </div>
-      ) : loading ? (
-        <div className="flex items-center justify-center py-20 text-gray-400">Loading robots…</div>
-      ) : robots.length === 0 ? (
-        <div className="flex items-center justify-center py-20 text-gray-500">No robots found</div>
-      ) : (
-        <div className="rounded-2xl border border-white/10 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-white/5 text-gray-400 text-xs uppercase">
-              <tr>
-                <th className="px-4 py-3 text-left">Robot</th>
-                <th className="px-4 py-3 text-left hidden sm:table-cell">Code</th>
-                <th className="px-4 py-3 text-left hidden md:table-cell">Type</th>
-                <th className="px-4 py-3 text-left hidden md:table-cell">Sport</th>
-                <th className="px-4 py-3 text-left hidden lg:table-cell">Team</th>
-                <th className="px-4 py-3 text-left hidden lg:table-cell">Weight</th>
-                <th className="px-4 py-3 text-center">Status</th>
-                <th className="px-4 py-3 text-left hidden sm:table-cell">Created</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {robots.map((robot) => (
-                <tr
-                  key={robot.id}
-                  onClick={() => navigate(`/admin/robots/${robot.id}`)}
-                  className="hover:bg-white/5 cursor-pointer transition-colors"
-                >
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      {robot.robotIMG ? (
-                        <img
-                          src={robot.robotIMG}
-                          alt={robot.robotName}
-                          className="h-8 w-8 rounded-lg object-cover border border-white/10 shrink-0"
-                        />
-                      ) : (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/20 text-orange-400 text-xs font-bold shrink-0">
-                          {robot.robotName.charAt(0)}
-                        </div>
-                      )}
-                      <span className="font-medium text-white">{robot.robotName}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 font-mono text-xs text-gray-400 hidden sm:table-cell">
-                    {robot.robotCode}
-                  </td>
-                  <td className="px-4 py-3 text-gray-300 hidden md:table-cell">
-                    {robot.robotType?.replace(/_/g, " ") ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-gray-300 hidden md:table-cell">
-                    {robot.sport?.replace(/_/g, " ") ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 hidden lg:table-cell">
-                    {robot.teamName ? (
-                      <div>
-                        <p className="text-gray-300">{robot.teamName}</p>
-                        <p className="font-mono text-xs text-gray-500">{robot.teamCode}</p>
-                      </div>
-                    ) : (
-                      <span className="text-gray-500">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-gray-400 hidden lg:table-cell">
-                    {robot.weightClass ?? (robot.weightKg ? `${robot.weightKg} kg` : "—")}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <StatusBadge status={robot.status} />
-                  </td>
-                  <td className="px-4 py-3 text-gray-400 hidden sm:table-cell">
-                    {robot.createdAt ? new Date(robot.createdAt).toLocaleDateString() : "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-5">
-          <span className="text-sm text-gray-400">
-            Page {page + 1} of {totalPages}
-          </span>
-          <div className="flex gap-2">
-            <button
-              disabled={page === 0}
-              onClick={() => setPage((p) => p - 1)}
-              className="rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-40 px-4 py-2 text-sm text-white transition"
-            >
-              Previous
-            </button>
-            <button
-              disabled={page >= totalPages - 1}
-              onClick={() => setPage((p) => p + 1)}
-              className="rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-40 px-4 py-2 text-sm text-white transition"
-            >
-              Next
-            </button>
+        {/* Table */}
+        {error ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600">
+            {error}
           </div>
+        ) : loading ? (
+          <div className="flex items-center justify-center py-20 text-gray-400">Loading robots…</div>
+        ) : robots.length === 0 ? (
+          <div className="flex items-center justify-center py-20 text-gray-400">No robots found</div>
+        ) : (
+          <div className="overflow-x-auto rounded-2xl border" style={{ borderColor: "rgba(75,134,232,0.25)" }}>
+            <table className="w-full border-collapse text-left text-sm">
+              <thead>
+                <tr style={{ background: ORG.gradientPill }}>
+                  <th className="px-5 py-4 font-semibold text-white">Robot</th>
+                  <th className="hidden px-5 py-4 font-semibold text-white sm:table-cell">Code</th>
+                  <th className="hidden px-5 py-4 font-semibold text-white md:table-cell">Type</th>
+                  <th className="hidden px-5 py-4 font-semibold text-white md:table-cell">Sport</th>
+                  <th className="hidden px-5 py-4 font-semibold text-white lg:table-cell">Team</th>
+                  <th className="hidden px-5 py-4 font-semibold text-white lg:table-cell">Weight</th>
+                  <th className="px-5 py-4 text-center font-semibold text-white">Status</th>
+                  <th className="hidden px-5 py-4 font-semibold text-white sm:table-cell">Created</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white">
+                {robots.map((robot) => (
+                  <tr
+                    key={robot.id}
+                    onClick={() => navigate(`/admin/robots/${robot.id}`)}
+                    className="cursor-pointer border-t transition-colors hover:bg-[#f8f9ff]"
+                    style={{ borderColor: "rgba(75,134,232,0.14)" }}
+                  >
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-3">
+                        {robot.robotIMG ? (
+                          <img
+                            src={robot.robotIMG}
+                            alt={robot.robotName}
+                            className="h-8 w-8 shrink-0 rounded-lg border object-cover"
+                            style={{ borderColor: "rgba(75,134,232,0.25)" }}
+                          />
+                        ) : (
+                          <span
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
+                            style={{ background: ORG.gradientCta }}
+                          >
+                            {robot.robotName.charAt(0)}
+                          </span>
+                        )}
+                        <span className="font-medium text-[#374151]">{robot.robotName}</span>
+                      </div>
+                    </td>
+                    <td className="hidden px-5 py-3.5 font-mono text-xs text-gray-500 sm:table-cell">
+                      {robot.robotCode}
+                    </td>
+                    <td className="hidden px-5 py-3.5 text-gray-600 md:table-cell">
+                      {robot.robotType?.replace(/_/g, " ") ?? "—"}
+                    </td>
+                    <td className="hidden px-5 py-3.5 text-gray-600 md:table-cell">
+                      {robot.sport?.replace(/_/g, " ") ?? "—"}
+                    </td>
+                    <td className="hidden px-5 py-3.5 lg:table-cell">
+                      {robot.teamName ? (
+                        <div>
+                          <p className="text-gray-600">{robot.teamName}</p>
+                          <p className="font-mono text-xs text-gray-400">{robot.teamCode}</p>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </td>
+                    <td className="hidden px-5 py-3.5 text-gray-500 lg:table-cell">
+                      {robot.weightClass ?? (robot.weightKg ? `${robot.weightKg} kg` : "—")}
+                    </td>
+                    <td className="px-5 py-3.5 text-center">
+                      <StatusBadge status={robot.status} />
+                    </td>
+                    <td className="hidden px-5 py-3.5 text-gray-500 sm:table-cell">
+                      {robot.createdAt ? new Date(robot.createdAt).toLocaleDateString() : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Pagination */}
+        <div className="mt-6 flex flex-wrap items-center gap-2">
+          {totalPages > 1 && (
+            <>
+              <button
+                disabled={page === 0}
+                onClick={() => setPage((p) => p - 1)}
+                className="flex h-9 w-9 items-center justify-center rounded-full border disabled:cursor-not-allowed disabled:opacity-40"
+                style={{ borderColor: "rgba(75,134,232,0.3)", color: ORG.muted }}
+                aria-label="Previous page"
+              >
+                <ChevronLeft size={16} />
+              </button>
+
+              {pageNumbers.map((p, i) => (
+                <span key={p} className="flex items-center">
+                  {i > 0 && p - pageNumbers[i - 1] > 1 && <span className="px-1 text-gray-400">…</span>}
+                  <button
+                    onClick={() => setPage(p)}
+                    className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold"
+                    style={p === page ? { background: ORG.blueHeading, color: "#fff" } : { color: ORG.blueHeading }}
+                  >
+                    {p + 1}
+                  </button>
+                </span>
+              ))}
+
+              <button
+                disabled={page >= totalPages - 1}
+                onClick={() => setPage((p) => p + 1)}
+                className="flex h-9 w-9 items-center justify-center rounded-full border disabled:cursor-not-allowed disabled:opacity-40"
+                style={{ borderColor: "rgba(75,134,232,0.3)", color: ORG.muted }}
+                aria-label="Next page"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </>
+          )}
+          {!loading && totalElements > 0 && (
+            <span className="ml-2 flex items-center gap-1.5 text-sm text-gray-400">
+              <BotIcon size={13} /> {totalElements} total
+            </span>
+          )}
         </div>
-      )}
+
+      </div>
     </div>
   )
 }

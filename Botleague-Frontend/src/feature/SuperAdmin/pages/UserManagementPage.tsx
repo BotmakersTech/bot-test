@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { Search, Plus, ChevronLeft, ChevronRight, Users as UsersIcon } from "lucide-react";
 import type { AppDispatch } from "../../../app/store";
 import {
   fetchUsers,
@@ -9,10 +10,15 @@ import {
   selectUserMgmtError,
   selectTotalPages,
   selectCurrentPage,
+  selectTotalElements,
 } from "../store/userManagementSlice";
 import { createAdminUser } from "../api/userManagement.api";
+import { ORG } from "../../Organizer/theme/organizerTheme";
+import PrimaryButton from "../../Organizer/components/PrimaryButton";
+import "../../../styles/organizerTheme.css";
 
 const ALL_ROLES = ["COMPETITOR","SPORT_HEAD","EVENT_HEAD","ORGANISER","ADMIN","SUPER_ADMIN","JUDGE","VOLUNTEER"];
+const PAGE_SIZES = [10, 25, 50];
 
 function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
   const [form, setForm] = useState({ firstName:"", lastName:"", phone:"", email:"", password:"", role:"COMPETITOR" });
@@ -35,13 +41,13 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
     } finally { setSaving(false); }
   };
 
-  const inp = "w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-[#fa4715]/50";
-  const lbl = "block mb-1 text-xs font-semibold text-neutral-400 uppercase tracking-wide";
+  const inp = "w-full rounded-lg bg-[#f8f9ff] border border-[rgba(75,134,232,0.3)] px-4 py-2.5 text-sm text-[#111111] placeholder-gray-400 focus:outline-none focus:border-[#4b86e8]";
+  const lbl = "block mb-1.5 text-xs font-bold text-[#5d5d5d] uppercase tracking-wide";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#111113] p-6 shadow-2xl">
-        <h2 className="mb-5 text-lg font-bold text-white">Create User</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="w-full max-w-lg rounded-2xl border-[1.5px] border-[#4b86e8] bg-white p-6 shadow-2xl">
+        <h2 className="mb-5 text-lg font-bold" style={{ fontFamily: ORG.fontHeading, color: ORG.blueHeading }}>Create User</h2>
         <form onSubmit={handle} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div><label className={lbl}>First Name *</label><input className={inp} value={form.firstName} onChange={e=>set("firstName",e.target.value)} placeholder="First name" /></div>
@@ -56,10 +62,15 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
               {ALL_ROLES.map(r => <option key={r} value={r}>{r.replace(/_/g," ")}</option>)}
             </select>
           </div>
-          {err && <p className="rounded-lg bg-red-500/10 px-4 py-2.5 text-sm text-red-400">{err}</p>}
+          {err && <p className="rounded-lg bg-red-50 border border-red-200 px-4 py-2.5 text-sm text-red-600">{err}</p>}
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} className="rounded-xl bg-white/5 px-5 py-2.5 text-sm font-semibold text-neutral-300 hover:bg-white/10">Cancel</button>
-            <button type="submit" disabled={saving} className="rounded-xl bg-[#fa4715] px-6 py-2.5 text-sm font-bold text-white hover:bg-orange-500 disabled:opacity-50">
+            <button type="button" onClick={onClose} className="rounded-lg bg-[#f8f9ff] border border-[rgba(75,134,232,0.3)] px-5 py-2.5 text-sm font-semibold text-[#5d5d5d] hover:bg-[#eef1ff]">Cancel</button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded-lg px-6 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+              style={{ background: ORG.gradientCta, boxShadow: ORG.btnShadow }}
+            >
               {saving ? "Creating…" : "Create User"}
             </button>
           </div>
@@ -68,26 +79,33 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
     </div>
   );
 }
+
 // ── Small badge helpers ────────────────────────────────────────────────────
 
 function RoleBadge({ role }: { role: string }) {
   return (
-    <span className="inline-flex items-center rounded-full bg-[#fa4715]/10 px-2.5 py-0.5 text-xs font-medium text-orange-400 border border-[#fa4715]/20">
-      {role}
+    <span
+      className="inline-flex items-center rounded-lg px-3 py-1 text-xs font-semibold italic"
+      style={{ color: ORG.violet, border: `1px solid ${ORG.violet}55`, background: "rgba(140,108,255,0.08)" }}
+    >
+      {role.replace(/_/g, " ")}
     </span>
   );
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const color =
-    status === "ACTIVE" ? "bg-green-500/10 text-green-400" :
-    status === "PENDING" ? "bg-yellow-500/10 text-yellow-400" :
-    "bg-red-500/10 text-red-400";
+  const isActive = status === "ACTIVE";
+  const isPending = status === "PENDING";
+  const bg = isActive ? "#1fa952" : isPending ? "#a16207" : "#e04b4b";
   return (
-    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${color}`}>
+    <span className="inline-block rounded-full px-4 py-1 text-xs font-semibold text-white" style={{ background: bg }}>
       {status}
     </span>
   );
+}
+
+function avatarInitials(firstName: string, lastName: string) {
+  return `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase() || "?";
 }
 
 // ── Main page ──────────────────────────────────────────────────────────────
@@ -101,142 +119,216 @@ export default function UserManagementPage() {
   const error = useSelector(selectUserMgmtError);
   const totalPages = useSelector(selectTotalPages);
   const currentPage = useSelector(selectCurrentPage);
+  const totalElements = useSelector(selectTotalElements);
 
   const [search, setSearch] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
+  const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
   const [showCreate, setShowCreate] = useState(false);
 
   const doSearch = useCallback(
-    (q: string, page: number) => dispatch(fetchUsers({ q: q || undefined, page })),
+    (q: string, page: number, size: number) => dispatch(fetchUsers({ q: q || undefined, page, size })),
     [dispatch]
   );
 
-  useEffect(() => { doSearch(activeSearch, 0); }, [doSearch, activeSearch]);
+  useEffect(() => { doSearch(activeSearch, 0, pageSize); }, [doSearch, activeSearch, pageSize]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setActiveSearch(search);
   };
 
+  // Numbered page buttons with an ellipsis once there are more pages than fit —
+  // always show first, last, current, and current's immediate neighbors.
+  const pageNumbers = (() => {
+    if (totalPages <= 1) return [];
+    const pages = new Set<number>([0, totalPages - 1, currentPage, currentPage - 1, currentPage + 1]);
+    return [...pages].filter(p => p >= 0 && p < totalPages).sort((a, b) => a - b);
+  })();
+
   return (
-    <div className="min-h-screen bg-gray-950 p-6 text-white">
-      {showCreate && (
-        <CreateUserModal
-          onClose={() => setShowCreate(false)}
-          onCreated={id => { setShowCreate(false); navigate(`/admin/users/${id}`); }}
-        />
-      )}
+    <div className="org-page-bg" style={{ padding: "40px 48px" }}>
+      <div style={{ maxWidth: "1400px", margin: "0 auto", position: "relative", zIndex: 1 }}>
 
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-red-500">User Management</h1>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="rounded-xl bg-[#fa4715] px-5 py-2.5 text-sm font-bold text-white hover:bg-orange-500 transition-colors"
+        {showCreate && (
+          <CreateUserModal
+            onClose={() => setShowCreate(false)}
+            onCreated={id => { setShowCreate(false); navigate(`/admin/users/${id}`); }}
+          />
+        )}
+
+        <h1
+          className="mb-8 text-4xl font-bold tracking-wide"
+          style={{ fontFamily: ORG.fontHeading, color: ORG.blueHeading }}
         >
-          + Create User
-        </button>
-      </div>
+          User Management
+        </h1>
 
-      {/* ── Search ── */}
-      <form onSubmit={handleSearch} className="mb-4 flex gap-3">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name, email, phone, or BotLeague ID…"
-          className="flex-1 rounded-lg bg-white/5 px-4 py-2.5 text-sm text-white placeholder-neutral-500 ring-1 ring-white/10 focus:outline-none focus:ring-red-500"
-        />
-        <button
-          type="submit"
-          className="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold hover:bg-red-500 transition-colors"
-        >
-          Search
-        </button>
-      </form>
-
-      {error && (
-        <div className="mb-4 rounded-lg bg-red-500/10 px-4 py-2.5 text-sm text-red-400">
-          {error}
-        </div>
-      )}
-
-      {/* ── User table ── */}
-      <div className="rounded-xl ring-1 ring-white/[0.08] overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-white/[0.04] text-neutral-400">
-            <tr>
-              <th className="px-4 py-3 text-left font-medium">User</th>
-              <th className="px-4 py-3 text-left font-medium">BotLeague ID</th>
-              <th className="px-4 py-3 text-left font-medium">Role</th>
-              <th className="px-4 py-3 text-left font-medium">Status</th>
-              <th className="px-4 py-3 text-left font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/[0.04]">
-            {loading && (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-neutral-500">
-                  Loading users…
-                </td>
-              </tr>
-            )}
-            {!loading && users.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-neutral-500">
-                  No users found.
-                </td>
-              </tr>
-            )}
-            {users.map((u) => (
-              <tr key={u.id} className="hover:bg-white/[0.02] transition-colors">
-                <td className="px-4 py-3">
-                  <div className="font-medium">{u.firstName} {u.lastName}</div>
-                  <div className="text-xs text-neutral-400">{u.email || u.phone}</div>
-                </td>
-                <td className="px-4 py-3 font-mono text-xs text-neutral-400">{u.botleagueId}</td>
-                <td className="px-4 py-3">
-                  <RoleBadge role={u.primaryRole} />
-                </td>
-                <td className="px-4 py-3">
-                  <StatusBadge status={u.accountStatus} />
-                </td>
-                <td className="px-4 py-3">
-                  <button
-                    onClick={() => navigate(`/admin/users/${u.id}`)}
-                    className="rounded-md bg-white/[0.06] px-3 py-1.5 text-xs font-medium hover:bg-white/10 transition-colors"
-                  >
-                    Manage
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* ── Pagination ── */}
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-center gap-2">
-          <button
-            disabled={currentPage === 0}
-            onClick={() => doSearch(activeSearch, currentPage - 1)}
-            className="rounded-lg px-3 py-1.5 text-sm bg-white/[0.06] text-neutral-300 hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
+        {/* ── Search & actions ── */}
+        <form onSubmit={handleSearch} className="mb-6 flex flex-wrap items-center gap-4">
+          <div
+            className="flex flex-1 min-w-[300px] items-center overflow-hidden rounded-xl border shadow-sm"
+            style={{ borderColor: "rgba(75,134,232,0.3)" }}
           >
-            ← Prev
-          </button>
-          <span className="text-sm text-neutral-400">
-            Page {currentPage + 1} of {totalPages}
-          </span>
-          <button
-            disabled={currentPage >= totalPages - 1}
-            onClick={() => doSearch(activeSearch, currentPage + 1)}
-            className="rounded-lg px-3 py-1.5 text-sm bg-white/[0.06] text-neutral-300 hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Next →
-          </button>
-        </div>
-      )}
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name, email, phone, or BotLeague ID…"
+              className="flex-1 px-5 py-3.5 text-[15px] text-[#374151] placeholder-gray-400 outline-none"
+            />
+            <button
+              type="submit"
+              className="flex h-full items-center justify-center self-stretch px-6"
+              style={{ background: ORG.gradientCta }}
+              aria-label="Search"
+            >
+              <Search size={18} className="text-white" />
+            </button>
+          </div>
 
+          <PrimaryButton type="button" onClick={() => setShowCreate(true)} style={{ padding: "14px 26px", fontSize: "0.9rem", flexShrink: 0 }}>
+            <Plus size={16} /> New User
+          </PrimaryButton>
+        </form>
+
+        {error && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">
+            {error}
+          </div>
+        )}
+
+        {/* ── User table ── */}
+        <div className="overflow-hidden rounded-2xl border" style={{ borderColor: "rgba(75,134,232,0.25)" }}>
+          <table className="w-full border-collapse text-left">
+            <thead>
+              <tr style={{ background: ORG.gradientPill }}>
+                <th className="px-6 py-4 text-[15px] font-semibold text-white">Full Name</th>
+                <th className="px-6 py-4 text-[15px] font-semibold text-white">BotLeague ID</th>
+                <th className="px-6 py-4 text-[15px] font-semibold text-white">Status</th>
+                <th className="px-6 py-4 text-[15px] font-semibold text-white">Mobile Number</th>
+                <th className="px-6 py-4 text-[15px] font-semibold text-white">Role</th>
+                <th className="px-6 py-4 text-[15px] font-semibold text-white">Manage</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white">
+              {loading && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-10 text-center text-sm text-gray-400">
+                    Loading users…
+                  </td>
+                </tr>
+              )}
+              {!loading && users.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-10 text-center text-sm text-gray-400">
+                    No users found.
+                  </td>
+                </tr>
+              )}
+              {!loading && users.map((u) => (
+                <tr key={u.id} className="border-t transition-colors hover:bg-[#f8f9ff]" style={{ borderColor: "rgba(75,134,232,0.14)" }}>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      {u.profilePhotoUrl ? (
+                        <img src={u.profilePhotoUrl} alt="" className="h-10 w-10 rounded-full object-cover" />
+                      ) : (
+                        <span
+                          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                          style={{ background: ORG.gradientCta }}
+                        >
+                          {avatarInitials(u.firstName, u.lastName)}
+                        </span>
+                      )}
+                      <div>
+                        <div className="font-medium text-[#374151]">{u.firstName} {u.lastName}</div>
+                        <div className="text-xs text-gray-400">{u.email || u.phone}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 font-mono text-xs text-gray-500">{u.botleagueId}</td>
+                  <td className="px-6 py-4"><StatusBadge status={u.accountStatus} /></td>
+                  <td className="px-6 py-4 text-gray-500">{u.phone || "—"}</td>
+                  <td className="px-6 py-4"><RoleBadge role={u.primaryRole} /></td>
+                  <td className="px-6 py-4">
+                    <button
+                      onClick={() => navigate(`/admin/users/${u.id}`)}
+                      className="rounded-lg px-5 py-2 text-sm font-semibold text-white"
+                      style={{ background: ORG.blue }}
+                    >
+                      Manage
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* ── Pagination ── */}
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            {totalPages > 1 && (
+              <>
+                <button
+                  disabled={currentPage === 0}
+                  onClick={() => doSearch(activeSearch, currentPage - 1, pageSize)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{ borderColor: "rgba(75,134,232,0.3)", color: ORG.muted }}
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+
+                {pageNumbers.map((p, i) => (
+                  <span key={p} className="flex items-center">
+                    {i > 0 && p - pageNumbers[i - 1] > 1 && <span className="px-1 text-gray-400">…</span>}
+                    <button
+                      onClick={() => doSearch(activeSearch, p, pageSize)}
+                      className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold"
+                      style={
+                        p === currentPage
+                          ? { background: ORG.blueHeading, color: "#fff" }
+                          : { color: ORG.blueHeading }
+                      }
+                    >
+                      {p + 1}
+                    </button>
+                  </span>
+                ))}
+
+                <button
+                  disabled={currentPage >= totalPages - 1}
+                  onClick={() => doSearch(activeSearch, currentPage + 1, pageSize)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{ borderColor: "rgba(75,134,232,0.3)", color: ORG.muted }}
+                  aria-label="Next page"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </>
+            )}
+            {!loading && totalElements > 0 && (
+              <span className="ml-2 flex items-center gap-1.5 text-sm text-gray-400">
+                <UsersIcon size={13} /> {totalElements} total
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="font-medium text-gray-500">Show:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+              className="cursor-pointer rounded-lg border px-4 py-2 font-medium outline-none"
+              style={{ borderColor: ORG.blue, color: ORG.blueHeading }}
+            >
+              {PAGE_SIZES.map(s => <option key={s} value={s}>{s} rows</option>)}
+            </select>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }
