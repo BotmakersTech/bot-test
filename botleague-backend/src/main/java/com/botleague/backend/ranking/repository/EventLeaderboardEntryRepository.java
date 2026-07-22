@@ -53,4 +53,7 @@ public interface EventLeaderboardEntryRepository extends JpaRepository<EventLead
     boolean existsByEventSportIdAndTeamId(UUID eventSportId, UUID teamId);
 
     long countByEventSportId(UUID eventSportId);
+
+    /** Certificates unlock only once a sport's leaderboard has been finalized — see AuthorizationService.assertLeaderboardFinalizedForCertificates. */
+    boolean existsByEventSportIdAndIsFinalized(UUID eventSportId, Boolean isFinalized);
 }

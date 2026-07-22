@@ -699,60 +699,6 @@ export const upsertVenueDetail = async (
   return res.data;
 };
 
-// ── Certificates ──────────────────────────────────────────────────────────────
-
-export interface Certificate {
-  id: string;
-  eventId: string;
-  recipientUserId: string | null;
-  recipientName: string;
-  certificateType: string;
-  sportId: string | null;
-  sportName: string | null;
-  teamName: string | null;
-  position: number | null;
-  pdfUrl: string | null;
-  issuedAt: string | null;
-  createdAt: string;
-}
-
-export interface CertificateRequest {
-  recipientUserId?: string;
-  recipientName: string;
-  certificateType: string;
-  sportId?: string;
-  position?: number;
-  pdfUrl?: string;
-  teamName?: string;
-  sportName?: string;
-}
-
-export const getCertificates = async (eventId: string): Promise<Certificate[]> => {
-  const res = await api.get(`/organizer/events/${eventId}/certificates`);
-  return res.data;
-};
-
-export const issueCertificate = async (
-  eventId: string,
-  req: CertificateRequest
-): Promise<Certificate> => {
-  const res = await api.post(`/organizer/events/${eventId}/certificates`, req);
-  return res.data;
-};
-
-export const updateCertificate = async (
-  eventId: string,
-  certId: string,
-  req: CertificateRequest
-): Promise<Certificate> => {
-  const res = await api.put(`/organizer/events/${eventId}/certificates/${certId}`, req);
-  return res.data;
-};
-
-export const deleteCertificate = async (eventId: string, certId: string): Promise<void> => {
-  await api.delete(`/organizer/events/${eventId}/certificates/${certId}`);
-};
-
 // ── Sport creation (shared /events/{id}/sports endpoint — ORGANIZER-permitted) ─
 
 export interface CreateEventSportRequest {

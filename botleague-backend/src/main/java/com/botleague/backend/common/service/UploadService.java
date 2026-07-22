@@ -32,6 +32,10 @@ public class UploadService {
     @Value("${upload.video-max-size-bytes:524288000}") // default 500MB
     private long maxVideoSize;
 
+    // Certificate template backgrounds — flat design assets, generous but bounded.
+    @Value("${upload.certificate-template-max-size-bytes:26214400}") // default 25MB
+    private long maxCertificateTemplateSize;
+
     public UploadService(S3Presigner presigner) {
         this.presigner = presigner;
     }
@@ -84,6 +88,62 @@ public class UploadService {
                 buildPublicUrl(key),                // public access URL
                 key
         );
+    }
+
+    // =========================
+    // CERTIFICATE TEMPLATE UPLOAD (separate from the generic method above —
+    // that method's image/video-only whitelist is relied on by many other
+    // features; templates additionally need PDF/PNG and get their own size cap).
+    // =========================
+    public UploadResponse generateCertificateTemplateUploadUrl(String key, String contentType, long fileSize) {
+
+        validateCertificateTemplateContentType(contentType);
+        validateCertificateTemplateFileSize(fileSize);
+
+        PutObjectRequest putRequest = PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .contentType(contentType)
+                .contentLength(fileSize)
+                .build();
+
+        PutObjectPresignRequest presignRequest =
+                PutObjectPresignRequest.builder()
+                        .signatureDuration(Duration.ofMinutes(10))
+                        .putObjectRequest(putRequest)
+                        .build();
+
+        PresignedPutObjectRequest presignedRequest =
+                presigner.presignPutObject(presignRequest);
+
+        return new UploadResponse(
+                presignedRequest.url().toString(),
+                buildPublicUrl(key),
+                key
+        );
+    }
+
+    private void validateCertificateTemplateContentType(String contentType) {
+        if (contentType == null) {
+            throw ApiException.badRequest("Content type is required");
+        }
+        // A template background is always a flat raster image — the renderer
+        // draws it as the PDF page background and overlays text/QR on top of
+        // it, so no PDF/SVG/animated format is accepted here.
+        boolean allowed = contentType.equalsIgnoreCase("image/png")
+                || contentType.equalsIgnoreCase("image/jpeg");
+        if (!allowed) {
+            throw ApiException.badRequest("Certificate templates must be PNG or JPEG");
+        }
+    }
+
+    private void validateCertificateTemplateFileSize(long fileSize) {
+        if (fileSize <= 0) {
+            throw ApiException.badRequest("Invalid file size");
+        }
+        if (fileSize > maxCertificateTemplateSize) {
+            throw ApiException.badRequest("File size exceeds limit of " + (maxCertificateTemplateSize / (1024 * 1024)) + "MB");
+        }
     }
 
     // =========================

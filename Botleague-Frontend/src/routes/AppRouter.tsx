@@ -51,6 +51,7 @@ import MatchesPage from "../feature/Matches/Pages/Matches";
 import RankingsPage from "../feature/Rankings/pages/Rankings";
 import AchievementsPage from "../feature/Achievement/pages/AchievementsPage";
 import CertificatesPage from "../feature/Achievement/pages/CertificatesPage";
+import VerifyCertificatePage from "../feature/Certificates/pages/VerifyCertificatePage";
 import SupportPage from "../feature/Support/pages/SupportPage";
 
 // ============================
@@ -68,6 +69,7 @@ import AdminAuditLogsPage from "../feature/Admin/pages/AdminAuditLogsPage";
 import AdminJudgesPage from "../feature/Admin/pages/AdminJudgesPage";
 import AdminSponsorsPage from "../feature/Admin/pages/AdminSponsorsPage";
 import AdminSupportTicketsPage from "../feature/Admin/pages/AdminSupportTicketsPage";
+import AdminCertificatesPage from "../feature/Admin/pages/AdminCertificatesPage";
 import CreateEvent from "../feature/Admin/components/CreateEvent";
 import CreateMatch from "../feature/Admin/components/Creatematch";
 
@@ -179,6 +181,9 @@ function AppRoutes() {
       <Route path="/contact-us" element={<FooterShell><ContactUs /></FooterShell>} />
       <Route path="/events" element={<FooterShell><EventsLandingPage /></FooterShell>} />
       <Route path="/verify-email" element={<FooterShell><VerifyEmail /></FooterShell>} />
+      {/* Public certificate verification — reached via QR scan or a shared link, no account needed */}
+      <Route path="/verify" element={<FooterShell><VerifyCertificatePage /></FooterShell>} />
+      <Route path="/verify/:certificateNumber" element={<FooterShell><VerifyCertificatePage /></FooterShell>} />
 
       {/* ========================================= */}
       {/* AUTH ROUTES */}
@@ -277,6 +282,9 @@ function AppRoutes() {
         {/* ── Robot Management (ADMIN+) ── */}
         <Route path="/admin/robots"           element={<RoleRoute roles={ADMIN_AND_UP}><AdminRobotsPage /></RoleRoute>} />
         <Route path="/admin/robots/:robotId"  element={<RoleRoute roles={ADMIN_AND_UP}><AdminRobotDetailPage /></RoleRoute>} />
+
+        {/* ── Certificate Management (ADMIN+) ── */}
+        <Route path="/admin/certificates"     element={<RoleRoute roles={ADMIN_AND_UP}><AdminCertificatesPage /></RoleRoute>} />
 
         {/* ── Role-specific dashboards ── */}
         <Route path="/organizer-dashboard"   element={<RoleRoute roles={SPORT_HEAD_AND_UP}><OrganizerDashboard /></RoleRoute>} />

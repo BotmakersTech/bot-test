@@ -1,63 +1,51 @@
-import { useEffect, useMemo, useState } from "react";
-import { getMyEvents, getMySports, type OrganizerEvent, type OrganizerSport } from "../api/organizer.api";
+import { useEffect, useState } from "react";
+import { getAllEvents, type AdminEventResponse } from "../api/admin.api";
 import {
-  getOrganizerTemplates,
-  createOrganizerTemplate,
-  updateOrganizerTemplate,
-  archiveOrganizerTemplate,
-  getOrganizerCertificateTypes,
-  createOrganizerCertificateType,
-  updateOrganizerCertificateType,
-  triggerOrganizerGeneration,
-  getOrganizerGenerationJobs,
-  getOrganizerIssuedCertificates,
-  revokeOrganizerCertificate,
+  getAdminTemplates,
+  createAdminTemplate,
+  updateAdminTemplate,
+  archiveAdminTemplate,
+  getAdminCertificateTypes,
+  createAdminCertificateType,
+  updateAdminCertificateType,
+  triggerAdminGeneration,
+  getAdminGenerationJobs,
+  getAdminIssuedCertificates,
+  revokeAdminCertificate,
 } from "../api/certificate.api";
 import type { CertificateTemplate } from "../../Certificates/api/certificate.api";
 import TemplateManager from "../../Certificates/components/TemplateManager";
 import CertificateTypeManager from "../../Certificates/components/CertificateTypeManager";
-import PageWrapper from "../components/PageWrapper";
-import { ORG } from "../theme/organizerTheme";
+import PageWrapper from "../../Organizer/components/PageWrapper";
+import { ORG } from "../../Organizer/theme/organizerTheme";
 
-export default function OrganizerCertificatesPage() {
+export default function AdminCertificatesPage() {
   const [tab, setTab] = useState<"templates" | "types">("templates");
   const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
-  const [events, setEvents] = useState<OrganizerEvent[]>([]);
-  const [sports, setSports] = useState<OrganizerSport[]>([]);
+  const [events, setEvents] = useState<AdminEventResponse[]>([]);
   const [eventSportId, setEventSportId] = useState("");
 
   const refreshTemplates = () => {
-    getOrganizerTemplates().then(setTemplates).catch(() => {});
+    getAdminTemplates().then(setTemplates).catch(() => {});
   };
 
   useEffect(() => {
     refreshTemplates();
-    Promise.all([getMyEvents(), getMySports()]).then(([ev, sp]) => {
+    getAllEvents().then((ev) => {
       setEvents(ev);
-      setSports(sp);
-      if (sp.length) setEventSportId(sp[0].id);
+      const firstWithSport = ev.find((e) => (e.sports?.length ?? 0) > 0);
+      if (firstWithSport?.sports?.[0]) setEventSportId(firstWithSport.sports[0].id);
     }).catch(() => {});
   }, []);
 
   const activeTemplates = templates.filter((t) => t.status === "ACTIVE");
-
-  const eventName = (eventId: string) => events.find((e) => e.id === eventId)?.eventName ?? "Event";
-  const groupedSports = useMemo(() => {
-    const byEvent = new Map<string, OrganizerSport[]>();
-    for (const s of sports) {
-      const list = byEvent.get(s.eventId) ?? [];
-      list.push(s);
-      byEvent.set(s.eventId, list);
-    }
-    return byEvent;
-  }, [sports]);
 
   return (
     <PageWrapper>
       <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-bold" style={{ color: ORG.blueHeading, fontFamily: ORG.fontHeading }}>Certificates</h1>
-          <p className="text-sm mt-0.5" style={{ color: ORG.muted }}>Your own certificate templates and per-sport certificate configuration</p>
+          <p className="text-sm mt-0.5" style={{ color: ORG.muted }}>BotLeague-issued certificate templates and per-sport certificate configuration</p>
         </div>
         <div className="flex gap-1 rounded-xl p-1" style={{ background: ORG.blue + "14" }}>
           <button
@@ -79,11 +67,11 @@ export default function OrganizerCertificatesPage() {
 
       {tab === "templates" ? (
         <TemplateManager
-          uploadBasePath="/organizer/certificates"
-          listTemplates={getOrganizerTemplates}
-          createTemplate={createOrganizerTemplate}
-          updateTemplate={updateOrganizerTemplate}
-          archiveTemplate={archiveOrganizerTemplate}
+          uploadBasePath="/admin/certificates"
+          listTemplates={getAdminTemplates}
+          createTemplate={createAdminTemplate}
+          updateTemplate={updateAdminTemplate}
+          archiveTemplate={archiveAdminTemplate}
           templates={templates}
           onChanged={refreshTemplates}
         />
@@ -97,10 +85,10 @@ export default function OrganizerCertificatesPage() {
               className="w-full max-w-md rounded-lg px-3 py-2 text-sm ring-1"
               style={{ boxShadow: `inset 0 0 0 1px ${ORG.blue}4d` }}
             >
-              {Array.from(groupedSports.entries()).map(([eventId, sportList]) => (
-                <optgroup key={eventId} label={eventName(eventId)}>
-                  {sportList.map((s) => (
-                    <option key={s.id} value={s.id}>{s.sport.replace(/_/g, " ")}</option>
+              {events.map((ev) => (
+                <optgroup key={ev.id} label={ev.eventName}>
+                  {(ev.sports ?? []).map((s) => (
+                    <option key={s.id} value={s.id}>{s.sportName || s.sport}</option>
                   ))}
                 </optgroup>
               ))}
@@ -111,13 +99,13 @@ export default function OrganizerCertificatesPage() {
             <CertificateTypeManager
               eventSportId={eventSportId}
               activeTemplates={activeTemplates}
-              listTypes={getOrganizerCertificateTypes}
-              createType={createOrganizerCertificateType}
-              updateType={updateOrganizerCertificateType}
-              triggerGeneration={triggerOrganizerGeneration}
-              listJobs={getOrganizerGenerationJobs}
-              listIssued={getOrganizerIssuedCertificates}
-              revoke={revokeOrganizerCertificate}
+              listTypes={getAdminCertificateTypes}
+              createType={createAdminCertificateType}
+              updateType={updateAdminCertificateType}
+              triggerGeneration={triggerAdminGeneration}
+              listJobs={getAdminGenerationJobs}
+              listIssued={getAdminIssuedCertificates}
+              revoke={revokeAdminCertificate}
             />
           ) : (
             <p className="text-sm" style={{ color: ORG.muted }}>Select an event sport to configure its certificates.</p>

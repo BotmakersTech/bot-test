@@ -68,6 +68,10 @@ public class SecurityConfig {
                 // tournament without an account, matching what the platform already
                 // does for live/completed event listings above.
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/matches/**").permitAll()
+                // QR / shared-link certificate verification — the entire point is that
+                // anyone holding the link or scanning the code can check authenticity
+                // without an account.
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/certificates/verify/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

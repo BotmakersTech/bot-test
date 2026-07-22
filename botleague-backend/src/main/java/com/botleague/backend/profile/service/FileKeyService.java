@@ -91,6 +91,13 @@ public class FileKeyService {
     }
 
     // =========================
+    // CERTIFICATE TEMPLATE - BACKGROUND
+    // =========================
+    public String generateCertificateTemplateKey(String contentType) {
+        return "certificates/templates/" + UUID.randomUUID() + getExtension(contentType);
+    }
+
+    // =========================
     // COMMON EXTENSION RESOLVER
     // =========================
     private String getExtension(String contentType) {

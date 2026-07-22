@@ -1,15 +1,12 @@
-import { useState } from "react"
-import type { ChangeEvent, FormEvent, ReactNode } from "react"
+import React, { useState } from "react"
+import type { ChangeEvent, FormEvent } from "react"
 import { useNavigate } from "react-router-dom"
-import { ArrowLeft, CalendarDays, Globe, MapPin, Building2, FileText, Loader2, Image as ImageIcon } from "lucide-react"
+import { ArrowLeft, UploadCloud, Image as ImageIcon, Loader2 } from "lucide-react"
 import { createEvent, uploadEventImage, type CreateEventRequest } from "../api/organizer.api"
 import LocationSelects from "../../../shared/components/LocationSelects"
-import { ORG } from "../theme/organizerTheme"
-import "../../../styles/organizerTheme.css"
-
-const BORDER = "rgba(75,134,232,0.3)"
-const TEXT   = ORG.text
-const MUTED  = ORG.muted
+import planeDeco from "../../../assets/Auth/plane.svg"
+import droneDeco from "../../../assets/Auth/drone.svg"
+import starDeco from "../../../assets/Auth/Star-two.svg"
 
 interface FormData {
   eventName: string
@@ -24,6 +21,66 @@ interface FormData {
   country: string
   startDate: string
   endDate: string
+}
+
+// =====================================================
+// DESIGN TOKENS — gradient-border form system
+// (Sarpanch / Poppins / Inter, already loaded app-wide)
+// =====================================================
+
+const GRADIENT_BORDER: React.CSSProperties = {
+  border: "2px solid transparent",
+  backgroundImage: "linear-gradient(#ffffff, #ffffff), linear-gradient(180deg, #0162D1, #715bc0)",
+  backgroundOrigin: "border-box",
+  backgroundClip: "padding-box, border-box",
+}
+
+const SELECT_ARROW =
+  "url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%234B5563%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')"
+
+const inputStyle: React.CSSProperties = {
+  ...GRADIENT_BORDER,
+  width: "100%",
+  borderRadius: "15px",
+  backgroundColor: "#BDBDBD33",
+  padding: "14px 16px",
+  fontFamily: "'Inter', sans-serif",
+  fontSize: "0.95rem",
+  color: "#111827",
+  outline: "none",
+  boxSizing: "border-box",
+}
+
+const selectStyle: React.CSSProperties = {
+  border: "2px solid transparent",
+  // Three stacked layers (first = topmost): the chevron icon, the white
+  // padding-box fill, then the border-box gradient ring — kept as three
+  // longhand background-* declarations (never the `background` shorthand,
+  // which would silently reset backgroundImage and erase the other two).
+  backgroundImage: `${SELECT_ARROW}, linear-gradient(#ffffff, #ffffff), linear-gradient(180deg, #0162D1, #715bc0)`,
+  backgroundOrigin: "padding-box, border-box, border-box",
+  backgroundClip: "padding-box, padding-box, border-box",
+  backgroundRepeat: "no-repeat, no-repeat, no-repeat",
+  backgroundPosition: "right 1rem center, 0 0, 0 0",
+  backgroundSize: "1.25rem, auto, auto",
+  width: "100%",
+  borderRadius: "10px",
+  padding: "14px 40px 14px 16px",
+  fontFamily: "'Inter', sans-serif",
+  fontSize: "0.95rem",
+  color: "#111827",
+  outline: "none",
+  boxSizing: "border-box",
+  appearance: "none",
+  WebkitAppearance: "none",
+  cursor: "pointer",
+}
+
+const labelStyle: React.CSSProperties = {
+  fontFamily: "'Poppins', sans-serif",
+  fontSize: "clamp(14px, 1.6vw, 22px)",
+  fontWeight: 500,
+  color: "#374151",
 }
 
 export default function OrganizerCreateEventPage() {
@@ -99,130 +156,199 @@ export default function OrganizerCreateEventPage() {
   }
 
   return (
-    <div className="org-page-bg" style={{ padding: "28px 32px", fontFamily: ORG.fontBody, color: TEXT }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "24px" }}>
-        <button
-          onClick={() => navigate(-1)}
-          style={{ background: ORG.cardBg, border: `1.5px solid ${BORDER}`, color: TEXT, borderRadius: "10px", padding: "10px", cursor: "pointer" }}
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <div>
-          <h1 style={{ margin: 0, fontSize: "1.75rem", fontFamily: ORG.fontHeading, color: ORG.blueHeading, fontWeight: 700 }}>Create Event</h1>
-          <p style={{ marginTop: "4px", color: MUTED, fontSize: "0.85rem" }}>Set up a new BotLeague event — starts as a draft, add sports and publish when ready</p>
-        </div>
-      </div>
+    <div className="relative min-h-screen overflow-hidden bg-white">
+      <img src={planeDeco} alt="" aria-hidden className="pointer-events-none absolute -left-4 top-40 hidden w-[180px] -rotate-6 opacity-80 lg:block" />
+      <img src={droneDeco} alt="" aria-hidden className="pointer-events-none absolute right-0 top-0 hidden w-[220px] opacity-80 lg:block" />
+      <img src={starDeco} alt="" aria-hidden className="pointer-events-none absolute right-16 top-72 hidden w-12 opacity-70 lg:block" />
+      <img src={starDeco} alt="" aria-hidden className="pointer-events-none absolute left-10 bottom-24 hidden w-16 opacity-60 lg:block" />
 
-      {success && (
-        <div style={{ background: "rgba(31,169,82,0.1)", border: "1px solid rgba(31,169,82,0.25)", color: ORG.success, padding: "14px 18px", borderRadius: "12px", marginBottom: "20px" }}>
-          Event created successfully — redirecting…
-        </div>
-      )}
-      {error && (
-        <div style={{ background: "rgba(224,75,75,0.08)", border: "1px solid rgba(224,75,75,0.25)", color: ORG.danger, padding: "14px 18px", borderRadius: "12px", marginBottom: "20px" }}>
-          {error}
-        </div>
-      )}
+      <div className="relative mx-auto w-full max-w-[1155px] px-3 py-8 sm:py-10">
 
-      <form onSubmit={handleSubmit}>
-        <div style={{ display: "grid", gap: "20px", maxWidth: "760px" }}>
-          <Section title="Event Information">
-            <Input icon={<FileText size={16} />} label="Event Name" name="eventName" value={formData.eventName} onChange={handleChange} placeholder="BotLeague Championship" required />
-            <Textarea label="Event Description" name="eventDescription" value={formData.eventDescription} onChange={handleChange} placeholder="Write event details… (optional)" />
-            <div>
-              <div style={{ marginBottom: "8px", color: MUTED, fontSize: "0.85rem" }}>Event Logo</div>
-              <div style={{ background: "rgba(75,134,232,0.04)", border: `1px solid ${BORDER}`, borderRadius: "12px", padding: "16px" }}>
-                <input type="file" accept="image/*" onChange={handleFileChange} style={{ color: TEXT }} />
-                {formData.eventLogo && (
-                  <div style={{ marginTop: "10px", color: MUTED, fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "8px" }}>
-                    <ImageIcon size={15} />
-                    {formData.eventLogo.name}
-                  </div>
-                )}
-              </div>
-            </div>
-          </Section>
-
-          <Section title="Organization (optional)">
-            <Input icon={<Building2 size={16} />} label="Organization Name" name="organizationName" value={formData.organizationName} onChange={handleChange} />
-            <Input icon={<Globe size={16} />} label="Organization URL" name="organizationUrl" value={formData.organizationUrl} onChange={handleChange} placeholder="https://…" />
-          </Section>
-
-          <Section title="Venue (optional)">
-            <Input icon={<MapPin size={16} />} label="Venue Name" name="venueName" value={formData.venueName} onChange={handleChange} />
-            <Input icon={<MapPin size={16} />} label="Venue Address" name="venueAddress" value={formData.venueAddress} onChange={handleChange} />
-            <LocationSelects
-              country={formData.country}
-              state={formData.state}
-              city={formData.city}
-              onCountry={(v) => setFormData((f) => ({ ...f, country: v }))}
-              onState={(v) => setFormData((f) => ({ ...f, state: v }))}
-              onCity={(v) => setFormData((f) => ({ ...f, city: v }))}
-              gridStyle={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: "18px" }}
-              selectStyle={{ width: "100%", background: "rgba(75,134,232,0.04)", border: `1px solid ${BORDER}`, borderRadius: "12px", padding: "12px 16px", color: TEXT, fontSize: "0.85rem", outline: "none", boxSizing: "border-box", cursor: "pointer" }}
-              labelStyle={{ display: "block", color: MUTED, fontSize: "0.85rem", fontWeight: 400, marginBottom: "8px", textTransform: "none", letterSpacing: "normal" }}
-            />
-          </Section>
-
-          <Section title="Event Dates (optional)">
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: "18px" }}>
-              <Input icon={<CalendarDays size={16} />} type="date" label="Start Date" name="startDate" value={formData.startDate} onChange={handleChange} />
-              <Input icon={<CalendarDays size={16} />} type="date" label="End Date" name="endDate" value={formData.endDate} onChange={handleChange} />
-            </div>
-          </Section>
-
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <button
-              type="submit"
-              disabled={submitting}
-              style={{ background: ORG.gradientCta, color: "#fff", border: "none", borderRadius: "12px", padding: "14px 22px", fontWeight: 700, display: "flex", alignItems: "center", gap: "10px", cursor: submitting ? "not-allowed" : "pointer", opacity: submitting ? 0.7 : 1, boxShadow: ORG.btnShadow }}
+        {/* Heading */}
+        <div className="mb-8 flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            aria-label="Back"
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-[#0162D1]/30 text-[#0162D1] transition hover:bg-[#0162D1]/5"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div>
+            <h2
+              className="text-[28px] font-semibold capitalize tracking-wide text-[#0162D1] sm:text-[32px] lg:text-[35px]"
+              style={{ fontFamily: "'Sarpanch', sans-serif" }}
             >
-              {submitting && <Loader2 size={16} className="animate-spin" />}
-              {uploadingImage ? "Uploading image…" : submitting ? "Creating event…" : "Create Event"}
-            </button>
+              Create Event
+            </h2>
+            <p className="mt-1 text-sm text-gray-500" style={{ fontFamily: "'Inter', sans-serif" }}>
+              Starts as a draft — add sports and publish when ready
+            </p>
           </div>
         </div>
-      </form>
-    </div>
-  )
-}
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <div style={{ background: ORG.cardBg, border: `1.5px solid ${BORDER}`, borderRadius: "16px", padding: "22px" }}>
-      <div style={{ fontSize: "0.95rem", fontWeight: 700, marginBottom: "18px", color: TEXT, fontFamily: ORG.fontHeading }}>{title}</div>
-      <div style={{ display: "grid", gap: "16px" }}>{children}</div>
-    </div>
-  )
-}
+        {success && (
+          <div className="mb-5 rounded-xl border border-green-200 bg-green-50 px-5 py-3.5 font-medium text-green-700" style={{ fontFamily: "'Inter', sans-serif" }}>
+            Event created successfully — redirecting…
+          </div>
+        )}
+        {error && (
+          <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-5 py-3.5 font-medium text-red-600" style={{ fontFamily: "'Inter', sans-serif" }}>
+            {error}
+          </div>
+        )}
 
-function Input({ icon, label, ...props }: any) {
-  return (
-    <div>
-      <div style={{ marginBottom: "8px", color: MUTED, fontSize: "0.85rem" }}>{label}</div>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", background: "rgba(75,134,232,0.04)", border: `1px solid ${BORDER}`, borderRadius: "12px", padding: "0 14px" }}>
-        {icon && <div style={{ color: MUTED }}>{icon}</div>}
-        <input
-          {...props}
-          onClick={(e: any) => {
-            if (props.type === "date") (e.target as HTMLInputElement).showPicker?.()
-          }}
-          style={{ flex: 1, width: "100%", background: "transparent", border: "none", outline: "none", color: TEXT, padding: "13px 0", cursor: props.type === "date" ? "pointer" : "text" }}
-        />
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+
+          {/* ── 1. Event Information ── */}
+          <SectionBadge n={1} title="Event Information" />
+
+          <Field label="Event Name">
+            <input type="text" name="eventName" value={formData.eventName} onChange={handleChange} style={inputStyle} required />
+          </Field>
+
+          <Field label="Event Description">
+            <textarea name="eventDescription" rows={4} value={formData.eventDescription} onChange={handleChange} style={{ ...inputStyle, resize: "vertical" }} />
+          </Field>
+
+          <Field label="Event Logo">
+            <label
+              htmlFor="eventLogo"
+              className="relative flex h-[157px] w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-[15px] text-center"
+              style={inputStyle}
+            >
+              <UploadCloud size={26} className="text-[#9ca3af]" />
+              <span className="text-[15px] text-zinc-500" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                click to upload or <span className="text-[#0162D1]">drag & drop</span>
+              </span>
+              {formData.eventLogo && (
+                <span className="mt-1 flex items-center gap-1.5 text-xs text-[#0162D1]">
+                  <ImageIcon size={13} /> {formData.eventLogo.name}
+                </span>
+              )}
+              <input id="eventLogo" type="file" accept="image/*" onChange={handleFileChange} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
+            </label>
+          </Field>
+
+          {/* ── 2. Organization ── */}
+          <SectionBadge n={2} title="Organization" />
+
+          <Field label="Organization Name">
+            <input type="text" name="organizationName" value={formData.organizationName} onChange={handleChange} style={inputStyle} />
+          </Field>
+
+          <Field label="Organization URL">
+            <input type="text" name="organizationUrl" value={formData.organizationUrl} onChange={handleChange} placeholder="https://…" style={inputStyle} />
+          </Field>
+
+          {/* ── 3. Venue ── */}
+          <SectionBadge n={3} title="Venue" />
+
+          <Field label="Venue Name">
+            <input type="text" name="venueName" value={formData.venueName} onChange={handleChange} style={inputStyle} />
+          </Field>
+
+          <Field label="Venue Address">
+            <input type="text" name="venueAddress" value={formData.venueAddress} onChange={handleChange} style={inputStyle} />
+          </Field>
+
+          <LocationSelects
+            country={formData.country}
+            state={formData.state}
+            city={formData.city}
+            onCountry={(v) => setFormData((f) => ({ ...f, country: v }))}
+            onState={(v) => setFormData((f) => ({ ...f, state: v }))}
+            onCity={(v) => setFormData((f) => ({ ...f, city: v }))}
+            gridStyle={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: "24px" }}
+            selectStyle={selectStyle}
+            inputStyle={inputStyle}
+            labelStyle={labelStyle}
+          />
+
+          {/* ── 4. Event Dates ── */}
+          <SectionBadge n={4} title="Event Dates" />
+
+          <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-2">
+            <Field label="Start Date">
+              <input
+                type="date" name="startDate" value={formData.startDate} onChange={handleChange}
+                onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                style={{ ...inputStyle, borderRadius: "10px", cursor: "pointer" }}
+              />
+            </Field>
+            <Field label="End Date">
+              <input
+                type="date" name="endDate" value={formData.endDate} onChange={handleChange}
+                onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                style={{ ...inputStyle, borderRadius: "10px", cursor: "pointer" }}
+              />
+            </Field>
+          </div>
+
+        </form>
+
+        {/* Submit */}
+        <div className="mt-6 flex items-center justify-center pb-4">
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="flex items-center gap-2.5 rounded-[10px] px-8 py-3.5 font-medium text-white shadow-md transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
+            style={{ background: "linear-gradient(300deg, #9d7df9 40%, #5385ed 100%)", fontFamily: "'Poppins', sans-serif" }}
+          >
+            {submitting && <Loader2 size={16} className="animate-spin" />}
+            {uploadingImage ? "Uploading image…" : submitting ? "Creating event…" : "Create Event"}
+          </button>
+        </div>
       </div>
     </div>
   )
 }
 
-function Textarea({ label, ...props }: any) {
+// =====================================================
+// SECTION BADGE — numbered gradient-border marker + title + divider
+// =====================================================
+
+function SectionBadge({ n, title }: { n: number; title: string }) {
   return (
-    <div>
-      <div style={{ marginBottom: "8px", color: MUTED, fontSize: "0.85rem" }}>{label}</div>
-      <textarea
-        {...props}
-        rows={5}
-        style={{ width: "100%", resize: "vertical", background: "rgba(75,134,232,0.04)", border: `1px solid ${BORDER}`, borderRadius: "12px", padding: "13px", outline: "none", color: TEXT }}
-      />
+    <div className="mt-2 flex w-full items-center gap-3 sm:gap-5">
+      <span
+        className="flex size-6.25 flex-shrink-0 items-center justify-center rounded-sm text-[14px]"
+        style={{ ...GRADIENT_BORDER, borderRadius: "6px", fontFamily: "'Poppins', sans-serif" }}
+      >
+        <span
+          className="font-medium leading-none"
+          style={{
+            backgroundImage: "linear-gradient(to right, #0162D1, #8C6CFF)",
+            WebkitBackgroundClip: "text",
+            backgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            color: "transparent",
+          }}
+        >
+          {n}
+        </span>
+      </span>
+      <p
+        className="whitespace-nowrap text-lg font-medium text-[#0162D1] sm:text-xl md:text-2xl lg:text-[28px]"
+        style={{ fontFamily: "'Poppins', sans-serif" }}
+      >
+        {title}
+      </p>
+      <div className="h-px w-full bg-gray-300" />
+    </div>
+  )
+}
+
+// =====================================================
+// FIELD — label + input wrapper
+// =====================================================
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex w-full flex-col gap-2">
+      <label style={labelStyle}>{label}</label>
+      {children}
     </div>
   )
 }

@@ -12,6 +12,7 @@ import com.botleague.backend.events.entity.EventSports;
 import com.botleague.backend.events.repository.EventRepository;
 import com.botleague.backend.events.repository.EventSportsRepository;
 import com.botleague.backend.organizer.repository.EventJudgeRepository;
+import com.botleague.backend.ranking.repository.EventLeaderboardEntryRepository;
 import com.botleague.backend.role.repository.UserRoleRepository;
 
 /**
@@ -32,18 +33,21 @@ public class AuthorizationService {
     private final EventRepository eventRepository;
     private final EventSportsRepository eventSportsRepository;
     private final EventJudgeRepository eventJudgeRepository;
+    private final EventLeaderboardEntryRepository eventLeaderboardEntryRepository;
 
     public AuthorizationService(
             UserRoleRepository userRoleRepository,
             ResourceRoleAssignmentRepository resourceRoleAssignmentRepository,
             EventRepository eventRepository,
             EventSportsRepository eventSportsRepository,
-            EventJudgeRepository eventJudgeRepository) {
+            EventJudgeRepository eventJudgeRepository,
+            EventLeaderboardEntryRepository eventLeaderboardEntryRepository) {
         this.userRoleRepository = userRoleRepository;
         this.resourceRoleAssignmentRepository = resourceRoleAssignmentRepository;
         this.eventRepository = eventRepository;
         this.eventSportsRepository = eventSportsRepository;
         this.eventJudgeRepository = eventJudgeRepository;
+        this.eventLeaderboardEntryRepository = eventLeaderboardEntryRepository;
     }
 
     // ── Checks ───────────────────────────────────────────────────────────
@@ -95,6 +99,24 @@ public class AuthorizationService {
                 || event.getStatus() == com.botleague.backend.events.enums.EventStatus.CANCELLED) {
             throw ApiException.conflict(
                     "This event is " + event.getStatus() + " — no further action can be taken on it.");
+        }
+    }
+
+    // ── Certificate lifecycle gate ──────────────────────────────────────
+    //
+    // Certificates must not be generated off an in-progress leaderboard — a
+    // WINNER certificate handed out before results are official could hand
+    // out the wrong name if a result is later corrected on appeal. Mirrors
+    // assertEventActiveForSport's shape: a focused guard called at the top
+    // of the one write path it protects (certificate generation triggers).
+
+    public void assertLeaderboardFinalizedForCertificates(UUID eventSportId) {
+        if (eventSportId == null) return;
+        boolean hasFinalizedEntries = eventLeaderboardEntryRepository
+                .existsByEventSportIdAndIsFinalized(eventSportId, Boolean.TRUE);
+        if (!hasFinalizedEntries) {
+            throw ApiException.conflict(
+                    "This sport's rankings have not been finalized yet — certificates cannot be generated until results are official.");
         }
     }
 

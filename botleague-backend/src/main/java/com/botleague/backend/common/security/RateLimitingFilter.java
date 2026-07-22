@@ -44,6 +44,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     private final int sendOtpPerMin;
     private final int resendOtpPerMin;
     private final int uploadUrlPerMin;
+    private final int certificateVerifyPerMin;
 
     public RateLimitingFilter(
             @Value("${rate-limit.login-per-minute:5}") int loginPerMin,
@@ -52,7 +53,8 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             @Value("${rate-limit.register-per-minute:5}") int registerPerMin,
             @Value("${rate-limit.send-otp-per-minute:10}") int sendOtpPerMin,
             @Value("${rate-limit.resend-otp-per-minute:5}") int resendOtpPerMin,
-            @Value("${rate-limit.upload-url-per-minute:20}") int uploadUrlPerMin) {
+            @Value("${rate-limit.upload-url-per-minute:20}") int uploadUrlPerMin,
+            @Value("${rate-limit.certificate-verify-per-minute:30}") int certificateVerifyPerMin) {
         this.loginPerMin = loginPerMin;
         this.forgotPerMin = forgotPerMin;
         this.otpPerMin = otpPerMin;
@@ -60,6 +62,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         this.sendOtpPerMin = sendOtpPerMin;
         this.resendOtpPerMin = resendOtpPerMin;
         this.uploadUrlPerMin = uploadUrlPerMin;
+        this.certificateVerifyPerMin = certificateVerifyPerMin;
     }
 
     @Override
@@ -73,7 +76,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             return;
         }
 
-        String key = clientIp(request) + ":" + request.getRequestURI();
+        String key = ClientIpResolver.resolve(request) + ":" + request.getRequestURI();
         Bucket bucket = buckets.computeIfAbsent(key, k -> {
             if (buckets.size() > MAX_BUCKETS) {
                 evictHalf(); // bounded guard against memory blowup
@@ -104,6 +107,9 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         // effectively a free write into R2 storage/egress cost.
         if (uri.endsWith("/upload-url"))                        return uploadUrlPerMin;
         if (uri.contains("/upload/") && uri.endsWith("/logo"))  return uploadUrlPerMin;
+        // Public, unauthenticated QR/link verification — otherwise a free,
+        // unbounded lookup an attacker could hammer to enumerate certificate numbers.
+        if (uri.contains("/certificates/verify/"))              return certificateVerifyPerMin;
         return null;
     }
 
@@ -128,33 +134,5 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     private Bucket newBucket(int perMinute) {
         Bandwidth limit = Bandwidth.classic(perMinute, Refill.greedy(perMinute, Duration.ofMinutes(1)));
         return Bucket.builder().addLimit(limit).build();
-    }
-
-    private String clientIp(HttpServletRequest request) {
-        // nginx.conf sets `X-Real-IP: $remote_addr` unconditionally — it always
-        // OVERWRITES this header with what it actually saw on the socket, so a
-        // client-supplied X-Real-IP can never survive the hop. That makes it
-        // the only header here a client can't spoof; prefer it.
-        //
-        // X-Forwarded-For is set via $proxy_add_x_forwarded_for, which APPENDS
-        // to whatever the client already sent rather than replacing it. Taking
-        // the FIRST entry (as this used to) reads back the attacker's own
-        // injected value; the LAST entry is the one nginx itself appended,
-        // i.e. the real peer — but only because there is exactly one trusted
-        // hop in front of this app (see nginx/botleague.conf). If a second
-        // proxy/CDN is ever added in front of nginx, this must change to trust
-        // the last-but-one entry instead.
-        String realIp = request.getHeader("X-Real-IP");
-        if (realIp != null && !realIp.isBlank()) {
-            return realIp.trim();
-        }
-
-        String xff = request.getHeader("X-Forwarded-For");
-        if (xff != null && !xff.isBlank()) {
-            String[] hops = xff.split(",");
-            return hops[hops.length - 1].trim();
-        }
-
-        return request.getRemoteAddr();
     }
 }

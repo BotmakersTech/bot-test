@@ -49,4 +49,15 @@ public class GetFileService {
         }
         return null;
     }
+
+    /** Certificate template backgrounds and issued certificate PDFs/images/QR codes. */
+    public String getCertificateUrl(String key) {
+        if (key == null || key.isEmpty()) {
+            return null;
+        }
+        if (!key.startsWith("certificates/")) {
+            throw new RuntimeException("Invalid file key");
+        }
+        return publicBaseUrl + "/" + key;
+    }
 }

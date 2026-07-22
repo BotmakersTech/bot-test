@@ -40,6 +40,7 @@ export const NAV_CONFIG: NavItem[] = [
   { id: "a-dash",     label: "Dashboard",           link: "/admin-dashboard",        iconName: "dashboard",  roles: [ADM] },
   { id: "a-teams",    label: "All Teams",           link: "/admin/teams",            iconName: "teams",      roles: [ADM] },
   { id: "a-robots",   label: "All Robots",          link: "/admin/robots",           iconName: "robot",      roles: [ADM] },
+  { id: "a-cert",     label: "Certificates",        link: "/admin/certificates",     iconName: "certificate",roles: [ADM] },
   { id: "a-events",   label: "All Events",          link: "/admin/user",             iconName: "calendar",   roles: [ADM] },
   { id: "a-create",   label: "Create Event",        link: "/admin/events/create",    iconName: "add",        roles: [ADM] },
   { id: "a-sports",   label: "All Sports",          link: "/admin/sports",           iconName: "sports",     roles: [ADM] },
