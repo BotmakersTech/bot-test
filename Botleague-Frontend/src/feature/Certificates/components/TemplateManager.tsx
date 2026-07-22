@@ -51,6 +51,7 @@ export default function TemplateManager({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [addKey, setAddKey] = useState<PlaceholderKey | "">("");
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const dragIndex = useRef<number | null>(null);
   const imageRef = useRef<HTMLDivElement | null>(null);
 
@@ -106,17 +107,31 @@ export default function TemplateManager({
   const addPlaceholder = () => {
     if (!addKey) return;
     const isQr = addKey === "QR_CODE";
-    const entry: TemplatePlaceholderPosition = isQr
-      ? { key: addKey, x: form.pageWidthPx / 2 - 60, y: form.pageHeightPx / 2 - 60, sizePx: 120 }
-      : {
-          key: addKey,
-          x: form.pageWidthPx / 2,
-          y: form.pageHeightPx / 2,
-          fontSize: 24,
-          color: "#1a1a1a",
-          align: "CENTER",
-          bold: false,
-        };
+    let entry: TemplatePlaceholderPosition;
+    if (isQr) {
+      // Bottom-right corner by default — QR codes sit in a corner on real
+      // certificates, never behind the text block in the middle.
+      const size = 120;
+      entry = { key: addKey, x: form.pageWidthPx - size - 40, y: form.pageHeightPx - size - 40, sizePx: size };
+    } else {
+      // Every new text field previously landed on the exact same spot
+      // (dead center), so adding a few fields stacked them invisibly on
+      // top of each other. Cascade each new one further down the page so
+      // it's immediately visible and grabbable — still just a starting
+      // point, drag it wherever it actually belongs.
+      const textCount = form.placeholderMap.filter((p) => p.key !== "QR_CODE").length;
+      const startY = form.pageHeightPx * 0.32;
+      const stepY = form.pageHeightPx * 0.11;
+      entry = {
+        key: addKey,
+        x: form.pageWidthPx / 2,
+        y: Math.min(form.pageHeightPx - 40, startY + textCount * stepY),
+        fontSize: 24,
+        color: "#1a1a1a",
+        align: "CENTER",
+        bold: false,
+      };
+    }
     setForm((p) => ({ ...p, placeholderMap: [...p.placeholderMap, entry] }));
     setAddKey("");
   };
@@ -135,6 +150,7 @@ export default function TemplateManager({
   const onMarkerPointerDown = (index: number) => (e: React.PointerEvent) => {
     e.preventDefault();
     dragIndex.current = index;
+    setActiveIndex(index);
     (e.target as Element).setPointerCapture(e.pointerId);
   };
 
@@ -314,28 +330,69 @@ export default function TemplateManager({
                   style={{ width: Math.min(PREVIEW_WIDTH, form.pageWidthPx) * scale, height: previewHeight, touchAction: "none" }}
                 >
                   <img src={form.backgroundUrl} alt="Template preview" className="absolute inset-0 w-full h-full object-cover rounded-lg pointer-events-none" />
-                  {form.placeholderMap.map((p, i) => (
-                    <div
-                      key={p.key}
-                      onPointerDown={onMarkerPointerDown(i)}
-                      className="absolute rounded-full flex items-center justify-center text-[9px] font-bold text-white cursor-move shadow-md"
-                      style={{
-                        left: p.x * scale - 8,
-                        top: p.y * scale - 8,
-                        width: 16,
-                        height: 16,
-                        background: p.key === "QR_CODE" ? ORG.violet : ORG.blueHeading,
-                      }}
-                      title={PLACEHOLDER_LABELS[p.key]}
-                    >
-                      {i + 1}
-                    </div>
-                  ))}
+                  {form.placeholderMap.map((p, i) => {
+                    const isActive = activeIndex === i;
+                    const previewWidthPx = Math.min(PREVIEW_WIDTH, form.pageWidthPx) * scale;
+                    const flipLeft = p.x * scale > previewWidthPx * 0.65;
+                    return (
+                      <div
+                        key={p.key}
+                        onPointerDown={onMarkerPointerDown(i)}
+                        onPointerEnter={() => setActiveIndex(i)}
+                        onPointerLeave={() => setActiveIndex((cur) => (cur === i ? null : cur))}
+                        className="absolute flex items-center cursor-move"
+                        style={{
+                          left: p.x * scale,
+                          top: p.y * scale,
+                          transform: "translate(-50%, -50%)",
+                          flexDirection: flipLeft ? "row-reverse" : "row",
+                          zIndex: isActive ? 20 : 10 + i,
+                        }}
+                      >
+                        <div
+                          className="rounded-full flex items-center justify-center text-[9px] font-bold text-white shadow-md shrink-0 transition-all"
+                          style={{
+                            width: isActive ? 20 : 16,
+                            height: isActive ? 20 : 16,
+                            background: p.key === "QR_CODE" ? ORG.violet : ORG.blueHeading,
+                            outline: isActive ? `2px solid ${ORG.warning}` : "none",
+                            outlineOffset: 2,
+                          }}
+                        >
+                          {i + 1}
+                        </div>
+                        <span
+                          className="text-[10px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap shadow-sm pointer-events-none"
+                          style={{
+                            background: isActive ? ORG.warning : "rgba(17,17,17,0.75)",
+                            color: isActive ? "#1a1a1a" : "#fff",
+                            margin: flipLeft ? "0 6px 0 0" : "0 0 0 6px",
+                          }}
+                        >
+                          {PLACEHOLDER_LABELS[p.key]}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
+                <p className="text-[11px] mt-1.5" style={{ color: ORG.muted }}>
+                  Each new field starts at a different spot so it's never hidden behind another — drag any marker to fine-tune, or hover a row below to find it on the image.
+                </p>
 
                 <div className="mt-3 space-y-2">
-                  {form.placeholderMap.map((p, i) => (
-                    <div key={p.key} className="flex flex-wrap items-center gap-2 rounded-lg p-2" style={{ background: ORG.blue + "0d" }}>
+                  {form.placeholderMap.map((p, i) => {
+                    const isActive = activeIndex === i;
+                    return (
+                    <div
+                      key={p.key}
+                      onMouseEnter={() => setActiveIndex(i)}
+                      onMouseLeave={() => setActiveIndex((cur) => (cur === i ? null : cur))}
+                      className="flex flex-wrap items-center gap-2 rounded-lg p-2 transition-colors"
+                      style={{
+                        background: isActive ? ORG.warning + "26" : ORG.blue + "0d",
+                        boxShadow: isActive ? `inset 0 0 0 1.5px ${ORG.warning}` : "none",
+                      }}
+                    >
                       <span className="text-xs font-bold w-36 shrink-0" style={{ color: ORG.blueHeading }}>{i + 1}. {PLACEHOLDER_LABELS[p.key]}</span>
                       {p.key === "QR_CODE" ? (
                         <label className="text-xs flex items-center gap-1">
@@ -367,7 +424,8 @@ export default function TemplateManager({
                         Remove
                       </button>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
