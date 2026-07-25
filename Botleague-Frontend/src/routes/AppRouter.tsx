@@ -180,6 +180,10 @@ function AppRoutes() {
       <Route path="/about-us" element={<FooterShell><AboutUs /></FooterShell>} />
       <Route path="/contact-us" element={<FooterShell><ContactUs /></FooterShell>} />
       <Route path="/events" element={<FooterShell><EventsLandingPage /></FooterShell>} />
+      {/* Event/sport browsing is fully public — registration/lineup actions
+          inside these pages prompt login only when actually used. */}
+      <Route path="/events/:eventId" element={<FooterShell><UserEventDetail /></FooterShell>} />
+      <Route path="/events/:eventId/sports/:sportId" element={<FooterShell><UserSportDetail /></FooterShell>} />
       <Route path="/verify-email" element={<FooterShell><VerifyEmail /></FooterShell>} />
       {/* Public certificate verification — reached via QR scan or a shared link, no account needed */}
       <Route path="/verify" element={<FooterShell><VerifyCertificatePage /></FooterShell>} />
@@ -232,10 +236,12 @@ function AppRoutes() {
 
         {/* ── Competitor pages ── */}
         {/* NOTE: /events (no id) is the public marketing/events page above —
-            this is the logged-in "browse & search events" dashboard view. */}
+            this is the logged-in "browse & search events" dashboard view.
+            /events/:eventId and /events/:eventId/sports/:sportId moved to the
+            public routes section — they're unprotected so anyone can browse
+            an event/sport without an account; registration/lineup actions
+            inside those pages still prompt login when actually used. */}
         <Route path="/browse-events" element={<UserEventPage />} />
-        <Route path="/events/:eventId" element={<UserEventDetail />} />
-        <Route path="/events/:eventId/sports/:sportId" element={<UserSportDetail />} />
         <Route path="/matches" element={<MatchesPage />} />
         <Route path="/rankings" element={<RankingsPage />} />
         <Route path="/achievements" element={<AchievementsPage />} />
