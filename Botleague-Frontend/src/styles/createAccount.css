@@ -1,0 +1,403 @@
+/* Poppins/Sarpanch are already loaded app-wide via the Google Fonts <link>
+   in index.html, so no @import is repeated here — same font, one request. */
+
+:root {
+    --cba-blue: #0162d1;
+    --cba-purple: #8c6cff;
+    --cba-red: #fc4c4c;
+    --cba-border-gray: #bdbdbd;
+    --cba-fill-gray: rgba(221, 221, 221, 0.42);
+    --cba-gradient: linear-gradient(180deg, var(--cba-blue), var(--cba-purple));
+    --cba-gradient-v: linear-gradient(180deg, var(--cba-blue), var(--cba-purple));
+}
+
+.cba-page {
+    position: relative;
+    min-height: 100vh;
+    background: #ffffff;
+    font-family: "Poppins", system-ui, sans-serif;
+    overflow: hidden;
+    padding: 40px 0 80px;
+}
+
+.cba-container {
+    max-width: 1378px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+}
+
+/* ---------- decorative corner shapes (approximating the low-opacity
+   triangles/stars scattered in the Figma background) ---------- */
+.cba-shape {
+    position: absolute;
+    opacity: 0.12;
+    background: var(--cba-gradient-v);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.cba-shape-tl {
+    top: -60px;
+    left: -80px;
+    width: 260px;
+    height: 260px;
+    clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+
+.cba-shape-tr {
+    top: 0;
+    right: -60px;
+    width: 220px;
+    height: 220px;
+    clip-path: polygon(100% 0, 100% 100%, 30% 0);
+}
+
+.cba-shape-bl {
+    bottom: -80px;
+    left: -60px;
+    width: 240px;
+    height: 240px;
+    clip-path: polygon(0 100%, 100% 100%, 0 40%);
+}
+
+.cba-shape-br {
+    bottom: -100px;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    clip-path: polygon(100% 100%, 0 100%, 100% 20%);
+}
+
+/* ---------- header / logo ---------- */
+.cba-header {
+    position: relative;
+    text-align: center;
+    margin-bottom: 48px;
+    padding-top: 40px;
+}
+
+.cba-plane {
+    position: absolute;
+    top: -10px;
+    left: calc(50% - 340px);
+    width: 90px;
+    height: auto;
+    opacity: 0.5;
+}
+
+.cba-logo {
+    display: inline-block;
+    font-weight: 800;
+    font-size: 2.6rem;
+    letter-spacing: 0.5px;
+    margin: 0 0 8px;
+    position: relative;
+}
+
+.cba-logo-bot {
+    color: #111;
+}
+
+.cba-logo-league {
+    color: #111;
+    font-style: italic;
+}
+
+.cba-logo::before {
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: 8%;
+    width: 45%;
+    height: 3px;
+    background: var(--cba-blue);
+}
+
+.cba-logo::after {
+    content: "";
+    position: absolute;
+    bottom: 4px;
+    right: 4%;
+    width: 55%;
+    height: 3px;
+    background: var(--cba-red);
+}
+
+.cba-tagline {
+    display: block;
+    font-weight: 900;
+    font-size: 20px;
+    font-family: "Sarpanch", sans-serif;
+    color: #797878;
+    margin: 0 auto;
+    padding-bottom: 8px;
+    border-bottom: 3px solid var(--cba-blue);
+    width: fit-content;
+}
+
+.cba-row {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 48px;
+}
+
+/* ---------- left: role selection cards ---------- */
+.cba-role-label {
+    color: var(--cba-purple);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.cba-role-card {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    text-align: left;
+    background: #fff;
+    border: 2px solid transparent;
+    background:
+        linear-gradient(#fff, #fff) padding-box,
+        linear-gradient(180deg, var(--cba-blue), var(--cba-purple)) border-box;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+
+.cba-role-card:hover {
+    transform: translateY(-2px);
+}
+
+.cba-role-card:last-child {
+    margin-bottom: 0;
+}
+
+.cba-role-icon {
+    flex: 0 0 auto;
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    background: var(--cba-gradient);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cba-role-title {
+    display: block;
+    font-weight: 700;
+    font-size: 30px;
+    color: var(--cba-purple);
+}
+
+.cba-role-desc {
+    display: block;
+    font-weight: 500;
+    font-size: 0.85rem;
+    color: #444;
+    margin-top: 2px;
+}
+
+.cba-role-card--active {
+    background: var(--cba-gradient);
+    border-image: none;
+    border-color: transparent;
+}
+
+.cba-role-card--active .cba-role-icon {
+    background: #fff;
+    color: var(--cba-purple);
+}
+
+.cba-role-card--active .cba-role-title,
+.cba-role-card--active .cba-role-desc {
+    color: #fff;
+}
+
+.cba-panel {
+    max-width: 560px;
+    display: flex;
+}
+
+.cba-panel-inner {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---------- right: form card ---------- */
+.cba-form-border {
+    background: var(--cba-gradient-v);
+    background: linear-gradient(180deg, var(--cba-blue), var(--cba-purple));
+    border-radius: 16px;
+    padding: 4px;
+    opacity: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.cba-form-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 36px 34px 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1
+}
+
+.cba-form-title {
+    color: var(--cba-blue);
+    font-weight: 600;
+    font-size: 1.9rem;
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+.cba-form-subtitle {
+    text-align: center;
+    font-weight: 700;
+    font-size: 1rem;
+    color: #111;
+    margin-bottom: 22px;
+}
+
+.cba-field-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.cba-input,
+.cba-input-full {
+    background: var(--cba-fill-gray) !important;
+    border: 1px solid var(--cba-border-gray) !important;
+    border-radius: 12px !important;
+    height: 50px;
+    font-size: 0.95rem;
+}
+
+.cba-input-full {
+    width: 100%;
+    margin-bottom: 14px;
+}
+
+.cba-input::placeholder,
+.cba-input-full::placeholder,
+.cba-otp-box::placeholder {
+    color: #8a8a8a;
+}
+
+.cba-btn-gradient {
+    background: var(--cba-gradient);
+    opacity: 0.92;
+    color: #fff !important;
+    font-weight: 700;
+    border: none;
+    border-radius: 9px;
+    white-space: nowrap;
+    flex: 0 0 auto;
+}
+
+.cba-btn-otp {
+    width: 121px;
+    height: 50px;
+}
+
+.cba-btn-verify {
+    width: 121px;
+    height: 56px;
+}
+
+.cba-otp-row {
+    align-items: stretch;
+}
+
+.cba-otp-box {
+    width: 56px;
+    height: 56px;
+    text-align: center;
+    font-size: 1.2rem;
+    background: var(--cba-fill-gray) !important;
+    border: 1px solid var(--cba-border-gray) !important;
+    border-radius: 8px !important;
+}
+
+.cba-resend {
+    color: var(--cba-purple);
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin: -4px 0 16px;
+}
+
+.cba-terms {
+    margin: 14px 0 18px;
+    padding-left: 1.8rem;
+    font-size: 0.85rem;
+    color: #111;
+}
+
+.cba-terms a {
+    color: var(--cba-blue);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.cba-terms a:hover {
+    text-decoration: underline;
+}
+
+.cba-terms .form-check-input {
+    border-radius: 4px;
+    border-color: #111;
+}
+
+.cba-submit-btn {
+    height: 51px;
+    border-radius: 8px !important;
+    font-size: 1.05rem;
+}
+
+.cba-or {
+    text-align: center;
+    font-weight: 700;
+    color: #333;
+    margin: 12px 0;
+}
+
+.cba-login-btn {
+    height: 50px;
+    border-radius: 11.5px !important;
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid var(--cba-blue) !important;
+    color: var(--cba-blue) !important;
+    font-weight: 700;
+}
+
+.cba-field-error {
+    color: var(--cba-red);
+    font-size: 0.85rem;
+    margin: -6px 0 12px;
+    text-align: center;
+}
+
+@media (max-width: 991.98px) {
+    .cba-header {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .cba-plane {
+        width: 70px;
+    }
+}
