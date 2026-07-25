@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+/* App-wide font tokens — Sarpanch/Inter/Poppins are already loaded via the
+   Google Fonts <link> in index.html; this just exposes them as the
+   font-display/font-sans/font-body Tailwind utilities so pages don't need
+   to repeat inline fontFamily styles everywhere. */
+@theme {
+  --font-display: 'Sarpanch', sans-serif;
+  --font-sans: 'Inter', sans-serif;
+  --font-body: 'Poppins', sans-serif;
+}

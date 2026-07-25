@@ -1,0 +1,91 @@
+/* Homepage-only styles that don't map cleanly onto Tailwind utility classes
+   (keyframes, pseudo-elements, attribute-driven transitions). Everything
+   else on the homepage uses plain Tailwind classes. Scoped by the .home-*
+   class prefixes below so nothing here can leak onto other pages. */
+
+/* ---- hero background drift (video not available yet, gradient is the look) ---- */
+.home-hero-anim {
+  background:
+    radial-gradient(ellipse at 30% 70%, rgba(139, 92, 246, .5), transparent 55%),
+    radial-gradient(ellipse at 75% 40%, rgba(224, 95, 168, .35), transparent 50%),
+    radial-gradient(ellipse at 50% 100%, rgba(47, 62, 240, .45), transparent 60%),
+    linear-gradient(180deg, #05030c, #120a24 60%, #1c1140);
+  background-size: 200% 200%, 200% 200%, 200% 200%, 100% 100%;
+  animation: home-hero-drift 16s ease-in-out infinite alternate;
+}
+@keyframes home-hero-drift {
+  0%   { background-position: 30% 70%, 75% 40%, 50% 100%, 0 0; }
+  100% { background-position: 60% 40%, 40% 60%, 55% 80%, 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-anim { animation: none; }
+}
+
+/* ---- league stacking cards ---- */
+.home-league-card-wrap {
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+  transition: max-height .7s cubic-bezier(.4, 0, .2, 1), opacity .5s ease, margin-bottom .7s ease;
+}
+.home-league-card-wrap[data-state="hidden"] { max-height: 0; opacity: 0; margin-bottom: 0; }
+.home-league-card-wrap[data-state="collapsed"] { max-height: 96px; opacity: 1; }
+.home-league-card-wrap[data-state="expanded"] { max-height: 620px; opacity: 1; }
+
+.home-league-img { min-height: 220px; transition: min-height .7s ease; }
+.home-league-card-wrap[data-state="collapsed"] .home-league-img,
+.home-league-card-wrap[data-state="hidden"] .home-league-img { min-height: 64px; }
+
+.home-league-desc-wrap { max-height: 300px; opacity: 1; overflow: hidden; transition: max-height .5s ease, opacity .35s ease; }
+.home-league-card-wrap[data-state="collapsed"] .home-league-desc-wrap,
+.home-league-card-wrap[data-state="hidden"] .home-league-desc-wrap { max-height: 0; opacity: 0; }
+
+/* ---- pinned "1" section row slide ---- */
+.home-one-row { transition: transform .7s cubic-bezier(.4, 0, .2, 1); will-change: transform; }
+
+.home-doodle { position: absolute; pointer-events: none; opacity: .45; color: #c9c4e6; }
+
+/* feature text: rises from below, holds, then rises up and fades out */
+.home-feature-box {
+  transition: transform .6s cubic-bezier(.22, 1, .36, 1), opacity .45s ease;
+  will-change: transform, opacity;
+}
+.home-feature-box[data-anim="below"] { transform: translateY(48px); opacity: 0; }
+.home-feature-box[data-anim="in"]    { transform: translateY(0);    opacity: 1; }
+.home-feature-box[data-anim="above"] { transform: translateY(-48px); opacity: 0; }
+
+/* ---- robot + progress bar — joined pillar ---- */
+.home-robot-bar {
+  position: relative;
+  background: linear-gradient(180deg, #6d7cf9 0%, #8a7bf5 60%, #7b6cf0 100%);
+  box-shadow:
+    inset 0 10px 16px rgba(255, 255, 255, .40),
+    inset 0 -8px 20px rgba(60, 40, 150, .35),
+    0 18px 30px rgba(80, 70, 200, .30);
+  border-radius: 999px 999px 8px 8px / 60px 60px 8px 8px;
+  transition: height 1.5s cubic-bezier(.34, 1.2, .4, 1), width .45s ease;
+  will-change: height;
+}
+.home-robot-bar::before {
+  content: "";
+  position: absolute; left: 50%; top: 0; transform: translateX(-50%);
+  width: 78%; height: 26px;
+  background: radial-gradient(ellipse at 50% 0, rgba(255, 255, 255, .55), transparent 70%);
+  border-radius: 50%;
+}
+.home-robot-bar::after {
+  content: "";
+  position: absolute; left: 50%; top: -14px; transform: translateX(-50%);
+  width: 60%; height: 22px;
+  background: radial-gradient(ellipse at 50% 60%, rgba(40, 20, 90, .35), transparent 72%);
+  border-radius: 50%;
+  filter: blur(2px);
+  pointer-events: none;
+}
+.home-robot-figure {
+  position: relative;
+  z-index: 2;
+  transition: transform .3s ease;
+}
+.home-robot-col:hover .home-robot-figure { transform: translateY(-4px); }
+
+.home-robot-message { transition: left .5s cubic-bezier(.4, 0, .2, 1), top .5s cubic-bezier(.4, 0, .2, 1), opacity .3s ease; }
