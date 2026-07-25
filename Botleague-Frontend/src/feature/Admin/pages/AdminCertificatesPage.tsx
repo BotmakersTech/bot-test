@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { getAllEvents, type AdminEventResponse } from "../api/admin.api";
 import {
   getAdminTemplates,
@@ -20,10 +21,13 @@ import PageWrapper from "../../Organizer/components/PageWrapper";
 import { ORG } from "../../Organizer/theme/organizerTheme";
 
 export default function AdminCertificatesPage() {
-  const [tab, setTab] = useState<"templates" | "types">("templates");
+  const [searchParams] = useSearchParams();
+  const preselectedSportId = searchParams.get("eventSportId") ?? "";
+
+  const [tab, setTab] = useState<"templates" | "types">(preselectedSportId ? "types" : "templates");
   const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
   const [events, setEvents] = useState<AdminEventResponse[]>([]);
-  const [eventSportId, setEventSportId] = useState("");
+  const [eventSportId, setEventSportId] = useState(preselectedSportId);
 
   const refreshTemplates = () => {
     getAdminTemplates().then(setTemplates).catch(() => {});
@@ -33,12 +37,22 @@ export default function AdminCertificatesPage() {
     refreshTemplates();
     getAllEvents().then((ev) => {
       setEvents(ev);
+      // A direct link from a sport's own page already knows which sport it
+      // wants — only fall back to "first sport in the list" when nobody
+      // asked for a specific one, so arriving from a sport with hundreds of
+      // others never dumps you back on sport #1.
+      if (preselectedSportId) return;
       const firstWithSport = ev.find((e) => (e.sports?.length ?? 0) > 0);
       if (firstWithSport?.sports?.[0]) setEventSportId(firstWithSport.sports[0].id);
     }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const activeTemplates = templates.filter((t) => t.status === "ACTIVE");
+
+  const preselectedSport = preselectedSportId
+    ? events.flatMap((ev) => (ev.sports ?? []).map((s) => ({ ...s, eventName: ev.eventName }))).find((s) => s.id === preselectedSportId)
+    : undefined;
 
   return (
     <PageWrapper>
@@ -77,6 +91,11 @@ export default function AdminCertificatesPage() {
         />
       ) : (
         <div className="space-y-4">
+          {preselectedSport && (
+            <div className="rounded-lg px-3 py-2 text-xs font-semibold" style={{ background: ORG.violet + "14", color: ORG.violetHeading }}>
+              Opened from {preselectedSport.eventName} — {preselectedSport.sportName || preselectedSport.sport}. Switch sports below anytime.
+            </div>
+          )}
           <div>
             <label className="text-xs font-semibold mb-1 block" style={{ color: ORG.muted }}>Event Sport</label>
             <select

@@ -1327,7 +1327,7 @@ export default function AdminSport() {
 
       {/* ── BRACKET / SCORING / RANKING ACTIONS — only once registration is not open ── */}
       {!isOpen && (
-        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "28px" }}>
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "12px" }}>
           <PrimaryButton onClick={() => navigate(`${location.pathname}/create-match`)} style={{ padding: "11px 20px", fontSize: "0.82rem" }}>
             <Swords size={14} /> Create Match
           </PrimaryButton>
@@ -1339,6 +1339,19 @@ export default function AdminSport() {
           </PrimaryButton>
         </div>
       )}
+
+      {/* ── CERTIFICATES — always reachable; actual generation is itself
+          gated server-side on finalized rankings, so browsing/configuring
+          templates and certificate types shouldn't wait on !isOpen too. ── */}
+      <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "28px" }}>
+        <PrimaryButton
+          variant="outline"
+          onClick={() => navigate(`/admin/certificates?eventSportId=${sportId}`)}
+          style={{ padding: "11px 20px", fontSize: "0.82rem" }}
+        >
+          <Award size={14} /> Certificates
+        </PrimaryButton>
+      </div>
 
       {/* ── REGISTERED TEAMS ── */}
       <div style={{

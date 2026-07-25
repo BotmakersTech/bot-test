@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { getMyEvents, getMySports, type OrganizerEvent, type OrganizerSport } from "../api/organizer.api";
 import {
   getOrganizerTemplates,
@@ -20,11 +21,14 @@ import PageWrapper from "../components/PageWrapper";
 import { ORG } from "../theme/organizerTheme";
 
 export default function OrganizerCertificatesPage() {
-  const [tab, setTab] = useState<"templates" | "types">("templates");
+  const [searchParams] = useSearchParams();
+  const preselectedSportId = searchParams.get("eventSportId") ?? "";
+
+  const [tab, setTab] = useState<"templates" | "types">(preselectedSportId ? "types" : "templates");
   const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
   const [events, setEvents] = useState<OrganizerEvent[]>([]);
   const [sports, setSports] = useState<OrganizerSport[]>([]);
-  const [eventSportId, setEventSportId] = useState("");
+  const [eventSportId, setEventSportId] = useState(preselectedSportId);
 
   const refreshTemplates = () => {
     getOrganizerTemplates().then(setTemplates).catch(() => {});
@@ -35,11 +39,15 @@ export default function OrganizerCertificatesPage() {
     Promise.all([getMyEvents(), getMySports()]).then(([ev, sp]) => {
       setEvents(ev);
       setSports(sp);
-      if (sp.length) setEventSportId(sp[0].id);
+      // Arriving from a specific sport's own page already knows which one it
+      // wants — only default to the first sport when nobody asked for one.
+      if (!preselectedSportId && sp.length) setEventSportId(sp[0].id);
     }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const activeTemplates = templates.filter((t) => t.status === "ACTIVE");
+  const preselectedSport = preselectedSportId ? sports.find((s) => s.id === preselectedSportId) : undefined;
 
   const eventName = (eventId: string) => events.find((e) => e.id === eventId)?.eventName ?? "Event";
   const groupedSports = useMemo(() => {
@@ -89,6 +97,11 @@ export default function OrganizerCertificatesPage() {
         />
       ) : (
         <div className="space-y-4">
+          {preselectedSport && (
+            <div className="rounded-lg px-3 py-2 text-xs font-semibold" style={{ background: ORG.violet + "14", color: ORG.violetHeading }}>
+              Opened from {eventName(preselectedSport.eventId)} — {preselectedSport.sport.replace(/_/g, " ")}. Switch sports below anytime.
+            </div>
+          )}
           <div>
             <label className="text-xs font-semibold mb-1 block" style={{ color: ORG.muted }}>Event Sport</label>
             <select

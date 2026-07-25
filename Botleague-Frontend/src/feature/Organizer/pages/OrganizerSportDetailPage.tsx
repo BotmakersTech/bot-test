@@ -1666,12 +1666,25 @@ export default function OrganizerSportDetailPage() {
 
       {/* ── BRACKET / MATCHES — only once registration is not open ── */}
       {!isOpen && (
-        <div style={{ display: "flex", gap: "12px", marginBottom: "28px" }}>
+        <div style={{ display: "flex", gap: "12px", marginBottom: "12px" }}>
           <PrimaryButton onClick={() => navigate(`${location.pathname}/create-match`)} style={{ padding: "11px 20px", fontSize: "0.82rem" }}>
             <Swords size={14} /> Create Match / Manage Bracket
           </PrimaryButton>
         </div>
       )}
+
+      {/* ── CERTIFICATES — always reachable; actual generation is itself
+          gated server-side on finalized rankings, so browsing/configuring
+          templates and certificate types shouldn't wait on !isOpen too. ── */}
+      <div style={{ display: "flex", gap: "12px", marginBottom: "28px" }}>
+        <PrimaryButton
+          variant="outline"
+          onClick={() => navigate(`/organizer/certificates?eventSportId=${sportId}`)}
+          style={{ padding: "11px 20px", fontSize: "0.82rem" }}
+        >
+          <Award size={14} /> Certificates
+        </PrimaryButton>
+      </div>
 
       {/* ── REGISTERED TEAMS ── */}
       <div style={{
