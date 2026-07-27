@@ -57,7 +57,16 @@ public class SecurityConfig {
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/Events/live").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/Events/completed").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/Events/*/support-contacts").permitAll()
+                // The controller itself already has no @PreAuthorize here (its own
+                // comment says "Public — any visitor browsing the event page must be
+                // able to see sports"), but that only skips method-level security —
+                // without this the request still gets rejected by the filter chain's
+                // anyRequest().authenticated() before it ever reaches the controller.
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/events/*/sports").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/events/*/sports/*/support-contacts").permitAll()
+                // Same gap — LeaderboardController's own javadoc says "Public,
+                // mirroring the other match READ endpoints (no admin check)".
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/leaderboard/**").permitAll()
                 .requestMatchers("/ws/chat/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/rankings/**").permitAll()
