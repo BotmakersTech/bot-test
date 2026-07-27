@@ -1,0 +1,150 @@
+.cu-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Present in the source stylesheet but not currently rendered by any
+   component here — kept for parity in case a "got a question" banner
+   variant gets wired in later. */
+.cu-question-banner {
+  background: linear-gradient(180deg, #0162D1, #8C6CFF);
+  padding: 90px 0;
+  height: 332px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cu-banner-title {
+  font-family: 'Sarpanch';
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: white;
+  line-height: 70px;
+  max-width: 1500px;
+  margin: auto;
+}
+
+.cu-contact-section {
+  padding: 120px 0 90px;
+  background: white;
+}
+
+.cu-contact-heading {
+  font-family: 'Sarpanch';
+  font-size: 64px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-align: center;
+  color: #0162D1;
+  margin-bottom: 60px;
+}
+
+.cu-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.cu-contact-card {
+  width: 100%;
+  max-width: 483px;
+  height: 300px;
+  margin: auto;
+  background: #949494;
+  border-radius: 20px;
+  padding: 35px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+  transition: .35s;
+}
+
+.cu-contact-card:hover {
+  transform: translateY(-10px);
+  background: #7f7f7f;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, .25);
+}
+
+.cu-icon-circle {
+  width: 77px;
+  height: 77px;
+  background: #585858;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 28px;
+  color: white;
+  margin-bottom: 28px;
+}
+
+.cu-contact-card h3 {
+  font-family: 'Sarpanch';
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: white;
+  line-height: 45px;
+  margin-bottom: 20px;
+}
+
+.cu-contact-card p {
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  line-height: 29px;
+  color: white;
+  letter-spacing: 1px;
+}
+
+@media (max-width: 992px) {
+  .cu-banner-title {
+    font-size: 34px;
+    line-height: 50px;
+  }
+
+  .cu-contact-heading {
+    font-size: 48px;
+  }
+
+  .cu-contact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cu-contact-card {
+    margin-bottom: 30px;
+  }
+}
+
+@media (max-width: 576px) {
+  .cu-banner-title {
+    font-size: 24px;
+    line-height: 38px;
+    letter-spacing: 1px;
+  }
+
+  .cu-contact-heading {
+    font-size: 34px;
+  }
+
+  .cu-contact-card {
+    padding: 25px;
+  }
+
+  .cu-contact-card h3 {
+    font-size: 24px;
+    line-height: 34px;
+  }
+
+  .cu-contact-card p {
+    font-size: 16px;
+  }
+}

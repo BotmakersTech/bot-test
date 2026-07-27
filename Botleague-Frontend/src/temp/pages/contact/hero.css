@@ -1,0 +1,93 @@
+.cu-hero-section {
+  height: 924px;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+.cu-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(16, 14, 39, .28), rgba(16, 14, 39, .12));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.cu-hero-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding-top: 90px;
+}
+
+.cu-hero-content h1 {
+  font-family: "Sarpanch", sans-serif;
+  font-size: 128px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 3px;
+  color: #ffffff;
+  text-transform: uppercase;
+  margin: 0 0 145px;
+}
+
+.cu-explore-btn {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  cursor: pointer;
+}
+
+.cu-circle {
+  width: 110px;
+  height: 110px;
+  border: 3px solid white;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 35px;
+  color: white;
+  transition: .35s;
+}
+
+.cu-circle:hover {
+  background: #8C6CFF;
+  border-color: #8C6CFF;
+  transform: scale(1.08);
+}
+
+.cu-explore-btn span {
+  font-family: "Poppins";
+  color: white;
+  letter-spacing: 3px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+@media (max-width: 992px) {
+  .cu-hero-content h1 {
+    font-size: 72px;
+    margin-bottom: 100px;
+  }
+
+  .cu-circle {
+    width: 80px;
+    height: 80px;
+    font-size: 25px;
+  }
+}
+
+@media (max-width: 576px) {
+  .cu-hero-content h1 {
+    font-size: 46px;
+    letter-spacing: 2px;
+  }
+}

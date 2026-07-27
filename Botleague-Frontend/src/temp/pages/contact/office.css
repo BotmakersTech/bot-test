@@ -1,0 +1,176 @@
+.cu-office-section {
+  padding: 90px 0;
+  background: #fff;
+}
+
+.cu-office-card {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: rgba(140, 108, 255, .85);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .2);
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  overflow: hidden;
+}
+
+.cu-office-left {
+  padding: 50px;
+  color: #fff;
+}
+
+.cu-office-left h2 {
+  font-family: 'Sarpanch';
+  font-size: 48px;
+  font-weight: 600;
+  margin-bottom: 35px;
+}
+
+.cu-office-left h4 {
+  font-family: 'Poppins';
+  font-size: 30px;
+  margin-bottom: 20px;
+}
+
+.cu-office-left p {
+  font-size: 24px;
+  line-height: 40px;
+  font-family: 'Poppins';
+}
+
+.cu-office-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  min-height: 340px;
+  display: block;
+}
+
+/* Contact Info */
+
+.cu-info-card {
+  max-width: 1200px;
+  margin: 40px auto 0;
+  background: #1E64DB;
+  border-radius: 20px;
+  padding: 60px;
+  color: white;
+  display: grid;
+  grid-template-columns: 6fr 3fr 3fr;
+  gap: 24px;
+}
+
+.cu-small-title {
+  font-size: 24px;
+  font-family: 'Inter';
+}
+
+.cu-info-card h2 {
+  font-size: 56px;
+  font-weight: 700;
+  font-family: 'Inter';
+  line-height: 1.3;
+  margin-top: 20px;
+}
+
+.cu-info-box h5 {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.cu-info-line {
+  width: 35px;
+  height: 3px;
+  background: white;
+  margin: 18px 0;
+}
+
+.cu-info-box h6 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.cu-info-box p {
+  font-size: 20px;
+  line-height: 34px;
+}
+
+@media (max-width: 992px) {
+  .cu-office-card {
+    grid-template-columns: 1fr;
+  }
+
+  .cu-office-left {
+    text-align: center;
+  }
+
+  .cu-office-left h2 {
+    font-size: 38px;
+  }
+
+  .cu-office-left p {
+    font-size: 20px;
+    line-height: 34px;
+  }
+
+  .cu-office-image {
+    height: 300px;
+    min-height: 0;
+  }
+
+  .cu-info-card {
+    grid-template-columns: 1fr;
+    padding: 35px;
+    text-align: center;
+  }
+
+  .cu-info-card h2 {
+    font-size: 40px;
+    margin-bottom: 30px;
+  }
+
+  .cu-info-box {
+    margin-top: 30px;
+  }
+
+  .cu-info-line {
+    margin: 15px auto;
+  }
+}
+
+@media (max-width: 576px) {
+  .cu-office-left {
+    padding: 30px;
+  }
+
+  .cu-office-left h2 {
+    font-size: 32px;
+  }
+
+  .cu-office-left h4 {
+    font-size: 24px;
+  }
+
+  .cu-office-left p {
+    font-size: 18px;
+    line-height: 30px;
+  }
+
+  .cu-info-card h2 {
+    font-size: 30px;
+  }
+
+  .cu-small-title {
+    font-size: 20px;
+  }
+
+  .cu-info-box h5,
+  .cu-info-box h6 {
+    font-size: 18px;
+  }
+
+  .cu-info-box p {
+    font-size: 16px;
+  }
+}
