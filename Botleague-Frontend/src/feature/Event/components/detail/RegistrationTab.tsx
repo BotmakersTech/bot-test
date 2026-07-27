@@ -93,6 +93,7 @@ export default function RegistrationTab({
   const eligibleRobots = useMemo(
     () =>
       robots.filter((robot: Robot) => {
+        if (robot.status !== "ACTIVE") return false;
         if (sport.weightLimitKg != null && robot.weightKg != null && robot.weightKg > sport.weightLimitKg) return false;
         if (sport.maxLengthCm != null && robot.lengthCm != null && robot.lengthCm > sport.maxLengthCm) return false;
         if (sport.maxWidthCm != null && robot.widthCm != null && robot.widthCm > sport.maxWidthCm) return false;
@@ -121,6 +122,11 @@ export default function RegistrationTab({
   const spotsLeft = (sport.maxTeams ?? 0) - (sport.registeredTeamsCount ?? 0);
   const isFull = sport.maxTeams != null && spotsLeft <= 0;
 
+  // The captain's OWN eligibility no longer gates registration/lineup access —
+  // registering a robot and managing the lineup are team-administrative
+  // actions. It only matters if/when the captain tries to add THEMSELVES as
+  // a lineup member, which the backend checks per-person on that specific
+  // action (see the informational notes below, and SportRegistrationLineupService.addMember()).
   const eligBlocked = eligibility != null && !eligibility.canRegister;
   const sportAgeGroup = (sport.ageGroup ?? "").toUpperCase();
   const categoryMismatch =
@@ -128,7 +134,7 @@ export default function RegistrationTab({
     eligibility?.category != null &&
     eligibility.category.toUpperCase() !== sportAgeGroup;
 
-  const canAdd = isCaptain && isRegOpen && !isFull && !!teamId && !eligBlocked && !categoryMismatch;
+  const canAdd = isCaptain && isRegOpen && !isFull && !!teamId;
 
   const assignedMemberIds = new Set(pendingLineup.map((e) => e.membershipId));
   const takenRoles = new Set(pendingLineup.map((e) => e.role));
@@ -182,19 +188,22 @@ export default function RegistrationTab({
         )}
 
         {eligBlocked && (
-          <div className="reg-banner error">
-            🚫 Registration Blocked — {eligibility?.blockReason ?? "Your account is not eligible to register for events."}
+          <div className="reg-banner info">
+            ℹ️ {eligibility?.blockReason ?? "Your account isn't currently eligible to compete."} You can still
+            register robots and manage the lineup — this only means you personally can't be added as a lineup
+            member.
             {eligibility?.requiresGuardian && !eligibility?.hasGuardian && (
-              <div style={{ marginTop: 6 }}>👤 A parent/guardian consent form is required. Complete it in Profile → Settings.</div>
+              <div style={{ marginTop: 6 }}>👤 To add yourself to a lineup you'll need a parent/guardian consent form on file. Complete it in Profile → Settings.</div>
             )}
           </div>
         )}
 
         {!eligBlocked && categoryMismatch && eligibility && (
-          <div className="reg-banner warning">
-            ⚠️ Age Category Mismatch — This sport is open to {toLabel(sport.ageGroup)} participants only. Your current
-            category is {eligibility.categoryLabel ?? toLabel(eligibility.category)}
-            {eligibility.ageRange ? ` (age ${eligibility.ageRange})` : ""}.
+          <div className="reg-banner info">
+            ℹ️ This sport is open to {toLabel(sport.ageGroup)} participants. Your category is{" "}
+            {eligibility.categoryLabel ?? toLabel(eligibility.category)}
+            {eligibility.ageRange ? ` (age ${eligibility.ageRange})` : ""}, so you personally can't be added as a
+            lineup member — but you can still register robots and add other eligible teammates.
           </div>
         )}
 
@@ -288,11 +297,15 @@ export default function RegistrationTab({
                   <div className="white-select">
                     <select value={regMember} onChange={(e) => setRegMember(e.target.value)}>
                       <option value="">Select member…</option>
-                      {teamMembers.map((m) => (
-                        <option key={m.membershipId} value={m.membershipId} disabled={assignedMemberIds.has(m.membershipId)}>
-                          {m.userName}{assignedMemberIds.has(m.membershipId) ? " (Added)" : ""}
-                        </option>
-                      ))}
+                      {teamMembers.map((m) => {
+                        const added = assignedMemberIds.has(m.membershipId);
+                        const inactive = m.status !== "ACTIVE";
+                        return (
+                          <option key={m.membershipId} value={m.membershipId} disabled={added || inactive}>
+                            {m.userName}{added ? " (Added)" : inactive ? " (Inactive)" : ""}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
                   <div className="white-select">

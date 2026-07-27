@@ -181,24 +181,26 @@ export default function LineupTab({
                 {teamMembers.map((m) => {
                   const isIn = inCurrentLineup.has(m.membershipId);
                   const isOther = !isIn && allAssigned.has(m.membershipId);
+                  const isInactive = !isIn && !isOther && m.status !== "ACTIVE";
+                  const disabled = isIn || isOther || isInactive;
                   return (
                     <button
                       key={m.membershipId}
                       type="button"
-                      disabled={isIn || isOther}
+                      disabled={disabled}
                       onClick={() => setSelectedMember(m.membershipId)}
                       style={{
                         padding: "8px 16px",
                         borderRadius: 10,
                         border: `1.5px solid ${selectedMember === m.membershipId ? ACCENT : "#ccc"}`,
                         background: selectedMember === m.membershipId ? "rgba(1,98,209,.08)" : "#fff",
-                        opacity: isIn || isOther ? 0.45 : 1,
-                        cursor: isIn || isOther ? "not-allowed" : "pointer",
+                        opacity: disabled ? 0.45 : 1,
+                        cursor: disabled ? "not-allowed" : "pointer",
                         fontSize: 13,
                         fontWeight: 600,
                       }}
                     >
-                      {m.userName} {isIn ? "✓ In lineup" : isOther ? "(In other robot)" : ""}
+                      {m.userName} {isIn ? "✓ In lineup" : isOther ? "(In other robot)" : isInactive ? "(Inactive)" : ""}
                     </button>
                   );
                 })}

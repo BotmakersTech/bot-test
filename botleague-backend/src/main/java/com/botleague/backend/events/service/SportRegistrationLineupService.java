@@ -7,17 +7,22 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.botleague.backend.auth.entity.User;
+import com.botleague.backend.auth.repository.UserRepository;
 import com.botleague.backend.chat.service.ChatService;
+import com.botleague.backend.common.utils.EligibilityUtils;
 import com.botleague.backend.events.entity.Event;
 import com.botleague.backend.events.entity.EventRegistrationLineup;
 import com.botleague.backend.events.entity.EventSports;
 import com.botleague.backend.events.entity.SportRegistration;
+import com.botleague.backend.events.enums.AgeCategory;
 import com.botleague.backend.events.enums.LineupRole;
 import com.botleague.backend.events.enums.RegistrationStatus;
 import com.botleague.backend.events.repository.EventRegistrationLineupRepository;
 import com.botleague.backend.events.repository.EventRepository;
 import com.botleague.backend.events.repository.EventSportsRepository;
 import com.botleague.backend.events.repository.SportRegistrationRepository;
+import com.botleague.backend.guardian.repository.GuardianRepository;
 import com.botleague.backend.team.entity.Robot;
 import com.botleague.backend.team.entity.TeamMembership;
 import com.botleague.backend.team.enums.RobotStatus;
@@ -63,6 +68,8 @@ public class SportRegistrationLineupService {
     private final TeamMembershipRepository          teamMembershipRepository;
     private final ChatService                       chatService;
     private final EventRepository                   eventRepository;
+    private final UserRepository                    userRepository;
+    private final GuardianRepository                guardianRepository;
 
     // =====================================================
     // CONSTRUCTOR
@@ -75,7 +82,9 @@ public class SportRegistrationLineupService {
             RobotRepository                   robotRepository,
             TeamMembershipRepository          teamMembershipRepository,
             ChatService                       chatService,
-            EventRepository                   eventRepository
+            EventRepository                   eventRepository,
+            UserRepository                    userRepository,
+            GuardianRepository                guardianRepository
     ) {
         this.lineupRepository            = lineupRepository;
         this.sportRegistrationRepository = sportRegistrationRepository;
@@ -84,6 +93,8 @@ public class SportRegistrationLineupService {
         this.teamMembershipRepository    = teamMembershipRepository;
         this.chatService                 = chatService;
         this.eventRepository             = eventRepository;
+        this.userRepository              = userRepository;
+        this.guardianRepository          = guardianRepository;
     }
 
     // =====================================================
@@ -188,6 +199,55 @@ public class SportRegistrationLineupService {
                     "Team membership does not belong to the team that owns this registration. " +
                     "Registration team: " + registration.getTeamId() +
                     ", Membership team: " + membership.getTeamId());
+        }
+
+        // =================================================
+        // 4.5 AGE CATEGORY ELIGIBILITY (+ guardian)
+        //     Checked for the person actually being placed in the lineup —
+        //     NOT the caller. A captain who doesn't personally fit this
+        //     sport's age category can still register robots and manage the
+        //     lineup; they just can't be added as a lineup member themselves
+        //     (this check applies to them too when their own membership is
+        //     the one being added). Other members are evaluated on their own
+        //     merits regardless of the captain's eligibility.
+        // =================================================
+
+        User member = userRepository.findById(membership.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "User not found: " + membership.getUserId()));
+
+        if (member.getDateOfBirth() == null) {
+            throw new IllegalStateException(
+                    "This member's date of birth is missing from their profile. " +
+                    "They must complete their profile before joining a lineup.");
+        }
+
+        int memberAge = EligibilityUtils.calculateAge(member.getDateOfBirth());
+        AgeCategory memberCategory = EligibilityUtils.getCategoryForAge(memberAge);
+
+        if (memberCategory == null) {
+            throw new IllegalStateException(
+                    "This member is not eligible for competition. " +
+                    "Minimum age is " + EligibilityUtils.JUNIOR_MIN + " years " +
+                    "(current age: " + memberAge + ").");
+        }
+
+        if (eventSport.getAgeGroup() != null
+                && !eventSport.getAgeGroup().equals(memberCategory)) {
+            throw new IllegalStateException(
+                    "Age category mismatch: this sport is for "
+                    + EligibilityUtils.toCategoryLabel(eventSport.getAgeGroup())
+                    + " (" + EligibilityUtils.toCategoryAgeRange(eventSport.getAgeGroup()) + "), "
+                    + "but this member's category is "
+                    + EligibilityUtils.toCategoryLabel(memberCategory)
+                    + " (age " + memberAge + ").");
+        }
+
+        if (EligibilityUtils.requiresGuardian(member.getDateOfBirth())
+                && !guardianRepository.existsByUserId(member.getId())) {
+            throw new IllegalStateException(
+                    "This member is under 18 and needs a guardian profile on file " +
+                    "before joining a lineup.");
         }
 
         // =================================================

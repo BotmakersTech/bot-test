@@ -11,10 +11,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.botleague.backend.auth.entity.User;
-import com.botleague.backend.auth.repository.UserRepository;
 import com.botleague.backend.chat.service.ChatService;
-import com.botleague.backend.common.utils.EligibilityUtils;
 import com.botleague.backend.events.dto.EventRegistrationResponse;
 import com.botleague.backend.events.dto.LineupResponse;
 import com.botleague.backend.events.dto.RegistrationRequest;
@@ -26,7 +23,6 @@ import com.botleague.backend.events.entity.EventSports;
 import com.botleague.backend.events.enums.ControlMode;
 import com.botleague.backend.events.enums.ControlType;
 import com.botleague.backend.events.entity.SportRegistration;
-import com.botleague.backend.events.enums.AgeCategory;
 import com.botleague.backend.events.enums.RegistrationStatus;
 import com.botleague.backend.events.enums.SportEventStatus;
 import com.botleague.backend.events.repository.EventRepository;
@@ -35,7 +31,6 @@ import com.botleague.backend.events.repository.EventSportsRepository;
 import com.botleague.backend.events.repository.SportRegistrationRepository;
 import com.botleague.backend.audit.service.AuditLogService;
 import com.botleague.backend.realtime.service.RealtimePublisher;
-import com.botleague.backend.guardian.repository.GuardianRepository;
 import com.botleague.backend.notification.enums.NotificationPriority;
 import com.botleague.backend.notification.enums.NotificationTargetType;
 import com.botleague.backend.notification.enums.NotificationType;
@@ -74,8 +69,6 @@ public class SportRegistrationService {
     private final TeamRepository                    teamRepository;
     private final TeamMembershipRepository          teamMembershipRepository;
     private final RobotRepository                   robotRepository;
-    private final UserRepository                    userRepository;
-    private final GuardianRepository                guardianRepository;
     private final NotificationService               notificationService;
     private final AuditLogService                   auditLogService;
     private final ChatService                       chatService;
@@ -96,8 +89,6 @@ public class SportRegistrationService {
             TeamRepository                       teamRepository,
             TeamMembershipRepository             teamMembershipRepository,
             RobotRepository                      robotRepository,
-            UserRepository                       userRepository,
-            GuardianRepository                   guardianRepository,
             NotificationService                  notificationService,
             AuditLogService                      auditLogService,
             ChatService                          chatService,
@@ -113,8 +104,6 @@ public class SportRegistrationService {
         this.teamRepository              = teamRepository;
         this.teamMembershipRepository    = teamMembershipRepository;
         this.robotRepository             = robotRepository;
-        this.userRepository              = userRepository;
-        this.guardianRepository          = guardianRepository;
         this.notificationService         = notificationService;
         this.auditLogService             = auditLogService;
         this.chatService                 = chatService;
@@ -227,53 +216,15 @@ public class SportRegistrationService {
         }
 
         // =================================================
-        // 4.5 ELIGIBILITY — age category + guardian
-        // =================================================
-
-        if (request.getCallerId() != null) {
-
-            User caller = userRepository.findById(request.getCallerId())
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "User not found: " + request.getCallerId()));
-
-            if (caller.getDateOfBirth() == null) {
-                throw new IllegalStateException(
-                        "Date of birth is required for event registration. " +
-                        "Please complete your profile first.");
-            }
-
-            int age = EligibilityUtils.calculateAge(caller.getDateOfBirth());
-            AgeCategory callerCategory = EligibilityUtils.getCategoryForAge(age);
-
-            if (callerCategory == null) {
-                throw new IllegalStateException(
-                        "You are not eligible for competition. " +
-                        "Minimum age is " + EligibilityUtils.JUNIOR_MIN + " years " +
-                        "(current age: " + age + ").");
-            }
-
-            if (eventSport.getAgeGroup() != null
-                    && !eventSport.getAgeGroup().equals(callerCategory)) {
-                throw new IllegalStateException(
-                        "Age category mismatch: this sport is for "
-                        + EligibilityUtils.toCategoryLabel(eventSport.getAgeGroup())
-                        + " (" + EligibilityUtils.toCategoryAgeRange(eventSport.getAgeGroup()) + "), "
-                        + "but your category is "
-                        + EligibilityUtils.toCategoryLabel(callerCategory)
-                        + " (age " + age + ").");
-            }
-
-            if (EligibilityUtils.requiresGuardian(caller.getDateOfBirth())
-                    && !guardianRepository.existsByUserId(request.getCallerId())) {
-                throw new IllegalStateException(
-                        "Participants under 18 must have a guardian profile on file. " +
-                        "Please add your guardian details in Profile → Guardian Info.");
-            }
-        }
-
-        // =================================================
         // 5. FIND TEAM
         // =================================================
+        //
+        // NOTE: registering a robot is a team-administrative action, not a
+        // personal one — the caller (usually the captain) does not need to
+        // personally fit the sport's age category to perform it. Per-person
+        // age-category / guardian eligibility is enforced where it actually
+        // matters: when a specific person is added to the robot's lineup
+        // (see SportRegistrationLineupService.addMember()), not here.
 
         Team team = teamRepository
                 .findById(teamId)

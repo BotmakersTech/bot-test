@@ -167,8 +167,8 @@ export default function UserSportDetail() {
       const data = await getLineup(targetRegId);
       setLineupsMap((prev) => ({ ...prev, [targetRegId]: data }));
     } catch (err) {
-      const e = err as { response?: { data?: { error?: string } }; message?: string };
-      setLineupError(e?.response?.data?.error ?? e?.message ?? "Failed to load lineup.");
+      const e = err as { response?: { data?: { message?: string; error?: string } }; message?: string };
+      setLineupError(e?.response?.data?.message ?? e?.response?.data?.error ?? e?.message ?? "Failed to load lineup.");
     } finally {
       setLineupLoading(false);
     }

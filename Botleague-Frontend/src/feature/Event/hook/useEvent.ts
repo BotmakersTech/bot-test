@@ -36,6 +36,7 @@ export interface TeamMember {
   teamRole: string;
   teamMemberId: string;
   membershipId: string;
+  status: string;
 }
 
 
@@ -179,6 +180,7 @@ const memberships = useAppSelector(
               m.membershipId ?? m.teamMemberId ?? m.id ?? m.userId ?? "",
             membershipId:
               m.membershipId ?? m.teamMemberId ?? m.id ?? m.userId ?? "",
+            status: m.status ?? "ACTIVE",
           });
         });
       }
@@ -209,6 +211,7 @@ const memberships = useAppSelector(
 
           teamMemberId: membership.id ?? membership.teamMemberId ?? membership.userId ?? "",
           membershipId: membership.id ?? membership.membershipId ?? membership.teamMemberId ?? membership.userId ?? "",
+          status: membership.status ?? "ACTIVE",
         });
       }
     });
