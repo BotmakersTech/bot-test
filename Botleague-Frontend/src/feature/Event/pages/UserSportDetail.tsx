@@ -29,6 +29,7 @@ import useLeaderboard from "../../Leaderboard/hook/useLeaderboard";
 import { useEligibility } from "../../Eligibility/hooks/useEligibility";
 import "../../../styles/eventDetail.css";
 
+import Hero from "../components/detail/Hero";
 import SportDetailsHeader from "../components/detail/SportDetailsHeader";
 import TournamentTabs from "../components/detail/TournamentTabs";
 import MatchesTab from "../components/detail/MatchesTab";
@@ -222,6 +223,7 @@ export default function UserSportDetail() {
 
   return (
     <div className="evd-page">
+      <Hero title={sport.sport?.replace(/_/g, " ") ?? "Sport"} imageUrl={sport.sportThumbnailUrl} />
       <SportDetailsHeader sport={sport} contacts={contacts} />
 
       <TournamentTabs
