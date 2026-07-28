@@ -21,17 +21,20 @@ export const resendOTP = async (phone: string) => {
 
 // ================= REGISTER =================
 
-export const register = async (phone: string, otp: string, password: string) => {
-  const res = await api.post("/auth/register", { phone, otp, password });
+export const register = async (phone: string, otp: string, password: string, role: string) => {
+  const res = await api.post("/auth/register", { phone, otp, password, role });
 
-  // Backend now returns { accessToken, botleagueId }
-  // Refresh token is set automatically as httpOnly cookie
-  const { accessToken, botleagueId } = res.data;
+  // Backend returns { accessToken, botleagueId } for an immediately-active account
+  // (Participant/Volunteer), or { pendingApproval: true, botleagueId, message } with
+  // no accessToken for an Organiser/Judge account awaiting admin approval — refresh
+  // token cookie is only set in the former case.
+  const { accessToken, botleagueId, pendingApproval, message } = res.data;
 
-  // Store access token for subsequent requests
-  setAccessToken(accessToken);
+  if (accessToken) {
+    setAccessToken(accessToken);
+  }
 
-  return { accessToken, botleagueId };
+  return { accessToken, botleagueId, pendingApproval: Boolean(pendingApproval), message };
 };
 
 // ================= LOGIN =================

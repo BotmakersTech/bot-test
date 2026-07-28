@@ -290,8 +290,8 @@ function AppRoutes() {
         />
 
         {/* ── User Management (SUPER_ADMIN only) ── */}
-        <Route path="/admin/users"       element={<RoleRoute roles={[AppRole.SUPER_ADMIN]}><UserManagementPage /></RoleRoute>} />
-        <Route path="/admin/users/:userId" element={<RoleRoute roles={[AppRole.SUPER_ADMIN]}><UserDetailPage /></RoleRoute>} />
+        <Route path="/admin/users"       element={<RoleRoute roles={ADMIN_AND_UP}><UserManagementPage /></RoleRoute>} />
+        <Route path="/admin/users/:userId" element={<RoleRoute roles={ADMIN_AND_UP}><UserDetailPage /></RoleRoute>} />
 
         {/* ── Team Management (ADMIN+) ── */}
         <Route path="/admin/teams"          element={<RoleRoute roles={ADMIN_AND_UP}><TeamManagementPage /></RoleRoute>} />

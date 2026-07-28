@@ -6,6 +6,19 @@ import { loginSuccess } from "../store/authSlice";
 import { useAppDispatch } from "../../../app/hooks";
 const OTP_LENGTH = 4;
 
+// UI role-selector keys -> backend AccountType enum names. The backend never
+// sees "participant" etc. — this is the one place that knows both vocabularies.
+export const ROLE_MAP: Record<string, string> = {
+  participant: "COMPETITOR",
+  volunteer: "VOLUNTEER",
+  organiser: "ORGANISER",
+  judge: "JUDGE",
+};
+
+// Matches AuthService.REQUIRES_APPROVAL_ROLES — used only to show the
+// "requires admin approval" note on the role cards before submitting.
+export const APPROVAL_REQUIRED_ROLES = new Set(["organiser", "judge"]);
+
 /**
  * IMPORTANT: MSG91's OTP codes are single-use — once otpService.verifyOtp()
  * succeeds for a code, that exact code is consumed and a second verify call
@@ -34,6 +47,12 @@ export default function useRegister() {
   const [isLoading, setIsLoading] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
+
+  const [role, setRole] = useState("participant");
+  // Set only when registration succeeded but the account needs admin approval
+  // (Organiser/Judge) — no session was established, so the page should show
+  // this instead of navigating into the app.
+  const [pendingMessage, setPendingMessage] = useState<string | null>(null);
 
   // ⏱ OTP resend timer
   useEffect(() => {
@@ -157,10 +176,17 @@ console.log("Resending OTP to:", mobile);
 
     try {
   setIsLoading(true);
+  setPendingMessage(null);
 
-const res = await register(mobile, otp.join(""), password);
+const res = await register(mobile, otp.join(""), password, ROLE_MAP[role]);
 
 console.log("User registered:", res);
+
+if (res.pendingApproval) {
+  // Organiser/Judge — no session was issued, nothing to fetch or log into.
+  setPendingMessage(res.message ?? "Your account has been created and is awaiting admin approval.");
+  return;
+}
 
 // fetch authenticated user
 const user = await getProfile();
@@ -211,6 +237,9 @@ navigate("/profile", { replace: true });
     setConfirmPassword,
     agreed,
     setAgreed,
+    role,
+    setRole,
+    pendingMessage,
     resendTimer,
     isLoading,
     error,

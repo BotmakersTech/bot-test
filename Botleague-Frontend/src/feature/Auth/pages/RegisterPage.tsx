@@ -1,8 +1,9 @@
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import useRegister from "../hooks/useRegister";
+import useRegister, { APPROVAL_REQUIRED_ROLES } from "../hooks/useRegister";
 import "../../../styles/createAccount.css";
 import paperPlane from "../../../assets/Auth/plane.svg";
+import LOGO_URL from "../../../assets/logo.png";
 
 const ROLES = [
   {
@@ -52,12 +53,6 @@ export default function CreateAccountPage() {
   const register = useRegister();
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Role selection is presentational only for now — the register API
-  // (POST /auth/register) has no role/accountType field yet, so picking a
-  // role here doesn't change what account gets created server-side. Wire
-  // this up once the backend accepts it.
-  const activeRole = "participant";
-
   const handleOtpChange = (i: number, val: string) => {
     if (!/^[0-9]?$/.test(val)) return;
     const next = [...register.otp];
@@ -81,10 +76,7 @@ export default function CreateAccountPage() {
       <div className="cba-container">
         <header className="cba-header">
           <img src={paperPlane} alt="" className="cba-plane" />
-          <h1 className="cba-logo">
-            <span className="cba-logo-bot">BOT</span>{" "}
-            <span className="cba-logo-league">LEAGUE</span>
-          </h1>
+          <img src={LOGO_URL} alt="BotLeague" className="cba-logo-img" />
           <p className="cba-tagline">Join the Bot League Community</p>
         </header>
 
@@ -98,11 +90,17 @@ export default function CreateAccountPage() {
                 <button
                   type="button"
                   key={role.key}
-                  className={"cba-role-card" + (activeRole === role.key ? " cba-role-card--active" : "")}
+                  className={"cba-role-card" + (register.role === role.key ? " cba-role-card--active" : "")}
+                  onClick={() => register.setRole(role.key)}
                 >
                   <span className="cba-role-icon">{role.icon}</span>
                   <span className="cba-role-text">
-                    <span className="cba-role-title">{role.title}</span>
+                    <span className="cba-role-title">
+                      {role.title}
+                      {APPROVAL_REQUIRED_ROLES.has(role.key) && (
+                        <span className="cba-role-badge">Needs admin approval</span>
+                      )}
+                    </span>
                     <span className="cba-role-desc">{role.desc}</span>
                   </span>
                 </button>
@@ -114,6 +112,21 @@ export default function CreateAccountPage() {
           <div className="cba-panel">
             <div className="cba-form-border w-full">
               <div className="cba-form-card">
+                {register.pendingMessage ? (
+                  <div className="cba-pending-state">
+                    <h2 className="cba-form-title">Account created</h2>
+                    <p className="cba-form-subtitle">Awaiting admin approval</p>
+                    <p className="cba-pending-message">{register.pendingMessage}</p>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/login")}
+                      className="cba-btn-gradient cba-submit-btn w-full"
+                    >
+                      Back to Login
+                    </button>
+                  </div>
+                ) : (
+                <>
                 <h2 className="cba-form-title">Create New Account</h2>
                 <p className="cba-form-subtitle">Start your journey</p>
 
@@ -222,6 +235,8 @@ export default function CreateAccountPage() {
                     Login
                   </button>
                 </form>
+                </>
+                )}
               </div>
             </div>
           </div>

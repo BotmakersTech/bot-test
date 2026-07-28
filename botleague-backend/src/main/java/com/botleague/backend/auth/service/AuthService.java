@@ -2,6 +2,7 @@ package com.botleague.backend.auth.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -23,8 +24,13 @@ import com.botleague.backend.auth.enums.PhoneVerification;
 import com.botleague.backend.auth.repository.PasswordResetTokenRepository;
 import com.botleague.backend.auth.repository.UserRepository;
 import com.botleague.backend.common.exception.ApiException;
+import com.botleague.backend.notification.enums.NotificationPriority;
+import com.botleague.backend.notification.enums.NotificationTargetType;
+import com.botleague.backend.notification.enums.NotificationType;
+import com.botleague.backend.notification.service.NotificationService;
 import com.botleague.backend.role.entity.UserRole;
 import com.botleague.backend.role.repository.UserRoleRepository;
+import com.botleague.backend.role.service.UserRoleService;
 import com.botleague.backend.common.security.JwtService;
 import com.botleague.backend.common.security.PasswordHasher;
 import com.botleague.backend.common.service.BotleagueIdService;
@@ -45,11 +51,24 @@ public class AuthService {
     private final EmailService emailService;
     private final UserRoleRepository userRoleRepository;
     private final ResourceRoleAssignmentRepository resourceRoleAssignmentRepository;
+    private final UserRoleService userRoleService;
+    private final NotificationService notificationService;
 
     private static final List<AccountType> ROLE_PRIORITY = List.of(
             AccountType.SUPER_ADMIN, AccountType.ADMIN, AccountType.ORGANISER,
             AccountType.EVENT_HEAD, AccountType.SPORT_HEAD,
             AccountType.JUDGE, AccountType.VOLUNTEER, AccountType.COMPETITOR
+    );
+
+    /** The only roles a user can grant themselves at registration — everything else
+     *  (ADMIN, SUPER_ADMIN, EVENT_HEAD, SPORT_HEAD) is admin-appointed only. */
+    private static final Set<AccountType> SELF_REGISTERABLE_ROLES = Set.of(
+            AccountType.COMPETITOR, AccountType.VOLUNTEER, AccountType.ORGANISER, AccountType.JUDGE
+    );
+
+    /** Higher-trust roles that need admin approval before the account is usable. */
+    private static final Set<AccountType> REQUIRES_APPROVAL_ROLES = Set.of(
+            AccountType.ORGANISER, AccountType.JUDGE
     );
 
     public AuthService(
@@ -62,7 +81,9 @@ public class AuthService {
             OtpService otpService,
             EmailService emailService,
             UserRoleRepository userRoleRepository,
-            ResourceRoleAssignmentRepository resourceRoleAssignmentRepository) {
+            ResourceRoleAssignmentRepository resourceRoleAssignmentRepository,
+            UserRoleService userRoleService,
+            NotificationService notificationService) {
         this.userRepository = userRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.botleagueIdService = botleagueIdService;
@@ -73,6 +94,8 @@ public class AuthService {
         this.emailService = emailService;
         this.userRoleRepository = userRoleRepository;
         this.resourceRoleAssignmentRepository = resourceRoleAssignmentRepository;
+        this.userRoleService = userRoleService;
+        this.notificationService = notificationService;
     }
 
     // ================= REGISTER =================
@@ -93,6 +116,21 @@ public class AuthService {
             throw ApiException.conflict("User already exists");
         }
 
+        AccountType role;
+        try {
+            role = AccountType.valueOf(request.getRole());
+        } catch (IllegalArgumentException e) {
+            throw ApiException.badRequest("Invalid role");
+        }
+        // Defense in depth beyond the DTO's own @Pattern whitelist — this is the
+        // actual security boundary preventing self-registration of ADMIN/SUPER_ADMIN/
+        // EVENT_HEAD/SPORT_HEAD, so it stays even though the DTO already restricts it.
+        if (!SELF_REGISTERABLE_ROLES.contains(role)) {
+            throw ApiException.badRequest("Invalid role");
+        }
+
+        boolean requiresApproval = REQUIRES_APPROVAL_ROLES.contains(role);
+
         String botleagueId = botleagueIdService.generateBotleagueUserId();
         // hashing is bounded so a registration burst can't pin both cores
         String hashedPassword = passwordHasher.hash(request.getPassword());
@@ -101,11 +139,47 @@ public class AuthService {
         user.setPhone(request.getPhone());
         user.setBotleagueId(botleagueId);
         user.setPasswordHash(hashedPassword);
-        user.setAccountStatus(AccountStatus.ACTIVE);
-        user.setAccountType(AccountType.COMPETITOR);
+        user.setAccountStatus(requiresApproval ? AccountStatus.PENDING : AccountStatus.ACTIVE);
+        user.setAccountType(role);
         user.setPhoneVerified(true);
 
         userRepository.save(user);
+
+        if (requiresApproval) {
+            // Write the real UserRole row now, not at approval time — AuthorizationService
+            // .canScoreMatch() checks userRoleRepository directly with NO fallback to
+            // accountType (unlike getUserRoles()/getCurrentUser()), so a JUDGE who only
+            // had accountType set would pass login but get a permanent 403 the moment
+            // they tried to actually score a match. APPROVED here refers to the role
+            // grant itself, not the account — AccountStatus.PENDING is what actually
+            // blocks the account from being usable until an admin approves it.
+            userRoleService.assignRole(user.getId(), role);
+
+            UUID newUserId = user.getId();
+            String newUserBotleagueId = botleagueId;
+            AccountType newUserRole = role;
+            // systemNotify()/dispatch() run REQUIRES_NEW and commit independently,
+            // including an immediate realtime push — firing it before THIS transaction
+            // commits risks notifying admins about a pending account that then fails to
+            // actually persist. afterCommit() is the same pattern already used below by
+            // createPasswordResetToken() for its email send.
+            afterCommit(() -> notificationService.systemNotify(
+                    "New " + newUserRole + " registration pending approval",
+                    "A new " + newUserRole + " account (" + newUserBotleagueId
+                            + ") has registered and needs approval before they can log in.",
+                    NotificationType.ACCOUNT_PENDING_APPROVAL,
+                    NotificationPriority.HIGH,
+                    NotificationTargetType.PLATFORM_ADMINS,
+                    null,
+                    "/admin/users/" + newUserId));
+
+            // No issueTokens() call — this is what actually enforces the approval gate.
+            // login() is the only place accountStatus is checked; refresh() never checks
+            // it at all, so a PENDING account that received tokens here could refresh its
+            // session forever and never be blocked. Not issuing tokens means there is no
+            // refresh token in existence to rotate in the first place.
+            return new AuthTokensDTO(null, null, botleagueId, true);
+        }
 
         return issueTokens(user, botleagueId);
     }

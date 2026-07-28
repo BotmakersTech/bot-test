@@ -17,7 +17,7 @@
     background: #ffffff;
     font-family: "Poppins", system-ui, sans-serif;
     overflow: hidden;
-    padding: 40px 0 80px;
+    padding: clamp(16px, 4dvh, 40px) 0 clamp(24px, 6dvh, 80px);
 }
 
 .cba-container {
@@ -74,8 +74,8 @@
 .cba-header {
     position: relative;
     text-align: center;
-    margin-bottom: 48px;
-    padding-top: 40px;
+    margin-bottom: clamp(16px, 4dvh, 48px);
+    padding-top: clamp(10px, 3dvh, 40px);
 }
 
 .cba-plane {
@@ -87,42 +87,13 @@
     opacity: 0.5;
 }
 
-.cba-logo {
-    display: inline-block;
-    font-weight: 800;
-    font-size: 2.6rem;
-    letter-spacing: 0.5px;
-    margin: 0 0 8px;
-    position: relative;
-}
-
-.cba-logo-bot {
-    color: #111;
-}
-
-.cba-logo-league {
-    color: #111;
-    font-style: italic;
-}
-
-.cba-logo::before {
-    content: "";
-    position: absolute;
-    top: -10px;
-    left: 8%;
-    width: 45%;
-    height: 3px;
-    background: var(--cba-blue);
-}
-
-.cba-logo::after {
-    content: "";
-    position: absolute;
-    bottom: 4px;
-    right: 4%;
-    width: 55%;
-    height: 3px;
-    background: var(--cba-red);
+.cba-logo-img {
+    display: block;
+    margin: 0 auto clamp(6px, 1.4dvh, 12px);
+    height: clamp(38px, 6dvh, 56px);
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
 }
 
 .cba-tagline {
@@ -168,8 +139,8 @@
         linear-gradient(#fff, #fff) padding-box,
         linear-gradient(180deg, var(--cba-blue), var(--cba-purple)) border-box;
     border-radius: 14px;
-    padding: 18px 20px;
-    margin-bottom: 16px;
+    padding: clamp(10px, 2dvh, 18px) 20px;
+    margin-bottom: clamp(8px, 1.6dvh, 16px);
     cursor: pointer;
     transition: transform 0.15s ease;
 }
@@ -184,8 +155,8 @@
 
 .cba-role-icon {
     flex: 0 0 auto;
-    width: 64px;
-    height: 64px;
+    width: clamp(44px, 7dvh, 64px);
+    height: clamp(44px, 7dvh, 64px);
     border-radius: 12px;
     background: var(--cba-gradient);
     color: #fff;
@@ -197,8 +168,30 @@
 .cba-role-title {
     display: block;
     font-weight: 700;
-    font-size: 30px;
+    font-size: clamp(20px, 3.2dvh, 30px);
     color: var(--cba-purple);
+}
+
+.cba-role-badge {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 10px;
+    font-family: "Inter", sans-serif;
+    font-weight: 600;
+    font-size: 0.62rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--cba-purple);
+    background: rgba(140, 108, 255, 0.12);
+    border: 1px solid rgba(140, 108, 255, 0.35);
+    border-radius: 999px;
+    padding: 3px 9px;
+}
+
+.cba-role-card--active .cba-role-badge {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
 }
 
 .cba-role-desc {
@@ -226,6 +219,8 @@
 }
 
 .cba-panel {
+    flex: 1 1 420px;
+    min-width: 320px;
     max-width: 560px;
     display: flex;
 }
@@ -249,7 +244,7 @@
 .cba-form-card {
     background: #fff;
     border-radius: 12px;
-    padding: 36px 34px 30px;
+    padding: clamp(18px, 3.6dvh, 36px) 34px clamp(16px, 3dvh, 30px);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -269,13 +264,13 @@
     font-weight: 700;
     font-size: 1rem;
     color: #111;
-    margin-bottom: 22px;
+    margin-bottom: clamp(10px, 2dvh, 22px);
 }
 
 .cba-field-row {
     display: flex;
     gap: 12px;
-    margin-bottom: 14px;
+    margin-bottom: clamp(8px, 1.6dvh, 14px);
 }
 
 .cba-input,
@@ -283,13 +278,25 @@
     background: var(--cba-fill-gray) !important;
     border: 1px solid var(--cba-border-gray) !important;
     border-radius: 12px !important;
-    height: 50px;
+    height: clamp(40px, 5.5dvh, 50px);
+    padding: 0 16px;
     font-size: 0.95rem;
+    font-family: "Inter", sans-serif;
+}
+
+/* Was un-flexed, so it sat at its browser-default intrinsic width inside
+   .cba-field-row instead of stretching — the actual cause of the Mobile
+   Number + Get OTP row not lining up with the full-width Password field
+   below it. flex:1 + min-width:0 makes it grow to fill exactly like
+   .cba-input-full does via width:100%. */
+.cba-input {
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .cba-input-full {
     width: 100%;
-    margin-bottom: 14px;
+    margin-bottom: clamp(8px, 1.6dvh, 14px);
 }
 
 .cba-input::placeholder,
@@ -311,23 +318,30 @@
 
 .cba-btn-otp {
     width: 121px;
-    height: 50px;
+    height: clamp(40px, 5.5dvh, 50px);
 }
 
 .cba-btn-verify {
     width: 121px;
-    height: 56px;
+    height: clamp(40px, 5.8dvh, 56px);
 }
 
 .cba-otp-row {
     align-items: stretch;
 }
 
+/* Was a fixed 56px each, so the 6-box row's total width was constant
+   regardless of container width — never matching the full-width Password
+   field below it. flex:1 + min-width:0 (same fix as .cba-input above)
+   makes the 6 boxes share whatever space is left after the Verify button,
+   so the row's total width always equals the container's full width. */
 .cba-otp-box {
-    width: 56px;
-    height: 56px;
+    flex: 1 1 0;
+    min-width: 0;
+    height: clamp(40px, 5.8dvh, 56px);
     text-align: center;
     font-size: 1.2rem;
+    font-family: "Inter", sans-serif;
     background: var(--cba-fill-gray) !important;
     border: 1px solid var(--cba-border-gray) !important;
     border-radius: 8px !important;
@@ -337,11 +351,11 @@
     color: var(--cba-purple);
     font-weight: 600;
     font-size: 0.9rem;
-    margin: -4px 0 16px;
+    margin: -4px 0 clamp(8px, 1.6dvh, 16px);
 }
 
 .cba-terms {
-    margin: 14px 0 18px;
+    margin: clamp(8px, 1.6dvh, 14px) 0 clamp(10px, 2dvh, 18px);
     padding-left: 1.8rem;
     font-size: 0.85rem;
     color: #111;
@@ -363,7 +377,7 @@
 }
 
 .cba-submit-btn {
-    height: 51px;
+    height: clamp(40px, 5.6dvh, 51px);
     border-radius: 8px !important;
     font-size: 1.05rem;
 }
@@ -372,11 +386,11 @@
     text-align: center;
     font-weight: 700;
     color: #333;
-    margin: 12px 0;
+    margin: clamp(6px, 1.4dvh, 12px) 0;
 }
 
 .cba-login-btn {
-    height: 50px;
+    height: clamp(40px, 5.5dvh, 50px);
     border-radius: 11.5px !important;
     background: rgba(255, 255, 255, 0.55);
     border: 1px solid var(--cba-blue) !important;
@@ -391,6 +405,26 @@
     text-align: center;
 }
 
+.cba-pending-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: clamp(8px, 2dvh, 20px) 0;
+}
+
+.cba-pending-message {
+    font-family: "Inter", sans-serif;
+    font-size: 0.95rem;
+    color: #444;
+    line-height: 1.5;
+    margin: 4px 0 clamp(18px, 3dvh, 28px);
+}
+
+.cba-pending-state .cba-submit-btn {
+    max-width: 260px;
+}
+
 @media (max-width: 991.98px) {
     .cba-header {
         flex-direction: column;
@@ -399,5 +433,51 @@
 
     .cba-plane {
         width: 70px;
+    }
+}
+
+/* .cba-otp-box is flex:1 1 0 (see above) so its width already auto-shrinks
+   to fill whatever space the fixed-width Verify button leaves — no width
+   override needed here. What narrow screens still need: less gap eaten
+   between 6 boxes, a narrower Verify button (more room for the boxes
+   themselves), and a smaller digit font so it doesn't clip in a thinner
+   box. */
+@media (max-width: 480px) {
+    .cba-form-card {
+        padding: 28px 18px 24px;
+    }
+
+    .cba-otp-row {
+        gap: 6px;
+    }
+
+    .cba-otp-box {
+        height: 38px;
+        font-size: 1rem;
+    }
+
+    .cba-btn-verify {
+        width: 72px;
+        height: 38px;
+        font-size: 0.8rem;
+    }
+}
+
+/* Common phone widths (~375-390px) still run tight at the 480px-breakpoint
+   sizing above — tighten once more. */
+@media (max-width: 400px) {
+    .cba-otp-row {
+        gap: 4px;
+    }
+
+    .cba-otp-box {
+        height: 36px;
+        font-size: 0.85rem;
+    }
+
+    .cba-btn-verify {
+        width: 60px;
+        height: 36px;
+        font-size: 0.72rem;
     }
 }

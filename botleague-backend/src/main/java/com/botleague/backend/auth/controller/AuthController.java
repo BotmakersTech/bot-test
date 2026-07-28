@@ -39,6 +39,16 @@ public class AuthController {
             @Valid @RequestBody RegisterRequestDTO request) {
 
         AuthTokensDTO tokens = authService.register(request);
+
+        if (tokens.isPendingApproval()) {
+            // No Set-Cookie — there is no refresh token to store for an account
+            // that isn't usable yet.
+            AuthResponseDTO body = AuthResponseDTO.pending(tokens.getBotleagueId(),
+                    "Your account has been created and is awaiting admin approval. "
+                            + "You'll be able to log in once it's approved.");
+            return ResponseEntity.status(HttpStatus.CREATED).body(body);
+        }
+
         return buildTokenResponse(tokens);
     }
 
