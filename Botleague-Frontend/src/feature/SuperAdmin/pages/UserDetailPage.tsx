@@ -23,34 +23,25 @@ import {
   selectAvailableSports,
 } from "../store/userManagementSlice"
 import { AppRole } from "../../../shared/constants/roles"
+import "../../../shared/styles/adminDetailPage.css"
 
 const ALL_ROLES = Object.values(AppRole)
 const ALL_STATUSES = ["ACTIVE", "SUSPENDED", "PENDING", "DEACTIVATED"]
 
+function statusClass(status: string) {
+  return `adp-status adp-status-${status.toLowerCase()}`
+}
+
 function StatusBadge({ status }: { status: string }) {
-  const color =
-    status === "ACTIVE"
-      ? "bg-green-500/10 text-green-400"
-      : status === "PENDING"
-      ? "bg-yellow-500/10 text-yellow-400"
-      : "bg-red-500/10 text-red-400"
-  return (
-    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${color}`}>
-      {status}
-    </span>
-  )
+  return <span className={statusClass(status)}>{status}</span>
 }
 
 function RoleBadge({ role, onRemove }: { role: string; onRemove?: () => void }) {
   return (
-    <span className="flex items-center gap-1 rounded-full bg-[#fa4715]/10 px-2.5 py-0.5 text-xs font-medium text-orange-400 border border-[#fa4715]/20">
+    <span className="adp-chip" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
       {role}
       {onRemove && (
-        <button
-          onClick={onRemove}
-          title="Remove role"
-          className="ml-0.5 text-orange-400 hover:text-white leading-none"
-        >
+        <button onClick={onRemove} title="Remove role" className="adp-link-remove" style={{ fontSize: 13 }}>
           ×
         </button>
       )}
@@ -186,83 +177,62 @@ export default function UserDetailPage() {
   const unassignedRoles = ALL_ROLES.filter((r) => !user?.allRoles.includes(r))
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-white">
-      {/* Top bar */}
-      <div className="border-b border-white/10 px-6 py-4 flex items-center gap-4">
-        <button
-          onClick={() => navigate("/admin/users")}
-          className="text-gray-400 hover:text-white text-sm flex items-center gap-1.5 transition"
-        >
+    <div className="adp-page">
+      <div className="adp-topbar">
+        <button onClick={() => navigate("/admin/users")} className="adp-back-link">
           ← Back to User Management
         </button>
       </div>
 
-      {error && (
-        <div className="mx-6 mt-4 rounded-lg bg-red-500/10 px-4 py-2.5 text-sm text-red-400">
-          {error}
-        </div>
-      )}
+      {error && <div className="adp-banner adp-banner-error" style={{ margin: "16px 40px 0" }}>{error}</div>}
 
       {!user && loading && (
-        <div className="flex items-center justify-center py-32 text-gray-400">
-          Loading user…
-        </div>
+        <div className="adp-center">Loading user…</div>
       )}
 
       {user && (
-        <div className="max-w-3xl mx-auto px-6 py-8">
-          {/* User profile card */}
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-6 mb-6 flex items-start gap-5">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#fa4715]/20 text-[#fa4715] font-bold text-2xl">
-              {(user.firstName?.charAt(0) || user.username?.charAt(0) || "U").toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-xl font-bold text-white">
-                  {user.firstName} {user.lastName}
-                </h1>
-                <StatusBadge status={user.accountStatus} />
+        <div className="adp-content">
+          {/* User card */}
+          <section className="adp-card">
+            <div className="adp-card-left">
+              <div className="adp-avatar">
+                {(user.firstName?.charAt(0) || user.username?.charAt(0) || "U").toUpperCase()}
               </div>
-              <p className="text-sm text-gray-400 mt-0.5">
-                {user.email && <span>{user.email}</span>}
-                {user.email && user.phone && <span className="mx-1.5 text-gray-600">·</span>}
-                {user.phone && <span>{user.phone}</span>}
-              </p>
-              <p className="font-mono text-xs text-gray-500 mt-1">{user.botleagueId}</p>
-              <div className="flex flex-wrap gap-2 mt-3">
-                {user.allRoles.map((r) => (
-                  <span
-                    key={r}
-                    className="rounded-full bg-white/8 px-2.5 py-0.5 text-xs text-gray-300 border border-white/10"
-                  >
-                    {r}
-                  </span>
-                ))}
+              <div>
+                <div className="adp-title-row">
+                  <h2 className="adp-entity-name">{user.firstName} {user.lastName}</h2>
+                  <StatusBadge status={user.accountStatus} />
+                </div>
+                <p className="adp-entity-meta">
+                  {user.email}{user.email && user.phone ? " · " : ""}{user.phone}
+                </p>
+                <p className="adp-entity-code">{user.botleagueId}</p>
+                <div className="adp-role-chips">
+                  {user.allRoles.map((r) => <span key={r} className="adp-chip">{r}</span>)}
+                </div>
               </div>
             </div>
-            <div className="shrink-0 text-right text-xs text-gray-500">
-              <p>Joined</p>
-              <p className="text-gray-400">{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "—"}</p>
+            <div className="adp-card-right">
+              <div className="adp-stat">
+                <h4>Joined</h4>
+                <span style={{ fontSize: 15 }}>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "—"}</span>
+              </div>
               {user.lastLoginAt && (
-                <>
-                  <p className="mt-1">Last login</p>
-                  <p className="text-gray-400">{new Date(user.lastLoginAt).toLocaleDateString()}</p>
-                </>
+                <div className="adp-stat">
+                  <h4>Last Login</h4>
+                  <span style={{ fontSize: 15 }}>{new Date(user.lastLoginAt).toLocaleDateString()}</span>
+                </div>
               )}
             </div>
-          </div>
+          </section>
 
           {/* Tabs */}
-          <div className="flex border-b border-white/10 mb-5 overflow-x-auto">
+          <div className="adp-tabs">
             {(["profile", "roles", "status", "events", "sports"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`px-5 py-3 text-sm font-medium whitespace-nowrap capitalize transition-colors border-b-2 ${
-                  tab === t
-                    ? "border-[#fa4715] text-white"
-                    : "border-transparent text-gray-400 hover:text-white"
-                }`}
+                className={"adp-tab" + (tab === t ? " adp-tab-active" : "")}
               >
                 {t === "events"
                   ? `Event Access (${user.assignedEvents?.length ?? 0})`
@@ -273,94 +243,90 @@ export default function UserDetailPage() {
             ))}
           </div>
 
-          {/* Loading overlay */}
-          {loading && (
-            <div className="text-center py-8 text-gray-400 text-sm">Updating…</div>
-          )}
+          {loading && <div className="adp-empty-note">Updating…</div>}
 
           {/* ── Profile tab ── */}
           {!loading && tab === "profile" && (
-            <div className="space-y-5">
-              {profileSuccess && (
-                <div className="rounded-xl bg-green-500/10 border border-green-500/20 px-4 py-2.5 text-sm text-green-400">
-                  Profile saved successfully.
-                </div>
-              )}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="adp-form-card">
+              {profileSuccess && <div className="adp-banner adp-banner-success" style={{ marginBottom: 20 }}>Profile saved successfully.</div>}
+              <div className="adp-form-grid">
                 <ProfileField label="First Name" value={profileForm.firstName}
                   onChange={(v) => setProfileForm((f) => ({ ...f, firstName: v }))} />
                 <ProfileField label="Last Name" value={profileForm.lastName}
                   onChange={(v) => setProfileForm((f) => ({ ...f, lastName: v }))} />
                 <ProfileField label="Username" value={profileForm.username}
                   onChange={(v) => setProfileForm((f) => ({ ...f, username: v }))} />
-                <ProfileField label="Email" value={profileForm.email} type="email"
-                  onChange={(v) => setProfileForm((f) => ({ ...f, email: v }))} />
                 <ProfileField label="Phone" value={profileForm.phone}
                   onChange={(v) => setProfileForm((f) => ({ ...f, phone: v }))} />
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1.5">Gender</label>
+                <ProfileField label="Email" value={profileForm.email} type="email"
+                  onChange={(v) => setProfileForm((f) => ({ ...f, email: v }))} />
+                <div className="adp-field">
+                  <label>Gender</label>
                   <select
                     value={profileForm.gender}
                     onChange={(e) => setProfileForm((f) => ({ ...f, gender: e.target.value }))}
-                    className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#fa4715]/50"
                   >
-                    <option value="">— not set —</option>
+                    <option value="">Select Gender</option>
                     <option value="MALE">Male</option>
                     <option value="FEMALE">Female</option>
                     <option value="OTHER">Other</option>
                   </select>
                 </div>
-                <ProfileField label="Date of Birth" value={profileForm.dateOfBirth} type="date"
+                <ProfileField label="Date Of Birth" value={profileForm.dateOfBirth} type="date"
                   onChange={(v) => setProfileForm((f) => ({ ...f, dateOfBirth: v }))} />
+                <ProfileField label="Country" value={profileForm.country}
+                  onChange={(v) => setProfileForm((f) => ({ ...f, country: v }))} />
                 <ProfileField label="City" value={profileForm.city}
                   onChange={(v) => setProfileForm((f) => ({ ...f, city: v }))} />
                 <ProfileField label="State" value={profileForm.state}
                   onChange={(v) => setProfileForm((f) => ({ ...f, state: v }))} />
-                <ProfileField label="Country" value={profileForm.country}
-                  onChange={(v) => setProfileForm((f) => ({ ...f, country: v }))} />
+                <div className="adp-field adp-full-width">
+                  <label>Address</label>
+                  <input
+                    type="text"
+                    value={profileForm.address}
+                    onChange={(e) => setProfileForm((f) => ({ ...f, address: e.target.value }))}
+                  />
+                </div>
               </div>
-              <ProfileField label="Address" value={profileForm.address}
-                onChange={(v) => setProfileForm((f) => ({ ...f, address: v }))} />
-              <div className="flex justify-end">
+
+              <div className="adp-buttons">
                 <button
-                  onClick={handleSaveProfile}
-                  disabled={profileSaving}
-                  className="rounded-xl bg-[#fa4715] hover:bg-orange-500 disabled:opacity-50 px-6 py-2.5 text-sm font-semibold text-white transition"
+                  className="adp-btn-cancel"
+                  type="button"
+                  onClick={() => user && setProfileForm({
+                    username: user.username ?? "", firstName: user.firstName ?? "", lastName: user.lastName ?? "",
+                    email: user.email ?? "", phone: user.phone ?? "", gender: user.gender ?? "",
+                    dateOfBirth: user.dateOfBirth ?? "", city: user.city ?? "", state: user.state ?? "",
+                    country: user.country ?? "", address: user.address ?? "",
+                  })}
                 >
-                  {profileSaving ? "Saving…" : "Save Profile"}
+                  Cancel
+                </button>
+                <button className="adp-btn-save" onClick={handleSaveProfile} disabled={profileSaving}>
+                  {profileSaving ? "Saving…" : "Save"}
                 </button>
               </div>
             </div>
           )}
 
+          {/* ── Roles tab ── */}
           {!loading && tab === "roles" && (
-            <div className="space-y-6">
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                  Current Roles
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {user.allRoles.length === 0 ? (
-                    <p className="text-sm text-gray-500">No roles assigned.</p>
-                  ) : (
-                    user.allRoles.map((r) => (
-                      <RoleBadge key={r} role={r} onRemove={() => handleRemoveRole(r)} />
-                    ))
-                  )}
-                </div>
+            <div className="adp-form-card">
+              <p className="adp-section-label">Current Roles</p>
+              <div className="adp-role-chips" style={{ marginBottom: 28 }}>
+                {user.allRoles.length === 0 ? (
+                  <p className="adp-empty-note">No roles assigned.</p>
+                ) : (
+                  user.allRoles.map((r) => <RoleBadge key={r} role={r} onRemove={() => handleRemoveRole(r)} />)
+                )}
               </div>
               {unassignedRoles.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                    Add Role
-                  </p>
-                  <div className="flex flex-wrap gap-2">
+                  <p className="adp-section-label">Add Role</p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     {unassignedRoles.map((r) => (
-                      <button
-                        key={r}
-                        onClick={() => handleAssignRole(r)}
-                        className="rounded-full border border-white/10 px-3 py-1 text-xs text-gray-400 hover:border-[#fa4715]/50 hover:text-white transition-colors"
-                      >
+                      <button key={r} onClick={() => handleAssignRole(r)} className="adp-btn-ghost">
                         + {r}
                       </button>
                     ))}
@@ -370,176 +336,111 @@ export default function UserDetailPage() {
             </div>
           )}
 
+          {/* ── Status tab ── */}
           {!loading && tab === "status" && (
-            <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                Account Status
-              </p>
-              <div className="flex flex-wrap gap-3">
+            <div className="adp-form-card">
+              <p className="adp-section-label">Account Status</p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
                 {ALL_STATUSES.map((s) => (
                   <button
                     key={s}
                     onClick={() => handleStatusChange(s)}
-                    className={`rounded-xl px-5 py-2.5 text-sm font-medium transition-colors ${
-                      user.accountStatus === s
-                        ? "bg-[#fa4715] text-white shadow-lg"
-                        : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/10"
-                    }`}
+                    className={"adp-btn-ghost" + (user.accountStatus === s ? " adp-btn-active" : "")}
+                    style={{ padding: "10px 20px", fontSize: 14 }}
                   >
                     {s}
                   </button>
                 ))}
               </div>
-              <p className="mt-4 text-sm text-gray-400">
-                Current status:{" "}
-                <strong className="text-white">{user.accountStatus}</strong>
+              <p style={{ marginTop: 18, fontFamily: "Inter, sans-serif", fontSize: 14, color: "#555" }}>
+                Current status: <strong style={{ color: "var(--adp-text)" }}>{user.accountStatus}</strong>
               </p>
             </div>
           )}
 
+          {/* ── Events tab ── */}
           {!loading && tab === "events" && (
-            <div className="space-y-6">
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                  Assign Event
-                </p>
-                <div className="flex gap-2">
-                  <select
-                    value={selectedEventId}
-                    onChange={(e) => setSelectedEventId(e.target.value)}
-                    className="flex-1 rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:border-[#fa4715]/50"
-                  >
-                    <option value="">Select an event…</option>
-                    {availableEvents
-                      .filter((ev) => !user.assignedEvents?.some((a) => a.eventId === ev.id))
-                      .map((ev) => (
-                        <option key={ev.id} value={ev.id}>
-                          {ev.eventName} ({ev.eventCode})
-                        </option>
-                      ))}
-                  </select>
-                  <button
-                    onClick={handleAssignEvent}
-                    disabled={!selectedEventId}
-                    className="rounded-xl bg-[#fa4715] hover:bg-orange-500 disabled:opacity-40 px-4 py-2 text-sm font-semibold text-white transition"
-                  >
-                    Assign
-                  </button>
-                </div>
+            <div className="adp-form-card">
+              <p className="adp-section-label">Assign Event</p>
+              <div className="adp-assign-row" style={{ marginBottom: 28 }}>
+                <select value={selectedEventId} onChange={(e) => setSelectedEventId(e.target.value)}>
+                  <option value="">Select an event…</option>
+                  {availableEvents
+                    .filter((ev) => !user.assignedEvents?.some((a) => a.eventId === ev.id))
+                    .map((ev) => <option key={ev.id} value={ev.id}>{ev.eventName} ({ev.eventCode})</option>)}
+                </select>
+                <button onClick={handleAssignEvent} disabled={!selectedEventId} className="adp-btn-save" style={{ minWidth: 110 }}>
+                  Assign
+                </button>
               </div>
 
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                  Assigned Events ({user.assignedEvents?.length ?? 0})
-                </p>
-                {!user.assignedEvents?.length ? (
-                  <p className="text-sm text-gray-500">No events assigned.</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {user.assignedEvents.map((e) => (
-                      <li
-                        key={e.eventId}
-                        className="flex items-center justify-between rounded-xl bg-white/5 px-4 py-3"
-                      >
-                        <div>
-                          <span className="text-sm font-medium text-white">{e.eventName}</span>
-                          <span className="ml-2 font-mono text-xs text-gray-500">{e.eventCode}</span>
-                        </div>
-                        <button
-                          onClick={() => handleRemoveEvent(e.eventId)}
-                          className="text-xs text-red-400 hover:text-red-300 transition"
-                        >
-                          Remove
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+              <p className="adp-section-label">Assigned Events ({user.assignedEvents?.length ?? 0})</p>
+              {!user.assignedEvents?.length ? (
+                <p className="adp-empty-note">No events assigned.</p>
+              ) : (
+                <div className="adp-row-list">
+                  {user.assignedEvents.map((e) => (
+                    <div key={e.eventId} className="adp-row">
+                      <div>
+                        <span className="adp-row-name">{e.eventName}</span>
+                        <span className="adp-row-sub" style={{ marginLeft: 8 }}>{e.eventCode}</span>
+                      </div>
+                      <button onClick={() => handleRemoveEvent(e.eventId)} className="adp-link-remove">Remove</button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
+          {/* ── Sports tab ── */}
           {!loading && tab === "sports" && (
-            <div className="space-y-6">
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                  Assign Sport
-                </p>
-                <div className="flex flex-col gap-2">
-                  <select
-                    value={selectedEventId}
-                    onChange={(e) => {
-                      setSelectedEventId(e.target.value)
-                      setSelectedSportId("")
-                    }}
-                    className="rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:border-[#fa4715]/50"
-                  >
-                    <option value="">1. Select event…</option>
-                    {availableEvents.map((ev) => (
-                      <option key={ev.id} value={ev.id}>
-                        {ev.eventName} ({ev.eventCode})
-                      </option>
-                    ))}
-                  </select>
+            <div className="adp-form-card">
+              <p className="adp-section-label">Assign Sport</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
+                <select
+                  value={selectedEventId}
+                  onChange={(e) => { setSelectedEventId(e.target.value); setSelectedSportId("") }}
+                >
+                  <option value="">1. Select event…</option>
+                  {availableEvents.map((ev) => <option key={ev.id} value={ev.id}>{ev.eventName} ({ev.eventCode})</option>)}
+                </select>
 
-                  {selectedEventId && (
-                    <div className="flex gap-2">
-                      <select
-                        value={selectedSportId}
-                        onChange={(e) => setSelectedSportId(e.target.value)}
-                        className="flex-1 rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:border-[#fa4715]/50"
-                      >
-                        <option value="">2. Select sport…</option>
-                        {availableSports
-                          .filter((s) => !user.assignedSports?.some((a) => a.eventSportId === s.id))
-                          .map((s) => (
-                            <option key={s.id} value={s.id}>
-                              {s.sport}
-                              {s.ageGroup ? ` · ${s.ageGroup}` : ""}
-                              {s.weightClass ? ` (${s.weightClass})` : ""}
-                            </option>
-                          ))}
-                      </select>
-                      <button
-                        onClick={handleAssignSport}
-                        disabled={!selectedSportId}
-                        className="rounded-xl bg-[#fa4715] hover:bg-orange-500 disabled:opacity-40 px-4 py-2 text-sm font-semibold text-white transition"
-                      >
-                        Assign
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                  Assigned Sports ({user.assignedSports?.length ?? 0})
-                </p>
-                {!user.assignedSports?.length ? (
-                  <p className="text-sm text-gray-500">No sports assigned.</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {user.assignedSports.map((s) => (
-                      <li
-                        key={s.eventSportId}
-                        className="flex items-center justify-between rounded-xl bg-white/5 px-4 py-3"
-                      >
-                        <div>
-                          <span className="text-sm font-medium text-white">{s.sport}</span>
-                          <span className="ml-2 text-xs text-gray-400">{s.eventName}</span>
-                        </div>
-                        <button
-                          onClick={() => handleRemoveSport(s.eventSportId)}
-                          className="text-xs text-red-400 hover:text-red-300 transition"
-                        >
-                          Remove
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+                {selectedEventId && (
+                  <div className="adp-assign-row">
+                    <select value={selectedSportId} onChange={(e) => setSelectedSportId(e.target.value)}>
+                      <option value="">2. Select sport…</option>
+                      {availableSports
+                        .filter((s) => !user.assignedSports?.some((a) => a.eventSportId === s.id))
+                        .map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.sport}{s.ageGroup ? ` · ${s.ageGroup}` : ""}{s.weightClass ? ` (${s.weightClass})` : ""}
+                          </option>
+                        ))}
+                    </select>
+                    <button onClick={handleAssignSport} disabled={!selectedSportId} className="adp-btn-save" style={{ minWidth: 110 }}>
+                      Assign
+                    </button>
+                  </div>
                 )}
               </div>
+
+              <p className="adp-section-label">Assigned Sports ({user.assignedSports?.length ?? 0})</p>
+              {!user.assignedSports?.length ? (
+                <p className="adp-empty-note">No sports assigned.</p>
+              ) : (
+                <div className="adp-row-list">
+                  {user.assignedSports.map((s) => (
+                    <div key={s.eventSportId} className="adp-row">
+                      <div>
+                        <span className="adp-row-name">{s.sport}</span>
+                        <span className="adp-row-sub" style={{ marginLeft: 8 }}>{s.eventName}</span>
+                      </div>
+                      <button onClick={() => handleRemoveSport(s.eventSportId)} className="adp-link-remove">Remove</button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -557,14 +458,9 @@ function ProfileField({
   type?: string
 }) {
   return (
-    <div>
-      <label className="block text-xs text-gray-400 mb-1.5">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#fa4715]/50"
-      />
+    <div className="adp-field">
+      <label>{label}</label>
+      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} />
     </div>
   )
 }
