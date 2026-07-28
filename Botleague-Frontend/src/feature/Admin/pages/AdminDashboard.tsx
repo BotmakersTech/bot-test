@@ -1,14 +1,12 @@
 "use client"
 
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useMemo, useState } from "react"
 import {
-  CalendarDays, Trophy, Users, Search, MapPin, Building2, Calendar,
-  Radio, Plus, ShieldCheck, AlertCircle, CheckCircle2, Clock, Trash2,
-  FileEdit, Zap, Activity
+  CalendarDays, Trophy, Radio, Plus, AlertCircle, CheckCircle2,
+  Search, MapPin, Building2, Calendar
 } from "lucide-react"
 import { useAdminEvents } from "../hooks/useAdmin"
 import type { AdminEventResponse } from "../api/admin.api"
-import { getRecentAuditLogs, type AuditLogEntry } from "../api/auditLog.api"
 import { Link } from "react-router-dom"
 import "../../../styles/adminDashboard.css"
 
@@ -62,26 +60,8 @@ export default function AdminEventsDashboard() {
   const [search, setSearch] = useState("")
   const [filterStatus, setFilterStatus] = useState<(typeof FILTERS)[number]>("all")
 
-  // Activity feed
-  const [activityLogs, setActivityLogs] = useState<AuditLogEntry[]>([])
-  const [activityLoading, setActivityLoading] = useState(true)
-
-  useEffect(() => {
-    getRecentAuditLogs()
-      .then(setActivityLogs)
-      .catch(() => setActivityLogs([]))
-      .finally(() => setActivityLoading(false))
-  }, [])
-
   // ── Stats ──
   const totalEvents = events.length
-
-  const totalTeams = events.reduce((acc, e) => {
-    const sportTeams = e?.sports?.reduce(
-      (total, sport) => total + (sport?.registeredTeamsCount || 0), 0
-    ) || 0
-    return acc + sportTeams
-  }, 0)
 
   const completedCount = events.filter(e => normalizeStatus(e?.status) === "completed").length
   const upcomingCount  = events.filter(e => normalizeStatus(e?.status) === "upcoming").length
@@ -141,7 +121,6 @@ export default function AdminEventsDashboard() {
         {/* ── STATS ── */}
         <section className="adb-stats">
           <StatCard icon={<CalendarDays size={26} />} value={totalEvents} label="Total Events" />
-          <StatCard icon={<Users size={26} />} value={totalTeams} label="Total Teams" />
           <StatCard icon={<CheckCircle2 size={26} />} value={completedCount} label="Completed" />
           <StatCard icon={<Trophy size={26} />} value={upcomingCount} label="Upcoming" />
           <StatCard icon={<Radio size={26} />} value={liveCount} label="Live Now" pulse={liveCount > 0} />
@@ -174,42 +153,18 @@ export default function AdminEventsDashboard() {
           </select>
         </section>
 
-        {/* ── EVENTS + ACTIVITY FEED ── */}
-        <div className="adb-two-col">
-
-          <div className="adb-event-grid">
-            {filteredEvents.length === 0 ? (
-              <div className="adb-empty">
-                <CalendarDays size={32} color="#c7c7c7" />
-                <p style={{ marginTop: 12 }}>No events match your filters</p>
-              </div>
-            ) : (
-              filteredEvents.map((event, idx) => (
-                <EventCard key={event.id || idx} event={event} />
-              ))
-            )}
-          </div>
-
-          <div className="adb-feed">
-            <div className="adb-feed-header">
-              <div className="adb-feed-title">
-                <ShieldCheck size={16} />
-                Activity Feed
-              </div>
-              <span className="adb-feed-subtitle">Governance log</span>
+        {/* ── EVENTS ── */}
+        <div className="adb-event-grid">
+          {filteredEvents.length === 0 ? (
+            <div className="adb-empty">
+              <CalendarDays size={32} color="#c7c7c7" />
+              <p style={{ marginTop: 12 }}>No events match your filters</p>
             </div>
-
-            <div className="adb-feed-body">
-              {activityLoading ? (
-                <div className="adb-feed-empty">Loading…</div>
-              ) : activityLogs.length === 0 ? (
-                <div className="adb-feed-empty">No activity yet</div>
-              ) : (
-                activityLogs.map((log) => <ActivityRow key={log.id} log={log} />)
-              )}
-            </div>
-          </div>
-
+          ) : (
+            filteredEvents.map((event, idx) => (
+              <EventCard key={event.id || idx} event={event} />
+            ))
+          )}
         </div>
 
       </div>
@@ -280,14 +235,6 @@ function EventCard({ event }: { event: AdminEventResponse }) {
           <Calendar size={16} />
           {formatDate(event.startDate)} – {formatDate(event.endDate)}
         </div>
-
-        {sportsCount > 0 && (
-          <div className="adb-sports-row">
-            {event.sports?.map(sport => (
-              <span key={sport.id} className="adb-sport-chip">{sport.sportName}</span>
-            ))}
-          </div>
-        )}
       </div>
 
       <div className="adb-stats-box">
@@ -307,63 +254,5 @@ function EventCard({ event }: { event: AdminEventResponse }) {
         {STATUS_LABEL[status]}
       </div>
     </Link>
-  )
-}
-
-// =====================================================
-// ACTIVITY ROW
-// =====================================================
-
-const ACTION_META: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
-  EVENT_CREATED:          { icon: <Plus size={13} />,         color: "#22c55e", label: "Event Created" },
-  EVENT_PUBLISHED:        { icon: <Zap size={13} />,          color: "#eab308", label: "Event Published" },
-  EVENT_STATUS_CHANGED:   { icon: <FileEdit size={13} />,     color: "#0162D1", label: "Status Changed" },
-  EVENT_UPDATED:          { icon: <FileEdit size={13} />,     color: "#8A8A8A", label: "Event Updated" },
-  EVENT_DELETED:          { icon: <Trash2 size={13} />,       color: "#ef4444", label: "Event Deleted" },
-  ROBOT_REGISTERED:       { icon: <CheckCircle2 size={13} />, color: "#22c55e", label: "Robot Registered" },
-  REGISTRATION_CANCELLED: { icon: <AlertCircle size={13} />,  color: "#f97316", label: "Registration Cancelled" },
-}
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1)  return "just now"
-  if (mins < 60) return `${mins}m ago`
-  const hrs = Math.floor(mins / 60)
-  if (hrs < 24)  return `${hrs}h ago`
-  return `${Math.floor(hrs / 24)}d ago`
-}
-
-function ActivityRow({ log }: { log: AuditLogEntry }) {
-  const meta = ACTION_META[log.action] ?? { icon: <Activity size={13} />, color: "#8A8A8A", label: log.action }
-  const actor = log.actorEmail
-    ? log.actorEmail.split("@")[0]
-    : log.actorId
-      ? log.actorId.slice(0, 8) + "…"
-      : "System"
-
-  return (
-    <div className="adb-activity-row">
-      <div className="adb-activity-icon" style={{ color: meta.color, borderColor: `${meta.color}40`, background: `${meta.color}14` }}>
-        {meta.icon}
-      </div>
-      <div className="adb-activity-content">
-        <div className="adb-activity-label">{meta.label}</div>
-        {log.entityName && <div className="adb-activity-entity">{log.entityName}</div>}
-        {(log.oldValue || log.newValue) && (
-          <div className="adb-activity-change">
-            {log.oldValue && <span style={{ color: "#ef4444" }}>{log.oldValue}</span>}
-            {log.oldValue && log.newValue && <span style={{ color: "#9CA3AF", margin: "0 4px" }}>→</span>}
-            {log.newValue && <span style={{ color: "#22c55e" }}>{log.newValue}</span>}
-          </div>
-        )}
-        <div className="adb-activity-meta">
-          <Clock size={10} />
-          {timeAgo(log.createdAt)}
-          <span style={{ color: "#D1D5DB" }}>·</span>
-          {actor}
-        </div>
-      </div>
-    </div>
   )
 }

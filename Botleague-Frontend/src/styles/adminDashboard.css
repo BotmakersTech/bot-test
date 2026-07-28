@@ -283,18 +283,7 @@
   box-shadow: 0 15px 30px rgba(1, 98, 209, .30);
 }
 
-/* ── Two-column layout: events + activity feed ── */
-
-.adb-two-col {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 24px;
-  align-items: start;
-}
-
-@media (max-width: 900px) {
-  .adb-two-col { grid-template-columns: 1fr; }
-}
+/* ── Event list ── */
 
 .adb-event-grid {
   display: flex;
@@ -387,26 +376,6 @@
   flex-shrink: 0;
 }
 
-.adb-sports-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 10px;
-}
-
-.adb-sport-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: rgba(1, 98, 209, .06);
-  border: 1px solid rgba(1, 98, 209, .14);
-  font-size: 12px;
-  color: #444;
-  font-weight: 600;
-}
-
 /* ── Number stats box ── */
 
 .adb-stats-box {
@@ -491,112 +460,6 @@
   border: 1px dashed var(--adb-border);
   background: #fff;
   color: var(--adb-gray);
-}
-
-/* ── Activity feed ── */
-
-.adb-feed {
-  border-radius: 18px;
-  border: 1px solid var(--adb-border);
-  background: #fff;
-  overflow: hidden;
-  position: sticky;
-  top: 24px;
-  box-shadow: var(--adb-shadow);
-}
-
-.adb-feed-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 20px 14px;
-  border-bottom: 1px solid var(--adb-border);
-}
-
-.adb-feed-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #222;
-}
-
-.adb-feed-title svg { color: var(--adb-primary); }
-
-.adb-feed-subtitle {
-  font-size: 11px;
-  color: var(--adb-gray);
-  font-weight: 500;
-}
-
-.adb-feed-body {
-  max-height: 640px;
-  overflow-y: auto;
-  padding: 6px 0;
-}
-
-.adb-feed-empty {
-  padding: 40px 20px;
-  text-align: center;
-  color: var(--adb-gray);
-  font-size: 13px;
-}
-
-.adb-activity-row {
-  display: flex;
-  gap: 11px;
-  padding: 12px 18px;
-  border-bottom: 1px solid #F3F4F6;
-  align-items: flex-start;
-}
-
-.adb-activity-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  border: 1px solid;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.adb-activity-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.adb-activity-label {
-  font-size: 13px;
-  font-weight: 700;
-  color: #222;
-  line-height: 1.3;
-}
-
-.adb-activity-entity {
-  font-size: 12px;
-  color: var(--adb-gray);
-  margin-top: 2px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.adb-activity-change {
-  font-size: 11.5px;
-  margin-top: 3px;
-  display: flex;
-  align-items: center;
-}
-
-.adb-activity-meta {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  color: #9CA3AF;
-  margin-top: 4px;
 }
 
 /* ── Loading / error states ── */
