@@ -50,22 +50,34 @@ export default function NewsFeedPage() {
       )}
 
       <div className="flex flex-col gap-3">
-        {items.map((item) => (
-          <Link
-            key={item.id}
-            to={`/news/${item.id}`}
-            className="block border border-gray-200 rounded-xl p-5 hover:border-[#0162D1]/40 hover:shadow-sm transition-all bg-white"
-          >
-            <div className="flex items-center gap-2 flex-wrap mb-1.5">
-              {item.isPinned && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#0162D1]/10 text-[#0162D1] font-semibold">PINNED</span>
+        {items.map((item) => {
+          const isImage = item.attachmentUrl && !item.attachmentFileType?.startsWith("video/");
+          return (
+            <Link
+              key={item.id}
+              to={`/news/${item.id}`}
+              className="flex gap-4 border border-gray-200 rounded-xl p-5 hover:border-[#0162D1]/40 hover:shadow-sm transition-all bg-white"
+            >
+              {isImage && (
+                <img
+                  src={item.attachmentUrl}
+                  alt=""
+                  className="w-24 h-24 rounded-lg object-cover shrink-0"
+                />
               )}
-              <span className="text-xs text-gray-400">{formatDate(item.publishedAt)}</span>
-            </div>
-            <h2 className="text-lg font-semibold text-gray-900">{item.title}</h2>
-            <p className="text-sm text-gray-500 mt-1 line-clamp-2">{item.body}</p>
-          </Link>
-        ))}
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                  {item.isPinned && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#0162D1]/10 text-[#0162D1] font-semibold">PINNED</span>
+                  )}
+                  <span className="text-xs text-gray-400">{formatDate(item.publishedAt)}</span>
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">{item.title}</h2>
+                <p className="text-sm text-gray-500 mt-1 line-clamp-2">{item.body}</p>
+              </div>
+            </Link>
+          );
+        })}
       </div>
 
       {items.length > 0 && page < totalPages - 1 && (

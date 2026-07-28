@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   createNews,
   listNewsAdmin,
@@ -9,10 +10,19 @@ import {
   type NewsRequest,
 } from "../api/news.api";
 import { AGE_GROUP_CATALOGUE, AGE_CATEGORY_RANGES } from "../../../shared/constants/sportCatalogue";
+import heroImg from "../../../assets/home/Img/sports-img/sport3.png";
+import "../styles/adminNewsPage.css";
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleString();
 }
+
+// "All News" and "Highlights" (pinned) are real, functional filters. The
+// other three labels don't correspond to any field News actually has (no
+// content-category concept exists on the entity) — they're kept visually
+// since the design called for 5 pills, but selecting them currently shows
+// the same list as "All News" rather than silently faking empty results.
+const NEWS_FILTERS = ["All News", "Highlights", "Live Matches", "Results", "Upcoming"] as const;
 
 // ── Create News Modal ───────────────────────────────────────────────────────
 
@@ -259,6 +269,7 @@ export default function AdminNewsPage() {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<(typeof NEWS_FILTERS)[number]>("All News");
 
   const load = async (p: number = 0) => {
     setLoading(true);
@@ -308,118 +319,130 @@ export default function AdminNewsPage() {
     }
   };
 
+  const featured = items.find((i) => i.isPinned) ?? items[0] ?? null;
+  const gridSource = items.filter((i) => i.id !== featured?.id);
+  const visibleItems = activeFilter === "Highlights" ? gridSource.filter((i) => i.isPinned) : gridSource;
+
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-white">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-white">News</h1>
-            <p className="text-sm text-neutral-500 mt-1">
-              Platform-wide announcements, filterable by age category and sport interest
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#0162D1] hover:bg-[#0052b3] rounded-lg transition-colors"
-          >
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            Publish News
-          </button>
+    <div className="an-page">
+      <div className="an-page-header">
+        <div>
+          <p className="an-page-title">News &amp; Announcements</p>
+          <h1 className="an-page-heading">PLATFORM NEWS</h1>
         </div>
+        <button type="button" className="an-create-btn" onClick={() => setShowModal(true)}>
+          + Create News
+        </button>
+      </div>
 
-        {error && (
-          <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 mb-4">
-            {error}
-          </div>
-        )}
+      {error && <div className="an-error-box">{error}</div>}
 
-        {loading && items.length === 0 && (
-          <div className="flex items-center justify-center py-16">
-            <div className="h-8 w-8 rounded-full border-2 border-[#0162D1] border-t-transparent animate-spin" />
-          </div>
-        )}
-
-        {!loading && items.length === 0 && !error && (
-          <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-            <p className="text-neutral-400 font-medium">No News published yet</p>
-            <p className="text-neutral-600 text-sm">Publish your first News item to get started.</p>
-          </div>
-        )}
-
-        {items.length > 0 && (
-          <div className="flex flex-col gap-3">
-            {items.map((item) => (
-              <div key={item.id} className="border border-white/[0.08] rounded-xl p-4 bg-white/[0.02]">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-medium text-white">{item.title}</p>
-                      {item.isPinned && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#0162D1]/20 text-[#5b9bff] font-semibold">PINNED</span>
-                      )}
-                      {item.isArchived && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-500/20 text-neutral-400 font-semibold">ARCHIVED</span>
-                      )}
-                    </div>
-                    <p className="text-neutral-500 text-xs mt-1 line-clamp-2">{item.body}</p>
-                    <div className="flex flex-wrap gap-2 mt-2 text-[0.7rem] text-neutral-500">
-                      <span>{item.recipientCount} recipients</span>
-                      <span>·</span>
-                      <span>{formatDate(item.publishedAt)}</span>
-                      {item.targetAgeCategories.length > 0 && (
-                        <>
-                          <span>·</span>
-                          <span>{item.targetAgeCategories.map((a) => a.replace(/_/g, " ")).join(", ")}</span>
-                        </>
-                      )}
-                      {item.targetSports.length > 0 && (
-                        <>
-                          <span>·</span>
-                          <span>{item.targetSports.length} sport(s)</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleArchive(item)}
-                      disabled={busyId === item.id}
-                      className="text-xs font-medium text-neutral-400 hover:text-white disabled:opacity-50"
-                    >
-                      {item.isArchived ? "Unarchive" : "Archive"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(item.id)}
-                      disabled={busyId === item.id}
-                      className="text-xs font-medium text-red-400 hover:text-red-300 disabled:opacity-50"
-                    >
-                      Delete
-                    </button>
-                  </div>
+      {loading && items.length === 0 ? (
+        <div className="an-center">
+          <div className="an-spinner" />
+          <span>Loading News…</span>
+        </div>
+      ) : items.length === 0 ? (
+        <div className="an-center">
+          <p style={{ fontWeight: 600 }}>No News published yet</p>
+          <p style={{ fontSize: 13 }}>Publish your first News item to get started.</p>
+        </div>
+      ) : (
+        <>
+          {featured && (
+            <div className="an-hero-card">
+              <div className="an-hero-img" style={{ backgroundImage: `url(${featured.attachmentUrl || heroImg})` }} />
+              <div className="an-hero-body">
+                <div className="an-hero-top">
+                  <span className="an-eyebrow">
+                    {featured.isPinned ? "Pinned · " : "Latest · "}{formatDate(featured.publishedAt)}
+                  </span>
+                  <span className="an-hero-global">
+                    {featured.targetAgeCategories.length === 0 && featured.targetSports.length === 0 ? "🌐 Global" : "🎯 Targeted"}
+                    <span className="an-stars">✦✦✦</span>
+                  </span>
                 </div>
+
+                <h1>{featured.title}</h1>
+                <p>{featured.body.length > 220 ? featured.body.slice(0, 220) + "…" : featured.body}</p>
+
+                <Link to={`/news/${featured.id}`} className="an-btn-grad">Read Full Story</Link>
               </div>
+            </div>
+          )}
+
+          <div className="an-filter-divider" />
+
+          <div className="an-filter-row">
+            {NEWS_FILTERS.map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setActiveFilter(f)}
+                className={"an-pill" + (activeFilter === f ? " an-active" : "")}
+              >
+                {f}
+              </button>
             ))}
           </div>
-        )}
 
-        {items.length > 0 && page < totalPages - 1 && (
-          <div className="mt-6 flex justify-center">
-            <button
-              type="button"
-              onClick={() => load(page + 1)}
-              disabled={loading}
-              className="px-6 py-2 text-sm font-medium text-white bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.12] rounded-lg transition-colors disabled:opacity-50"
-            >
-              {loading ? "Loading..." : "Load More"}
-            </button>
+          <div className="an-news-grid">
+            {visibleItems.map((item) => {
+              const isImage = item.attachmentUrl && !item.attachmentFileType?.startsWith("video/");
+              return (
+                <Link to={`/news/${item.id}`} className="an-news-card" key={item.id}>
+                  {isImage ? (
+                    <div className="an-thumb" style={{ backgroundImage: `url(${item.attachmentUrl})` }} />
+                  ) : (
+                    <div className="an-thumb an-thumb-fallback">{item.title[0]?.toUpperCase() ?? "N"}</div>
+                  )}
+
+                  <div className="an-news-details">
+                    <span className="an-news-category">
+                      {item.isArchived ? "Archived" : item.isPinned ? "Pinned" : "News"} · {formatDate(item.publishedAt)}
+                    </span>
+                    <h3 style={item.isArchived ? { opacity: 0.55 } : undefined}>{item.title}</h3>
+
+                    <div className="an-news-footer">
+                      <div className="an-news-admin-actions">
+                        <button
+                          type="button"
+                          disabled={busyId === item.id}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleArchive(item); }}
+                        >
+                          {item.isArchived ? "Unarchive" : "Archive"}
+                        </button>
+                        <button
+                          type="button"
+                          className="an-danger"
+                          disabled={busyId === item.id}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(item.id); }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                      <span className="an-btn-read-more">Read More →</span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
-        )}
-      </div>
+
+          {page < totalPages - 1 && (
+            <div style={{ marginTop: 32, display: "flex", justifyContent: "center" }}>
+              <button
+                type="button"
+                onClick={() => load(page + 1)}
+                disabled={loading}
+                className="an-pill"
+              >
+                {loading ? "Loading…" : "Load More"}
+              </button>
+            </div>
+          )}
+        </>
+      )}
 
       {showModal && <CreateNewsModal onClose={() => setShowModal(false)} onCreated={handleCreated} />}
     </div>
