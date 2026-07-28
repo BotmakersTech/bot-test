@@ -67,6 +67,15 @@ public class FileKeyService {
     }
 
     // =========================
+    // NEWS - ATTACHMENT
+    // News has no parent entity to hang a key off of (unlike the sport-
+    // scoped announcement above), same shape as the certificate template key.
+    // =========================
+    public String generateNewsAttachmentKey(String contentType) {
+        return "news/" + UUID.randomUUID() + getExtension(contentType);
+    }
+
+    // =========================
     // SPONSOR - LOGO (TEAM)
     // =========================
     public String generateSponsorLogoKey(UUID teamId, String contentType) {

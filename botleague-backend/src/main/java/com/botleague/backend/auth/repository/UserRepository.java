@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.botleague.backend.auth.entity.User;
+import com.botleague.backend.auth.enums.AccountStatus;
 import com.botleague.backend.team.entity.TeamInvite;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
@@ -17,6 +18,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     // ================= BASIC LOOKUPS =================
 
     Optional<User> findByPhone(String phone);
+
+    // Active, non-deleted users — the base pool for News audience resolution.
+    java.util.List<User> findByAccountStatusAndDeletedAtIsNull(AccountStatus accountStatus);
    
 
     Optional<User> findByEmailIgnoreCase(String email); // ✅ better

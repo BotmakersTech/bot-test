@@ -15,6 +15,11 @@ public interface EventSportsRepository extends JpaRepository<EventSports, UUID> 
 
     List<EventSports> findByEventIdIn(java.util.Collection<UUID> eventIds);
 
+    // Platform-wide sport-value lookup for News audience resolution — not
+    // scoped to one event, matches EventSports.sport against the same
+    // catalogue-value strings the sport-creation form already writes.
+    List<EventSports> findBySportIn(java.util.Collection<String> sports);
+
     boolean existsByEventIdAndSportAndAgeGroup(UUID eventId, String sport, AgeCategory ageCategory);
 
 

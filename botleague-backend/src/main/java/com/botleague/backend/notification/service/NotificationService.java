@@ -199,6 +199,60 @@ public class NotificationService {
     }
 
     /**
+     * Deliver a notification to an already-resolved list of recipients.
+     * For callers whose audience model doesn't fit NotificationTargetType's
+     * single-targetId resolution (e.g. News: age-category / sport-interest
+     * filtering, possibly intersected) — they resolve their own recipient
+     * IDs, then hand them here for the actual save + fan-out + realtime push.
+     * Otherwise identical to dispatch(), just skipping resolveRecipients().
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public NotificationResponse notifyUsers(
+            List<UUID> userIds,
+            String title,
+            String message,
+            NotificationType type,
+            NotificationPriority priority,
+            NotificationTargetType targetType,
+            UUID targetId,
+            String actionUrl,
+            UUID createdBy) {
+
+        Notification notification = new Notification();
+        notification.setTitle(title);
+        notification.setMessage(message);
+        notification.setType(type);
+        notification.setPriority(priority);
+        notification.setTargetType(targetType);
+        notification.setTargetId(targetId);
+        notification.setActionUrl(actionUrl);
+        notification.setCustom(false);
+        notification.setCreatedBy(createdBy);
+        notification.setCreatedAt(LocalDateTime.now());
+        Notification saved = notificationRepository.save(notification);
+
+        Set<UUID> uniqueIds = new LinkedHashSet<>(userIds);
+        List<NotificationRecipient> recipients = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
+        for (UUID userId : uniqueIds) {
+            NotificationRecipient r = new NotificationRecipient();
+            r.setNotificationId(saved.getId());
+            r.setUserId(userId);
+            r.setRead(false);
+            r.setDeliveredAt(now);
+            r.setCreatedAt(now);
+            recipients.add(r);
+        }
+        recipientRepository.saveAll(recipients);
+
+        NotificationResponse rtPayload = toResponseNoRecipient(saved);
+        for (UUID userId : uniqueIds) {
+            realtimePublisher.pushNotification(userId, rtPayload);
+        }
+        return rtPayload;
+    }
+
+    /**
      * Get paginated notifications for a specific user (sorted newest first).
      */
     @Transactional(readOnly = true)
@@ -311,6 +365,13 @@ public class NotificationService {
                     .map(UserRole::getUserId)
                     .distinct()
                     .collect(Collectors.toList());
+
+            // News recipients are pre-resolved by NewsService (age-category /
+            // sport-interest filtering has no single targetId to resolve from)
+            // and delivered via notifyUsers(), which bypasses this method
+            // entirely. This arm exists only so the switch stays exhaustive —
+            // it is never actually reached for NEWS.
+            case NEWS -> List.of();
         };
     }
 

@@ -61,6 +61,13 @@ public interface SportRegistrationRepository
             RegistrationStatus status
     );
 
+    // Same as above but across a set of EventSports rows in one query — used
+    // by News audience resolution when a sport value spans multiple events.
+    List<SportRegistration> findByEventSportIdInAndStatus(
+            java.util.Collection<UUID> eventSportIds,
+            RegistrationStatus status
+    );
+
     // Confirmed entries in seed order - use this when building / reading the bracket.
     List<SportRegistration> findByEventSportIdAndStatusOrderBySeedAsc(
             UUID eventSportId,

@@ -80,6 +80,13 @@ import NotificationsPage from "../feature/Notifications/pages/NotificationsPage"
 import SystemNotificationsPage from "../feature/Admin/pages/SystemNotificationsPage"
 
 // ============================
+// NEWS
+// ============================
+import AdminNewsPage from "../feature/News/pages/AdminNewsPage"
+import NewsFeedPage from "../feature/News/pages/NewsFeedPage"
+import NewsDetailPage from "../feature/News/pages/NewsDetailPage"
+
+// ============================
 // CHAT / MESSAGES
 // ============================
 import MessagesPage from "../feature/Chat/pages/MessagesPage"
@@ -232,6 +239,8 @@ function AppRoutes() {
         <Route path="/robots" element={<RobotsPage />} />
         <Route path="/robots/:robotId" element={<RobotProfilePage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/news" element={<NewsFeedPage />} />
+        <Route path="/news/:id" element={<NewsDetailPage />} />
         <Route path="/messages" element={<MessagesPage />} />
 
         {/* ── Competitor pages ── */}
@@ -250,6 +259,9 @@ function AppRoutes() {
 
         {/* ── System Notifications (ADMIN minimum) ── */}
         <Route path="/admin/system-notifications" element={<RoleRoute roles={[AppRole.ADMIN]}><SystemNotificationsPage /></RoleRoute>} />
+
+        {/* ── News (platform-wide, Admin-only) ── */}
+        <Route path="/admin/news" element={<RoleRoute roles={ADMIN_AND_UP}><AdminNewsPage /></RoleRoute>} />
 
         {/* ── Admin routes (ADMIN+) ── */}
         <Route path="/admin/sports"         element={<RoleRoute roles={ADMIN_AND_UP}><AdminAllSportsPage /></RoleRoute>} />

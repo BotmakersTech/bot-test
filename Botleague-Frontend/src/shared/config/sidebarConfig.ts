@@ -33,6 +33,7 @@ export const NAV_CONFIG: NavItem[] = [
   { id: "s-judges",   label: "Judge Ecosystem",      link: "/admin/judges",          iconName: "judge",      roles: [SA] },
   { id: "s-reports",  label: "Reports",              link: "/admin/reports",         iconName: "reports",    roles: [SA] },
   { id: "s-audit",    label: "Audit Logs",           link: "/admin/audit-logs",      iconName: "audit",      roles: [SA] },
+  { id: "s-news",     label: "News",                 link: "/admin/news",            iconName: "communication", roles: [SA] },
 
   // ══════════════════════════════════════════════════════════════════════════
   // ADMIN  — platform + user + event management + event operations
@@ -52,6 +53,7 @@ export const NAV_CONFIG: NavItem[] = [
   { id: "a-analytics",label: "Analytics",           link: "/admin/analytics",        iconName: "analytics",  roles: [ADM] },
   { id: "a-reports",  label: "Reports",             link: "/admin/reports",          iconName: "reports",    roles: [ADM] },
   { id: "a-audit",    label: "Audit Logs",          link: "/admin/audit-logs",       iconName: "audit",      roles: [ADM] },
+  { id: "a-news",     label: "News",                link: "/admin/news",             iconName: "communication", roles: [ADM] },
 
   // ══════════════════════════════════════════════════════════════════════════
   // ORGANISER — external partner, owns their events
@@ -76,6 +78,7 @@ export const NAV_CONFIG: NavItem[] = [
   { id: "og-cert",       label: "Certificates",       link: "/organizer/certificates",   iconName: "certificate",   roles: [ORGR] },
   { id: "og-closure",    label: "Event Closure",      link: "/organizer/closure",        iconName: "audit",         roles: [ORGR] },
   { id: "og-notif",      label: "Notifications",      link: "/notifications",            iconName: "bell",          roles: [ORGR] },
+  { id: "og-news",       label: "News",               link: "/news",                     iconName: "communication", roles: [ORGR] },
   { id: "og-settings",   label: "Settings",           link: "/organizer/settings",       iconName: "settings",      roles: [ORGR] },
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -101,6 +104,7 @@ export const NAV_CONFIG: NavItem[] = [
   { id: "o-cert",       label: "Certificates",       link: "/organizer/certificates",   iconName: "certificate",   roles: [ORG] },
   { id: "o-closure",    label: "Event Closure",      link: "/organizer/closure",        iconName: "audit",         roles: [ORG] },
   { id: "o-notif",      label: "Notifications",      link: "/notifications",            iconName: "bell",          roles: [ORG] },
+  { id: "o-news",       label: "News",               link: "/news",                     iconName: "communication", roles: [ORG] },
   { id: "o-settings",   label: "Settings",           link: "/organizer/settings",       iconName: "settings",      roles: [ORG] },
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -114,6 +118,7 @@ export const NAV_CONFIG: NavItem[] = [
   { id: "sub-ann",     label: "Announcements",       link: "/organizer/announcements",  iconName: "bell",       roles: [SUB] },
   { id: "sub-sched",   label: "Schedule",            link: "/organizer/schedule",       iconName: "schedule",   roles: [SUB] },
   { id: "sub-notif",   label: "Notifications",       link: "/notifications",            iconName: "bell",       roles: [SUB] },
+  { id: "sub-news",    label: "News",                link: "/news",                     iconName: "communication", roles: [SUB] },
 
   // ══════════════════════════════════════════════════════════════════════════
   // COMPETITOR  — regular platform user / competitor
@@ -127,6 +132,7 @@ export const NAV_CONFIG: NavItem[] = [
   { id: "c-cert",     label: "Certificates", link: "/certificates",    iconName: "certificate", roles: [CMP] },
   { id: "c-support",  label: "Support",      link: "/support",         iconName: "support",     roles: [CMP] },
   { id: "c-notif",    label: "Notifications",link: "/notifications",   iconName: "bell",        roles: [CMP] },
+  { id: "c-news",     label: "News",         link: "/news",            iconName: "communication", roles: [CMP] },
 
   // ══════════════════════════════════════════════════════════════════════════
   // JUDGE  — views + scores assigned matches
@@ -136,6 +142,7 @@ export const NAV_CONFIG: NavItem[] = [
   { id: "j-scores",  label: "Score Entry",      link: "/judge/scores",         iconName: "rankings",  roles: [JDG] },
   { id: "j-sched",   label: "My Schedule",      link: "/judge/schedule",       iconName: "schedule",  roles: [JDG] },
   { id: "j-notif",   label: "Notifications",    link: "/notifications",        iconName: "bell",      roles: [JDG] },
+  { id: "j-news",    label: "News",             link: "/news",                 iconName: "communication", roles: [JDG] },
 
   // ══════════════════════════════════════════════════════════════════════════
   // VOLUNTEER  — views event info, checks in/out
@@ -145,6 +152,7 @@ export const NAV_CONFIG: NavItem[] = [
   { id: "v-checkin", label: "Check In / Out",   link: "/volunteer/checkin",    iconName: "users",     roles: [VOL] },
   { id: "v-schedule",label: "My Schedule",      link: "/volunteer/schedule",   iconName: "schedule",  roles: [VOL] },
   { id: "v-notif",   label: "Notifications",    link: "/notifications",        iconName: "bell",      roles: [VOL] },
+  { id: "v-news",    label: "News",             link: "/news",                 iconName: "communication", roles: [VOL] },
 ];
 
 // ── Role priority for primary-role resolution ────────────────────────────────
