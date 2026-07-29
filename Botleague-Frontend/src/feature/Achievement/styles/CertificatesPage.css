@@ -1,0 +1,425 @@
+/* Poppins/Sarpanch/Inter are already loaded app-wide via index.html's
+   Google Fonts <link>, so no @import is repeated here — same pattern as
+   createAccount.css. */
+
+:root {
+    --cp-grad-primary: linear-gradient(90deg, #0162d1 0%, #8c6cff 100%);
+    --cp-grad-primary-diag: linear-gradient(135deg, #0162d1 0%, #8c6cff 100%);
+    --cp-blue: #0162d1;
+    --cp-violet: #8c6cff;
+    --cp-ink: #14213d;
+    --cp-muted: #6b7280;
+}
+
+.bl-page {
+    position: relative;
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding: 40px 48px 60px;
+    background: #ffffff;
+    color: var(--cp-ink);
+    font-family: "Inter", sans-serif;
+}
+
+/* ---------- decorative corner shapes (CSS-only, no external assets) ---------- */
+.bl-shape {
+    position: absolute;
+    opacity: 0.1;
+    background: var(--cp-grad-primary-diag);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.bl-shape-tl {
+    top: -60px;
+    left: -80px;
+    width: 240px;
+    height: 240px;
+    clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+
+.bl-shape-br {
+    bottom: -90px;
+    right: -90px;
+    width: 260px;
+    height: 260px;
+    clip-path: polygon(100% 100%, 0 100%, 100% 20%);
+}
+
+.bl-content {
+    position: relative;
+    z-index: 1;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+/* ---------- Page heading + Grid/List toggle ---------- */
+.bl-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.bl-page-title {
+    font-family: "Sarpanch", sans-serif;
+    font-weight: 800;
+    font-style: italic;
+    color: var(--cp-blue);
+    font-size: 2.1rem;
+    margin: 0;
+}
+
+.bl-page-subtitle {
+    color: var(--cp-muted);
+    font-size: 0.9rem;
+    margin: 6px 0 28px;
+}
+
+.bl-toggle-group {
+    background: #ffffff;
+    border: 1px solid;
+    border-image: var(--cp-grad-primary-diag) 1;
+    border-radius: 10px;
+    overflow: hidden;
+    display: inline-flex;
+    flex-shrink: 0;
+}
+
+.bl-toggle-btn {
+    border: none;
+    background: transparent;
+    padding: 8px 18px;
+    font-family: "Inter", sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--cp-blue);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.bl-toggle-btn.active {
+    background: var(--cp-grad-primary-diag);
+    color: #ffffff;
+    box-shadow: inset 0 0 0 1px rgba(1, 98, 209, 0.25);
+}
+
+/* ---------- states: loading / error / empty ---------- */
+.bl-state-card {
+    border-radius: 18px;
+    padding: 56px 24px;
+    text-align: center;
+    color: var(--cp-muted);
+}
+
+.bl-state-card.bl-state-error {
+    background: rgba(224, 75, 75, 0.06);
+    border: 1px solid rgba(224, 75, 75, 0.22);
+    color: #b3261e;
+}
+
+.bl-state-card.bl-state-empty {
+    background: rgba(140, 108, 255, 0.05);
+    border: 2px solid rgba(140, 108, 255, 0.25);
+}
+
+.bl-state-icon {
+    font-size: 2.6rem;
+    margin-bottom: 14px;
+}
+
+.bl-state-title {
+    font-family: "Poppins", sans-serif;
+    font-weight: 700;
+    color: var(--cp-ink);
+    font-size: 1.1rem;
+    margin-bottom: 6px;
+}
+
+/* ---------- grid layout ---------- */
+.bl-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 22px;
+}
+
+/* ---------- Certificate card ---------- */
+.bl-card {
+    background: #ffffff;
+    border: 2px solid;
+    border-image: var(--cp-grad-primary-diag) 1;
+    border-radius: 20px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+}
+
+.bl-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 16px 30px rgba(1, 98, 209, 0.14);
+}
+
+.bl-card-image-wrap {
+    border-radius: 14px;
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    background: linear-gradient(135deg, rgba(1, 98, 209, 0.08), rgba(140, 108, 255, 0.12));
+    position: relative;
+}
+
+.bl-card-image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.35s ease;
+}
+
+.bl-card:hover .bl-card-image-wrap img {
+    transform: scale(1.05);
+}
+
+.bl-card-image-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cp-violet);
+    opacity: 0.5;
+}
+
+.bl-card-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #ffffff;
+    border-radius: 999px;
+    padding: 3px 11px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--cp-blue);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.bl-card-badge.bl-badge-winner {
+    color: #a16207;
+}
+
+.bl-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0 2px;
+}
+
+.bl-card-event {
+    font-family: "Poppins", sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--cp-ink);
+    line-height: 1.3;
+}
+
+.bl-card-sport {
+    color: var(--cp-muted);
+    font-size: 0.82rem;
+}
+
+.bl-card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 2px 0;
+    border-top: 1px solid rgba(1, 98, 209, 0.1);
+    margin-top: 2px;
+}
+
+.bl-card-meta-label {
+    font-size: 0.6rem;
+    color: #9aa1b1;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.bl-card-meta-value {
+    font-size: 0.75rem;
+    color: var(--cp-ink);
+    font-weight: 600;
+}
+
+.bl-card-meta-num {
+    font-family: monospace;
+    font-size: 0.68rem;
+    color: #9aa1b1;
+}
+
+.bl-card-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.bl-card-btn {
+    flex: 1;
+    text-align: center;
+    border: none;
+    border-radius: 10px;
+    padding: 9px 14px;
+    color: #ffffff;
+    font-family: "Inter", sans-serif;
+    font-weight: 600;
+    font-size: 0.8rem;
+    background: var(--cp-grad-primary-diag);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.bl-card-btn:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+}
+
+.bl-card-btn-outline {
+    background: #fff;
+    border: 1.5px solid rgba(1, 98, 209, 0.3);
+    color: var(--cp-blue);
+}
+
+.bl-card-revoked {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #b3261e;
+    font-size: 0.78rem;
+    font-weight: 700;
+    background: rgba(224, 75, 75, 0.07);
+    border: 1px solid rgba(224, 75, 75, 0.2);
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+
+/* ---------- list view ---------- */
+.bl-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.bl-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    background: #fff;
+    border: 1.5px solid var(--cp-blue);
+    border-radius: 14px;
+    padding: 10px 16px;
+    flex-wrap: wrap;
+}
+
+.bl-list-main {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.bl-list-thumb {
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(1, 98, 209, 0.08), rgba(140, 108, 255, 0.12));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cp-violet);
+}
+
+.bl-list-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.bl-list-text {
+    min-width: 0;
+}
+
+.bl-list-event {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--cp-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bl-list-sport {
+    color: var(--cp-muted);
+    font-size: 0.78rem;
+}
+
+.bl-list-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.bl-list-actions .bl-card-btn {
+    flex: none;
+    padding: 7px 16px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 767px) {
+    .bl-page {
+        padding: 24px 16px 40px;
+    }
+
+    .bl-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 14px;
+    }
+
+    .bl-page-title {
+        font-size: 1.6rem;
+    }
+
+    .bl-list-item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .bl-list-actions {
+        justify-content: stretch;
+    }
+
+    .bl-list-actions .bl-card-btn {
+        flex: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .bl-card,
+    .bl-card-image-wrap img {
+        transition: none !important;
+    }
+}
