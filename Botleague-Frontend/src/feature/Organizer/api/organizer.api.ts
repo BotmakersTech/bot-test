@@ -779,6 +779,16 @@ export const getSportChangeRequests = async (
   return res.data;
 };
 
+// Event-level aggregate — every pending change request across all of an
+// event's sports in one call, used by the event dashboard's User Control panel.
+export const getEventChangeRequests = async (
+  eventId: string,
+  status: string = "PENDING"
+): Promise<SportChangeRequest[]> => {
+  const res = await api.get(`/events/${eventId}/sports/change-requests`, { params: { status } });
+  return res.data;
+};
+
 export const approveSportChangeRequest = async (
   eventId: string,
   changeRequestId: string

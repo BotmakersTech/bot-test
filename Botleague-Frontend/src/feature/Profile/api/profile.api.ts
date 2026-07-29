@@ -10,6 +10,28 @@ export const updateUsername = async (username: string) => {
   const res = await api.post("/profile/addUserName", { username });
   return res.data;
 };
+
+export interface PublicProfileByCode {
+  userId: string;
+  botleagueId: string;
+  firstName: string | null;
+  lastName: string | null;
+  username: string | null;
+  profilePhotoUrl: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  memberSince: string | null;
+  accountType: string | null;
+}
+
+// Public, unauthenticated lookup of a single user by their BotLeague ID —
+// used to find a specific user to grant SPORT_HEAD/EVENT_HEAD access to,
+// without needing the admin-only full user-directory search.
+export const getPublicProfileByCode = async (botleagueId: string): Promise<PublicProfileByCode> => {
+  const res = await api.get(`/profile/public/${botleagueId}`);
+  return res.data;
+};
 export async function updateEmail(
   email: string
 ) {

@@ -1,31 +1,27 @@
 import React, { useCallback, useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ArrowLeft, Plus, X, ChevronDown, Info, Calendar, Users, Trophy, Swords, Tag, Edit2, Trash2, UserPlus, Check, Ban } from "lucide-react"
+import { Plus, X, ChevronDown, Info, Calendar, Trash2 } from "lucide-react"
 import { useSelector } from "react-redux"
 import { useAdminEvents } from "../hooks/UseAdminEvent"
 import { useEventRealtime } from "../../../shared/realtime/useEventRealtime"
 import {
-  searchUsers, getEventAssignments, assignEventHead, unassignEventHead,
-  getSportAssignments, assignSportHead, unassignSportHead,
-  approveSportHeadAssignment, rejectSportHeadAssignment,
-  getEventSports,
   approveSport, rejectSport,
-  type CreateEventSportRequest, type UpdateEventRequest, type UserSearchResult, type EventAssignment,
-  type GetEventSportDTO,
+  type CreateEventSportRequest, type UpdateEventRequest,
 } from "../api/admin.api"
+import { getEventChangeRequests } from "../../Organizer/api/organizer.api"
 import type { RootState } from "../../../app/store"
-import { hasRole, AppRole } from "../../../shared/constants/roles"
+import { hasRole, AppRole, EVENT_HEAD_AND_UP } from "../../../shared/constants/roles"
 import LocationSelects from "../../../shared/components/LocationSelects"
 import SponsorManager from "../components/SponsorManager"
 import EventMediaField from "../../Organizer/components/EventMediaField"
+import EventDashboard from "../../../shared/components/EventDashboard/EventDashboard"
+import UserControlPanel from "../../../shared/components/EventDashboard/UserControlPanel"
 
 // ─────────────────────────────────────────────────────────────
 // DESIGN TOKENS
 // ─────────────────────────────────────────────────────────────
 
 const BG      = "#3a3a3a"
-const CARD    = "rgba(0,0,0,0.25)"
-const CARD2   = "rgba(0,0,0,0.35)"
 const BORDER  = "rgba(255,255,255,0.08)"
 const ACCENT  = "#fa4715"
 const TEXT    = "#ffffff"
@@ -174,73 +170,6 @@ const INITIAL_FORM: AddSportForm = {
 function Spinner({ size = 16, color = ACCENT }: { size?: number; color?: string }) {
   return (
     <span style={{ display: "inline-block", width: size, height: size, border: `2px solid rgba(255,255,255,0.12)`, borderTop: `2px solid ${color}`, borderRadius: "50%", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
-  )
-}
-
-// ─────────────────────────────────────────────────────────────
-// STATUS PILL
-// ─────────────────────────────────────────────────────────────
-
-function StatusPill({ status }: { status?: string }) {
-  const MAP: Record<string, { bg: string; border: string; color: string; icon: string }> = {
-    DRAFT:     { bg: "rgba(251,191,36,0.1)",  border: "rgba(251,191,36,0.28)",  color: WARNING, icon: "📝" },
-    PUBLISHED: { bg: "rgba(250,71,21,0.11)",  border: "rgba(250,71,21,0.28)",   color: ACCENT,  icon: "📣" },
-    LIVE:      { bg: "rgba(74,222,128,0.1)",  border: "rgba(74,222,128,0.28)",  color: SUCCESS, icon: "🟢" },
-    COMPLETED: { bg: "rgba(156,163,175,0.1)", border: "rgba(156,163,175,0.25)", color: MUTED,   icon: "✅" },
-    ARCHIVED:  { bg: "rgba(100,116,139,0.1)", border: "rgba(100,116,139,0.25)", color: "#64748b", icon: "🗄️" },
-  }
-  const key = status?.toUpperCase() || "DRAFT"
-  const s   = MAP[key] || MAP["DRAFT"]
-  return (
-    <span style={{ background: s.bg, border: `1px solid ${s.border}`, color: s.color, borderRadius: "999px", fontSize: "0.67rem", padding: "3px 10px", fontWeight: 700, whiteSpace: "nowrap" }}>
-      {s.icon} {key.replace(/_/g, " ")}
-    </span>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────
-// CHIP
-// ─────────────────────────────────────────────────────────────
-
-const chip = (active = false): React.CSSProperties => ({
-  background: active ? "rgba(250,71,21,0.13)" : "rgba(255,255,255,0.06)",
-  border: `1px solid ${active ? "rgba(250,71,21,0.35)" : BORDER}`,
-  color: active ? ACCENT : LABEL,
-  borderRadius: "6px",
-  fontSize: "0.7rem",
-  padding: "3px 9px",
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "4px"
-})
-
-// ─────────────────────────────────────────────────────────────
-// STAT CARD
-// ─────────────────────────────────────────────────────────────
-
-function StatCard({ label, value, icon }: { label: string; value: string | number; icon: string }) {
-  return (
-    <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: "12px", padding: "16px 20px", display: "flex", flexDirection: "column", gap: "6px", minWidth: "140px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "7px", color: MUTED, fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.09em" }}>
-        <span>{icon}</span>{label}
-      </div>
-      <div style={{ fontSize: "1.5rem", fontWeight: 700, color: TEXT, fontFamily: "'Sarpanch', sans-serif" }}>
-        {value}
-      </div>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────
-// INFO CELL
-// ─────────────────────────────────────────────────────────────
-
-function InfoCell({ label, value }: { label: string; value?: string }) {
-  return (
-    <div style={{ background: "rgba(0,0,0,0.2)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "10px 14px" }}>
-      <div style={{ color: MUTED, fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "4px" }}>{label}</div>
-      <div style={{ color: TEXT, fontWeight: 600, fontSize: "0.85rem" }}>{value || "—"}</div>
-    </div>
   )
 }
 
@@ -509,223 +438,14 @@ function AddSportModal({ eventId: _eventId, onAddSport, submitting, onClose }: A
 }
 
 // ─────────────────────────────────────────────────────────────
-// SPORT CARD
-// — reads `sport.sport` (the enum value from server)
-// ─────────────────────────────────────────────────────────────
-
-function SportCard({ sport, index, eventId, navigate, onApprove, onReject, busy }: {
-  sport: EventSportItem; index: number; eventId: string; navigate: (path: string) => void
-  onApprove: (sportId: string) => void; onReject: (sportId: string, reason: string) => void; busy: boolean
-}) {
-  const teamCount   = sport.registrations?.length ?? sport.registeredTeamsCount ?? 0
-  const playerCount = sport.registrations?.reduce((n, t) => n + ((t.lineup as any[])?.length ?? 0), 0) ?? 0
-  const displayName = toLabel(sport.sport)   // ← uses sport.sport, not sport.sportName
-  const hue         = (index * 47 + 11) % 360
-  const isPending   = sport.status?.toUpperCase() === "PENDING_APPROVAL"
-  const [rejecting, setRejecting] = useState(false)
-  const [reason, setReason]       = useState("")
-
-  return (
-    <div
-      onClick={() => navigate(`/admin/events/${eventId}/sports/${sport.id}`)}
-      style={{ background: "rgba(0,0,0,0.28)", border: `1px solid ${isPending ? "rgba(251,191,36,0.35)" : "rgba(255,255,255,0.09)"}`, borderRadius: "14px", overflow: "hidden", transition: "border-color 0.15s, transform 0.15s", position: "relative", cursor: "pointer" }}
-      onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(250,71,21,0.38)"; (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)" }}
-      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = isPending ? "rgba(251,191,36,0.35)" : "rgba(255,255,255,0.09)"; (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)" }}
-    >
-      {/* accent stripe */}
-      <div style={{ height: "3px", background: `linear-gradient(90deg, ${ACCENT}, hsl(${hue},80%,55%))` }} />
-
-      <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: "12px" }}>
-        {/* name + index */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "9px" }}>
-            <span style={{ background: "rgba(250,71,21,0.13)", border: "1px solid rgba(250,71,21,0.28)", color: ACCENT, borderRadius: "6px", fontSize: "0.62rem", fontWeight: 800, padding: "2px 7px", flexShrink: 0 }}>#{index + 1}</span>
-            <span style={{ fontWeight: 700, fontSize: "0.92rem", color: TEXT, lineHeight: 1.3 }}>{displayName}</span>
-          </div>
-          <Swords size={15} style={{ color: MUTED, flexShrink: 0, marginTop: "2px" }} />
-        </div>
-
-        {/* meta chips row */}
-        <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-          {sport.ageGroup && <span style={chip()}>{toLabel(sport.ageGroup)}</span>}
-          {sport.weightClass && <span style={chip()}>{toLabel(sport.weightClass)}</span>}
-          {sport.formatType && <span style={chip()}>{toLabel(sport.formatType)}</span>}
-          {sport.status && <StatusPill status={sport.status} />}
-        </div>
-
-        {/* stats */}
-        <div style={{ display: "flex", gap: "10px" }}>
-          <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "8px 12px", display: "flex", alignItems: "center", gap: "7px" }}>
-            <Trophy size={13} style={{ color: WARNING, flexShrink: 0 }} />
-            <div>
-              <div style={{ fontSize: "0.62rem", color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>Teams</div>
-              <div style={{ fontSize: "1rem", fontWeight: 700, color: TEXT, fontFamily: "'Sarpanch', sans-serif" }}>{teamCount}</div>
-            </div>
-          </div>
-          <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "8px 12px", display: "flex", alignItems: "center", gap: "7px" }}>
-            <Users size={13} style={{ color: SUCCESS, flexShrink: 0 }} />
-            <div>
-              <div style={{ fontSize: "0.62rem", color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>Players</div>
-              <div style={{ fontSize: "1rem", fontWeight: 700, color: TEXT, fontFamily: "'Sarpanch', sans-serif" }}>{playerCount}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* fee / prize */}
-        {(sport.entryFee != null || sport.prizeMoney != null) && (
-          <div style={{ display: "flex", gap: "10px" }}>
-            {sport.entryFee != null && (
-              <div style={{ flex: 1, background: "rgba(255,255,255,0.03)", border: `1px solid ${BORDER}`, borderRadius: "7px", padding: "6px 10px" }}>
-                <div style={{ fontSize: "0.6rem", color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>Entry Fee</div>
-                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: WARNING }}>₹{sport.entryFee.toLocaleString("en-IN")}</div>
-              </div>
-            )}
-            {sport.prizeMoney != null && (
-              <div style={{ flex: 1, background: "rgba(255,255,255,0.03)", border: `1px solid ${BORDER}`, borderRadius: "7px", padding: "6px 10px" }}>
-                <div style={{ fontSize: "0.6rem", color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>Prize Pool</div>
-                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: SUCCESS }}>₹{sport.prizeMoney.toLocaleString("en-IN")}</div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* registration window */}
-        {sport.registrationStartDate && sport.registrationEndDate && (
-          <div style={{ fontSize: "0.67rem", color: MUTED, display: "flex", alignItems: "center", gap: "5px" }}>
-            <Calendar size={10} style={{ flexShrink: 0 }} />
-            {new Date(sport.registrationStartDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
-            {" → "}
-            {new Date(sport.registrationEndDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-          </div>
-        )}
-
-        {/* team chips */}
-        {sport.registrations && sport.registrations.length > 0 && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
-            {sport.registrations.slice(0, 4).map(t => (
-              <span key={t.id} style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${BORDER}`, color: LABEL, borderRadius: "5px", fontSize: "0.65rem", padding: "2px 8px", display: "flex", alignItems: "center", gap: "4px" }}>
-                <Tag size={9} style={{ flexShrink: 0 }} />{t.teamName}
-              </span>
-            ))}
-            {sport.registrations.length > 4 && (
-              <span style={{ background: "rgba(250,71,21,0.1)", border: "1px solid rgba(250,71,21,0.22)", color: ACCENT, borderRadius: "5px", fontSize: "0.65rem", padding: "2px 8px", fontWeight: 700 }}>+{sport.registrations.length - 4} more</span>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* ORGANIZER SUBMITTED THIS FOR APPROVAL — admin review actions */}
-      {isPending && (
-        <div onClick={e => e.stopPropagation()} style={{ padding: "0 18px 16px", display: "flex", flexDirection: "column", gap: "8px" }}>
-          {!rejecting ? (
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                type="button"
-                onClick={() => onApprove(sport.id)}
-                disabled={busy}
-                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", background: "rgba(74,222,128,0.12)", border: "1px solid rgba(74,222,128,0.35)", color: SUCCESS, borderRadius: "8px", padding: "8px 10px", fontSize: "0.78rem", fontWeight: 700, cursor: busy ? "not-allowed" : "pointer" }}
-              >
-                {busy ? <Spinner size={13} color={SUCCESS} /> : <Check size={13} />} Approve
-              </button>
-              <button
-                type="button"
-                onClick={() => setRejecting(true)}
-                disabled={busy}
-                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", color: DANGER, borderRadius: "8px", padding: "8px 10px", fontSize: "0.78rem", fontWeight: 700, cursor: busy ? "not-allowed" : "pointer" }}
-              >
-                <Ban size={13} /> Reject
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              <input
-                autoFocus
-                placeholder="Reason for rejection (optional)…"
-                value={reason}
-                onChange={e => setReason(e.target.value)}
-                style={{ background: "rgba(0,0,0,0.35)", border: `1px solid ${BORDER}`, borderRadius: "7px", padding: "7px 10px", color: TEXT, fontSize: "0.76rem", outline: "none" }}
-              />
-              <div style={{ display: "flex", gap: "8px" }}>
-                <button
-                  type="button"
-                  onClick={() => { setRejecting(false); setReason("") }}
-                  disabled={busy}
-                  style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "7px", padding: "7px 10px", fontSize: "0.76rem", fontWeight: 600, cursor: "pointer" }}
-                >Cancel</button>
-                <button
-                  type="button"
-                  onClick={() => onReject(sport.id, reason)}
-                  disabled={busy}
-                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", background: busy ? "rgba(248,113,113,0.2)" : DANGER, border: "none", color: "#fff", borderRadius: "7px", padding: "7px 10px", fontSize: "0.76rem", fontWeight: 700, cursor: busy ? "not-allowed" : "pointer" }}
-                >
-                  {busy ? <Spinner size={13} color="#fff" /> : <Ban size={13} />} Confirm Reject
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────
-// SPORTS LIST SECTION
-// ─────────────────────────────────────────────────────────────
-
-function SportsList({ sports, isDraft, eventId, onAddSport, navigate, onApproveSport, onRejectSport, busySportId }: {
-  sports: EventSportItem[]; isDraft: boolean; eventId: string; onAddSport: () => void; navigate: (p: string) => void
-  onApproveSport: (sportId: string) => void; onRejectSport: (sportId: string, reason: string) => void; busySportId: string | null
-}) {
-  return (
-    <div style={{ background: CARD2, border: "1px solid rgba(250,71,21,0.14)", borderRadius: "16px", overflow: "hidden", marginTop: "24px" }}>
-      <div style={{ padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, background: "rgba(250,71,21,0.04)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ fontWeight: 700, letterSpacing: "0.06em", fontSize: "0.85rem" }}>SPORTS</span>
-          <span style={{ background: "rgba(250,71,21,0.13)", border: "1px solid rgba(250,71,21,0.28)", color: ACCENT, borderRadius: "999px", fontSize: "0.65rem", fontWeight: 800, padding: "1px 9px" }}>{sports.length}</span>
-        </div>
-        {isDraft && (
-          <button onClick={onAddSport} style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(250,71,21,0.1)", border: "1px solid rgba(250,71,21,0.3)", color: ACCENT, borderRadius: "8px", padding: "6px 14px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", letterSpacing: "0.04em" }}>
-            <Plus size={13} /> ADD SPORT
-          </button>
-        )}
-      </div>
-
-      <div style={{ padding: "18px 20px" }}>
-        {sports.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "48px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
-            <div style={{ fontSize: "2.5rem" }}>🏅</div>
-            <div style={{ color: MUTED, fontSize: "0.85rem", fontWeight: 600 }}>No sports added yet</div>
-            {isDraft && (
-              <button onClick={onAddSport} style={{ display: "flex", alignItems: "center", gap: "7px", background: ACCENT, border: "none", color: "#fff", borderRadius: "9px", padding: "9px 20px", fontSize: "0.8rem", fontWeight: 700, cursor: "pointer", marginTop: "4px" }}>
-                <Plus size={14} /> Add the first sport
-              </button>
-            )}
-          </div>
-        ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "14px" }}>
-            {sports.map((sport, i) => (
-              <SportCard
-                key={sport.id} sport={sport} index={i} eventId={eventId} navigate={navigate}
-                onApprove={onApproveSport} onReject={onRejectSport} busy={busySportId === sport.id}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────
 // STATUS TRANSITION CONFIG
 // ─────────────────────────────────────────────────────────────
 
-const STATUS_TRANSITIONS: Record<string, { value: string; label: string; color: string }[]> = {
-  DRAFT:     [{ value: "PUBLISHED", label: "Publish",        color: ACCENT  }],
-  PUBLISHED: [{ value: "LIVE",      label: "Start Event",    color: SUCCESS },
+const STATUS_TRANSITIONS: Record<string, { value: string; label: string; color: string; primary?: boolean }[]> = {
+  DRAFT:     [{ value: "PUBLISHED", label: "Publish",        color: ACCENT,  primary: true }],
+  PUBLISHED: [{ value: "LIVE",      label: "Start Event",    color: SUCCESS, primary: true },
               { value: "ARCHIVED",  label: "Archive",         color: MUTED   }],
-  LIVE:      [{ value: "COMPLETED", label: "Complete Event", color: SUCCESS }],
+  LIVE:      [{ value: "COMPLETED", label: "Complete Event", color: SUCCESS, primary: true }],
   COMPLETED: [{ value: "ARCHIVED",  label: "Archive",         color: MUTED   }],
 }
 
@@ -849,291 +569,6 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange, limited
 }
 
 // ─────────────────────────────────────────────────────────────
-// ASSIGN ORGANIZER PANEL
-// — search a user, choose EVENT_HEAD or SPORT_HEAD, assign them to this
-//   event (or a specific sport within it). Sport-head assignments start
-//   PENDING_APPROVAL and need an EVENT_HEAD/ORGANISER/ADMIN to approve.
-// ─────────────────────────────────────────────────────────────
-
-function AssignOrganizerPanel({ eventId, ownerChain }: { eventId: string; ownerChain?: string }) {
-  const [assignments, setAssignments] = useState<EventAssignment[]>([])
-  const [sports, setSports]           = useState<GetEventSportDTO[]>([])
-  const [loading, setLoading]         = useState(true)
-  const [roleType, setRoleType]       = useState<"EVENT_HEAD" | "SPORT_HEAD">("EVENT_HEAD")
-  const [sportId, setSportId]         = useState("")
-  const [query, setQuery]             = useState("")
-  const [results, setResults]         = useState<UserSearchResult[]>([])
-  const [searching, setSearching]     = useState(false)
-  const [assigning, setAssigning]     = useState<string | null>(null)
-  const [removing, setRemoving]       = useState<string | null>(null)
-  const [deciding, setDeciding]       = useState<string | null>(null)
-  const [error, setError]             = useState<string | null>(null)
-
-  const loadAssignments = useCallback(() => {
-    setLoading(true)
-    Promise.all([
-      getEventAssignments(eventId),
-      getEventSports(eventId).then(list => {
-        setSports(list)
-        return Promise.all(list.map(s => getSportAssignments(s.id)))
-      }).then(lists => lists.flat()),
-    ])
-      .then(([eventAssignments, sportAssignments]) => setAssignments([...eventAssignments, ...sportAssignments]))
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [eventId])
-
-  useEffect(() => { loadAssignments() }, [loadAssignments])
-
-  useEffect(() => {
-    if (query.trim().length < 2) { setResults([]); return }
-    setSearching(true)
-    const timeout = setTimeout(() => {
-      searchUsers(query.trim())
-        .then(setResults)
-        .catch(() => setResults([]))
-        .finally(() => setSearching(false))
-    }, 300)
-    return () => clearTimeout(timeout)
-  }, [query])
-
-  const handleAssign = async (userId: string) => {
-    if (roleType === "SPORT_HEAD" && !sportId) {
-      setError("Choose a sport before assigning a sport head.")
-      return
-    }
-    setAssigning(userId)
-    setError(null)
-    try {
-      if (roleType === "EVENT_HEAD") {
-        await assignEventHead(userId, eventId)
-      } else {
-        await assignSportHead(userId, sportId)
-      }
-      setQuery("")
-      setResults([])
-      loadAssignments()
-    } catch (err: any) {
-      setError(err?.response?.data?.message || "Failed to assign.")
-    } finally {
-      setAssigning(null)
-    }
-  }
-
-  const handleRemove = async (a: EventAssignment) => {
-    setRemoving(a.id)
-    setError(null)
-    try {
-      if (a.roleType === "SPORT_HEAD" && a.eventSportId) {
-        await unassignSportHead(a.userId, a.eventSportId)
-      } else {
-        await unassignEventHead(a.userId, eventId)
-      }
-      loadAssignments()
-    } catch (err: any) {
-      setError(err?.response?.data?.message || "Failed to remove.")
-    } finally {
-      setRemoving(null)
-    }
-  }
-
-  const handleApprove = async (assignmentId: string) => {
-    setDeciding(assignmentId)
-    setError(null)
-    try {
-      await approveSportHeadAssignment(assignmentId)
-      loadAssignments()
-    } catch (err: any) {
-      setError(err?.response?.data?.message || "Failed to approve.")
-    } finally {
-      setDeciding(null)
-    }
-  }
-
-  const handleReject = async (assignmentId: string) => {
-    const reason = window.prompt("Reason for rejecting this sport-head assignment (optional):") || undefined
-    setDeciding(assignmentId)
-    setError(null)
-    try {
-      await rejectSportHeadAssignment(assignmentId, reason)
-      loadAssignments()
-    } catch (err: any) {
-      setError(err?.response?.data?.message || "Failed to reject.")
-    } finally {
-      setDeciding(null)
-    }
-  }
-
-  const assignedUserIds = new Set(
-    assignments
-      .filter(a => a.status !== "REJECTED" && (roleType === "EVENT_HEAD" ? a.roleType !== "SPORT_HEAD" : a.eventSportId === sportId))
-      .map(a => a.userId)
-  )
-
-  const roleBadgeStyle = (r?: string) => ({
-    background: r === "SPORT_HEAD" ? "rgba(96,165,250,0.14)" : "rgba(52,211,153,0.14)",
-    border: `1px solid ${r === "SPORT_HEAD" ? "rgba(96,165,250,0.35)" : "rgba(52,211,153,0.35)"}`,
-    color: r === "SPORT_HEAD" ? "#60a5fa" : "#34d399",
-    borderRadius: "999px", fontSize: "0.62rem", fontWeight: 800, padding: "2px 8px",
-  })
-
-  const statusBadgeStyle = (s?: string) => ({
-    background: s === "PENDING_APPROVAL" ? "rgba(251,191,36,0.14)" : s === "REJECTED" ? "rgba(248,113,113,0.14)" : "rgba(74,222,128,0.14)",
-    border: `1px solid ${s === "PENDING_APPROVAL" ? "rgba(251,191,36,0.35)" : s === "REJECTED" ? "rgba(248,113,113,0.35)" : "rgba(74,222,128,0.35)"}`,
-    color: s === "PENDING_APPROVAL" ? WARNING : s === "REJECTED" ? DANGER : SUCCESS,
-    borderRadius: "999px", fontSize: "0.62rem", fontWeight: 800, padding: "2px 8px",
-  })
-
-  return (
-    <div style={{ background: CARD2, border: "1px solid rgba(250,71,21,0.14)", borderRadius: "16px", overflow: "hidden", marginTop: "24px" }}>
-      <div style={{ padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, background: "rgba(250,71,21,0.04)", display: "flex", alignItems: "center", gap: "10px" }}>
-        <UserPlus size={15} style={{ color: ACCENT }} />
-        <span style={{ fontWeight: 700, letterSpacing: "0.06em", fontSize: "0.85rem" }}>EVENT & SPORT HEADS</span>
-        <span style={{ background: "rgba(250,71,21,0.13)", border: "1px solid rgba(250,71,21,0.28)", color: ACCENT, borderRadius: "999px", fontSize: "0.65rem", fontWeight: 800, padding: "1px 9px" }}>{assignments.length}</span>
-        {ownerChain === "ORGANISER" && (
-          <span style={{ marginLeft: "auto", background: "rgba(96,165,250,0.14)", border: "1px solid rgba(96,165,250,0.35)", color: "#60a5fa", borderRadius: "999px", fontSize: "0.65rem", fontWeight: 800, padding: "2px 10px" }}>ORGANISER-OWNED EVENT</span>
-        )}
-      </div>
-
-      <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: "14px" }}>
-        {/* role-type picker */}
-        <div style={{ display: "flex", gap: "8px" }}>
-          {(["EVENT_HEAD", "SPORT_HEAD"] as const).map(rt => (
-            <button
-              key={rt}
-              type="button"
-              onClick={() => setRoleType(rt)}
-              style={{
-                flex: 1, padding: "8px 12px", borderRadius: "8px", fontSize: "0.78rem", fontWeight: 700,
-                cursor: "pointer", border: `1px solid ${roleType === rt ? ACCENT : BORDER}`,
-                background: roleType === rt ? "rgba(250,71,21,0.14)" : "transparent",
-                color: roleType === rt ? ACCENT : MUTED,
-              }}
-            >
-              {rt === "EVENT_HEAD" ? "Event Head (whole event)" : "Sport Head (one sport)"}
-            </button>
-          ))}
-        </div>
-
-        {roleType === "SPORT_HEAD" && (
-          <select
-            style={inputStyle}
-            value={sportId}
-            onChange={e => setSportId(e.target.value)}
-          >
-            <option value="">Select a sport…</option>
-            {sports.map(s => (
-              <option key={s.id} value={s.id}>{s.sport}{s.weightClass ? ` (${s.weightClass})` : ""}</option>
-            ))}
-          </select>
-        )}
-
-        {/* search */}
-        <div style={{ position: "relative" }}>
-          <input
-            style={inputStyle}
-            placeholder="Search users by name, phone, or BotLeague ID…"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-          />
-          {query.trim().length >= 2 && (
-            <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, zIndex: 5, background: "#2a2a2a", border: `1px solid ${BORDER}`, borderRadius: "10px", maxHeight: "260px", overflowY: "auto", boxShadow: "0 12px 30px rgba(0,0,0,0.4)" }}>
-              {searching ? (
-                <div style={{ padding: "14px", color: MUTED, fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "8px" }}><Spinner size={14} />Searching…</div>
-              ) : results.length === 0 ? (
-                <div style={{ padding: "14px", color: MUTED, fontSize: "0.82rem" }}>No users found.</div>
-              ) : (
-                results.map(u => {
-                  const already = assignedUserIds.has(u.id)
-                  return (
-                    <button
-                      key={u.id}
-                      type="button"
-                      onClick={() => !already && handleAssign(u.id)}
-                      disabled={already || assigning === u.id}
-                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", padding: "10px 14px", background: "transparent", border: "none", borderBottom: `1px solid ${BORDER}`, color: TEXT, textAlign: "left", cursor: already ? "default" : "pointer" }}
-                    >
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: "0.85rem" }}>{u.firstName} {u.lastName} <span style={{ color: MUTED, fontWeight: 500 }}>· {u.botleagueId}</span></div>
-                        <div style={{ color: MUTED, fontSize: "0.72rem" }}>{u.phone || u.email}</div>
-                      </div>
-                      {already ? (
-                        <span style={{ color: SUCCESS, fontSize: "0.72rem", fontWeight: 700 }}>✓ Assigned</span>
-                      ) : assigning === u.id ? (
-                        <Spinner size={14} />
-                      ) : (
-                        <span style={{ color: ACCENT, fontSize: "0.72rem", fontWeight: 700 }}>+ Assign</span>
-                      )}
-                    </button>
-                  )
-                })
-              )}
-            </div>
-          )}
-        </div>
-
-        {error && <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "8px", padding: "8px 12px", color: DANGER, fontSize: "0.78rem", fontWeight: 600 }}>⚠️ {error}</div>}
-
-        {/* current assignments */}
-        {loading ? (
-          <div style={{ color: MUTED, fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "8px" }}><Spinner size={14} />Loading…</div>
-        ) : assignments.length === 0 ? (
-          <div style={{ color: MUTED, fontSize: "0.82rem" }}>No event/sport heads assigned yet — search above to assign one.</div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {assignments.map(a => (
-              <div key={a.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}`, borderRadius: "9px", padding: "10px 14px" }}>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "8px" }}>
-                    {a.userDisplayName || a.username}
-                    <span style={roleBadgeStyle(a.roleType)}>{a.roleType === "SPORT_HEAD" ? `SPORT HEAD${a.sportName ? " · " + a.sportName : ""}` : "EVENT HEAD"}</span>
-                    {a.status && a.status !== "APPROVED" && <span style={statusBadgeStyle(a.status)}>{a.status.replace("_", " ")}</span>}
-                  </div>
-                  <div style={{ color: MUTED, fontSize: "0.72rem" }}>{a.userEmail}</div>
-                  {a.status === "REJECTED" && a.rejectionReason && (
-                    <div style={{ color: DANGER, fontSize: "0.7rem", marginTop: "2px" }}>Rejected: {a.rejectionReason}</div>
-                  )}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  {a.status === "PENDING_APPROVAL" && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => handleApprove(a.id)}
-                        disabled={deciding === a.id}
-                        style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.3)", color: SUCCESS, borderRadius: "7px", padding: "6px 10px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
-                      >
-                        {deciding === a.id ? <Spinner size={12} color={SUCCESS} /> : <Check size={12} />} Approve
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleReject(a.id)}
-                        disabled={deciding === a.id}
-                        style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", color: DANGER, borderRadius: "7px", padding: "6px 10px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
-                      >
-                        <Ban size={12} /> Reject
-                      </button>
-                    </>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => handleRemove(a)}
-                    disabled={removing === a.id}
-                    style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", color: DANGER, borderRadius: "7px", padding: "6px 12px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
-                  >
-                    {removing === a.id ? <Spinner size={12} color={DANGER} /> : <X size={12} />} Remove
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────
 // PAGE WRAPPER
 // ─────────────────────────────────────────────────────────────
 
@@ -1230,22 +665,19 @@ export default function AdminEventPage() {
   const limitedEdit  = canEditBasic && !canEditFull
 
   const sports   = (event?.sports ?? []) as unknown as EventSportItem[]
-  const totalSports = sports.length
-  const totalRegistrations = sports.reduce((t, s) => t + (s.registrations?.length ?? s.registeredTeamsCount ?? 0), 0)
 
-  const [publishError, setPublishError] = useState<string | null>(null)
-  const [publishConfirm, setPublishConfirm] = useState(false)
+  const canReviewSportHeadTier = hasRole(userRoles, EVENT_HEAD_AND_UP)
+  const [showUserControl, setShowUserControl] = useState(false)
+  const [pendingChangeCount, setPendingChangeCount] = useState(0)
 
-  const handlePublishEvent = async () => {
+  const loadPendingCount = useCallback(() => {
     if (!eventId) return
-    setPublishError(null)
-    try {
-      await changeEventStatus(eventId, "PUBLISHED")
-      setPublishConfirm(false)
-    } catch (err: any) {
-      setPublishError(err?.message || "Failed to publish event.")
-    }
-  }
+    getEventChangeRequests(eventId, "PENDING")
+      .then(r => setPendingChangeCount(r.length))
+      .catch(() => {})
+  }, [eventId])
+
+  useEffect(() => { loadPendingCount() }, [loadPendingCount])
 
   const handleStatusChange = async (status: string) => {
     if (!eventId) return
@@ -1310,35 +742,22 @@ export default function AdminEventPage() {
     )
   }
 
+  const statusTransitions = canEdit ? (STATUS_TRANSITIONS[event.status as string] ?? []) : []
+
   return (
-    <PageWrapper>
+    <>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        select option { background: #2a2a2a; color: #fff; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
+      `}</style>
+
       {showAddSport && eventId && (
         <AddSportModal eventId={eventId} onAddSport={handleAddSport} submitting={sportLoading} onClose={() => setShowAddSport(false)} />
       )}
 
       {showEditEvent && event && (
         <EditEventModal event={event} onSave={handleSaveEdit} saving={publishLoading} onClose={() => setShowEditEvent(false)} onMediaChange={refetch} limitedEdit={limitedEdit} />
-      )}
-
-      {/* PUBLISH CONFIRM DIALOG */}
-      {publishConfirm && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}
-             onClick={e => { if (e.target === e.currentTarget) setPublishConfirm(false) }}>
-          <div style={{ background: "#2a2a2a", border: `1px solid rgba(250,71,21,0.3)`, borderRadius: "16px", padding: "28px 28px 24px", width: "100%", maxWidth: "420px", boxShadow: "0 24px 60px rgba(0,0,0,0.5)" }}>
-            <div style={{ fontSize: "1.6rem", marginBottom: "12px" }}>📣</div>
-            <h2 style={{ margin: "0 0 8px", fontFamily: "'Sarpanch', sans-serif", fontSize: "1rem", fontWeight: 700 }}>Publish Event?</h2>
-            <p style={{ margin: "0 0 20px", color: MUTED, fontSize: "0.82rem", lineHeight: 1.6 }}>
-              Move <strong style={{ color: TEXT }}>{event.eventName}</strong> from <strong style={{ color: WARNING }}>DRAFT</strong> to <strong style={{ color: ACCENT }}>PUBLISHED</strong>.
-            </p>
-            {publishError && <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "8px", padding: "8px 12px", color: DANGER, fontSize: "0.78rem", fontWeight: 600, marginBottom: "14px" }}>⚠️ {publishError}</div>}
-            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
-              <button onClick={() => { setPublishConfirm(false); setPublishError(null) }} disabled={publishLoading} style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "8px", padding: "9px 18px", fontSize: "0.82rem", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
-              <button onClick={handlePublishEvent} disabled={publishLoading} style={{ background: publishLoading ? "rgba(250,71,21,0.4)" : ACCENT, border: "none", color: "#fff", borderRadius: "8px", padding: "9px 22px", fontSize: "0.82rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
-                {publishLoading ? <><Spinner size={14} color="#fff" />Publishing…</> : <>📣 Confirm Publish</>}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
 
       {/* DELETE CONFIRM DIALOG */}
@@ -1362,114 +781,52 @@ export default function AdminEventPage() {
         </div>
       )}
 
-      {/* BACK */}
-      <button onClick={() => navigate(-1)} style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "8px", padding: "8px 14px", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", marginBottom: "28px" }}>
-        <ArrowLeft size={14} /> Back to Events
-      </button>
-
-      {actionError && !showDeleteConfirm && (
-        <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "8px", padding: "10px 14px", color: DANGER, fontSize: "0.8rem", fontWeight: 600, marginBottom: "16px" }}>⚠️ {actionError}</div>
-      )}
-
-      {/* HEADER */}
-      <div style={{ marginBottom: "32px" }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
-          <h1 style={{ margin: 0, fontSize: "1.9rem", fontFamily: "'Sarpanch', sans-serif", fontWeight: 700, letterSpacing: "0.08em" }}>{event.eventName}</h1>
-          <div style={{ display: "flex", gap: "10px", flexShrink: 0, flexWrap: "wrap" }}>
-            {/* Edit button — ORGANIZER+ */}
-            {canEdit && (
-              <button onClick={() => setShowEditEvent(true)}
-                style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.07)", border: `1px solid ${BORDER}`, color: TEXT, borderRadius: "10px", padding: "10px 18px", fontSize: "0.82rem", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
-                <Edit2 size={14} /> EDIT
-              </button>
-            )}
-            {/* Add Sport — only in DRAFT with full edit rights */}
-            {isDraft && canEditFull && (
-              <button onClick={() => setShowAddSport(true)}
-                style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.07)", border: `1px solid ${BORDER}`, color: TEXT, borderRadius: "10px", padding: "10px 18px", fontSize: "0.82rem", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
-                <Plus size={14} /> ADD SPORT
-              </button>
-            )}
-            {/* Status transition buttons */}
-            {canEdit && STATUS_TRANSITIONS[event.status as string]?.map(t => (
-              <button key={t.value} onClick={() => handleStatusChange(t.value)} disabled={actionLoading}
-                style={{ display: "flex", alignItems: "center", gap: "8px", background: actionLoading ? "rgba(255,255,255,0.04)" : t.color === ACCENT ? ACCENT : `${t.color}22`, border: `1px solid ${t.color}44`, color: t.color === ACCENT ? "#fff" : t.color, borderRadius: "10px", padding: "10px 18px", fontSize: "0.82rem", fontWeight: 700, cursor: actionLoading ? "not-allowed" : "pointer", whiteSpace: "nowrap" }}>
-                {actionLoading ? <Spinner size={14} color={t.color} /> : null}{t.label}
-              </button>
-            ))}
-            {/* Delete button — MANAGER+ */}
-            {canDelete && (
-              <button onClick={() => setShowDeleteConfirm(true)}
-                style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", color: DANGER, borderRadius: "10px", padding: "10px 16px", fontSize: "0.82rem", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
-                <Trash2 size={14} />
-              </button>
-            )}
-          </div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "10px", flexWrap: "wrap" }}>
-          <StatusPill status={event.status} />
-          {event.organizationName && <span style={chip()}>🏛 {event.organizationName}</span>}
-          {isDraft && canEdit && <span style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)", color: WARNING, borderRadius: "999px", fontSize: "0.67rem", padding: "3px 10px", fontWeight: 600 }}>✏️ Draft — sports can be added</span>}
-          {isArchived && <span style={{ background: "rgba(100,116,139,0.08)", border: "1px solid rgba(100,116,139,0.2)", color: "#64748b", borderRadius: "999px", fontSize: "0.67rem", padding: "3px 10px", fontWeight: 600 }}>🗄️ Archived — read only</span>}
-        </div>
-        <p style={{ marginTop: "18px", color: MUTED, maxWidth: "700px", lineHeight: 1.7, fontSize: "0.9rem" }}>{event.eventDescription}</p>
-      </div>
-
-      {/* STATS */}
-      <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "32px" }}>
-        <StatCard label="Sports"        value={totalSports}             icon="🏅" />
-        <StatCard label="Registrations" value={totalRegistrations}      icon="📋" />
-        <StatCard label="Venue"         value={event.venueName || "—"}  icon="🏟️" />
-      </div>
-
-      {/* EVENT DETAILS */}
-      <div style={{ background: CARD2, border: "1px solid rgba(250,71,21,0.14)", borderRadius: "16px", overflow: "hidden" }}>
-        <div style={{ padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, background: "rgba(250,71,21,0.04)", fontWeight: 700, letterSpacing: "0.06em" }}>EVENT DETAILS</div>
-        <div style={{ padding: "18px 20px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "10px" }}>
-            <InfoCell label="Status"       value={event.status} />
-            <InfoCell label="Organization" value={event.organizationName} />
-            <InfoCell label="City"         value={event.city} />
-            <InfoCell label="State"        value={event.state} />
-            <InfoCell label="Country"      value={event.country} />
-            <InfoCell label="Venue"        value={event.venueName} />
-            <InfoCell label="Start Date"   value={event.startDate ? new Date(event.startDate).toLocaleDateString("en-IN") : undefined} />
-            <InfoCell label="End Date"     value={event.endDate ? new Date(event.endDate).toLocaleDateString("en-IN") : undefined} />
-          </div>
-        </div>
-      </div>
-
-      {/* ASSIGN ORGANIZER — ADMINISTRATOR+ */}
-      {eventId && isAdmin && <AssignOrganizerPanel eventId={eventId} />}
-
-      {/* SPORTS LIST */}
-      {eventId && (
-        <SportsList
-          sports={sports}
-          isDraft={isDraft && canEditFull}
+      {showUserControl && eventId && (
+        <UserControlPanel
           eventId={eventId}
-          onAddSport={() => setShowAddSport(true)}
-          navigate={navigate}
-          onApproveSport={handleApproveSport}
-          onRejectSport={handleRejectSport}
-          busySportId={busySportId}
+          isAdmin={isAdmin}
+          sports={sports}
+          currentUserId={user?.id}
+          canReviewSportHeadTier={canReviewSportHeadTier}
+          canReviewManagerTier={isAdmin}
+          onClose={() => setShowUserControl(false)}
+          onResolved={loadPendingCount}
         />
       )}
 
-      {/* SPONSOR MANAGEMENT — ADMINISTRATOR+ */}
-      {eventId && canManageSponsors && (
-        <>
-          <SponsorManager mode="event" entityId={eventId} title="Event Sponsors" />
-          {sports.map(sport => (
-            <SponsorManager
-              key={sport.id}
-              mode="sport"
-              entityId={sport.id}
-              title={`Sponsors — ${toLabel(sport.sport)}`}
-            />
-          ))}
-        </>
+      {eventId && (
+        <EventDashboard
+          event={event}
+          sports={sports}
+          canEdit={canEdit}
+          canAddSport={isDraft && canEditFull}
+          canManageEvent={canEdit}
+          statusTransitions={statusTransitions}
+          actionLoading={actionLoading}
+          onEditEvent={() => setShowEditEvent(true)}
+          onAddSport={() => setShowAddSport(true)}
+          onStatusChange={handleStatusChange}
+          onManageSport={sportId => navigate(`/admin/events/${eventId}/sports/${sportId}`)}
+          onApproveSport={handleApproveSport}
+          onRejectSport={handleRejectSport}
+          approveRejectBusyId={busySportId}
+          onOpenUserControl={() => setShowUserControl(true)}
+          pendingApprovalCount={pendingChangeCount}
+          onBack={() => navigate(-1)}
+          backLabel="Back to Events"
+          errorBanner={actionError}
+          canDelete={canDelete}
+          onDelete={() => setShowDeleteConfirm(true)}
+          eventSponsors={canManageSponsors ? <SponsorManager mode="event" entityId={eventId} title="Event Sponsors" /> : undefined}
+          extraSponsorSections={canManageSponsors ? (
+            <>
+              {sports.map(sport => (
+                <SponsorManager key={sport.id} mode="sport" entityId={sport.id} title={`Sponsors — ${toLabel(sport.sport)}`} />
+              ))}
+            </>
+          ) : undefined}
+        />
       )}
-    </PageWrapper>
+    </>
   )
 }

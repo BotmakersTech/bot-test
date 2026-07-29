@@ -25,6 +25,7 @@ import { ORG } from "../theme/organizerTheme"
 import PageWrapper from "../components/PageWrapper"
 import StatChip from "../components/StatChip"
 import PrimaryButton from "../components/PrimaryButton"
+import { ChangeFieldDiff } from "../../../shared/components/EventDashboard/ChangeRequestDiff"
 
 // ─────────────────────────────────────────────────────────────
 // DESIGN TOKENS — Organizer light theme (organizerTheme.ts), matching the
@@ -1016,45 +1017,6 @@ function EditSportModal({
 // to — inline Approve/Reject actions (mirrors AdminEventDetail's SportCard
 // isPending review pattern).
 // ─────────────────────────────────────────────────────────────
-
-function ChangeFieldDiff({ request, sport }: { request: SportChangeRequest; sport: SportDetail }) {
-  const LABELS: Record<string, string> = {
-    sport: "Sport", ageGroup: "Age Group", competitionType: "Competition Type",
-    sportData: "Description", weightClass: "Weight Class", weightLimitKg: "Weight Limit (kg)",
-    maxLengthCm: "Max Length (cm)", maxWidthCm: "Max Width (cm)", maxHeightCm: "Max Height (cm)",
-    controlType: "Control Type", maxBotsPerTeam: "Max Bots/Team", minTeamSize: "Min Team Size",
-    maxTeamSize: "Max Team Size", maxTeams: "Max Teams", entryFee: "Entry Fee", prizeMoney: "Prize Money",
-    formatType: "Format", registrationStartDate: "Registration Start", registrationEndDate: "Registration End",
-  }
-  const CURRENT_KEY: Record<string, keyof SportDetail> = {
-    sport: "sport", ageGroup: "ageGroup", competitionType: "competitionType", sportData: "sportsDescription",
-    weightClass: "weightClass", weightLimitKg: "weightLimitKg", maxLengthCm: "maxLengthCm",
-    maxWidthCm: "maxWidthCm", maxHeightCm: "maxHeightCm", controlType: "controlType",
-    maxBotsPerTeam: "maxBotsPerTeam", minTeamSize: "minTeamSize", maxTeamSize: "maxTeamSize",
-    maxTeams: "maxTeams", entryFee: "entryFee", prizeMoney: "prizeMoney", formatType: "formatType",
-    registrationStartDate: "registrationStartDate", registrationEndDate: "registrationEndDate",
-  }
-  const changes = Object.entries(request.proposedChanges || {})
-    .filter(([key, value]) => key in LABELS && value !== null && value !== undefined && value !== "")
-
-  if (changes.length === 0) return null
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "4px" }}>
-      {changes.map(([key, value]) => {
-        const currentVal = sport[CURRENT_KEY[key]]
-        return (
-          <div key={key} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.76rem", flexWrap: "wrap" }}>
-            <span style={{ color: MUTED, fontWeight: 700, minWidth: "140px" }}>{LABELS[key]}:</span>
-            <span style={{ color: DANGER, textDecoration: "line-through", opacity: 0.7 }}>{String(currentVal ?? "—")}</span>
-            <span style={{ color: MUTED }}>→</span>
-            <span style={{ color: SUCCESS, fontWeight: 700 }}>{String(value)}</span>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
 
 function PendingChangeRequestPanel({
   eventId,

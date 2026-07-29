@@ -1,30 +1,31 @@
 ﻿import React, { useCallback, useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
-import { ArrowLeft, Plus, X, ChevronDown, Info, Calendar, Users, Trophy, Swords, Edit2, CheckCircle2 } from "lucide-react"
+import { Plus, X, ChevronDown, Info, Calendar } from "lucide-react"
 import {
   getMyEventById, updateEventInfo, changeEventStatus, createEventSport, submitSportForApproval,
-  type OrganizerEvent, type OrganizerSport, type UpdateEventInfoRequest, type CreateEventSportRequest,
+  getEventChangeRequests,
+  type OrganizerEvent, type UpdateEventInfoRequest, type CreateEventSportRequest,
 } from "../api/organizer.api"
 import EventMediaField from "../components/EventMediaField"
 import SponsorManager from "../../Admin/components/SponsorManager"
 import SupportContactManager from "../components/SupportContactManager"
+import EventDashboard from "../../../shared/components/EventDashboard/EventDashboard"
+import UserControlPanel from "../../../shared/components/EventDashboard/UserControlPanel"
 import { ORG } from "../theme/organizerTheme"
 import type { RootState } from "../../../app/store"
-import { hasRole, AppRole } from "../../../shared/constants/roles"
+import { hasRole, AppRole, EVENT_HEAD_AND_UP, ADMIN_AND_UP } from "../../../shared/constants/roles"
 
 // ─────────────────────────────────────────────────────────────
 // DESIGN TOKENS
 // ─────────────────────────────────────────────────────────────
 
 const BG      = ORG.pageBg
-const CARD2   = "rgba(255,255,255,0.9)"
 const BORDER  = "rgba(75,134,232,0.3)"
 const ACCENT  = "#8c6cff"
 const TEXT    = "#111111"
 const MUTED   = "#5d5d5d"
 const SUCCESS = "#1fa952"
-const WARNING = "#a16207"
 const DANGER  = "#e04b4b"
 
 type EventStatus = "DRAFT" | "PUBLISHED" | "LIVE" | "COMPLETED" | "ARCHIVED"
@@ -45,11 +46,6 @@ interface AgeGroupConfig {
 }
 
 type AddSportForm = CreateEventSportRequest
-
-function toLabel(raw?: string | null): string {
-  if (!raw) return "—"
-  return raw.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
-}
 
 // ─────────────────────────────────────────────────────────────
 // AGE GROUP → SPORT CATALOGUE
@@ -134,77 +130,6 @@ const INITIAL_FORM: AddSportForm = {
 function Spinner({ size = 16, color = ACCENT }: { size?: number; color?: string }) {
   return (
     <span style={{ display: "inline-block", width: size, height: size, border: `2px solid rgba(75,134,232,0.12)`, borderTop: `2px solid ${color}`, borderRadius: "50%", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
-  )
-}
-
-function StatusPill({ status }: { status?: string }) {
-  const MAP: Record<string, { bg: string; border: string; color: string; icon: string }> = {
-    DRAFT:     { bg: "rgba(251,191,36,0.1)",  border: "rgba(251,191,36,0.28)",  color: WARNING, icon: "📝" },
-    PUBLISHED: { bg: "rgba(140,108,255,0.11)",  border: "rgba(140,108,255,0.28)",   color: ACCENT,  icon: "📣" },
-    LIVE:      { bg: "rgba(74,222,128,0.1)",  border: "rgba(74,222,128,0.28)",  color: SUCCESS, icon: "🟢" },
-    COMPLETED: { bg: "rgba(156,163,175,0.1)", border: "rgba(156,163,175,0.25)", color: MUTED,   icon: "✅" },
-    ARCHIVED:  { bg: "rgba(100,116,139,0.1)", border: "rgba(100,116,139,0.25)", color: "#64748b", icon: "🗄️" },
-  }
-  const key = status?.toUpperCase() || "DRAFT"
-  const s   = MAP[key] || MAP["DRAFT"]
-  return (
-    <span style={{ background: s.bg, border: `1px solid ${s.border}`, color: s.color, borderRadius: "999px", fontSize: "0.67rem", padding: "3px 10px", fontWeight: 700, whiteSpace: "nowrap" }}>
-      {s.icon} {key.replace(/_/g, " ")}
-    </span>
-  )
-}
-
-function SportStatusPill({ status }: { status?: string }) {
-  const MAP: Record<string, { bg: string; border: string; color: string }> = {
-    DRAFT:               { bg: "rgba(107,114,128,0.1)", border: "rgba(107,114,128,0.25)", color: MUTED },
-    PENDING_APPROVAL:     { bg: "rgba(251,191,36,0.1)",  border: "rgba(251,191,36,0.28)",  color: WARNING },
-    APPROVED:             { bg: "rgba(74,222,128,0.1)",  border: "rgba(74,222,128,0.28)",  color: SUCCESS },
-    ACTIVE:               { bg: "rgba(74,222,128,0.12)", border: "rgba(74,222,128,0.3)",   color: SUCCESS },
-    REGISTRATION_OPEN:    { bg: "rgba(140,108,255,0.1)",   border: "rgba(140,108,255,0.28)",   color: ACCENT },
-    REGISTRATION_CLOSED:  { bg: "rgba(107,114,128,0.1)", border: "rgba(107,114,128,0.25)", color: MUTED },
-    REJECTED:             { bg: "rgba(248,113,113,0.1)", border: "rgba(248,113,113,0.28)", color: DANGER },
-    COMPLETED:            { bg: "rgba(156,163,175,0.1)", border: "rgba(156,163,175,0.25)", color: MUTED },
-  }
-  const key = status?.toUpperCase() || "DRAFT"
-  const s   = MAP[key] || MAP["DRAFT"]
-  return (
-    <span style={{ background: s.bg, border: `1px solid ${s.border}`, color: s.color, borderRadius: "999px", fontSize: "0.67rem", padding: "3px 10px", fontWeight: 700, whiteSpace: "nowrap" }}>
-      {key.replace(/_/g, " ")}
-    </span>
-  )
-}
-
-const chip = (): React.CSSProperties => ({
-  background: "rgba(75,134,232,0.06)",
-  border: `1px solid ${BORDER}`,
-  color: "#374151",
-  borderRadius: "6px",
-  fontSize: "0.7rem",
-  padding: "3px 9px",
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "4px"
-})
-
-function StatCard({ label, value, icon }: { label: string; value: string | number; icon: string }) {
-  return (
-    <div style={{ background: "rgba(75,134,232,0.05)", border: `1px solid ${BORDER}`, borderRadius: "12px", padding: "16px 20px", display: "flex", flexDirection: "column", gap: "6px", minWidth: "140px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "7px", color: MUTED, fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.09em" }}>
-        <span>{icon}</span>{label}
-      </div>
-      <div style={{ fontSize: "1.5rem", fontWeight: 700, color: TEXT, fontFamily: "'Sarpanch', 'Inter', sans-serif" }}>
-        {value}
-      </div>
-    </div>
-  )
-}
-
-function InfoCell({ label, value }: { label: string; value?: string }) {
-  return (
-    <div style={{ background: "rgba(75,134,232,0.04)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "10px 14px" }}>
-      <div style={{ color: MUTED, fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "4px" }}>{label}</div>
-      <div style={{ color: TEXT, fontWeight: 600, fontSize: "0.85rem" }}>{value || "—"}</div>
-    </div>
   )
 }
 
@@ -439,112 +364,14 @@ function AddSportModal({ onAddSport, submitting, onClose }: {
 }
 
 // ─────────────────────────────────────────────────────────────
-// SPORT CARD (view + on-page "submit for approval" — no navigation)
-// ─────────────────────────────────────────────────────────────
-
-function SportCard({ sport, index, eventId, navigate, onSubmitApproval, submittingId }: {
-  sport: OrganizerSport; index: number; eventId: string; navigate: ReturnType<typeof useNavigate>
-  onSubmitApproval: (sportId: string) => void; submittingId: string | null
-}) {
-  const teamCount   = sport.registrations?.length ?? sport.registeredTeamsCount ?? 0
-  const playerCount = sport.registrations?.reduce((n, t) => n + (t.lineup?.length ?? 0), 0) ?? 0
-  const displayName = toLabel(sport.sport)
-  const hue         = (index * 47 + 11) % 360
-  const canSubmit   = sport.status?.toUpperCase() === "DRAFT"
-  const submitting  = submittingId === sport.id
-
-  return (
-    <div
-      onClick={() => navigate(`/organizer/events/${eventId}/sports/${sport.id}`)}
-      style={{ background: "rgba(75,134,232,0.06)", border: `1px solid rgba(75,134,232,0.09)`, borderRadius: "14px", overflow: "hidden", cursor: "pointer" }}
-    >
-      <div style={{ height: "3px", background: `linear-gradient(90deg, ${ACCENT}, hsl(${hue},80%,55%))` }} />
-
-      <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: "12px" }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "9px" }}>
-            <span style={{ background: "rgba(140,108,255,0.13)", border: "1px solid rgba(140,108,255,0.28)", color: ACCENT, borderRadius: "6px", fontSize: "0.62rem", fontWeight: 800, padding: "2px 7px", flexShrink: 0 }}>#{index + 1}</span>
-            <span style={{ fontWeight: 700, fontSize: "0.92rem", color: TEXT, lineHeight: 1.3 }}>{displayName}</span>
-          </div>
-          <Swords size={15} style={{ color: MUTED, flexShrink: 0, marginTop: "2px" }} />
-        </div>
-
-        <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-          {sport.ageGroup && <span style={chip()}>{toLabel(sport.ageGroup)}</span>}
-          {sport.weightClass && <span style={chip()}>{toLabel(sport.weightClass)}</span>}
-          {sport.formatType && <span style={chip()}>{toLabel(sport.formatType)}</span>}
-          {sport.status && <SportStatusPill status={sport.status} />}
-        </div>
-
-        <div style={{ display: "flex", gap: "10px" }}>
-          <div style={{ flex: 1, background: "rgba(75,134,232,0.04)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "8px 12px", display: "flex", alignItems: "center", gap: "7px" }}>
-            <Trophy size={13} style={{ color: WARNING, flexShrink: 0 }} />
-            <div>
-              <div style={{ fontSize: "0.62rem", color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>Teams</div>
-              <div style={{ fontSize: "1rem", fontWeight: 700, color: TEXT, fontFamily: "'Sarpanch', 'Inter', sans-serif" }}>{teamCount}</div>
-            </div>
-          </div>
-          <div style={{ flex: 1, background: "rgba(75,134,232,0.04)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "8px 12px", display: "flex", alignItems: "center", gap: "7px" }}>
-            <Users size={13} style={{ color: SUCCESS, flexShrink: 0 }} />
-            <div>
-              <div style={{ fontSize: "0.62rem", color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>Players</div>
-              <div style={{ fontSize: "1rem", fontWeight: 700, color: TEXT, fontFamily: "'Sarpanch', 'Inter', sans-serif" }}>{playerCount}</div>
-            </div>
-          </div>
-        </div>
-
-        {(sport.entryFee != null || sport.prizeMoney != null) && (
-          <div style={{ display: "flex", gap: "10px" }}>
-            {sport.entryFee != null && (
-              <div style={{ flex: 1, background: "rgba(75,134,232,0.03)", border: `1px solid ${BORDER}`, borderRadius: "7px", padding: "6px 10px" }}>
-                <div style={{ fontSize: "0.6rem", color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>Entry Fee</div>
-                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: WARNING }}>₹{sport.entryFee.toLocaleString("en-IN")}</div>
-              </div>
-            )}
-            {sport.prizeMoney != null && (
-              <div style={{ flex: 1, background: "rgba(75,134,232,0.03)", border: `1px solid ${BORDER}`, borderRadius: "7px", padding: "6px 10px" }}>
-                <div style={{ fontSize: "0.6rem", color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>Prize Pool</div>
-                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: SUCCESS }}>₹{sport.prizeMoney.toLocaleString("en-IN")}</div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {sport.registrationStartDate && sport.registrationEndDate && (
-          <div style={{ fontSize: "0.67rem", color: MUTED, display: "flex", alignItems: "center", gap: "5px" }}>
-            <Calendar size={10} style={{ flexShrink: 0 }} />
-            {new Date(sport.registrationStartDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
-            {" → "}
-            {new Date(sport.registrationEndDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-          </div>
-        )}
-      </div>
-
-      {canSubmit && (
-        <div style={{ padding: "0 18px 16px" }} onClick={e => e.stopPropagation()}>
-          <button
-            type="button"
-            onClick={() => onSubmitApproval(sport.id)}
-            disabled={submitting}
-            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "7px", background: "rgba(140,108,255,0.1)", border: "1px solid rgba(140,108,255,0.3)", color: ACCENT, borderRadius: "8px", padding: "8px 14px", fontSize: "0.78rem", fontWeight: 700, cursor: submitting ? "not-allowed" : "pointer" }}
-          >
-            {submitting ? <Spinner size={13} /> : <CheckCircle2 size={13} />} Submit for Approval
-          </button>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────
 // STATUS TRANSITIONS
 // ─────────────────────────────────────────────────────────────
 
-const STATUS_TRANSITIONS: Record<string, { value: string; label: string; color: string }[]> = {
-  DRAFT:     [{ value: "PUBLISHED", label: "Publish",        color: ACCENT  }],
-  PUBLISHED: [{ value: "LIVE",      label: "Start Event",    color: SUCCESS },
+const STATUS_TRANSITIONS: Record<string, { value: string; label: string; color: string; primary?: boolean }[]> = {
+  DRAFT:     [{ value: "PUBLISHED", label: "Publish",        color: ACCENT,  primary: true }],
+  PUBLISHED: [{ value: "LIVE",      label: "Start Event",    color: SUCCESS, primary: true },
               { value: "ARCHIVED",  label: "Archive",         color: MUTED   }],
-  LIVE:      [{ value: "COMPLETED", label: "Complete Event", color: SUCCESS }],
+  LIVE:      [{ value: "COMPLETED", label: "Complete Event", color: SUCCESS, primary: true }],
   COMPLETED: [{ value: "ARCHIVED",  label: "Archive",         color: MUTED   }],
 }
 
@@ -702,6 +529,20 @@ export default function OrganizerEventDetailPage() {
   const user = useSelector((state: RootState) => state.auth.user)
   const userRoles = user?.allRoles ?? (user?.role ? [user.role] : [])
   const canManageEvent = hasRole(userRoles, [AppRole.SUPER_ADMIN, AppRole.ADMIN, AppRole.ORGANISER, AppRole.EVENT_HEAD])
+  const isAdmin = hasRole(userRoles, ADMIN_AND_UP)
+  const canReviewSportHeadTier = hasRole(userRoles, EVENT_HEAD_AND_UP)
+
+  const [showUserControl, setShowUserControl] = useState(false)
+  const [pendingChangeCount, setPendingChangeCount] = useState(0)
+
+  const loadPendingCount = useCallback(() => {
+    if (!eventId || !canManageEvent) return
+    getEventChangeRequests(eventId, "PENDING")
+      .then(r => setPendingChangeCount(r.length))
+      .catch(() => {})
+  }, [eventId, canManageEvent])
+
+  useEffect(() => { loadPendingCount() }, [loadPendingCount])
 
   const eventStatus = event?.status as EventStatus | undefined
   const isDraft      = eventStatus === "DRAFT"
@@ -790,11 +631,16 @@ export default function OrganizerEventDetailPage() {
   }
 
   const sports = event.sports ?? []
-  const totalSports = sports.length
-  const totalRegistrations = sports.reduce((t, s) => t + (s.registrations?.length ?? s.registeredTeamsCount ?? 0), 0)
+  const statusTransitions = canChangeStatus ? (STATUS_TRANSITIONS[event.status as string] ?? []) : []
 
   return (
-    <PageWrapper>
+    <>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        select option { background: #ffffff; color: #111111; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
+      `}</style>
+
       {showAddSport && (
         <AddSportModal onAddSport={handleAddSport} submitting={sportSubmitting} onClose={() => setShowAddSport(false)} />
       )}
@@ -803,117 +649,41 @@ export default function OrganizerEventDetailPage() {
         <EditEventModal event={event} onSave={handleSaveEdit} saving={savingEdit} onClose={() => setShowEditEvent(false)} onMediaChange={load} />
       )}
 
-      {/* BACK — stays within /organizer */}
-      <button type="button" onClick={() => navigate("/organizer/events")} style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(75,134,232,0.05)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "8px", padding: "8px 14px", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", marginBottom: "28px" }}>
-        <ArrowLeft size={14} /> Back to My Events
-      </button>
-
-      {actionError && (
-        <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "8px", padding: "10px 14px", color: DANGER, fontSize: "0.8rem", fontWeight: 600, marginBottom: "16px" }}>⚠️ {actionError}</div>
+      {showUserControl && (
+        <UserControlPanel
+          eventId={eventId}
+          isAdmin={isAdmin}
+          sports={sports}
+          currentUserId={user?.id}
+          canReviewSportHeadTier={canReviewSportHeadTier}
+          canReviewManagerTier={isAdmin}
+          onClose={() => setShowUserControl(false)}
+          onResolved={loadPendingCount}
+        />
       )}
 
-      {/* HEADER */}
-      <div style={{ marginBottom: "32px" }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
-          <h1 style={{ margin: 0, fontSize: "1.9rem", fontFamily: "'Sarpanch', 'Inter', sans-serif", fontWeight: 700, letterSpacing: "0.08em" }}>{event.eventName}</h1>
-          <div style={{ display: "flex", gap: "10px", flexShrink: 0, flexWrap: "wrap" }}>
-            {canEdit && (
-              <button type="button" onClick={() => setShowEditEvent(true)}
-                style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(75,134,232,0.07)", border: `1px solid ${BORDER}`, color: TEXT, borderRadius: "10px", padding: "10px 18px", fontSize: "0.82rem", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
-                <Edit2 size={14} /> EDIT
-              </button>
-            )}
-            {canAddSport && (
-              <button type="button" onClick={() => setShowAddSport(true)}
-                style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(75,134,232,0.07)", border: `1px solid ${BORDER}`, color: TEXT, borderRadius: "10px", padding: "10px 18px", fontSize: "0.82rem", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
-                <Plus size={14} /> ADD SPORT
-              </button>
-            )}
-            {canChangeStatus && STATUS_TRANSITIONS[event.status as string]?.map(t => (
-              <button key={t.value} type="button" onClick={() => handleStatusChange(t.value)} disabled={actionLoading}
-                style={{ display: "flex", alignItems: "center", gap: "8px", background: actionLoading ? "rgba(75,134,232,0.04)" : t.color === ACCENT ? ACCENT : `${t.color}22`, border: `1px solid ${t.color}44`, color: t.color === ACCENT ? "#fff" : t.color, borderRadius: "10px", padding: "10px 18px", fontSize: "0.82rem", fontWeight: 700, cursor: actionLoading ? "not-allowed" : "pointer", whiteSpace: "nowrap" }}>
-                {actionLoading ? <Spinner size={14} color={t.color} /> : null}{t.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "10px", flexWrap: "wrap" }}>
-          <StatusPill status={event.status} />
-          {event.organizationName && <span style={chip()}>🏛 {event.organizationName}</span>}
-          {isDraft && <span style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)", color: WARNING, borderRadius: "999px", fontSize: "0.67rem", padding: "3px 10px", fontWeight: 600 }}>✏️ Draft — sports can be added</span>}
-          {isArchived && <span style={{ background: "rgba(100,116,139,0.08)", border: "1px solid rgba(100,116,139,0.2)", color: "#64748b", borderRadius: "999px", fontSize: "0.67rem", padding: "3px 10px", fontWeight: 600 }}>🗄️ Archived — read only</span>}
-        </div>
-        <p style={{ marginTop: "18px", color: MUTED, maxWidth: "700px", lineHeight: 1.7, fontSize: "0.9rem" }}>{event.eventDescription}</p>
-      </div>
-
-      {/* STATS */}
-      <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "32px" }}>
-        <StatCard label="Sports"        value={totalSports}             icon="🏅" />
-        <StatCard label="Registrations" value={totalRegistrations}      icon="📋" />
-        <StatCard label="Venue"         value={event.venueName || "—"}  icon="🏟️" />
-      </div>
-
-      {/* EVENT DETAILS */}
-      <div style={{ background: CARD2, border: "1px solid rgba(140,108,255,0.14)", borderRadius: "16px", overflow: "hidden" }}>
-        <div style={{ padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, background: "rgba(140,108,255,0.04)", fontWeight: 700, letterSpacing: "0.06em" }}>EVENT DETAILS</div>
-        <div style={{ padding: "18px 20px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "10px" }}>
-            <InfoCell label="Status"       value={event.status} />
-            <InfoCell label="Organization" value={event.organizationName ?? undefined} />
-            <InfoCell label="City"         value={event.city ?? undefined} />
-            <InfoCell label="State"        value={event.state ?? undefined} />
-            <InfoCell label="Country"      value={event.country ?? undefined} />
-            <InfoCell label="Venue"        value={event.venueName ?? undefined} />
-            <InfoCell label="Start Date"   value={event.startDate ? new Date(event.startDate).toLocaleDateString("en-IN") : undefined} />
-            <InfoCell label="End Date"     value={event.endDate ? new Date(event.endDate).toLocaleDateString("en-IN") : undefined} />
-          </div>
-        </div>
-      </div>
-
-      {/* SPONSORS — event-level management only, not shown to SPORT_HEAD */}
-      {canManageEvent && (
-        <SponsorManager mode="event" entityId={eventId} title="Event Sponsors" />
-      )}
-
-      {/* SUPPORT CONTACTS — event-level management only, not shown to SPORT_HEAD */}
-      {canManageEvent && (
-        <SupportContactManager mode="event" eventId={eventId} title="Event Support Contacts" />
-      )}
-
-      {/* SPORTS LIST */}
-      <div style={{ background: CARD2, border: "1px solid rgba(140,108,255,0.14)", borderRadius: "16px", overflow: "hidden", marginTop: "24px" }}>
-        <div style={{ padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, background: "rgba(140,108,255,0.04)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ fontWeight: 700, letterSpacing: "0.06em", fontSize: "0.85rem" }}>SPORTS</span>
-            <span style={{ background: "rgba(140,108,255,0.13)", border: "1px solid rgba(140,108,255,0.28)", color: ACCENT, borderRadius: "999px", fontSize: "0.65rem", fontWeight: 800, padding: "1px 9px" }}>{sports.length}</span>
-          </div>
-          {canAddSport && (
-            <button type="button" onClick={() => setShowAddSport(true)} style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(140,108,255,0.1)", border: "1px solid rgba(140,108,255,0.3)", color: ACCENT, borderRadius: "8px", padding: "6px 14px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", letterSpacing: "0.04em" }}>
-              <Plus size={13} /> ADD SPORT
-            </button>
-          )}
-        </div>
-
-        <div style={{ padding: "18px 20px" }}>
-          {sports.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "48px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
-              <div style={{ fontSize: "2.5rem" }}>🏅</div>
-              <div style={{ color: MUTED, fontSize: "0.85rem", fontWeight: 600 }}>No sports added yet</div>
-              {canAddSport && (
-                <button type="button" onClick={() => setShowAddSport(true)} style={{ display: "flex", alignItems: "center", gap: "7px", background: ACCENT, border: "none", color: "#fff", borderRadius: "9px", padding: "9px 20px", fontSize: "0.8rem", fontWeight: 700, cursor: "pointer", marginTop: "4px" }}>
-                  <Plus size={14} /> Add the first sport
-                </button>
-              )}
-            </div>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "14px" }}>
-              {sports.map((sport, i) => (
-                <SportCard key={sport.id} sport={sport} index={i} eventId={eventId ?? ""} navigate={navigate} onSubmitApproval={handleSubmitApproval} submittingId={approvalSubmittingId} />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </PageWrapper>
+      <EventDashboard
+        event={event}
+        sports={sports}
+        canEdit={canEdit}
+        canAddSport={canAddSport}
+        canManageEvent={canManageEvent}
+        statusTransitions={statusTransitions}
+        actionLoading={actionLoading}
+        onEditEvent={() => setShowEditEvent(true)}
+        onAddSport={() => setShowAddSport(true)}
+        onStatusChange={handleStatusChange}
+        onManageSport={sportId => navigate(`/organizer/events/${eventId}/sports/${sportId}`)}
+        onSubmitApproval={handleSubmitApproval}
+        submitApprovalId={approvalSubmittingId}
+        onOpenUserControl={() => setShowUserControl(true)}
+        pendingApprovalCount={pendingChangeCount}
+        onBack={() => navigate("/organizer/events")}
+        backLabel="Back to My Events"
+        errorBanner={actionError}
+        eventSponsors={canManageEvent ? <SponsorManager mode="event" entityId={eventId} title="Event Sponsors" /> : undefined}
+        extraSponsorSections={canManageEvent ? <SupportContactManager mode="event" eventId={eventId} title="Event Support Contacts" /> : undefined}
+      />
+    </>
   )
 }
