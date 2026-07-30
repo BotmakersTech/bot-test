@@ -35,7 +35,7 @@ export default function AchievementsPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-white p-6">
+    <div className="min-h-screen bg-[#0a0c10] text-white pt-11.5 px-13 pb-17.5">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white">Achievements</h1>
         <p className="text-gray-400 text-sm mt-1">

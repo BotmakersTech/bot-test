@@ -124,6 +124,5 @@ select.etm-field-input { appearance: none; cursor: pointer; }
 @media (min-width: 1100px) { .etm-bg-deco { display: block; } }
 
 .etm-page-content {
-  padding-left:  clamp(12px, 2vw, 40px);
-  padding-right: clamp(12px, 2vw, 40px);
+  padding: 46px 52px 70px;
 }

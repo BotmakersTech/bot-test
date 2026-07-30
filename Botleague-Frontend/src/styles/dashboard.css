@@ -29,8 +29,8 @@
   margin: 0;
   color: #3567cf;
   font-family: "Sarpanch", "Inter", system-ui, sans-serif;
-  font-size: 40px;
-  font-weight: 700;
+  font-size: 38px;
+  font-weight: 500;
   line-height: 1;
   letter-spacing: 1px;
 }
@@ -111,7 +111,7 @@
   margin: 0;
   color: #5b62ea;
   font-size: 32px;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1;
   letter-spacing: 0;
    font-family: "Poppins", sans-serif;
@@ -325,7 +325,7 @@
   margin: 0 0 22px;
   color: #070707;
   font-size: 23px;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1;
 }
 

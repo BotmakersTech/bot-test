@@ -52,7 +52,7 @@ export default function SupportPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-white p-6 max-w-3xl mx-auto">
+    <div className="min-h-screen bg-[#0a0c10] text-white pt-11.5 px-13 pb-17.5 max-w-3xl mx-auto">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white">Support</h1>
         <p className="text-gray-400 text-sm mt-1">Find answers or reach out to the BotLeague team</p>

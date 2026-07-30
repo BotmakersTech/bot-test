@@ -344,7 +344,7 @@ export default function SearchMatches() {
   const showError   = !!error && matches.length === 0;
 
   return (
-    <div style={{ minHeight: "100vh", background: BG, color: TEXT, padding: "40px 48px", position: "relative", overflow: "hidden" }}>
+    <div style={{ minHeight: "100vh", background: BG, color: TEXT, padding: "46px 52px 70px", position: "relative", overflow: "hidden" }}>
       <style>{`
         @keyframes spin   { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }

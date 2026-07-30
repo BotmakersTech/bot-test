@@ -287,7 +287,7 @@ export default function SettingsPage() {
         </h1>
       </div>
 
-      <div style={{ maxWidth: 720, margin: "0 auto", padding: "24px 16px" }}>
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "46px 52px 70px" }}>
 
         {/* Tabs */}
         <div style={{

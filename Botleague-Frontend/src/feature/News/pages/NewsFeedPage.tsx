@@ -33,7 +33,7 @@ export default function NewsFeedPage() {
   }, []);
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10">
+    <div className="max-w-3xl mx-auto pt-11.5 px-13 pb-17.5">
       <h1 className="text-2xl font-bold text-gray-900 mb-1">News</h1>
       <p className="text-sm text-gray-500 mb-6">Updates from BotLeague, curated for you.</p>
 

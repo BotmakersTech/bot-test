@@ -81,7 +81,7 @@ export default function CreateTeamForm() {
         <OutlineStar className="etm-bg-deco absolute top-[36%] left-[10%] w-16 h-16 text-indigo-100 opacity-80" />
         <OutlineStar className="etm-bg-deco absolute bottom-[16%] left-[10%] w-16 h-16 text-indigo-100 opacity-80" />
 
-        <div className="relative z-10 flex-1 etm-page-content py-6 md:py-8 lg:py-12">
+        <div className="relative z-10 flex-1 etm-page-content">
           <div className="w-full max-w-[1079px] mx-auto flex flex-col gap-5 md:gap-6 lg:gap-8">
 
             <div className="pl-1">

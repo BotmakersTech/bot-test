@@ -278,7 +278,7 @@ export default function EditTeamPage() {
         <img className="etm-bg-deco absolute w-[50px] bottom-40 left-24" src={starDeco} alt="" aria-hidden="true" />
         <img className="etm-bg-deco absolute w-[130px] right-40 -bottom-5" src={starDeco} alt="" aria-hidden="true" />
 
-        <div className="relative z-10 flex-1 etm-page-content py-6 md:py-8 lg:py-12">
+        <div className="relative z-10 flex-1 etm-page-content">
           <div className="w-full max-w-[1079px] mx-auto flex flex-col gap-5 md:gap-6 lg:gap-8">
 
             <div className="pl-1">

@@ -23,7 +23,7 @@ export default function NewsDetailPage() {
   }, [id]);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-10">
+    <div className="max-w-2xl mx-auto pt-11.5 px-13 pb-17.5">
       <Link to="/news" className="text-sm text-[#0162D1] hover:underline mb-6 inline-block">
         ← Back to News
       </Link>
