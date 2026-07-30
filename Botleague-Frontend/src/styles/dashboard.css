@@ -110,10 +110,11 @@
 .dash-name-row h2 {
   margin: 0;
   color: #5b62ea;
-  font-size: 37px;
+  font-size: 32px;
   font-weight: 800;
   line-height: 1;
   letter-spacing: 0;
+   font-family: "Poppins", sans-serif;
 }
 
 .dash-active-pill {
@@ -139,7 +140,7 @@
 
 .dash-profile-copy p {
   margin: 7px 0 0;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 500;
   line-height: 1;
 }
@@ -236,13 +237,13 @@
 .dash-stat-ribbon strong {
   font-family: "Sarpanch", "Inter", system-ui, sans-serif;
   font-size: 39px;
-  font-weight: 900;
+  font-weight: 600;
   line-height: 1;
 }
 
 .dash-stat-ribbon span:last-child {
   font-size: 21px;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .dash-team-card {
@@ -275,8 +276,9 @@
   margin: 0 0 4px;
   color: #090909;
   font-size: 23px;
-  font-weight: 800;
+  font-weight: 500;
   line-height: 1;
+  font-family: "Poppins", system-ui, sans-serif;
 }
 
 .dash-team-info p span {
@@ -310,6 +312,7 @@
   border-radius: 5px;
   font-size: 14px;
   font-weight: 700;
+  font-family: "Poppins", system-ui, sans-serif;
 }
 
 .dash-divider {

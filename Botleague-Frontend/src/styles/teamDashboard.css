@@ -354,6 +354,9 @@
   max-width: 58%;
   min-width: 0;
 }
+.teamdash-name-row h2{
+ font-family: "Poppins", sans-serif;
+}
 
 .teamdash-active-pill {
   display: inline-flex;
