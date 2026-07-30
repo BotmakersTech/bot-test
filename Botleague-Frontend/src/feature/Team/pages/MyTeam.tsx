@@ -292,7 +292,7 @@ export default function MyTeam() {
       : robots;
   }, [dashboardTeam?.teamId, resolvedTeam?.id, robots]);
   const primaryRobot = teamRobots[0] ?? null;
-  const sideRobots = teamRobots.slice(1, 3);
+  const sideRobots = teamRobots.slice(1, 4);
   const loading = teamLoading || dashboardLoading || fallbackMembersLoading || sponsorsLoading;
   const error = teamError || dashboardError || fallbackMembersError || sponsorsError;
   const currentTeamName = resolvedTeam?.teamName || "Your Team";
@@ -431,26 +431,13 @@ export default function MyTeam() {
                   <a href="#team-info">{resolvedTeam?.institutionName || location || resolvedTeam?.memberRole || "Team profile details pending"}</a>
                 )}
               </div>
-                 {canEditTeam && (
-                <button
-                  type="button"
-                  onClick={() => navigate("/my-team/edit")}
-                  style={{
-                    float: "right",
-                    background: "linear-gradient(135deg, #0162D1, #8C6CFF)",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "8px",
-                    padding: "6px 16px",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                  }}
-                >
-                  Edit Team
-                </button>
-              )}
             </div>
+
+            {canEditTeam && (
+              <button type="button" className="teamdash-edit-btn" onClick={() => navigate("/my-team/edit")}>
+                Edit Team
+              </button>
+            )}
 
             <div className="teamdash-team-image">
               <TeamLogo src={teamLogo} alt={currentTeamName} />
@@ -493,8 +480,8 @@ export default function MyTeam() {
 
         <section className="teamdash-machines" id="robots">
           <div className="teamdash-machines-head">
-            <h2>Battle Machines</h2>
-            <button type="button" onClick={() => navigate("/robots")}>View all</button>
+            <h2>Team Build</h2>
+            <button type="button" onClick={() => navigate("/robots")}>View All</button>
           </div>
 
           {primaryRobot ? (
