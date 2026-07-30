@@ -69,9 +69,12 @@ export default function AuthLayout({ children, variant = "default" }: Props) {
       )}
 
       {/* ---------- Main Content ---------- */}
-      <div className="relative z-10 flex w-full min-h-screen flex-col items-center justify-center px-4 py-8 ">
+      <div
+        className="relative z-10 flex w-full min-h-screen flex-col items-center justify-center px-4"
+        style={{ paddingTop: "clamp(12px, 3dvh, 32px)", paddingBottom: "clamp(12px, 3dvh, 32px)" }}
+      >
         {/* Logo */}
-        <div className="flex justify-center pb-6">
+        <div className="flex justify-center" style={{ paddingBottom: "clamp(8px, 2dvh, 24px)" }}>
           <img
             src={LOGO_URL}
             alt="BotLeague"

@@ -47,14 +47,26 @@
   .cna-auth-deco { display: block; }
 }
 
-/* ── Login gradient-border card ── */
+/* ── Login gradient-border card ──
+   padding uses clamp(MIN, Ndvh, MAX) instead of the old width-only ladder
+   so it also shrinks on short screens — MAX matches the old widest-screen
+   value (48px/32px at 1400px+) so tall screens render unchanged. */
 .cna-gradient-card--login {
   position: relative;
   z-index: 1;
   width: 100%;
   max-width: 692px;
-  padding-top: 32px;
-  padding-bottom: 24px;
+  padding-top: clamp(14px, 4.5dvh, 48px);
+  padding-bottom: clamp(10px, 3.5dvh, 32px);
+  /* Always-on horizontal inset between the gradient border and the form
+     content — previously the card had none of its own and relied entirely
+     on .cna-login-form-pad, which zeroes out at ≥768px. That was invisible
+     while the card stayed fixed at 692px, but breaks once the card's width
+     can shrink on short desktop windows (inputs/buttons end up flush
+     against the border). */
+  padding-left: clamp(16px, 4vw, 32px);
+  padding-right: clamp(16px, 4vw, 32px);
+  box-sizing: border-box;
   background:
     linear-gradient(#ffffff, #ffffff) padding-box,
     linear-gradient(135deg, rgba(1, 98, 209, 0.75), rgba(140, 108, 255, 0.75)) border-box;
@@ -65,14 +77,23 @@
   align-items: center;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.06);
 }
-@media (min-width: 1024px) {
-  .cna-gradient-card--login { padding-top: 44px; padding-bottom: 30px; }
+/* Narrower on phones/small tablets so the card doesn't stretch edge-to-edge
+   — desktop (≥768px) keeps the existing 692px cap. */
+@media (max-width: 360px) {
+  .cna-gradient-card--login { max-width: 260px; }
 }
-@media (min-width: 1280px) {
-  .cna-gradient-card--login { padding-top: 24px; padding-bottom: 18px; }
+@media (min-width: 361px) and (max-width: 480px) {
+  .cna-gradient-card--login { max-width: 300px; }
 }
-@media (min-width: 1400px) {
-  .cna-gradient-card--login { padding-top: 48px; padding-bottom: 32px; }
+@media (min-width: 481px) and (max-width: 767px) {
+  .cna-gradient-card--login { max-width: 360px; }
+}
+/* Desktop: width now also follows viewport height, not just a flat 692px —
+   a short-but-wide window (e.g. a laptop with the browser resized down)
+   narrows the card instead of just shrinking padding. 80dvh ≈ 692px at the
+   864px-tall target, so normal desktop heights render unchanged. */
+@media (min-width: 768px) {
+  .cna-gradient-card--login { max-width: clamp(420px, 80dvh, 692px); }
 }
 
 /* ── Register gradient-border card ──
@@ -131,27 +152,31 @@
   display: block;
 }
 
-/* ── Login input ── */
+/* ── Login input ──
+   height uses clamp(MIN, Ndvh, MAX) instead of the old width-only ladder
+   so it also shrinks on short screens — MAX matches the old widest-screen
+   value (51px at 1280px+). */
 .cna-login-field-input {
-  height: 42px;
+  height: clamp(42px, 6.4dvh, 56px);
   width: 100%;
+  box-sizing: border-box;
   background-color: rgba(221, 221, 221, 0.42);
   border: 1px solid #BDBDBD;
   border-radius: 12px;
   box-shadow: inset 4px 4px 4px rgba(0, 0, 0, 0.25);
-  padding: 10px 16px;
+  padding: 14px 18px;
   outline: none;
   transition: all 0.2s ease;
   font-family: var(--auth-inter);
 }
 @media (min-width: 768px) {
-  .cna-login-field-input { height: 46px; padding: 12px 18px; }
+  .cna-login-field-input { padding: 16px 20px; }
 }
 @media (min-width: 1024px) {
-  .cna-login-field-input { height: 48px; padding: 14px 20px; }
+  .cna-login-field-input { padding: 18px 22px; }
 }
 @media (min-width: 1280px) {
-  .cna-login-field-input { height: 51px; padding: 16px 20px; }
+  .cna-login-field-input { padding: 20px 24px; }
 }
 .cna-login-field-input:focus {
   border-color: #0162D1;
@@ -209,10 +234,19 @@
    parent wherever the layout allows it. */
 .cna-auth-label-pad { padding-left: 4px; }
 
-.cna-login-form-pad { padding-left: 24px; padding-right: 24px; }
-@media (min-width: 768px) {
-  .cna-login-form-pad { padding-left: 0; padding-right: 0; }
-}
+/* Horizontal inset now lives on .cna-gradient-card--login itself (always
+   on, every width) — this class is kept at 0/0 so it doesn't double up
+   with the card's own padding. */
+.cna-login-form-pad { padding-left: 0; padding-right: 0; }
+
+/* ── Login form sizing — height-driven so the whole form shrinks on short
+   screens instead of the page scrolling. MAX values match the old
+   xl:-breakpoint values, so tall screens (1512×864 target) are unchanged. ── */
+.cna-login-gap-field { gap: clamp(10px, 1.8dvh, 16px); }
+.cna-login-gap-btn   { gap: clamp(8px, 1.6dvh, 14px); }
+.cna-login-label     { font-size: clamp(13px, 2.2dvh, 22px); }
+.cna-login-link      { font-size: clamp(12px, 1.7dvh, 16px); }
+.cna-login-btn       { height: clamp(38px, 5.8dvh, 50px); font-size: clamp(12px, 1.9dvh, 17px); padding: 0 20px; box-sizing: border-box; }
 
 .cna-otp-resend-row { padding-top: 8px; padding-bottom: 8px; }
 @media (min-width: 768px)  { .cna-otp-resend-row { padding-top: 10px; padding-bottom: 10px; } }

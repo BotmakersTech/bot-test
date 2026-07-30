@@ -8,10 +8,10 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <form onSubmit={login.handleLogin} className="flex flex-col gap-3 md:gap-4 w-full">
+    <form onSubmit={login.handleLogin} className="cna-login-gap-field flex flex-col w-full">
       {/* MOBILE */}
       <div className="flex flex-col gap-1.5">
-        <label className="cna-auth-label-pad text-[16px] md:text-[18px] lg:text-[20px] xl:text-[22px] font-medium text-black" style={{ fontFamily: "var(--auth-poppins)" }}>
+        <label className="cna-auth-label-pad cna-login-label font-medium text-black" style={{ fontFamily: "var(--auth-poppins)" }}>
           Mobile number
         </label>
         <div className="relative">
@@ -30,7 +30,7 @@ export default function LoginForm() {
 
       {/* PASSWORD */}
       <div className="flex flex-col gap-1.5">
-        <label className="cna-auth-label-pad text-[16px] md:text-[18px] lg:text-[20px] xl:text-[22px] font-medium text-black" style={{ fontFamily: "var(--auth-poppins)" }}>
+        <label className="cna-auth-label-pad cna-login-label font-medium text-black" style={{ fontFamily: "var(--auth-poppins)" }}>
           Password
         </label>
         <div className="relative">
@@ -54,7 +54,7 @@ export default function LoginForm() {
         </div>
         <a
           href="/forgot-password"
-          className="self-end text-[13px] md:text-[14px] lg:text-[15px] xl:text-[16px] font-semibold text-[#8C6CFF] hover:brightness-125"
+          className="cna-login-link self-end font-semibold text-[#8C6CFF] hover:brightness-125"
         >
           Forgot password?
         </a>
@@ -64,11 +64,11 @@ export default function LoginForm() {
       {login.error && <p className="cna-field-error">{login.error}</p>}
 
       {/* Grouped Action Buttons */}
-      <div className="flex flex-col gap-2 md:gap-3">
+      <div className="cna-login-gap-btn flex flex-col">
         <button
           type="submit"
           disabled={login.isLoading}
-          className="h-[38px] md:h-[40px] lg:h-[42px] xl:h-[44px] w-full rounded-[12px] bg-gradient-to-b from-[#8C6CFF]/[0.75] to-[#0162D1]/[0.75] text-[14px] md:text-[15px] lg:text-[16px] xl:text-[17px] font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="cna-login-btn w-full rounded-[12px] bg-gradient-to-b from-[#8C6CFF]/[0.75] to-[#0162D1]/[0.75] font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-60 disabled:cursor-not-allowed"
           style={{ fontFamily: "var(--auth-poppins)" }}
         >
           {login.isLoading ? "Loading..." : "Login"}
@@ -76,7 +76,7 @@ export default function LoginForm() {
 
         <button
           type="button"
-          className="h-[38px] md:h-[40px] lg:h-[42px] xl:h-[44px] w-full flex items-center justify-center gap-2 rounded-[12px] bg-black/20 transition hover:bg-black/30 text-[14px] md:text-[15px] lg:text-[16px] xl:text-[17px] font-semibold text-[#0162D1]"
+          className="cna-login-btn w-full flex items-center justify-center gap-2 rounded-[12px] bg-black/20 transition hover:bg-black/30 font-semibold text-[#0162D1]"
           style={{ fontFamily: "var(--auth-poppins)" }}
         >
           <FcGoogle className="w-4.5 h-4.5" />
@@ -89,7 +89,7 @@ export default function LoginForm() {
 
         <a
           href="/register"
-          className="cna-gradient-btn flex h-[38px] md:h-[40px] lg:h-[42px] xl:h-[44px] w-full items-center justify-center rounded-[12px] text-[14px] md:text-[15px] lg:text-[16px] xl:text-[17px] font-semibold text-[#0162D1]"
+          className="cna-gradient-btn cna-login-btn flex w-full items-center justify-center rounded-[12px] font-semibold text-[#0162D1]"
           style={{ fontFamily: "var(--auth-poppins)" }}
         >
           Create new account
