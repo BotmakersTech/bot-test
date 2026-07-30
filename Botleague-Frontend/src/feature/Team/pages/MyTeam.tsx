@@ -447,30 +447,38 @@ export default function MyTeam() {
           <aside className="teamdash-squad-panel">
             <h2>Active Squad ({members.filter(isMemberActive).length})</h2>
             <div className="teamdash-member-list">
-              {squadPreview.length > 0 ? (
-                squadPreview.map((member) => {
-                  const name = memberName(member);
-                  const photoSrc = resolveAvatarSrc(member.profilePhotoUrl);
+              {Array.from({ length: 3 }).map((_, i) => {
+                const member = squadPreview[i];
+                if (!member) {
                   return (
-                    <div className="teamdash-member" key={member.membershipId || member.teamMemberId || member.userId || name}>
-                      {photoSrc ? (
-                        <img src={photoSrc} alt={name} className="teamdash-avatar" />
-                      ) : (
-                        <span className="teamdash-avatar teamdash-avatar-fallback">{memberInitials(name)}</span>
-                      )}
+                    <div className="teamdash-member teamdash-member-empty" key={`empty-${i}`}>
+                      <span className="teamdash-avatar teamdash-avatar-empty" />
                       <div className="teamdash-member-info">
-                        <strong>{name}</strong>
-                        <span>{toLabel(member.teamRole || member.role)}</span>
+                        <strong>Empty Slot</strong>
+                        <span>No member yet</span>
                       </div>
-                      <em className={isMemberActive(member) ? "active" : "offline"}>
-                        {isMemberActive(member) ? "Active" : "Offline"}
-                      </em>
                     </div>
                   );
-                })
-              ) : (
-                <div className="teamdash-empty-list">No members loaded yet.</div>
-              )}
+                }
+                const name = memberName(member);
+                const photoSrc = resolveAvatarSrc(member.profilePhotoUrl);
+                return (
+                  <div className="teamdash-member" key={member.membershipId || member.teamMemberId || member.userId || name}>
+                    {photoSrc ? (
+                      <img src={photoSrc} alt={name} className="teamdash-avatar" />
+                    ) : (
+                      <span className="teamdash-avatar teamdash-avatar-fallback">{memberInitials(name)}</span>
+                    )}
+                    <div className="teamdash-member-info">
+                      <strong>{name}</strong>
+                      <span>{toLabel(member.teamRole || member.role)}</span>
+                    </div>
+                    <em className={isMemberActive(member) ? "active" : "offline"}>
+                      {isMemberActive(member) ? "Active" : "Offline"}
+                    </em>
+                  </div>
+                );
+              })}
             </div>
             <button type="button" className="teamdash-manage-btn" onClick={() => navigate("/my-team/members")}>
               Member Management
