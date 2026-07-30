@@ -485,32 +485,40 @@ export default function MyTeam() {
           </div>
 
           {primaryRobot ? (
-            <div className="teamdash-machine-strip">
-              <article className="teamdash-machine-feature">
-                <img src={primaryRobot.robotIMG || fallbackRobot} alt={primaryRobot.robotName} />
-                <span className="teamdash-machine-status">{toLabel(primaryRobot.status)}</span>
-                <div className="teamdash-machine-info">
-                  <h3>{primaryRobot.robotName}</h3>
-                  <p>{toLabel(primaryRobot.category)}</p>
-                  <div className="teamdash-machine-stats">
-                    <div>
-                      <strong>{stats.wins}</strong>
-                      <span>VICTORIES</span>
+            <div className="teamdash-build-stage">
+              {/* LEFT: main robot card */}
+              <div className="teamdash-build-left">
+                <img className="teamdash-build-left-img" src={primaryRobot.robotIMG || fallbackRobot} alt={primaryRobot.robotName} />
+                <div className="teamdash-build-left-overlay" />
+                <div className="teamdash-build-left-active">{toLabel(primaryRobot.status)}</div>
+              </div>
+
+              {/* RIGHT: up to 3 side panels, sit behind the purple banner */}
+              {sideRobots.map((robot, i) => (
+                <div className={"teamdash-build-panel teamdash-build-panel--" + "abc"[i]} key={robot.id}>
+                  <div className="teamdash-build-panel-dark" />
+                  <img className="teamdash-build-panel-img" src={robot.robotIMG || fallbackRobot} alt={robot.robotName} />
+                  <div className="teamdash-build-panel-active">{toLabel(robot.status)}</div>
+                </div>
+              ))}
+
+              {/* PURPLE ANGLED STAT BANNER — overlaps the first side panel */}
+              <div className="teamdash-build-banner">
+                <div className="teamdash-build-banner-inner">
+                  <div className="teamdash-bb-name">{primaryRobot.robotName}</div>
+                  <div className="teamdash-bb-tag">{toLabel(primaryRobot.category)}</div>
+                  <div className="teamdash-bb-stats">
+                    <div className="teamdash-bb-col">
+                      <div className="teamdash-bb-num">{stats.wins}</div>
+                      <div className="teamdash-bb-sub">Victories</div>
                     </div>
-                    <div>
-                      <strong>{toLabel(primaryRobot.weightClass)}</strong>
-                      <span>CLASS</span>
+                    <div className="teamdash-bb-col">
+                      <div className="teamdash-bb-num">{toLabel(primaryRobot.weightClass)}</div>
+                      <div className="teamdash-bb-sub">Class</div>
                     </div>
                   </div>
                 </div>
-              </article>
-
-              {sideRobots.map((robot) => (
-                <article className="teamdash-machine-thumb" key={robot.id}>
-                  <img src={robot.robotIMG || fallbackRobot} alt={robot.robotName} />
-                  <span className="teamdash-machine-status">{toLabel(robot.status)}</span>
-                </article>
-              ))}
+              </div>
             </div>
           ) : (
             <div className="teamdash-empty-machines">
