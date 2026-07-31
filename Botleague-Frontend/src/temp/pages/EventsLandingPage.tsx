@@ -142,8 +142,7 @@ export default function EventsLandingPage() {
 
         <section className="events-section">
           <div className="events-section-header">
-            <span className="events-section-eyebrow">Look Back</span>
-            <h2 className="events-section-title">Previous Events</h2>
+            <h2 className="events-section-title events-section-title--plain">Previous Events</h2>
           </div>
 
           <div className="events-grid">
