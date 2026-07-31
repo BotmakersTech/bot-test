@@ -4,6 +4,7 @@ import { ArrowDown, Calendar, MapPin } from "lucide-react";
 
 import { getLiveEvents, getCompletedEvents, type EventResponse } from "../../feature/Event/api/event.api";
 import droneDecor from "../../assets/Auth/drone.svg";
+import PublicNavbar from "../../shared/components/PublicNavbar";
 import "../../styles/eventsLanding.css";
 
 const INITIAL_FEATURED = 6;
@@ -87,15 +88,7 @@ export default function EventsLandingPage() {
   return (
     <div className="events-landing">
       <section className="events-hero">
-        <nav className="events-hero-nav">
-          <a href="/" className="events-hero-logo">BOT <span>LEAGUE</span></a>
-          <div className="events-hero-links">
-            <a href="/">Home</a>
-            <a href="/events" className="active">Events</a>
-            <a href="/about-us">About Us</a>
-            <a href="/contact-us">Contact Us</a>
-          </div>
-        </nav>
+        <PublicNavbar />
 
         <div className="events-hero-content">
           <span className="events-hero-eyebrow">Events</span>
