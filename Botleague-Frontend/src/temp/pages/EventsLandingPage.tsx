@@ -69,14 +69,29 @@ export default function EventsLandingPage() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([getLiveEvents(), getCompletedEvents()])
-      .then(([live, completed]) => {
+
+    // Promise.allSettled, not Promise.all — a failure in one call (e.g. the
+    // completed-events endpoint erroring) must not blank out the other's
+    // real results. Promise.all rejects as soon as either call rejects, and
+    // the previous empty catch() silently left BOTH lists empty even when
+    // one endpoint had real data — that was the actual bug behind "published
+    // events exist but don't show".
+    Promise.allSettled([getLiveEvents(), getCompletedEvents()])
+      .then(([liveResult, completedResult]) => {
         if (cancelled) return;
-        setFeatured(live);
-        setPrevious(completed);
+        if (liveResult.status === "fulfilled") {
+          setFeatured(liveResult.value);
+        } else {
+          console.error("Failed to load live/upcoming events:", liveResult.reason);
+        }
+        if (completedResult.status === "fulfilled") {
+          setPrevious(completedResult.value);
+        } else {
+          console.error("Failed to load completed events:", completedResult.reason);
+        }
       })
-      .catch(() => { /* leave lists empty — empty states below handle it */ })
       .finally(() => { if (!cancelled) setLoading(false); });
+
     return () => { cancelled = true; };
   }, []);
 
