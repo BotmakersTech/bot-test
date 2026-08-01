@@ -1,0 +1,228 @@
+/* Sarpanch/Poppins/Inter are already loaded app-wide via index.html's
+   Google Fonts <link> — referenced here by name only, no re-import. */
+
+.nwd-page {
+  position: relative;
+  min-height: calc(100vh - 72px);
+  overflow: hidden;
+  background: #ffffff;
+  color: #050505;
+  padding: 46px 52px 70px;
+}
+
+.nwd-shell {
+  position: relative;
+  z-index: 1;
+  width: min(900px, 100%);
+  margin: 0 auto;
+}
+
+.nwd-decor {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.14;
+  display: none;
+}
+
+@media (min-width: 992px) {
+  .nwd-decor {
+    display: block;
+  }
+}
+
+.nwd-decor-plane {
+  top: 60px;
+  right: -20px;
+  width: 240px;
+  transform: rotate(14deg);
+}
+
+.nwd-decor-drone {
+  top: 420px;
+  left: -40px;
+  width: 190px;
+  transform: rotate(-10deg);
+}
+
+.nwd-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 28px;
+  color: #0162d1;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.nwd-back:hover {
+  text-decoration: underline;
+}
+
+.nwd-eyebrow {
+  margin: 0 0 6px;
+  color: #0162d1;
+  font-family: "Sarpanch", sans-serif;
+  font-size: clamp(18px, 2vw, 24px);
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.nwd-hero-title {
+  margin: 0;
+  font-family: "Sarpanch", sans-serif;
+  font-weight: 700;
+  font-size: clamp(34px, 5vw, 58px);
+  text-transform: uppercase;
+  background: linear-gradient(97deg, #0162d1 0%, #8c6cff 92%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.nwd-divider {
+  width: 62%;
+  height: 4px;
+  margin: 28px 0 40px;
+  border-radius: 20px;
+  background: linear-gradient(90deg, #0162d1 0%, #8c6cff 100%);
+  box-shadow: 0 0 10px rgba(120, 120, 255, 0.35), 0 0 18px rgba(160, 110, 255, 0.2);
+}
+
+.nwd-article {
+  position: relative;
+}
+
+.nwd-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.nwd-tag-pill,
+.nwd-pinned-pill {
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-family: "Poppins", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.nwd-tag-pill {
+  color: #0162d1;
+  background: rgba(1, 98, 209, 0.08);
+}
+
+.nwd-pinned-pill {
+  color: #8c6cff;
+  background: rgba(140, 108, 255, 0.12);
+}
+
+.nwd-feature-media {
+  border-radius: 20px;
+  overflow: hidden;
+  height: clamp(220px, 34vw, 420px);
+  margin-bottom: 36px;
+}
+
+.nwd-feature-media img,
+.nwd-feature-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nwd-title {
+  margin: 0 0 10px;
+  color: #0162d1;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-size: clamp(24px, 3vw, 40px);
+  line-height: 1.25;
+}
+
+.nwd-meta {
+  margin: 0 0 28px;
+  color: #6b6b6b;
+  font-family: "Inter", sans-serif;
+  font-size: 15px;
+  font-style: italic;
+}
+
+.nwd-body {
+  margin: 0 0 44px;
+  color: #2b2b2b;
+  font-family: "Inter", sans-serif;
+  font-size: 18px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+.nwd-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 13px;
+  padding: 12px 28px;
+  color: #ffffff;
+  background: linear-gradient(180deg, rgba(1, 98, 209, 0.85), rgba(140, 108, 255, 0.85));
+  box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.18);
+  font-family: "Poppins", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.18s ease;
+}
+
+.nwd-cta-btn:hover {
+  opacity: 0.9;
+  color: #ffffff;
+}
+
+.nwd-loading {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.nwd-spinner {
+  width: 34px;
+  height: 34px;
+  display: block;
+  border-radius: 999px;
+  border: 3px solid rgba(1, 98, 209, 0.2);
+  border-top-color: #0162d1;
+  animation: nwd-spin 0.8s linear infinite;
+}
+
+@keyframes nwd-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.nwd-error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .nwd-page {
+    padding: 34px 22px 56px;
+  }
+
+  .nwd-divider {
+    width: 100%;
+  }
+}

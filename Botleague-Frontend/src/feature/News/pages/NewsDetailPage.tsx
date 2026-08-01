@@ -1,9 +1,26 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+
 import { getNewsDetail, type NewsResponse } from "../api/news.api";
+import planeDecor from "../../../assets/Auth/plane.svg";
+import droneDecor from "../../../assets/Auth/drone.svg";
+import "../styles/newsDetail.css";
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function toLabel(value: string): string {
+  return value
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function readTime(body: string): number {
+  const words = body.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / 200));
 }
 
 export default function NewsDetailPage() {
@@ -22,39 +39,68 @@ export default function NewsDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  const tags = useMemo(() => {
+    if (!item) return [];
+    const labels = [...item.targetSports, ...item.targetAgeCategories].map(toLabel);
+    return labels.length > 0 ? labels : ["Global"];
+  }, [item]);
+
   return (
-    <div className="max-w-2xl mx-auto pt-11.5 px-13 pb-17.5">
-      <Link to="/news" className="text-sm text-[#0162D1] hover:underline mb-6 inline-block">
-        ← Back to News
-      </Link>
+    <div className="nwd-page">
+      <img src={planeDecor} alt="" className="nwd-decor nwd-decor-plane" aria-hidden="true" />
+      <img src={droneDecor} alt="" className="nwd-decor nwd-decor-drone" aria-hidden="true" />
 
-      {loading && (
-        <div className="flex justify-center py-16">
-          <div className="h-8 w-8 rounded-full border-2 border-[#0162D1] border-t-transparent animate-spin" />
-        </div>
-      )}
+      <div className="nwd-shell">
+        <Link to="/news" className="nwd-back">
+          <ArrowLeft size={15} />
+          Back to News
+        </Link>
 
-      {error && <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">{error}</div>}
+        <p className="nwd-eyebrow">News and Blogs</p>
+        <h1 className="nwd-hero-title">From the Arena</h1>
+        <div className="nwd-divider" />
 
-      {item && (
-        <article>
-          {item.isPinned && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#0162D1]/10 text-[#0162D1] font-semibold">PINNED</span>
-          )}
-          <h1 className="text-3xl font-bold text-gray-900 mt-2 mb-2">{item.title}</h1>
-          <p className="text-sm text-gray-400 mb-6">{formatDate(item.publishedAt)}</p>
+        {loading && (
+          <div className="nwd-loading">
+            <span className="nwd-spinner" aria-hidden="true" />
+          </div>
+        )}
 
-          {item.attachmentUrl && (
-            item.attachmentFileType?.startsWith("video/") ? (
-              <video src={item.attachmentUrl} controls className="w-full rounded-xl mb-6" />
-            ) : (
-              <img src={item.attachmentUrl} alt="" className="w-full rounded-xl mb-6" />
-            )
-          )}
+        {error && <div className="nwd-error">{error}</div>}
 
-          <p className="text-base text-gray-700 whitespace-pre-wrap leading-relaxed">{item.body}</p>
-        </article>
-      )}
+        {item && (
+          <article className="nwd-article">
+            <div className="nwd-tag-row">
+              {tags.map((tag) => (
+                <span key={tag} className="nwd-tag-pill">{tag}</span>
+              ))}
+              {item.isPinned && <span className="nwd-pinned-pill">Pinned</span>}
+            </div>
+
+            {item.attachmentUrl && (
+              <div className="nwd-feature-media">
+                {item.attachmentFileType?.startsWith("video/") ? (
+                  <video src={item.attachmentUrl} controls />
+                ) : (
+                  <img src={item.attachmentUrl} alt="" />
+                )}
+              </div>
+            )}
+
+            <h2 className="nwd-title">{item.title}</h2>
+            <p className="nwd-meta">
+              {formatDate(item.publishedAt)} · {readTime(item.body)} min read
+            </p>
+
+            <p className="nwd-body">{item.body}</p>
+
+            <Link to="/news" className="nwd-cta-btn">
+              <span>Back to News</span>
+              <ArrowRight size={16} />
+            </Link>
+          </article>
+        )}
+      </div>
     </div>
   );
 }
