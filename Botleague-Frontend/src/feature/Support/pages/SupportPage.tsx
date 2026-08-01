@@ -1,42 +1,140 @@
 import { useState } from "react"
+import { Trophy, Bot, Users, Globe2, ChevronDown } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
+import "../styles/faqSection.css"
 
-const FAQS = [
+interface FaqItem {
+  q: string
+  a: string
+}
+
+interface FaqSection {
+  icon: LucideIcon
+  title: string
+  items: FaqItem[]
+}
+
+const FAQ_SECTIONS: FaqSection[] = [
   {
-    q: "How do I register my team for an event?",
-    a: "Go to Events in the sidebar, find an open event, and click Register. You'll need an active team with at least the minimum required members and a registered robot.",
+    icon: Trophy,
+    title: "General",
+    items: [
+      {
+        q: "What is BotLeague?",
+        a: "BotLeague is a competitive robotics platform where teams design, build, and battle robots across a variety of events — from beginner-friendly challenges to advanced international tournaments.",
+      },
+      {
+        q: "Who can participate in BotLeague?",
+        a: "Anyone with an interest in robotics can join — students, hobbyists, and professional teams are all welcome. Some events have age or category divisions, which are listed on each competition page.",
+      },
+      {
+        q: "Do I need to be an expert to participate?",
+        a: "Not at all. BotLeague has entry-level challenges designed for first-time builders, alongside advanced tracks for experienced teams, so you can start wherever your skill level is.",
+      },
+    ],
   },
   {
-    q: "How do I create a team?",
-    a: "Navigate to My Team → Create Team. Fill in your team details, add members by their BotLeague ID, and upload a team logo. The team captain can manage membership.",
+    icon: Bot,
+    title: "Competitions",
+    items: [
+      {
+        q: "What types of robotics competitions are available?",
+        a: "We host combat robotics, maze-solving, line-following, sumo-bot, and innovation-showcase competitions, with new formats added throughout the season.",
+      },
+      {
+        q: "Are the rules the same across all BotLeague events?",
+        a: "Core safety and fair-play rules are consistent across every event, but weight classes, build specs, and scoring can vary by competition — always check the specific event rulebook.",
+      },
+      {
+        q: "Can I participate in multiple competitions?",
+        a: "Yes — teams are free to register for as many competitions as they'd like, as long as the schedules don't overlap and each robot meets that event's requirements.",
+      },
+    ],
   },
   {
-    q: "How do I add a robot to my team?",
-    a: "Go to My Robots and click Add Robot. Fill in the specifications — weight, dimensions, type, and sport. The robot will appear when registering for compatible events.",
+    icon: Users,
+    title: "Teams",
+    items: [
+      {
+        q: "Can I create my own team?",
+        a: "Absolutely. You can register a new team from your dashboard, invite members by email, and assign roles like builder, driver, and strategist.",
+      },
+      {
+        q: "Can I join an existing team?",
+        a: "Yes — you can request to join a public team or accept an invite link shared by a team captain from the Teams section.",
+      },
+      {
+        q: "Can I compete without a team?",
+        a: "Some individual-format events allow solo entries, but most BotLeague competitions are designed for teams of two or more to encourage collaboration.",
+      },
+    ],
   },
   {
-    q: "Why can't I see my match schedule?",
-    a: "Match schedules are published by the event organizer after registration closes. Check the Matches section or your event page for updates.",
-  },
-  {
-    q: "How do I contact the event organizer?",
-    a: "Each event has a dedicated chat room for registered teams. You can also send a notification via the event page to reach the organizer.",
-  },
-  {
-    q: "How do I reset my password?",
-    a: "Click Forgot Password on the login page and enter your registered email. You'll receive a reset link within a few minutes.",
-  },
-  {
-    q: "My team member didn't receive a verification email.",
-    a: "Ask them to check their spam folder. They can also re-trigger verification from their profile Settings page.",
-  },
-  {
-    q: "How are rankings calculated?",
-    a: "Rankings are based on match wins, points scored, and tournament bracket progression. The exact formula may vary per event. Check the Rankings page for live standings.",
+    icon: Globe2,
+    title: "International Opportunities",
+    items: [
+      {
+        q: "Can BotLeague help me compete internationally?",
+        a: "Yes — top-performing teams from regional and national events are invited to represent BotLeague at partner international competitions.",
+      },
+      {
+        q: "How can I qualify for international competitions?",
+        a: "Qualification is based on your ranking in national-level events. Standings are updated after every competition and posted on the leaderboard.",
+      },
+      {
+        q: "What is the Battle of Robots pathway?",
+        a: "Battle of Robots is BotLeague's flagship pathway: teams progress from local qualifiers, to nationals, to the international finals, earning points at each stage.",
+      },
+    ],
   },
 ]
 
+function FAQAccordionItem({ question, answer, isOpen, onToggle }: { question: string; answer: string; isOpen: boolean; onToggle: () => void }) {
+  return (
+    <div className={`faq-item ${isOpen ? "open" : ""}`}>
+      <button type="button" className="faq-item-header" onClick={onToggle} aria-expanded={isOpen}>
+        <span className="faq-question">{question}</span>
+        <span className={`faq-chevron ${isOpen ? "open" : ""}`}>
+          <ChevronDown size={18} color="#0162D1" strokeWidth={2} />
+        </span>
+      </button>
+
+      <div className={`faq-answer-wrap ${isOpen ? "open" : ""}`}>
+        <div className="faq-answer-inner">
+          <div className="faq-answer">{answer}</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FAQCard({ icon: Icon, title, items }: FaqSection) {
+  const [openIndex, setOpenIndex] = useState<number | null>(null)
+
+  return (
+    <div className="faq-card">
+      <h3 className="faq-card-title">
+        <span className="faq-card-icon">
+          <Icon size={20} color="#0162D1" strokeWidth={2} />
+        </span>
+        {title}
+      </h3>
+      <div className="faq-items">
+        {items.map((item, i) => (
+          <FAQAccordionItem
+            key={item.q}
+            question={item.q}
+            answer={item.a}
+            isOpen={openIndex === i}
+            onToggle={() => setOpenIndex(openIndex === i ? null : i)}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function SupportPage() {
-  const [open, setOpen] = useState<number | null>(null)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [message, setMessage] = useState("")
@@ -60,25 +158,12 @@ export default function SupportPage() {
 
       {/* FAQ */}
       <section className="mb-10">
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
+        <h2 className="faq-section-title text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
           Frequently Asked Questions
         </h2>
-        <div className="space-y-2">
-          {FAQS.map((faq, i) => (
-            <div key={i} className="rounded-xl bg-white/5 border border-white/10 overflow-hidden">
-              <button
-                onClick={() => setOpen(open === i ? null : i)}
-                className="w-full text-left px-5 py-4 flex items-center justify-between gap-3 hover:bg-white/5 transition-colors"
-              >
-                <span className="text-sm font-medium text-white">{faq.q}</span>
-                <span className="shrink-0 text-gray-500 text-xs">{open === i ? "▲" : "▼"}</span>
-              </button>
-              {open === i && (
-                <div className="px-5 pb-4 text-sm text-gray-400 border-t border-white/5">
-                  <p className="pt-3">{faq.a}</p>
-                </div>
-              )}
-            </div>
+        <div className="faq-grid">
+          {FAQ_SECTIONS.map((section) => (
+            <FAQCard key={section.title} {...section} />
           ))}
         </div>
       </section>
