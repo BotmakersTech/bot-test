@@ -1,7 +1,10 @@
 import { useState } from "react"
 import { Trophy, Bot, Users, Globe2, ChevronDown } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
-import "../styles/faqSection.css"
+import starDecor from "../../../assets/Auth/Star-two.svg"
+import planeDecor from "../../../assets/Auth/plane.svg"
+import droneDecor from "../../../assets/Auth/drone.svg"
+import "../styles/supportPage.css"
 
 interface FaqItem {
   q: string
@@ -150,97 +153,93 @@ export default function SupportPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-white pt-11.5 px-13 pb-17.5 max-w-3xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Support</h1>
-        <p className="text-gray-400 text-sm mt-1">Find answers or reach out to the BotLeague team</p>
-      </div>
+    <div className="support-page">
+      <img src={starDecor} alt="" className="support-decor support-decor-star-1" aria-hidden="true" />
+      <img src={starDecor} alt="" className="support-decor support-decor-star-2" aria-hidden="true" />
+      <img src={starDecor} alt="" className="support-decor support-decor-star-3" aria-hidden="true" />
+      <img src={planeDecor} alt="" className="support-decor support-decor-plane" aria-hidden="true" />
+      <img src={droneDecor} alt="" className="support-decor support-decor-drone" aria-hidden="true" />
 
-      {/* FAQ */}
-      <section className="mb-10">
-        <h2 className="faq-section-title text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
-          Frequently Asked Questions
-        </h2>
-        <div className="faq-grid">
-          {FAQ_SECTIONS.map((section) => (
-            <FAQCard key={section.title} {...section} />
-          ))}
+      <div className="support-shell">
+        <div className="support-heading">
+          <h1 className="support-title">Support</h1>
+          <p className="support-subtitle">Find answers or reach out to the BotLeague team</p>
         </div>
-      </section>
 
-      {/* Contact form */}
-      <section>
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
-          Contact Support
-        </h2>
-
-        {submitted ? (
-          <div className="rounded-2xl bg-green-500/10 border border-green-500/20 p-8 text-center">
-            <div className="text-4xl mb-3">✅</div>
-            <h3 className="text-lg font-semibold text-white mb-1">Message Sent</h3>
-            <p className="text-sm text-gray-400">
-              Your email client should have opened. We'll reply to you within 1–2 business days.
-            </p>
-            <button
-              onClick={() => setSubmitted(false)}
-              className="mt-4 text-sm text-orange-400 hover:text-orange-300 transition"
-            >
-              Send another message
-            </button>
+        {/* FAQ */}
+        <section className="mb-10">
+          <h2 className="support-section-title">Frequently Asked Questions</h2>
+          <div className="faq-grid">
+            {FAQ_SECTIONS.map((section) => (
+              <FAQCard key={section.title} {...section} />
+            ))}
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="rounded-2xl bg-white/5 border border-white/10 p-6 space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-gray-400 mb-1.5">Your Name</label>
-                <input
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Full name"
-                  className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-orange-500/50"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-400 mb-1.5">Email Address</label>
-                <input
-                  required
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-orange-500/50"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1.5">Message</label>
-              <textarea
-                required
-                rows={5}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Describe your issue or question in detail…"
-                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-orange-500/50 resize-none"
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-gray-600">
-                Or email us directly at{" "}
-                <a href="mailto:developers.botmakers@gmail.com" className="text-orange-400 hover:underline">
-                  developers.botmakers@gmail.com
-                </a>
+        </section>
+
+        {/* Contact form */}
+        <section>
+          <h2 className="support-section-title">Contact Support</h2>
+
+          {submitted ? (
+            <div className="support-success-card">
+              <div className="text-4xl mb-3">✅</div>
+              <h3 className="support-success-title">Message Sent</h3>
+              <p className="support-success-text">
+                Your email client should have opened. We'll reply to you within 1–2 business days.
               </p>
-              <button
-                type="submit"
-                className="rounded-xl bg-[#fa4715] hover:bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition"
-              >
-                Send Message
+              <button type="button" onClick={() => setSubmitted(false)} className="support-again-btn">
+                Send another message
               </button>
             </div>
-          </form>
-        )}
-      </section>
+          ) : (
+            <form onSubmit={handleSubmit} className="support-contact-card space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="support-field-label">Your Name</label>
+                  <input
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Full name"
+                    className="support-input"
+                  />
+                </div>
+                <div>
+                  <label className="support-field-label">Email Address</label>
+                  <input
+                    required
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="support-input"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="support-field-label">Message</label>
+                <textarea
+                  required
+                  rows={5}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Describe your issue or question in detail…"
+                  className="support-input resize-none"
+                />
+              </div>
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <p className="support-email-note">
+                  Or email us directly at{" "}
+                  <a href="mailto:developers.botmakers@gmail.com">developers.botmakers@gmail.com</a>
+                </p>
+                <button type="submit" className="support-submit-btn">
+                  Send Message
+                </button>
+              </div>
+            </form>
+          )}
+        </section>
+      </div>
     </div>
   )
 }

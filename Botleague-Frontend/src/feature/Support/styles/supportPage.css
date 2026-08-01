@@ -1,0 +1,372 @@
+/* Sarpanch/Poppins/Inter are already loaded app-wide via index.html's
+   Google Fonts <link> — referenced here by name only, no re-import. */
+
+.support-page {
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: #fbfbfb;
+  color: #111111;
+  padding: 46px 52px 70px;
+}
+
+.support-shell {
+  position: relative;
+  z-index: 1;
+  width: min(768px, 100%);
+  margin: 0 auto;
+}
+
+/* ---------------- Decorative background shapes ---------------- */
+
+.support-decor {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  display: none;
+  background: linear-gradient(135deg, #0162d1, #8c6cff);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  mask-position: center;
+  opacity: 0.9;
+  z-index: 0;
+}
+
+@media (min-width: 992px) {
+  .support-decor {
+    display: block;
+  }
+}
+
+.support-decor-star-1 {
+  top: 70px;
+  right: 8%;
+  width: 44px;
+  height: 44px;
+  transform: rotate(10deg);
+}
+
+.support-decor-star-2 {
+  top: 48%;
+  left: 3%;
+  width: 58px;
+  height: 58px;
+  transform: rotate(-8deg);
+}
+
+.support-decor-star-3 {
+  bottom: 16%;
+  right: 5%;
+  width: 38px;
+  height: 38px;
+  transform: rotate(18deg);
+}
+
+.support-decor-plane {
+  top: 8%;
+  left: 2.5%;
+  width: 110px;
+  height: 110px;
+  transform: rotate(-15deg);
+}
+
+.support-decor-drone {
+  bottom: 6%;
+  right: 2%;
+  width: 130px;
+  height: 130px;
+}
+
+/* ---------------- Header ---------------- */
+
+.support-heading {
+  margin-bottom: 32px;
+}
+
+.support-title {
+  margin: 0;
+  font-family: "Sarpanch", sans-serif;
+  font-weight: 800;
+  font-size: clamp(26px, 4vw, 34px);
+  color: #0162d1;
+  letter-spacing: 0.5px;
+}
+
+.support-subtitle {
+  margin: 6px 0 0;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  color: #4f4f4f;
+}
+
+.support-section-title {
+  margin: 0 0 16px;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0162d1;
+}
+
+/* ---------------- FAQ cards ---------------- */
+
+.faq-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.faq-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: clamp(20px, 4vw, 32px);
+  border: 1px solid transparent;
+  background-image:
+    linear-gradient(#fff, #fff),
+    linear-gradient(180deg, #0162d1, #8c6cff);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+.faq-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 20px;
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+  font-size: clamp(17px, 2.6vw, 21px);
+  color: #0162d1;
+}
+
+.faq-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 8px;
+  background: rgba(1, 98, 209, 0.08);
+}
+
+.faq-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.faq-item {
+  background: #ffffff;
+  border: 1px solid transparent;
+  background-image:
+    linear-gradient(#fff, #fff),
+    linear-gradient(90deg, #0162d1, #8c6cff);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.faq-item:hover,
+.faq-item.open {
+  box-shadow: 0 4px 14px rgba(1, 98, 209, 0.18);
+}
+
+.faq-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 14px 18px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.faq-question {
+  font-family: "Inter", sans-serif;
+  font-size: clamp(14px, 2.1vw, 16px);
+  font-weight: 500;
+  color: #111111;
+  line-height: 1.4;
+}
+
+.faq-chevron {
+  display: inline-flex;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.faq-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* Grid-rows trick gives an accurate auto-height expand/collapse
+   animation without measuring content height in JS. */
+.faq-answer-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.3s ease, opacity 0.25s ease;
+}
+
+.faq-answer-wrap.open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.faq-answer-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.faq-answer {
+  padding: 4px 18px 16px;
+  border-top: 1px solid #efefef;
+  padding-top: 12px;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: #333333;
+}
+
+/* ---------------- Contact form ---------------- */
+
+.support-contact-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: clamp(20px, 4vw, 28px);
+  border: 1px solid transparent;
+  background-image:
+    linear-gradient(#fff, #fff),
+    linear-gradient(180deg, #0162d1, #8c6cff);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+.support-field-label {
+  display: block;
+  margin-bottom: 6px;
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4f4f4f;
+}
+
+.support-input {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid #d7d7d7;
+  background: #ffffff;
+  padding: 10px 14px;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  color: #111111;
+}
+
+.support-input::placeholder {
+  color: #a8a8a8;
+}
+
+.support-input:focus {
+  outline: none;
+  border-color: #0162d1;
+}
+
+.support-submit-btn {
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 22px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0162d1, #8c6cff);
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.18s ease;
+}
+
+.support-submit-btn:hover {
+  opacity: 0.9;
+}
+
+.support-email-note {
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  color: #7a7a7a;
+}
+
+.support-email-note a {
+  color: #0162d1;
+  font-weight: 600;
+}
+
+.support-success-card {
+  text-align: center;
+  border-radius: 20px;
+  padding: 32px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.support-success-title {
+  margin: 4px 0 6px;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+  color: #111111;
+}
+
+.support-success-text {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  color: #4f4f4f;
+}
+
+.support-again-btn {
+  margin-top: 14px;
+  border: 0;
+  background: transparent;
+  color: #0162d1;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.support-again-btn:hover {
+  text-decoration: underline;
+}
+
+/* ---------------- Responsive ---------------- */
+
+@media (max-width: 640px) {
+  .support-page {
+    padding: 34px 22px 56px;
+  }
+
+  .faq-card {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .faq-item-header {
+    padding: 12px 14px;
+  }
+
+  .faq-answer {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
