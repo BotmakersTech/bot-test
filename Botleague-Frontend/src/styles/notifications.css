@@ -28,7 +28,7 @@
 }
 
 .notif-heading-row h1 {
-  margin: 0 0 0 138px;
+  margin: 0;
   color: #3569d2;
   font-family: "Sarpanch", "Inter", system-ui, sans-serif;
   font-size: clamp(32px, 3vw, 48px);
@@ -54,7 +54,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 30px;
-  margin: 0 0 48px 134px;
+  margin: 0 0 48px;
 }
 
 .notif-tab {
@@ -95,7 +95,6 @@
 
 .notif-section {
   position: relative;
-  margin-left: 130px;
 }
 
 .notif-section h2 {
@@ -277,12 +276,12 @@
 
 .notif-divider {
   height: 1px;
-  margin: 46px 0 38px 122px;
+  margin: 46px 0 38px;
   background: #e2e2e2;
 }
 
 .notif-state {
-  margin: 90px 0 0 130px;
+  margin: 90px 0 0;
   color: #3569d2;
   font-size: 24px;
   font-weight: 600;
@@ -361,13 +360,6 @@
     padding: 46px 32px 72px;
   }
 
-  .notif-heading-row h1,
-  .notif-tabs,
-  .notif-section,
-  .notif-state {
-    margin-left: 0;
-  }
-
   .notif-row {
     grid-template-columns: 1fr;
     gap: 14px;
@@ -378,10 +370,6 @@
     min-width: 0;
     justify-content: flex-start;
     padding-left: 136px;
-  }
-
-  .notif-divider {
-    margin-left: 0;
   }
 }
 
