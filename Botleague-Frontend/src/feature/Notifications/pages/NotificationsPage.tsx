@@ -17,6 +17,7 @@ import {
 import useTeamInvitations from "../../Team/hooks/useTeamInvitations";
 import type { TeamInvitationResponse } from "../../UserDashboard/api/userMembership.api";
 import ProfileIncompleteModal from "../../../shared/components/ProfileIncompleteModal";
+import { getPreview, getFullText, isTruncated } from "../utils/notificationText";
 
 type TabKey = "all" | "team" | "join" | "sport" | "match";
 
@@ -174,13 +175,40 @@ function getActionKind(notification: NotificationResponse) {
 }
 
 function NotificationText({ notification }: { notification: NotificationResponse }) {
+  const [expanded, setExpanded] = useState(false);
+  // Only offer "Show more" when there's no actionUrl to click through to —
+  // when one exists, clicking the row already reveals full detail.
+  const canExpand = !notification.actionUrl && isTruncated(notification);
+
   return (
     <p className="notif-row-text">
       <strong>{notification.title}</strong>
       {notification.message && (
         <>
           <span> : </span>
-          <span className="notif-message">{notification.message}</span>
+          <span className="notif-message">
+            {expanded ? getFullText(notification) : getPreview(notification)}
+          </span>
+          {canExpand && (
+            <span
+              className="notif-show-more"
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded((v) => !v);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setExpanded((v) => !v);
+                }
+              }}
+            >
+              {expanded ? "Show less" : "Show more"}
+            </span>
+          )}
         </>
       )}
       <time>{relativeTime(notification.createdAt)}</time>

@@ -193,6 +193,19 @@
   white-space: nowrap;
 }
 
+.notif-show-more {
+  margin-left: 10px;
+  color: #3569d2;
+  font-size: 0.7em;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.notif-show-more:hover {
+  text-decoration: underline;
+}
+
 .notif-actions {
   position: relative;
   z-index: 2;

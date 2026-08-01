@@ -211,7 +211,10 @@ export default function Navbar() {
 
   useEffect(() => {
     dispatch(fetchUnreadCount())
-    const interval = setInterval(() => dispatch(fetchUnreadCount()), 30_000)
+    // unreadCount already updates instantly via the realtime pushNotification
+    // reducer — this poll is just a reconciliation safety net for reconnect
+    // gaps / multi-tab drift, so it doesn't need to run every 30s.
+    const interval = setInterval(() => dispatch(fetchUnreadCount()), 5 * 60_000)
     return () => clearInterval(interval)
   }, [dispatch])
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Toaster } from "react-hot-toast";
 
 import type { RootState } from "../app/store";
 import { loginStart, loginSuccess, loginFailure } from "../feature/Auth/store/authSlice";
@@ -10,6 +11,7 @@ import { getMyTeam } from "../feature/Team/api/team.api";
 import Layout from "../routes/AppRouter";
 import { RealtimeProvider } from "../shared/realtime/RealtimeProvider";
 import { useNotificationRealtime } from "../shared/realtime/useNotificationRealtime";
+import { useNotificationToast } from "../shared/realtime/useNotificationToast";
 
 // Refresh this many seconds before the token actually expires.
 const REFRESH_BEFORE_EXPIRY_S = 120;
@@ -17,7 +19,8 @@ const REFRESH_BEFORE_EXPIRY_S = 120;
 /** Mounts always-on subscriptions that must live for the session lifetime. */
 function GlobalRealtimeSubscriptions() {
   useNotificationRealtime();
-  return null;
+  useNotificationToast();
+  return <Toaster position="top-right" gutter={10} />;
 }
 
 function App() {
