@@ -186,6 +186,7 @@
 }
 
 .notif-row-text time {
+  font-size: 24px;
   margin-left: 14px;
   color: #737373;
   font-style: italic;
