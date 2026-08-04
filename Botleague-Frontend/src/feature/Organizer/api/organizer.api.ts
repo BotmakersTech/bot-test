@@ -66,6 +66,7 @@ export interface OrganizerTeamRegistration {
   teamLogoUrl?: string;
   robotId?: string;
   robotName?: string;
+  status?: string;
   lineup?: { id: string; fullName: string; role?: string }[];
 }
 

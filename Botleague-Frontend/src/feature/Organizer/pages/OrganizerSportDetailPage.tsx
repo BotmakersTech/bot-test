@@ -11,6 +11,7 @@ import {
   type CreateEventSportRequest, ensureTeamChatRoom,
   type SportChangeRequest, type SportUpdateResult,
   getSportChangeRequests, approveSportChangeRequest, rejectSportChangeRequest,
+  updateRegistrationStatus,
 } from "../api/organizer.api"
 import SportMediaField from "../components/SportMediaField"
 import SportAnnouncementForm from "../components/SportAnnouncementForm"
@@ -57,6 +58,7 @@ interface TeamReg {
   teamLogoUrl?: string
   robotId?: string
   robotName?: string
+  status?: string
   lineup?: TeamPlayer[]
 }
 
@@ -162,13 +164,36 @@ function StatusPill({ status }: { status?: string }) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// FIELD  (sport-details grid cell — hidden entirely when there's no value)
+// ─────────────────────────────────────────────────────────────
+
+function Field({ label, value }: { label: string; value?: string | number | null }) {
+  if (value == null || value === "") return null
+  return (
+    <div>
+      <div className="sdt-field-label">{label}</div>
+      <div className="sdt-field-value">{value}</div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────
 // TEAM CARD
 // ─────────────────────────────────────────────────────────────
 
-function TeamCard({ team, index, eventId }: { team: TeamReg; index: number; eventId?: string }) {
+function TeamCard({
+  team, index, eventId, onStatusChange,
+}: {
+  team: TeamReg
+  index: number
+  eventId?: string
+  onStatusChange?: (registrationId: string, status: string) => Promise<void>
+}) {
   const [open, setOpen] = React.useState(false)
   const [messaging, setMessaging] = React.useState(false)
+  const [statusBusy, setStatusBusy] = React.useState(false)
   const playerCount = team.lineup?.length ?? 0
+  const status = team.status?.toUpperCase()
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
 
@@ -188,6 +213,17 @@ function TeamCard({ team, index, eventId }: { team: TeamReg; index: number; even
     }
   }
 
+  const handleStatusChange = async (e: React.MouseEvent, newStatus: string) => {
+    e.stopPropagation()
+    if (!onStatusChange) return
+    setStatusBusy(true)
+    try {
+      await onStatusChange(team.id, newStatus)
+    } finally {
+      setStatusBusy(false)
+    }
+  }
+
   return (
     <div className="sdt-team-card">
       {/* HEADER */}
@@ -198,6 +234,7 @@ function TeamCard({ team, index, eventId }: { team: TeamReg; index: number; even
           alignItems: "center",
           justifyContent: "space-between",
           gap: "10px",
+          flexWrap: "wrap",
           cursor: playerCount > 0 ? "pointer" : "default"
         }}
         onClick={() => playerCount > 0 && setOpen(o => !o)}
@@ -216,9 +253,12 @@ function TeamCard({ team, index, eventId }: { team: TeamReg; index: number; even
           </div>
 
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 700, fontSize: "0.88rem", color: TEXT }}>
-              <span style={{ color: MUTED, fontSize: "0.7rem", marginRight: "6px" }}>#{index + 1}</span>
-              {team.teamName}
+            <div style={{ fontWeight: 700, fontSize: "0.88rem", color: TEXT, display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+              <span>
+                <span style={{ color: MUTED, fontSize: "0.7rem", marginRight: "6px" }}>#{index + 1}</span>
+                {team.teamName}
+              </span>
+              {status && <span className={`sdt-status-pill st-${status.toLowerCase()}`}>{status.replace(/_/g, " ")}</span>}
             </div>
             {team.robotName && (
               <div style={{
@@ -248,26 +288,32 @@ function TeamCard({ team, index, eventId }: { team: TeamReg; index: number; even
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+        <div className="sdt-reg-actions" style={{ flexShrink: 0 }}>
+          {status === "REGISTERED" && onStatusChange && (
+            <>
+              <button className="sdt-reg-action-btn sdt-reg-waitlist" disabled={statusBusy} onClick={(e) => handleStatusChange(e, "WAITLISTED")}>
+                Waitlist
+              </button>
+              <button className="sdt-reg-action-btn sdt-reg-reject" disabled={statusBusy} onClick={(e) => handleStatusChange(e, "REJECTED")}>
+                Reject
+              </button>
+            </>
+          )}
+          {status === "WAITLISTED" && onStatusChange && (
+            <button className="sdt-reg-action-btn sdt-reg-accept" disabled={statusBusy} onClick={(e) => handleStatusChange(e, "REGISTERED")}>
+              Accept
+            </button>
+          )}
           {eventId && team.teamId && (
             <button
+              className="sdt-reg-action-btn sdt-reg-message"
               onClick={handleMessage}
               disabled={messaging}
               title="Message this team"
-              style={{
-                display: "flex", alignItems: "center", gap: "5px",
-                background: "rgba(75,134,232,0.1)",
-                border: "1px solid rgba(75,134,232,0.3)",
-                color: ORG.blueHeading,
-                borderRadius: "6px",
-                padding: "4px 9px",
-                fontSize: "0.68rem",
-                fontWeight: 700,
-                cursor: messaging ? "not-allowed" : "pointer",
-                opacity: messaging ? 0.6 : 1,
-              }}
             >
-              <MessageCircle size={11} /> Message
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                <MessageCircle size={11} /> Message
+              </span>
             </button>
           )}
           {playerCount > 0 && (
@@ -1124,6 +1170,7 @@ export default function OrganizerSportDetailPage() {
   const [saveResultMsg,       setSaveResultMsg]       = React.useState<{ text: string; pending: boolean } | null>(null)
   const [pendingPanelKey,     setPendingPanelKey]     = React.useState(0)
   const [showAnnounceForm,    setShowAnnounceForm]    = React.useState(false)
+  const [regActionError,      setRegActionError]      = React.useState<string | null>(null)
 
   const {
     event,
@@ -1138,9 +1185,17 @@ export default function OrganizerSportDetailPage() {
   // ── derive the specific sport from event.sports ──
   const sport = event?.sports?.find((s: any) => s.id === sportId) as SportDetail | undefined
 
+  // sport.registrations now includes every status (WAITLISTED/REJECTED/etc.),
+  // not just REGISTERED — the top stat cards should only count teams that are
+  // actually competing, while the list below shows everyone so the sport
+  // head can accept/reject/waitlist.
   const registrations: TeamReg[] = sport?.registrations ?? []
-  const totalTeams   = registrations.length
-  const totalPlayers = registrations.reduce((n, t) => n + (t.lineup?.length ?? 0), 0)
+  const activeRegistrations = registrations.filter(t => {
+    const s = t.status?.toUpperCase()
+    return !s || s === "REGISTERED" || s === "CHECKED_IN"
+  })
+  const totalTeams   = activeRegistrations.length
+  const totalPlayers = activeRegistrations.reduce((n, t) => n + (t.lineup?.length ?? 0), 0)
 
   const isOpen = sport?.status?.toUpperCase() === "REGISTRATION_OPEN"
 
@@ -1172,6 +1227,22 @@ export default function OrganizerSportDetailPage() {
       // error already set in the hook — no console noise in production
     } finally {
       setRegistrationLoading(false)
+    }
+  }
+
+  // ── accept / reject / waitlist a registration ──
+  const handleRegistrationStatusChange = async (registrationId: string, status: string) => {
+    if (!eventId) return
+    setRegActionError(null)
+    try {
+      await updateRegistrationStatus(eventId, registrationId, status)
+      await refetch()
+    } catch (err: unknown) {
+      const isResponseError = typeof err === "object" && err !== null && "response" in err
+      const responseData = isResponseError
+        ? (err as { response?: { data?: { message?: string; error?: string } } }).response?.data
+        : undefined
+      setRegActionError(responseData?.message || responseData?.error || "Couldn't update the registration — try again")
     }
   }
 
@@ -1388,32 +1459,32 @@ export default function OrganizerSportDetailPage() {
 
           {/* meta fields — real sport specs, styled in the fields-box treatment */}
           <div className="sdt-fields-box">
-            <div><div className="sdt-field-label">Age Group</div><div className="sdt-field-value">{toLabel(sport.ageGroup)}</div></div>
-            <div><div className="sdt-field-label">Competition Type</div><div className="sdt-field-value">{toLabel(sport.competitionType)}</div></div>
-            <div><div className="sdt-field-label">Format</div><div className="sdt-field-value">{toLabel(sport.formatType)}</div></div>
-            <div><div className="sdt-field-label">Control Type</div><div className="sdt-field-value">{toLabel(sport.controlType)}</div></div>
-            <div><div className="sdt-field-label">Weight Class</div><div className="sdt-field-value">{toLabel(sport.weightClass)}</div></div>
-            <div><div className="sdt-field-label">Weight Limit</div><div className="sdt-field-value">{sport.weightLimitKg != null ? `${sport.weightLimitKg} kg` : "—"}</div></div>
-            <div><div className="sdt-field-label">Max Bots/Team</div><div className="sdt-field-value">{sport.maxBotsPerTeam ?? "—"}</div></div>
-            <div>
-              <div className="sdt-field-label">Dimensions (L×W×H)</div>
-              <div className="sdt-field-value">
-                {sport.maxLengthCm != null && sport.maxWidthCm != null && sport.maxHeightCm != null
+            <Field label="Age Group" value={sport.ageGroup ? toLabel(sport.ageGroup) : null} />
+            <Field label="Competition Type" value={sport.competitionType ? toLabel(sport.competitionType) : null} />
+            <Field label="Format" value={sport.formatType ? toLabel(sport.formatType) : null} />
+            <Field label="Control Type" value={sport.controlType ? toLabel(sport.controlType) : null} />
+            <Field label="Weight Class" value={sport.weightClass ? toLabel(sport.weightClass) : null} />
+            <Field label="Weight Limit" value={sport.weightLimitKg != null ? `${sport.weightLimitKg} kg` : null} />
+            <Field label="Max Bots/Team" value={sport.maxBotsPerTeam ?? null} />
+            <Field
+              label="Dimensions (L×W×H)"
+              value={
+                sport.maxLengthCm != null && sport.maxWidthCm != null && sport.maxHeightCm != null
                   ? `${sport.maxLengthCm}×${sport.maxWidthCm}×${sport.maxHeightCm} cm`
-                  : "—"}
-              </div>
-            </div>
-            <div>
-              <div className="sdt-field-label">Team Size</div>
-              <div className="sdt-field-value">
-                {sport.minTeamSize != null && sport.maxTeamSize != null
+                  : null
+              }
+            />
+            <Field
+              label="Team Size"
+              value={
+                sport.minTeamSize != null && sport.maxTeamSize != null
                   ? `${sport.minTeamSize} – ${sport.maxTeamSize} players`
-                  : "—"}
-              </div>
-            </div>
-            <div><div className="sdt-field-label">Max Teams</div><div className="sdt-field-value">{sport.maxTeams ?? "—"}</div></div>
-            <div><div className="sdt-field-label">Entry Fee</div><div className="sdt-field-value">{formatCurrency(sport.entryFee)}</div></div>
-            <div><div className="sdt-field-label">Prize Pool</div><div className="sdt-field-value">{formatCurrency(sport.prizeMoney)}</div></div>
+                  : null
+              }
+            />
+            <Field label="Max Teams" value={sport.maxTeams ?? null} />
+            <Field label="Entry Fee" value={sport.entryFee != null ? formatCurrency(sport.entryFee) : null} />
+            <Field label="Prize Pool" value={sport.prizeMoney != null ? formatCurrency(sport.prizeMoney) : null} />
           </div>
 
           {/* extra rules */}
@@ -1478,12 +1549,14 @@ export default function OrganizerSportDetailPage() {
         <div className="sdt-panel-header">
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <span className="sdt-panel-title">REGISTERED TEAMS</span>
-            <span className="sdt-panel-count">{totalTeams}</span>
+            <span className="sdt-panel-count">{registrations.length}</span>
           </div>
           <span style={{ fontSize: "0.72rem", color: MUTED, fontFamily: "Inter, sans-serif" }}>
-            {totalPlayers} total player{totalPlayers !== 1 ? "s" : ""}
+            {totalPlayers} confirmed player{totalPlayers !== 1 ? "s" : ""}
           </span>
         </div>
+
+        {regActionError && <div className="sdt-banner error" style={{ margin: "0 20px" }}>{regActionError}</div>}
 
         <div className="sdt-panel-body">
           {registrations.length === 0 ? (
@@ -1500,9 +1573,9 @@ export default function OrganizerSportDetailPage() {
               </div>
             </div>
           ) : (
-            <div className="sdt-team-grid">
+            <div className="sdt-team-list">
               {registrations.map((team, i) => (
-                <TeamCard key={team.id} team={team} index={i} eventId={eventId} />
+                <TeamCard key={team.id} team={team} index={i} eventId={eventId} onStatusChange={handleRegistrationStatusChange} />
               ))}
             </div>
           )}

@@ -29,7 +29,6 @@ import com.botleague.backend.events.entity.EventRegistrationLineup;
 import com.botleague.backend.events.entity.EventSports;
 import com.botleague.backend.events.entity.SportRegistration;
 import com.botleague.backend.events.enums.ControlType;
-import com.botleague.backend.events.enums.RegistrationStatus;
 import com.botleague.backend.events.repository.EventRegistrationLineupRepository;
 import com.botleague.backend.events.repository.EventRepository;
 import com.botleague.backend.events.repository.EventSportsRepository;
@@ -180,17 +179,14 @@ public class AdminService {
 
             // =========================================
             // GET TEAM REGISTRATIONS
-            // Uses SportRegistrationRepository.
-            // findByEventSportIdAndStatus() — same
-            // method name, now returns SportRegistration.
+            // All statuses, not just REGISTERED — the sport-head/organiser/
+            // admin roster view needs to see and act on WAITLISTED/REJECTED
+            // entries too (accept/reject/waitlist), same reasoning as
+            // OrganizerController.getAllRegistrationsForSport's unfiltered fetch.
             // =========================================
 
             List<SportRegistration> registrations =
-                    sportRegistrationRepository
-                            .findByEventSportIdAndStatus(
-                                    sport.getId(),
-                                    RegistrationStatus.REGISTERED
-                            );
+                    sportRegistrationRepository.findByEventSportId(sport.getId());
 
             List<AdminRegisteredTeamResponse> registrationDtos = new ArrayList<>();
 

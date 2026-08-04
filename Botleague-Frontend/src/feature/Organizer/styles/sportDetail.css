@@ -342,12 +342,12 @@
 }
 .sdt-action-rank:hover { background: #024fac; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(1, 98, 209, 0.35); }
 
-/* ---------------- Registered teams / robots ---------------- */
+/* ---------------- Registered teams / robots (list view) ---------------- */
 
-.sdt-team-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 14px;
+.sdt-team-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .sdt-team-card {
@@ -359,9 +359,62 @@
 }
 
 .sdt-team-card:hover {
-  box-shadow: 0 8px 20px rgba(140, 108, 255, 0.2);
-  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(140, 108, 255, 0.16);
 }
+
+.sdt-status-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.sdt-status-pill.st-registered { background: rgba(0, 178, 24, 0.1); color: var(--sdt-green); }
+.sdt-status-pill.st-waitlisted { background: rgba(216, 173, 0, 0.14); color: #8a6d00; }
+.sdt-status-pill.st-rejected { background: rgba(252, 76, 76, 0.1); color: var(--sdt-red); }
+.sdt-status-pill.st-checked_in { background: rgba(1, 98, 209, 0.1); color: var(--sdt-primary); }
+.sdt-status-pill.st-withdrawn,
+.sdt-status-pill.st-cancelled { background: rgba(107, 114, 128, 0.12); color: #6b7280; }
+.sdt-status-pill.st-pending,
+.sdt-status-pill.st-confirmed { background: rgba(140, 108, 255, 0.1); color: var(--sdt-purple); }
+
+.sdt-reg-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sdt-reg-action-btn {
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+  background: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.sdt-reg-action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.sdt-reg-accept { background: rgba(0, 178, 24, 0.1); border-color: rgba(0, 178, 24, 0.3); color: var(--sdt-green); }
+.sdt-reg-accept:hover:not(:disabled) { background: var(--sdt-green); color: #fff; }
+
+.sdt-reg-waitlist { background: rgba(216, 173, 0, 0.1); border-color: rgba(216, 173, 0, 0.3); color: #8a6d00; }
+.sdt-reg-waitlist:hover:not(:disabled) { background: var(--sdt-gold); color: #fff; }
+
+.sdt-reg-reject { background: rgba(252, 76, 76, 0.08); border-color: rgba(252, 76, 76, 0.25); color: var(--sdt-red); }
+.sdt-reg-reject:hover:not(:disabled) { background: var(--sdt-red); color: #fff; }
+
+.sdt-reg-message { background: rgba(1, 98, 209, 0.08); border-color: rgba(1, 98, 209, 0.25); color: var(--sdt-primary); }
+.sdt-reg-message:hover:not(:disabled) { background: var(--sdt-primary); color: #fff; }
 
 .sdt-empty-state {
   text-align: center;
