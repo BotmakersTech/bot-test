@@ -11,6 +11,7 @@ import org.hibernate.type.SqlTypes;
 
 import com.botleague.backend.auth.enums.AccountStatus;
 import com.botleague.backend.auth.enums.AccountType;
+import com.botleague.backend.auth.enums.AuthProvider;
 import com.botleague.backend.auth.enums.PhoneVerification;
 
 @Entity
@@ -35,7 +36,9 @@ public class User {
     @Column(unique = true)
     private String email;
 
-    @Column(unique = true, nullable = false)
+    // Nullable: a Google-signup user has no phone until they complete the
+    // mandatory post-login phone-verification step.
+    @Column(unique = true)
     private String phone;
 
     // Guard rail: this entity is never directly serialized today (every
@@ -44,6 +47,14 @@ public class User {
     @JsonIgnore
     @Column(name = "password_hash")
     private String passwordHash;
+
+    // Links this account to a Google identity. Null for password-only accounts.
+    @Column(name = "google_id", unique = true)
+    private String googleId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auth_provider", nullable = false)
+    private AuthProvider authProvider;
 
     // =========================
     // EMAIL UPDATE VERIFICATION
@@ -78,8 +89,10 @@ public class User {
     @Column(name = "account_status", nullable = false)
     private AccountStatus accountStatus;
 
+    // Nullable: a fresh Google-signup user has no role until they complete
+    // the mandatory post-login role-selection step.
     @Enumerated(EnumType.STRING)
-    @Column(name = "account_type", nullable = false)
+    @Column(name = "account_type")
     private AccountType accountType;
 
     // =========================
@@ -147,6 +160,10 @@ public class User {
 
         if (this.accountStatus == null) {
             this.accountStatus = AccountStatus.PENDING;
+        }
+
+        if (this.authProvider == null) {
+            this.authProvider = AuthProvider.LOCAL;
         }
     }
 
@@ -229,6 +246,22 @@ public class User {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public String getGoogleId() {
+        return googleId;
+    }
+
+    public void setGoogleId(String googleId) {
+        this.googleId = googleId;
+    }
+
+    public AuthProvider getAuthProvider() {
+        return authProvider;
+    }
+
+    public void setAuthProvider(AuthProvider authProvider) {
+        this.authProvider = authProvider;
     }
 
     public boolean isPhoneVerified() {

@@ -16,6 +16,7 @@ import com.botleague.backend.profile.dto.PublicProfileResponseDTO;
 import com.botleague.backend.auth.entity.User;
 import com.botleague.backend.auth.repository.UserRepository;
 import com.botleague.backend.profile.dto.ChangePhoneRequestDTO;
+import com.botleague.backend.profile.dto.VerifyPhoneRequestDTO;
 import com.botleague.backend.profile.dto.UpdateEmailRequestDTO;
 import com.botleague.backend.profile.dto.UpdateProfileRequestDTO;
 import com.botleague.backend.profile.dto.UploadResponse;
@@ -156,6 +157,17 @@ public class ProfileController {
             @Valid @RequestBody ChangePhoneRequestDTO request) {
         userProfileService.changePhone(authentication, request);
         return ResponseEntity.ok("Phone number updated successfully");
+    }
+
+    // =========================
+    // Verify phone (mandatory post-Google-signin gate) — sets phoneVerified=true
+    // =========================
+    @PostMapping("/verify-phone")
+    public ResponseEntity<String> verifyPhone(
+            Authentication authentication,
+            @Valid @RequestBody VerifyPhoneRequestDTO request) {
+        userProfileService.verifyAndSetPhone(authentication, request);
+        return ResponseEntity.ok("Phone number verified successfully");
     }
 
     // =========================

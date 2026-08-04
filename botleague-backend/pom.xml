@@ -77,6 +77,15 @@
             <version>3.5.3</version>
         </dependency>
 
+        <!-- Google Sign-In: verifies the ID token from the frontend's Google
+             Identity Services flow (GoogleIdTokenVerifier handles Google's
+             signing-key rotation/caching for us). -->
+        <dependency>
+            <groupId>com.google.api-client</groupId>
+            <artifactId>google-api-client</artifactId>
+            <version>2.7.0</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>

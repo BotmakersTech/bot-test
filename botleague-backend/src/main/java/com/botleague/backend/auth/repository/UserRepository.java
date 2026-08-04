@@ -19,6 +19,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     Optional<User> findByPhone(String phone);
 
+    Optional<User> findByGoogleId(String googleId);
+
     // Active, non-deleted users — the base pool for News audience resolution.
     java.util.List<User> findByAccountStatusAndDeletedAtIsNull(AccountStatus accountStatus);
    

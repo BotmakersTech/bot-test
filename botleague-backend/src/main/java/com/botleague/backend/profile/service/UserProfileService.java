@@ -18,6 +18,7 @@ import com.botleague.backend.common.service.GetFileService;
 import com.botleague.backend.profile.dto.ChangePhoneRequestDTO;
 import com.botleague.backend.profile.dto.ProfileResponseDTO;
 import com.botleague.backend.profile.dto.UpdateProfileRequestDTO;
+import com.botleague.backend.profile.dto.VerifyPhoneRequestDTO;
 
 @Service
 public class UserProfileService {
@@ -221,6 +222,7 @@ public class UserProfileService {
         dto.setCity(user.getCity());
         dto.setAddress(user.getAddress());
         dto.setCreatedAt(user.getCreatedAt());
+        dto.setPhoneVerified(user.isPhoneVerified());
 
         return dto;
     }
@@ -237,6 +239,26 @@ public class UserProfileService {
 
         User user = extractUser(authentication);
         user.setPhone(request.getNewPhone());
+        userRepository.save(user);
+    }
+
+    // ================= VERIFY PHONE (mandatory post-Google-signin gate) =================
+    // Distinct from changePhone(): that method assumes an existing phone is
+    // being replaced and never touches phoneVerified. This is a first-time
+    // set (starting phone is null for a fresh Google-signup account) and its
+    // entire purpose is to flip phoneVerified to true.
+
+    @Transactional
+    public void verifyAndSetPhone(Authentication authentication, VerifyPhoneRequestDTO request) {
+        otpService.verifyOtp(request.getPhone(), request.getOtp());
+
+        if (userRepository.existsByPhone(request.getPhone())) {
+            throw ApiException.conflict("Phone number already in use");
+        }
+
+        User user = extractUser(authentication);
+        user.setPhone(request.getPhone());
+        user.setPhoneVerified(true);
         userRepository.save(user);
     }
 

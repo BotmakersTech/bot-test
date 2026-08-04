@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.botleague.backend.auth.dto.*;
 import com.botleague.backend.auth.service.AuthService;
+import com.botleague.backend.auth.service.GoogleAuthService;
 import com.botleague.backend.common.security.JwtService;
 
 import jakarta.servlet.http.Cookie;
@@ -25,10 +26,12 @@ public class AuthController {
     private static final int REFRESH_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
 
     private final AuthService authService;
+    private final GoogleAuthService googleAuthService;
     private final JwtService jwtService;
 
-    public AuthController(AuthService authService, JwtService jwtService) {
+    public AuthController(AuthService authService, GoogleAuthService googleAuthService, JwtService jwtService) {
         this.authService = authService;
+        this.googleAuthService = googleAuthService;
         this.jwtService  = jwtService;
     }
 
@@ -59,6 +62,48 @@ public class AuthController {
             @Valid @RequestBody LoginRequestDTO request) {
 
         AuthTokensDTO tokens = authService.login(request);
+        return buildTokenResponse(tokens);
+    }
+
+    // ================= GOOGLE SIGN-IN =================
+
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponseDTO> google(
+            @Valid @RequestBody GoogleAuthRequestDTO request) {
+
+        AuthTokensDTO tokens = googleAuthService.authenticate(request);
+        return buildTokenResponse(tokens);
+    }
+
+    // ================= SELECT ROLE (post-Google-signin onboarding) =================
+    // Not under a role-protected path since the caller has no role yet by
+    // definition — same manual authentication check /me uses, since all of
+    // /api/auth/** is permitAll at the filter-chain level.
+
+    @PostMapping("/select-role")
+    public ResponseEntity<AuthResponseDTO> selectRole(
+            @Valid @RequestBody SelectRoleRequestDTO request,
+            Authentication authentication) {
+
+        if (authentication == null || authentication.getPrincipal() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String userId = (String) authentication.getPrincipal();
+        AuthTokensDTO tokens = authService.selectRole(userId, request);
+
+        if (tokens.isPendingApproval()) {
+            // Clear the session issued at Google sign-in — a PENDING account
+            // must have no live session, same invariant register() relies on.
+            AuthResponseDTO body = AuthResponseDTO.pending(tokens.getBotleagueId(),
+                    "Your account has been created and is awaiting admin approval. "
+                            + "You'll be able to log in once it's approved.");
+            ResponseCookie cleared = buildCookie("", 0);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cleared.toString())
+                    .body(body);
+        }
+
         return buildTokenResponse(tokens);
     }
 

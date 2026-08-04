@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Phone, Lock, Eye, EyeOff } from "lucide-react";
-import { FcGoogle } from "react-icons/fc";
+import { GoogleLogin } from "@react-oauth/google";
 import useLogin from "../hooks/useLogin";
+import useGoogleAuth from "../hooks/useGoogleAuth";
 
 export default function LoginForm() {
   const login = useLogin();
+  const googleAuth = useGoogleAuth();
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -61,7 +63,9 @@ export default function LoginForm() {
       </div>
 
       {/* ERROR */}
-      {login.error && <p className="cna-field-error">{login.error}</p>}
+      {(login.error || googleAuth.error) && (
+        <p className="cna-field-error">{login.error || googleAuth.error}</p>
+      )}
 
       {/* Grouped Action Buttons */}
       <div className="cna-login-gap-btn flex flex-col">
@@ -74,14 +78,16 @@ export default function LoginForm() {
           {login.isLoading ? "Loading..." : "Login"}
         </button>
 
-        <button
-          type="button"
-          className="cna-login-btn w-full flex items-center justify-center gap-2 rounded-[12px] bg-black/20 transition hover:bg-black/30 font-semibold text-[#0162D1]"
-          style={{ fontFamily: "var(--auth-poppins)" }}
-        >
-          <FcGoogle className="w-4.5 h-4.5" />
-          Login with Google
-        </button>
+        <div className="w-full flex justify-center">
+          <GoogleLogin
+            onSuccess={(credentialResponse) => {
+              if (credentialResponse.credential) {
+                googleAuth.handleGoogleCredential(credentialResponse.credential);
+              }
+            }}
+            onError={() => {}}
+          />
+        </div>
 
         <div className="flex items-center justify-center">
           <span className="text-sm font-medium text-black">OR</span>

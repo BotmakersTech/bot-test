@@ -44,6 +44,8 @@ public class ProfileResponseDTO {
 
     private LocalDateTime createdAt;
 
+    private boolean phoneVerified;
+
     public ProfileResponseDTO() {
     }
 
@@ -159,5 +161,13 @@ public class ProfileResponseDTO {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public boolean isPhoneVerified() {
+        return phoneVerified;
+    }
+
+    public void setPhoneVerified(boolean phoneVerified) {
+        this.phoneVerified = phoneVerified;
     }
 }

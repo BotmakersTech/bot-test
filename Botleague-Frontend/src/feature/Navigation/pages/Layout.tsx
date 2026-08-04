@@ -6,6 +6,8 @@ import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import AppFooter from "../../../shared/components/AppFooter";
 import WelcomeModal from "../../../shared/components/WelcomeModal";
+import MandatoryRoleModal from "../../../shared/components/MandatoryRoleModal";
+import MandatoryPhoneVerifyModal from "../../../shared/components/MandatoryPhoneVerifyModal";
 import OnboardingTour, { TOUR_DONE_FLAG } from "../../../shared/components/OnboardingTour";
 import pageBackground from "../../../assets/background.png";
 import "../../../styles/onboarding.css";
@@ -36,6 +38,12 @@ export default function Layout() {
 
         <AppFooter />
       </div>
+
+      {/* Sequential mandatory gates for a fresh Google signup — role first,
+          then phone+OTP. Each is a no-op (renders null) once its condition
+          is satisfied, so at most one is ever visible at a time. */}
+      <MandatoryRoleModal />
+      <MandatoryPhoneVerifyModal />
 
       <WelcomeModal onTakeTour={openTour} />
       {tourOpen && <OnboardingTour onClose={closeTour} />}

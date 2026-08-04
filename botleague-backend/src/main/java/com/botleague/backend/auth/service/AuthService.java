@@ -220,6 +220,73 @@ public class AuthService {
         return issueTokens(user, user.getBotleagueId());
     }
 
+    // ================= SELECT ROLE (post-Google-signin onboarding) =================
+    // A fresh Google-signup account has no accountType yet (see GoogleAuthService).
+    // This is the one-time follow-up that assigns it, reusing the exact same
+    // self-registerable-role whitelist and admin-approval mechanics as register().
+
+    @Transactional
+    public AuthTokensDTO selectRole(String userId, SelectRoleRequestDTO request) {
+
+        User user = userRepository.findById(UUID.fromString(userId))
+                .orElseThrow(() -> ApiException.notFound("User not found"));
+
+        if (user.getAccountType() != null) {
+            throw ApiException.badRequest("Role already selected");
+        }
+
+        AccountType role;
+        try {
+            role = AccountType.valueOf(request.getRole());
+        } catch (IllegalArgumentException e) {
+            throw ApiException.badRequest("Invalid role");
+        }
+        if (!SELF_REGISTERABLE_ROLES.contains(role)) {
+            throw ApiException.badRequest("Invalid role");
+        }
+
+        boolean requiresApproval = REQUIRES_APPROVAL_ROLES.contains(role);
+        user.setAccountType(role);
+        userRepository.save(user);
+
+        if (requiresApproval) {
+            user.setAccountStatus(AccountStatus.PENDING);
+            userRepository.save(user);
+
+            // Same reasoning as register()'s approval branch: the real UserRole
+            // row is written now, and AccountStatus.PENDING is what actually
+            // blocks the account.
+            userRoleService.assignRole(user.getId(), role);
+
+            UUID newUserId = user.getId();
+            String newUserBotleagueId = user.getBotleagueId();
+            AccountType newUserRole = role;
+            afterCommit(() -> notificationService.systemNotify(
+                    "New " + newUserRole + " registration pending approval",
+                    "A new " + newUserRole + " account (" + newUserBotleagueId
+                            + ") has registered and needs approval before they can log in.",
+                    NotificationType.ACCOUNT_PENDING_APPROVAL,
+                    NotificationPriority.HIGH,
+                    NotificationTargetType.PLATFORM_ADMINS,
+                    null,
+                    "/admin/users/" + newUserId));
+
+            // Unlike register() (which never issues tokens for a PENDING account
+            // in the first place), this user is already authenticated from the
+            // Google sign-in that preceded role selection — that session must be
+            // torn down now so the same "PENDING == no live session" invariant
+            // holds regardless of how PENDING was reached.
+            refreshTokenService.revokeAll(user.getId());
+
+            return new AuthTokensDTO(null, null, user.getBotleagueId(), true);
+        }
+
+        // Re-issue tokens so the JWT's roles claim reflects the newly-selected
+        // role immediately — the token issued at Google sign-in had an empty
+        // roles claim, since accountType was null at that time.
+        return issueTokens(user, user.getBotleagueId());
+    }
+
     // ================= REFRESH =================
 
     @Transactional
@@ -395,12 +462,16 @@ public class AuthService {
         response.setAllRoles(roleNames);
         response.setAssignedEventIds(eventIds);
         response.setAssignedSportIds(sportIds);
+        response.setPhoneVerified(user.isPhoneVerified());
         return response;
     }
 
     // ================= HELPERS =================
 
-    private AuthTokensDTO issueTokens(User user, String botleagueId) {
+    // Package-private (not private): GoogleAuthService, in this same package,
+    // reuses this so a Google sign-in issues the exact same JWT + refresh
+    // token shape as every other login path.
+    AuthTokensDTO issueTokens(User user, String botleagueId) {
         String access = jwtService.generateAccessToken(user.getId().toString(), getUserRoles(user));
         String refresh = refreshTokenService.issue(user.getId());
         return new AuthTokensDTO(access, refresh, botleagueId);

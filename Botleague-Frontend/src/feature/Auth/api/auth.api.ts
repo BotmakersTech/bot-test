@@ -55,6 +55,58 @@ export const login = async (payload: {
   return { accessToken, botleagueId, expiresIn: expiresIn as number | undefined };
 };
 
+// ================= GOOGLE SIGN-IN =================
+
+export const googleSignIn = async (idToken: string) => {
+  const res = await api.post("/auth/google", { idToken });
+
+  // Same response shape as /login — a Google sign-in for an existing,
+  // non-ACTIVE account is rejected server-side rather than returning a
+  // pending-approval shape here, so this always means success.
+  const { accessToken, botleagueId, expiresIn } = res.data;
+  setAccessToken(accessToken);
+
+  return { accessToken, botleagueId, expiresIn: expiresIn as number | undefined };
+};
+
+// ================= SELECT ROLE (post-Google-signin onboarding) =================
+
+export const selectRole = async (role: string) => {
+  const res = await api.post("/auth/select-role", { role });
+
+  // Self-active role (COMPETITOR/VOLUNTEER): { accessToken, botleagueId, expiresIn }.
+  // Approval-required role (ORGANISER/JUDGE): { pendingApproval: true, botleagueId,
+  // message }, accessToken absent — the session was revoked server-side.
+  const { accessToken, botleagueId, expiresIn, pendingApproval, message } = res.data;
+
+  if (accessToken) {
+    setAccessToken(accessToken);
+  }
+
+  return {
+    accessToken,
+    botleagueId,
+    expiresIn: expiresIn as number | undefined,
+    pendingApproval: Boolean(pendingApproval),
+    message,
+  };
+};
+
+// ================= VERIFY PHONE (mandatory post-Google-signin gate) =================
+
+export const verifyPhone = async (phone: string, otp: string) => {
+  const res = await api.post("/profile/verify-phone", { phone, otp });
+  return res.data;
+};
+
+// Clears the in-memory access token without a network round-trip — for
+// cases where the backend already tore down the session as a side effect of
+// another call (select-role's pending-approval branch clears the refresh
+// cookie itself), so a follow-up /auth/logout call would be redundant.
+export function clearLocalSession() {
+  clearAccessToken();
+}
+
 // ================= REFRESH =================
 // Call this when you get a 401 — it uses the httpOnly cookie automatically
 

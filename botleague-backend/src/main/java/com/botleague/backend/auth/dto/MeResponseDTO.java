@@ -11,6 +11,7 @@ public class MeResponseDTO {
     private List<String> allRoles;
     private List<String> assignedEventIds;
     private List<String> assignedSportIds;
+    private boolean phoneVerified;
 
     public String getBotleagueId() { return botleagueId; }
     public void setBotleagueId(String botleagueId) { this.botleagueId = botleagueId; }
@@ -32,4 +33,7 @@ public class MeResponseDTO {
 
     public List<String> getAssignedSportIds() { return assignedSportIds; }
     public void setAssignedSportIds(List<String> assignedSportIds) { this.assignedSportIds = assignedSportIds; }
+
+    public boolean isPhoneVerified() { return phoneVerified; }
+    public void setPhoneVerified(boolean phoneVerified) { this.phoneVerified = phoneVerified; }
 }

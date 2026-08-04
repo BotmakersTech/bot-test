@@ -38,6 +38,7 @@ export interface User {
   allRoles?: string[];
   assignedEventIds?: string[];
   assignedSportIds?: string[];
+  phoneVerified?: boolean;
 
   // =========================
   // Future Expansion

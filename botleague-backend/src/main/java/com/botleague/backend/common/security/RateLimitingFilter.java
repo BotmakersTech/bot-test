@@ -45,6 +45,9 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     private final int resendOtpPerMin;
     private final int uploadUrlPerMin;
     private final int certificateVerifyPerMin;
+    private final int googleSigninPerMin;
+    private final int selectRolePerMin;
+    private final int verifyPhonePerMin;
 
     public RateLimitingFilter(
             @Value("${rate-limit.login-per-minute:5}") int loginPerMin,
@@ -54,7 +57,10 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             @Value("${rate-limit.send-otp-per-minute:10}") int sendOtpPerMin,
             @Value("${rate-limit.resend-otp-per-minute:5}") int resendOtpPerMin,
             @Value("${rate-limit.upload-url-per-minute:20}") int uploadUrlPerMin,
-            @Value("${rate-limit.certificate-verify-per-minute:30}") int certificateVerifyPerMin) {
+            @Value("${rate-limit.certificate-verify-per-minute:30}") int certificateVerifyPerMin,
+            @Value("${rate-limit.google-signin-per-minute:10}") int googleSigninPerMin,
+            @Value("${rate-limit.select-role-per-minute:5}") int selectRolePerMin,
+            @Value("${rate-limit.verify-phone-per-minute:5}") int verifyPhonePerMin) {
         this.loginPerMin = loginPerMin;
         this.forgotPerMin = forgotPerMin;
         this.otpPerMin = otpPerMin;
@@ -63,6 +69,9 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         this.resendOtpPerMin = resendOtpPerMin;
         this.uploadUrlPerMin = uploadUrlPerMin;
         this.certificateVerifyPerMin = certificateVerifyPerMin;
+        this.googleSigninPerMin = googleSigninPerMin;
+        this.selectRolePerMin = selectRolePerMin;
+        this.verifyPhonePerMin = verifyPhonePerMin;
     }
 
     @Override
@@ -100,6 +109,9 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         if (uri.endsWith("/auth/send-otp"))        return sendOtpPerMin;
         if (uri.endsWith("/auth/verify-otp"))      return otpPerMin;
         if (uri.endsWith("/auth/resend-otp"))      return resendOtpPerMin;
+        if (uri.endsWith("/auth/google"))          return googleSigninPerMin;
+        if (uri.endsWith("/auth/select-role"))     return selectRolePerMin;
+        if (uri.endsWith("/profile/verify-phone")) return verifyPhonePerMin;
         // Presigned-upload-URL minting — every one of these was previously
         // completely unrated, including two that were also unauthenticated
         // (see SecurityConfig / EventSponsorController / SportSponsorController).
