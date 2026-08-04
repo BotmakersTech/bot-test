@@ -33,6 +33,9 @@ public class ChatController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ChatRoomListResponse> getMyChatRooms(Authentication authentication) {
         UUID userId = extractUserId(authentication);
+        // Self-heal: guarantees this user's own team chat exists and they're
+        // in it before listing rooms — see ChatService.ensureMyTeamChatExists.
+        chatService.ensureMyTeamChatExists(userId);
         ChatRoomListResponse response = chatService.getMyChatRooms(userId);
         return ResponseEntity.ok(response);
     }

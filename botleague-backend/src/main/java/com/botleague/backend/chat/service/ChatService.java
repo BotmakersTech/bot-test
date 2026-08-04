@@ -131,6 +131,23 @@ public class ChatService {
     }
 
     /**
+     * Self-heal safety net, called before every GET /chat/rooms fetch: if this
+     * user has an ACTIVE team membership but somehow isn't a participant in
+     * that team's chat room (e.g. a historical gap in a team-creation path,
+     * or any other data inconsistency), this repairs it on the spot.
+     * addMemberToTeamChat is already idempotent — a no-op, no system message,
+     * if the user is already an active participant — so this is safe and
+     * cheap to call on every fetch, not just when something is actually wrong.
+     * Unlike EVENT_TEAM chats (lazily ensured via a "Message" button tied to
+     * one eventId+teamId), a user's own TEAM chat has no such per-team entry
+     * point in the UI, so this is the only self-service recovery path there is.
+     */
+    public void ensureMyTeamChatExists(UUID userId) {
+        teamMembershipRepository.findByUserIdAndStatus(userId, TeamMembershipStatus.ACTIVE)
+                .ifPresent(membership -> addMemberToTeamChat(membership.getTeamId(), userId));
+    }
+
+    /**
      * Called when a user leaves or is removed from a team.
      * Deactivates their participant record and broadcasts a system leave message.
      */
