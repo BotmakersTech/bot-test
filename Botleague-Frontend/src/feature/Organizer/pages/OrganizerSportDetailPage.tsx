@@ -2,7 +2,7 @@ import React from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
 import {
-  ArrowLeft, Users, Trophy, Calendar, Tag, Swords, Weight, Zap, DollarSign, Award, Cpu, Ruler, Bot,
+  ArrowLeft, Users, Trophy, Calendar, CalendarRange, Tag, Swords, DollarSign, Award, Bot,
   Edit2, X, Megaphone, FileEdit, PlayCircle, RefreshCw, CheckCircle2, XCircle, Lock, Unlock, Globe,
   AlertTriangle, MessageCircle, Check, Ban, Clock,
 } from "lucide-react"
@@ -23,16 +23,14 @@ import { hasRole, AppRole, EVENT_HEAD_AND_UP } from "../../../shared/constants/r
 import { fetchChatRooms, setActiveRoom } from "../../Chat/store/chatSlice"
 import { ORG } from "../theme/organizerTheme"
 import PageWrapper from "../components/PageWrapper"
-import StatChip from "../components/StatChip"
-import PrimaryButton from "../components/PrimaryButton"
 import { ChangeFieldDiff } from "../../../shared/components/EventDashboard/ChangeRequestDiff"
+import "../styles/sportDetail.css"
 
 // ─────────────────────────────────────────────────────────────
 // DESIGN TOKENS — Organizer light theme (organizerTheme.ts), matching the
 // User Dashboard / Team Dashboard / Robot Profile reference pages.
 // ─────────────────────────────────────────────────────────────
 
-const CARD2   = "#ffffff"
 const BORDER  = "rgba(75,134,232,0.28)"
 const ACCENT  = ORG.violet
 const TEXT    = ORG.text
@@ -144,78 +142,22 @@ function Spinner({ size = 16, color = ACCENT }: { size?: number; color?: string 
 // ─────────────────────────────────────────────────────────────
 
 function StatusPill({ status }: { status?: string }) {
-  const MAP: Record<string, { bg: string; border: string; color: string; icon: React.ReactNode }> = {
-    PUBLISHED:           { bg: "rgba(75,134,232,0.1)",  border: "rgba(75,134,232,0.3)",  color: ORG.blueHeading, icon: <Megaphone size={11} /> },
-    DRAFT:               { bg: "rgba(161,98,7,0.1)",    border: "rgba(161,98,7,0.28)",   color: WARNING,         icon: <FileEdit size={11} /> },
-    LIVE:                { bg: "rgba(31,169,82,0.1)",   border: "rgba(31,169,82,0.28)",  color: SUCCESS,         icon: <PlayCircle size={11} /> },
-    ONGOING:             { bg: "rgba(31,169,82,0.1)",   border: "rgba(31,169,82,0.28)",  color: SUCCESS,         icon: <RefreshCw size={11} /> },
-    COMPLETED:           { bg: "rgba(93,93,93,0.08)",   border: "rgba(93,93,93,0.22)",   color: MUTED,           icon: <CheckCircle2 size={11} /> },
-    CANCELLED:           { bg: "rgba(224,75,75,0.1)",   border: "rgba(224,75,75,0.28)",  color: DANGER,          icon: <XCircle size={11} /> },
-    REGISTRATION_OPEN:   { bg: "rgba(31,169,82,0.1)",   border: "rgba(31,169,82,0.28)",  color: SUCCESS,         icon: <Unlock size={11} /> },
-    REGISTRATION_CLOSED: { bg: "rgba(161,98,7,0.1)",    border: "rgba(161,98,7,0.28)",   color: WARNING,         icon: <Lock size={11} /> },
+  const MAP: Record<string, { cls: string; icon: React.ReactNode }> = {
+    PUBLISHED:           { cls: "is-published", icon: <Megaphone size={11} /> },
+    DRAFT:               { cls: "is-draft",     icon: <FileEdit size={11} /> },
+    LIVE:                { cls: "is-live",      icon: <PlayCircle size={11} /> },
+    ONGOING:             { cls: "is-live",      icon: <RefreshCw size={11} /> },
+    COMPLETED:           { cls: "is-draft",     icon: <CheckCircle2 size={11} /> },
+    CANCELLED:           { cls: "is-cancelled", icon: <XCircle size={11} /> },
+    REGISTRATION_OPEN:   { cls: "is-open",      icon: <Unlock size={11} /> },
+    REGISTRATION_CLOSED: { cls: "is-closed",    icon: <Lock size={11} /> },
   }
   const key = status?.toUpperCase() || "DRAFT"
   const s   = MAP[key] || MAP["DRAFT"]
   return (
-    <span style={{
-      display: "inline-flex",
-      alignItems: "center",
-      gap: "5px",
-      background: s.bg,
-      border: `1px solid ${s.border}`,
-      color: s.color,
-      borderRadius: "999px",
-      fontSize: "0.67rem",
-      padding: "3px 10px",
-      fontWeight: 700,
-      whiteSpace: "nowrap"
-    }}>
+    <span className={`sdt-badge-status ${s.cls}`}>
       {s.icon} {key.replace(/_/g, " ")}
     </span>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────
-// META CHIP  (detail grid cell)
-// ─────────────────────────────────────────────────────────────
-
-function MetaChip({
-  icon,
-  label,
-  value
-}: {
-  icon: React.ReactNode
-  label: string
-  value?: string | number | null
-}) {
-  if (value == null || value === "") return null
-  return (
-    <div style={{
-      background: "rgba(75,134,232,0.05)",
-      border: `1px solid ${BORDER}`,
-      borderRadius: "9px",
-      padding: "10px 14px",
-      display: "flex",
-      alignItems: "center",
-      gap: "10px"
-    }}>
-      <span style={{ color: ACCENT, flexShrink: 0 }}>{icon}</span>
-      <div>
-        <div style={{
-          fontSize: "0.6rem",
-          color: MUTED,
-          fontWeight: 700,
-          textTransform: "uppercase",
-          letterSpacing: "0.08em",
-          marginBottom: "2px"
-        }}>
-          {label}
-        </div>
-        <div style={{ fontSize: "0.85rem", fontWeight: 600, color: TEXT }}>
-          {value}
-        </div>
-      </div>
-    </div>
   )
 }
 
@@ -247,17 +189,7 @@ function TeamCard({ team, index, eventId }: { team: TeamReg; index: number; even
   }
 
   return (
-    <div
-      style={{
-        background: "#ffffff",
-        border: `1.5px solid rgba(75,134,232,0.25)`,
-        borderRadius: "12px",
-        overflow: "hidden",
-        transition: "border-color 0.15s"
-      }}
-      onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.borderColor = ORG.blue}
-      onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(75,134,232,0.25)"}
-    >
+    <div className="sdt-team-card">
       {/* HEADER */}
       <div
         style={{
@@ -1297,24 +1229,8 @@ export default function OrganizerSportDetailPage() {
       )}
 
       {/* ── BACK ── */}
-      <button
-        onClick={() => navigate(-1)}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          background: "#ffffff",
-          border: `1px solid ${BORDER}`,
-          color: MUTED,
-          borderRadius: "8px",
-          padding: "8px 14px",
-          fontSize: "0.8rem",
-          fontWeight: 600,
-          cursor: "pointer",
-          marginBottom: "28px"
-        }}
-      >
-        <ArrowLeft size={14} /> Back to Event
+      <button onClick={() => navigate(-1)} className="sdt-back-btn" style={{ marginBottom: "24px" }}>
+        <ArrowLeft size={18} />
       </button>
 
       {/* ── HEADER ── */}
@@ -1328,36 +1244,17 @@ export default function OrganizerSportDetailPage() {
           flexWrap: "wrap",
           marginBottom: "10px"
         }}>
-          <Swords size={22} style={{ color: ACCENT, flexShrink: 0 }} />
-
-          <h1 style={{
-            margin: 0,
-            fontSize: "1.8rem",
-            fontFamily: ORG.fontHeading,
-            fontWeight: 700,
-            letterSpacing: "0.02em",
-            color: ORG.blueHeading,
-          }}>
-            {toLabel(sport.sport)}
-          </h1>
+          <h1 className="sdt-title">{toLabel(sport.sport)}</h1>
 
           <StatusPill status={sport.status} />
 
           {/* EDIT SPORT BUTTON */}
-          <PrimaryButton variant="outline" onClick={() => setShowEditSport(true)} style={{ padding: "7px 14px", fontSize: "0.74rem" }}>
+          <button onClick={() => setShowEditSport(true)} className="sdt-btn sdt-btn-edit">
             <Edit2 size={13} /> Edit Sport
-          </PrimaryButton>
+          </button>
 
           {/* SEND ANNOUNCEMENT BUTTON */}
-          <button
-            onClick={() => setShowAnnounceForm(v => !v)}
-            style={{
-              display: "flex", alignItems: "center", gap: "7px",
-              background: showAnnounceForm ? "rgba(109,91,208,0.14)" : "rgba(109,91,208,0.08)",
-              border: "1px solid rgba(109,91,208,0.3)", color: "#6d5bd0",
-              borderRadius: "8px", padding: "7px 14px", fontSize: "0.74rem", fontWeight: 700, cursor: "pointer",
-            }}
-          >
+          <button onClick={() => setShowAnnounceForm(v => !v)} className="sdt-btn sdt-btn-ghost">
             <Megaphone size={13} /> Send Announcement
           </button>
 
@@ -1365,23 +1262,7 @@ export default function OrganizerSportDetailPage() {
           <button
             onClick={handleToggleRegistration}
             disabled={registrationLoading}
-            style={{
-              background: isOpen ? "rgba(224,75,75,0.1)" : "rgba(31,169,82,0.1)",
-              border: isOpen
-                ? "1px solid rgba(224,75,75,0.3)"
-                : "1px solid rgba(31,169,82,0.3)",
-              color: isOpen ? DANGER : SUCCESS,
-              borderRadius: "8px",
-              padding: "7px 14px",
-              fontSize: "0.74rem",
-              fontWeight: 700,
-              cursor: registrationLoading ? "not-allowed" : "pointer",
-              opacity: registrationLoading ? 0.7 : 1,
-              display: "flex",
-              alignItems: "center",
-              gap: "7px",
-              transition: "all 0.15s"
-            }}
+            className={`sdt-btn ${isOpen ? "sdt-btn-close" : "sdt-btn-open"}`}
           >
             {registrationLoading
               ? <><Spinner size={12} color="currentColor" />Updating…</>
@@ -1395,21 +1276,7 @@ export default function OrganizerSportDetailPage() {
               onClick={handleFinalize}
               disabled={finalizing}
               title="Push finalized results to the Global Rankings pool"
-              style={{
-                background: "rgba(140,108,255,0.12)",
-                border: "1px solid rgba(140,108,255,0.3)",
-                color: ACCENT,
-                borderRadius: "8px",
-                padding: "7px 14px",
-                fontSize: "0.74rem",
-                fontWeight: 700,
-                cursor: finalizing ? "not-allowed" : "pointer",
-                opacity: finalizing ? 0.7 : 1,
-                display: "flex",
-                alignItems: "center",
-                gap: "7px",
-                transition: "all 0.15s",
-              }}
+              className="sdt-btn sdt-btn-publish"
             >
               {finalizing ? <><Spinner size={12} color={ACCENT} />Publishing…</> : <><Globe size={13} />Publish to Global Rankings</>}
             </button>
@@ -1418,37 +1285,19 @@ export default function OrganizerSportDetailPage() {
 
         {/* finalize feedback */}
         {finalizeMsg && (
-          <div style={{
-            padding: "8px 14px",
-            background: finalizeOk ? "rgba(31,169,82,0.08)" : "rgba(224,75,75,0.08)",
-            border: `1px solid ${finalizeOk ? "rgba(31,169,82,0.25)" : "rgba(224,75,75,0.25)"}`,
-            borderRadius: "8px",
-            fontSize: "0.82rem",
-            color: finalizeOk ? SUCCESS : DANGER,
-            marginTop: "8px",
-          }}>
+          <div className={`sdt-banner ${finalizeOk ? "ok" : "error"}`}>
             {finalizeMsg}
           </div>
         )}
 
         {/* event breadcrumb */}
-        <div style={{ color: MUTED, fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+        <div className="sdt-breadcrumb">
           Event: <span style={{ color: LABEL, fontWeight: 600 }}>{event?.eventName}</span>
         </div>
 
         {/* description */}
         {(sport.sportsDescription) && (
-          <p style={{
-            marginTop: "10px",
-            color: MUTED,
-            fontSize: "0.88rem",
-            lineHeight: 1.6,
-            maxWidth: "700px",
-            background: "rgba(75,134,232,0.05)",
-            border: `1px solid ${BORDER}`,
-            borderRadius: "8px",
-            padding: "10px 14px"
-          }}>
+          <p className="sdt-description">
             {sport.sportsDescription}
           </p>
         )}
@@ -1500,76 +1349,78 @@ export default function OrganizerSportDetailPage() {
       )}
 
       {/* ── STAT BOXES ── */}
-      <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "28px" }}>
-        <StatChip icon={<Trophy size={20} />}      label="Teams"      value={totalTeams}                        color={WARNING} />
-        <StatChip icon={<Users size={20} />}       label="Players"    value={totalPlayers}                     color={SUCCESS} />
-        {sport.maxTeams    != null && <StatChip icon={<Tag size={20} />}        label="Max Teams"  value={sport.maxTeams}                       color={LABEL}   />}
-        {sport.entryFee    != null && <StatChip icon={<DollarSign size={20} />} label="Entry Fee"  value={formatCurrency(sport.entryFee)}        color={WARNING} />}
-        {sport.prizeMoney  != null && <StatChip icon={<Award size={20} />}      label="Prize Pool" value={formatCurrency(sport.prizeMoney)}      color={SUCCESS} />}
+      <div className="sdt-stat-row">
+        <div className="sdt-stat-card">
+          <span className="sdt-stat-icon"><Trophy size={20} /></span>
+          <div><div className="sdt-stat-value">{totalTeams}</div><div className="sdt-stat-label">Teams</div></div>
+        </div>
+        <div className="sdt-stat-card">
+          <span className="sdt-stat-icon"><Users size={20} /></span>
+          <div><div className="sdt-stat-value">{totalPlayers}</div><div className="sdt-stat-label">Players</div></div>
+        </div>
+        {sport.maxTeams != null && (
+          <div className="sdt-stat-card">
+            <span className="sdt-stat-icon"><Tag size={20} /></span>
+            <div><div className="sdt-stat-value">{sport.maxTeams}</div><div className="sdt-stat-label">Max Teams</div></div>
+          </div>
+        )}
+        {sport.entryFee != null && (
+          <div className="sdt-stat-card">
+            <span className="sdt-stat-icon"><DollarSign size={20} /></span>
+            <div><div className="sdt-stat-value">{formatCurrency(sport.entryFee)}</div><div className="sdt-stat-label">Entry Fee</div></div>
+          </div>
+        )}
+        {sport.prizeMoney != null && (
+          <div className="sdt-stat-card">
+            <span className="sdt-stat-icon"><Award size={20} /></span>
+            <div><div className="sdt-stat-value">{formatCurrency(sport.prizeMoney)}</div><div className="sdt-stat-label">Prize Pool</div></div>
+          </div>
+        )}
       </div>
 
-      {/* ── SPORT DETAILS GRID ── */}
-      <div style={{
-        background: CARD2,
-        border: "1.5px solid rgba(75,134,232,0.3)",
-        borderRadius: "16px",
-        overflow: "hidden",
-        marginBottom: "28px"
-      }}>
-        <div style={{
-          padding: "14px 20px",
-          borderBottom: `1px solid ${BORDER}`,
-          background: "rgba(75,134,232,0.04)",
-          fontWeight: 700,
-          letterSpacing: "0.06em",
-          fontSize: "0.85rem",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px"
-        }}>
-          <Swords size={14} style={{ color: ACCENT }} />
-          SPORT DETAILS
+      {/* ── SPORT DETAILS ── */}
+      <div className="sdt-panel">
+        <div className="sdt-panel-header">
+          <span className="sdt-panel-title"><Swords size={14} /> SPORT DETAILS</span>
         </div>
 
-        <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: "14px" }}>
+        <div className="sdt-panel-body">
 
-          {/* meta chips grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "10px" }}>
-            <MetaChip icon={<Zap size={15} />}        label="Age Group"        value={toLabel(sport.ageGroup)}          />
-            <MetaChip icon={<Swords size={15} />}     label="Competition Type" value={toLabel(sport.competitionType)}   />
-            <MetaChip icon={<Trophy size={15} />}     label="Format"           value={toLabel(sport.formatType)}        />
-            <MetaChip icon={<Cpu size={15} />}        label="Control Type"     value={toLabel(sport.controlType)}       />
-            <MetaChip icon={<Weight size={15} />}     label="Weight Class"     value={toLabel(sport.weightClass)}       />
-            <MetaChip icon={<Weight size={15} />}     label="Weight Limit"     value={sport.weightLimitKg != null ? `${sport.weightLimitKg} kg` : null} />
-            <MetaChip icon={<Bot size={15} />}        label="Max Bots/Team"    value={sport.maxBotsPerTeam}             />
-            <MetaChip
-              icon={<Ruler size={15} />}
-              label="Dimensions (L×W×H)"
-              value={
-                sport.maxLengthCm != null && sport.maxWidthCm != null && sport.maxHeightCm != null
+          {/* meta fields — real sport specs, styled in the fields-box treatment */}
+          <div className="sdt-fields-box">
+            <div><div className="sdt-field-label">Age Group</div><div className="sdt-field-value">{toLabel(sport.ageGroup)}</div></div>
+            <div><div className="sdt-field-label">Competition Type</div><div className="sdt-field-value">{toLabel(sport.competitionType)}</div></div>
+            <div><div className="sdt-field-label">Format</div><div className="sdt-field-value">{toLabel(sport.formatType)}</div></div>
+            <div><div className="sdt-field-label">Control Type</div><div className="sdt-field-value">{toLabel(sport.controlType)}</div></div>
+            <div><div className="sdt-field-label">Weight Class</div><div className="sdt-field-value">{toLabel(sport.weightClass)}</div></div>
+            <div><div className="sdt-field-label">Weight Limit</div><div className="sdt-field-value">{sport.weightLimitKg != null ? `${sport.weightLimitKg} kg` : "—"}</div></div>
+            <div><div className="sdt-field-label">Max Bots/Team</div><div className="sdt-field-value">{sport.maxBotsPerTeam ?? "—"}</div></div>
+            <div>
+              <div className="sdt-field-label">Dimensions (L×W×H)</div>
+              <div className="sdt-field-value">
+                {sport.maxLengthCm != null && sport.maxWidthCm != null && sport.maxHeightCm != null
                   ? `${sport.maxLengthCm}×${sport.maxWidthCm}×${sport.maxHeightCm} cm`
-                  : null
-              }
-            />
-            <MetaChip
-              icon={<Users size={15} />}
-              label="Team Size"
-              value={
-                sport.minTeamSize != null && sport.maxTeamSize != null
+                  : "—"}
+              </div>
+            </div>
+            <div>
+              <div className="sdt-field-label">Team Size</div>
+              <div className="sdt-field-value">
+                {sport.minTeamSize != null && sport.maxTeamSize != null
                   ? `${sport.minTeamSize} – ${sport.maxTeamSize} players`
-                  : null
-              }
-            />
-            <MetaChip icon={<Tag size={15} />}          label="Max Teams"  value={sport.maxTeams}                      />
-            <MetaChip icon={<DollarSign size={15} />}   label="Entry Fee"  value={formatCurrency(sport.entryFee)}       />
-            <MetaChip icon={<Award size={15} />}        label="Prize Pool" value={formatCurrency(sport.prizeMoney)}     />
+                  : "—"}
+              </div>
+            </div>
+            <div><div className="sdt-field-label">Max Teams</div><div className="sdt-field-value">{sport.maxTeams ?? "—"}</div></div>
+            <div><div className="sdt-field-label">Entry Fee</div><div className="sdt-field-value">{formatCurrency(sport.entryFee)}</div></div>
+            <div><div className="sdt-field-label">Prize Pool</div><div className="sdt-field-value">{formatCurrency(sport.prizeMoney)}</div></div>
           </div>
 
           {/* extra rules */}
           {sport.extraRules && Object.keys(sport.extraRules).length > 0 && (
             <div style={{
-              background: "rgba(75,134,232,0.05)",
-              border: `1px solid ${BORDER}`,
+              background: "rgba(1,98,209,0.05)",
+              border: "1px solid rgba(75,134,232,0.28)",
               borderRadius: "9px",
               padding: "12px 16px"
             }}>
@@ -1589,31 +1440,14 @@ export default function OrganizerSportDetailPage() {
 
           {/* registration window */}
           {sport.registrationStartDate && sport.registrationEndDate && (
-            <div style={{
-              background: "rgba(75,134,232,0.05)",
-              border: "1px solid rgba(75,134,232,0.2)",
-              borderRadius: "9px",
-              padding: "12px 16px",
-              display: "flex",
-              alignItems: "center",
-              gap: "12px"
-            }}>
+            <div className="sdt-reg-window">
               <Calendar size={16} style={{ color: ACCENT, flexShrink: 0 }} />
               <div>
-                <div style={{
-                  fontSize: "0.62rem",
-                  color: MUTED,
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  marginBottom: "3px"
-                }}>
-                  Registration Window
-                </div>
-                <div style={{ fontSize: "0.85rem", fontWeight: 600, color: TEXT }}>
-                  {formatDate(sport.registrationStartDate)}
-                  <span style={{ color: MUTED, margin: "0 10px" }}>→</span>
-                  {formatDate(sport.registrationEndDate)}
+                <div className="label"><CalendarRange size={12} /> Registration Window</div>
+                <div className="dates">
+                  <span>{formatDate(sport.registrationStartDate)}</span>
+                  <span>→</span>
+                  <span>{formatDate(sport.registrationEndDate)}</span>
                 </div>
               </div>
             </div>
@@ -1626,75 +1460,34 @@ export default function OrganizerSportDetailPage() {
         <SupportContactManager mode="sport" eventId={eventId} sportId={sportId} />
       )}
 
-      {/* ── BRACKET / MATCHES — only once registration is not open ── */}
-      {!isOpen && (
-        <div style={{ display: "flex", gap: "12px", marginBottom: "12px" }}>
-          <PrimaryButton onClick={() => navigate(`${location.pathname}/create-match`)} style={{ padding: "11px 20px", fontSize: "0.82rem" }}>
+      {/* ── BRACKET / MATCHES / RANKING / CERTIFICATES ── */}
+      <div className="sdt-action-row">
+        {!isOpen && (
+          <button onClick={() => navigate(`${location.pathname}/create-match`)} className="sdt-action-btn sdt-action-create">
             <Swords size={14} /> Create Match / Manage Bracket
-          </PrimaryButton>
-        </div>
-      )}
-
-      {/* ── CERTIFICATES — always reachable; actual generation is itself
-          gated server-side on finalized rankings, so browsing/configuring
-          templates and certificate types shouldn't wait on !isOpen too. ── */}
-      <div style={{ display: "flex", gap: "12px", marginBottom: "28px" }}>
-        <PrimaryButton
-          variant="outline"
-          onClick={() => navigate(`/organizer/certificates?eventSportId=${sportId}`)}
-          style={{ padding: "11px 20px", fontSize: "0.82rem" }}
-        >
+          </button>
+        )}
+        <button onClick={() => navigate(`/organizer/certificates?eventSportId=${sportId}`)} className="sdt-action-btn sdt-action-update">
           <Award size={14} /> Certificates
-        </PrimaryButton>
+        </button>
       </div>
 
       {/* ── REGISTERED TEAMS ── */}
-      <div style={{
-        background: CARD2,
-        border: "1.5px solid rgba(75,134,232,0.3)",
-        borderRadius: "16px",
-        overflow: "hidden"
-      }}>
+      <div className="sdt-panel" style={{ marginBottom: 0 }}>
         {/* section header */}
-        <div style={{
-          padding: "14px 20px",
-          borderBottom: `1px solid ${BORDER}`,
-          background: "rgba(75,134,232,0.04)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between"
-        }}>
+        <div className="sdt-panel-header">
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ fontWeight: 700, letterSpacing: "0.06em", fontSize: "0.85rem", color: ORG.blueHeading }}>
-              REGISTERED TEAMS
-            </span>
-            <span style={{
-              background: "rgba(140,108,255,0.13)",
-              border: "1px solid rgba(140,108,255,0.28)",
-              color: ACCENT,
-              borderRadius: "999px",
-              fontSize: "0.65rem",
-              fontWeight: 800,
-              padding: "1px 9px"
-            }}>
-              {totalTeams}
-            </span>
+            <span className="sdt-panel-title">REGISTERED TEAMS</span>
+            <span className="sdt-panel-count">{totalTeams}</span>
           </div>
-          <span style={{ fontSize: "0.72rem", color: MUTED }}>
+          <span style={{ fontSize: "0.72rem", color: MUTED, fontFamily: "Inter, sans-serif" }}>
             {totalPlayers} total player{totalPlayers !== 1 ? "s" : ""}
           </span>
         </div>
 
-        <div style={{ padding: "18px 20px" }}>
+        <div className="sdt-panel-body">
           {registrations.length === 0 ? (
-            <div style={{
-              textAlign: "center",
-              padding: "48px 0",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "10px"
-            }}>
+            <div className="sdt-empty-state">
               <Bot size={40} style={{ color: "rgba(140,108,255,0.4)" }} />
               <div style={{ color: MUTED, fontSize: "0.85rem", fontWeight: 600 }}>
                 No teams registered yet
@@ -1707,11 +1500,7 @@ export default function OrganizerSportDetailPage() {
               </div>
             </div>
           ) : (
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-              gap: "14px"
-            }}>
+            <div className="sdt-team-grid">
               {registrations.map((team, i) => (
                 <TeamCard key={team.id} team={team} index={i} eventId={eventId} />
               ))}
