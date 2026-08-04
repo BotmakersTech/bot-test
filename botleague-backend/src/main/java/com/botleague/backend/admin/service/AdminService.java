@@ -81,6 +81,7 @@ public class AdminService {
     private final RealtimePublisher                 realtimePublisher;
     private final AuthorizationService               authorizationService;
     private final ChatService                        chatService;
+    private final com.botleague.backend.common.service.GetFileService getFileService;
 
     // =====================================================
     // CONSTRUCTOR
@@ -99,7 +100,8 @@ public class AdminService {
             AuditLogService                   auditLogService,
             RealtimePublisher                 realtimePublisher,
             AuthorizationService              authorizationService,
-            ChatService                       chatService
+            ChatService                       chatService,
+            com.botleague.backend.common.service.GetFileService getFileService
     ) {
         this.eventRepository             = eventRepository;
         this.eventSportRepository        = eventSportRepository;
@@ -114,6 +116,7 @@ public class AdminService {
         this.realtimePublisher           = realtimePublisher;
         this.authorizationService        = authorizationService;
         this.chatService                 = chatService;
+        this.getFileService              = getFileService;
     }
 
     /**
@@ -595,10 +598,13 @@ public class AdminService {
         dto.setEventName(event.getEventName());
         dto.setEventDescription(event.getEventDescription());
         dto.setStatus(event.getStatus() != null ? event.getStatus().name() : null);
-        dto.setEventLogoUrl(event.getEventLogoUrl());
-        dto.setEventThumbnailUrl(event.getEventThumbnailUrl());
-        dto.setTeaserVideo1Url(event.getTeaserVideo1Url());
-        dto.setTeaserVideo2Url(event.getTeaserVideo2Url());
+        // Stored as either a raw "events/..." key (media-upload flow) or an
+        // already-full URL (creation flow) — resolveEventImage handles both,
+        // same convention as GetFileService.resolveProfileImage for users.
+        dto.setEventLogoUrl(getFileService.resolveEventImage(event.getEventLogoUrl()));
+        dto.setEventThumbnailUrl(getFileService.resolveEventImage(event.getEventThumbnailUrl()));
+        dto.setTeaserVideo1Url(getFileService.resolveEventImage(event.getTeaserVideo1Url()));
+        dto.setTeaserVideo2Url(getFileService.resolveEventImage(event.getTeaserVideo2Url()));
         dto.setCity(event.getCity());
         dto.setState(event.getState());
         dto.setCountry(event.getCountry());

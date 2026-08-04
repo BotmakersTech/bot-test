@@ -47,6 +47,7 @@ public class EventService {
     private final AuditLogService auditLogService;
     private final ChatService chatService;
     private final AuthorizationService authorizationService;
+    private final com.botleague.backend.common.service.GetFileService getFileService;
 
     // =====================================================
     // CONSTRUCTOR
@@ -59,7 +60,8 @@ public class EventService {
             NotificationService notificationService,
             AuditLogService auditLogService,
             ChatService chatService,
-            AuthorizationService authorizationService
+            AuthorizationService authorizationService,
+            com.botleague.backend.common.service.GetFileService getFileService
     ) {
 
         this.eventRepository = eventRepository;
@@ -69,6 +71,7 @@ public class EventService {
         this.auditLogService = auditLogService;
         this.chatService = chatService;
         this.authorizationService = authorizationService;
+        this.getFileService = getFileService;
     }
 
     // =====================================================
@@ -406,20 +409,22 @@ public class EventService {
                 event.getEventDescription()
         );
 
+        // Stored as either a raw "events/..." key (media-upload flow) or an
+        // already-full URL (creation flow) — resolveEventImage handles both.
         response.setEventLogoUrl(
-                event.getEventLogoUrl()
+                getFileService.resolveEventImage(event.getEventLogoUrl())
         );
 
         response.setEventThumbnailUrl(
-                event.getEventThumbnailUrl()
+                getFileService.resolveEventImage(event.getEventThumbnailUrl())
         );
 
         response.setTeaserVideo1Url(
-                event.getTeaserVideo1Url()
+                getFileService.resolveEventImage(event.getTeaserVideo1Url())
         );
 
         response.setTeaserVideo2Url(
-                event.getTeaserVideo2Url()
+                getFileService.resolveEventImage(event.getTeaserVideo2Url())
         );
 
         response.setOrganizationName(

@@ -33,16 +33,19 @@ public class OrganizerService {
     private final EventRepository eventRepository;
     private final EventSportsRepository eventSportsRepository;
     private final RealtimePublisher realtimePublisher;
+    private final com.botleague.backend.common.service.GetFileService getFileService;
 
     public OrganizerService(
             ResourceRoleAssignmentRepository assignmentRepository,
             EventRepository eventRepository,
             EventSportsRepository eventSportsRepository,
-            RealtimePublisher realtimePublisher) {
+            RealtimePublisher realtimePublisher,
+            com.botleague.backend.common.service.GetFileService getFileService) {
         this.assignmentRepository = assignmentRepository;
         this.eventRepository = eventRepository;
         this.eventSportsRepository = eventSportsRepository;
         this.realtimePublisher = realtimePublisher;
+        this.getFileService = getFileService;
     }
 
     /** Every event this user has an approved EVENT_HEAD assignment on, or owns as ORGANISER. */
@@ -197,10 +200,12 @@ public class OrganizerService {
         dto.setEventCode(e.getEventCode());
         dto.setEventName(e.getEventName());
         dto.setEventDescription(e.getEventDescription());
-        dto.setEventLogoUrl(e.getEventLogoUrl());
-        dto.setEventThumbnailUrl(e.getEventThumbnailUrl());
-        dto.setTeaserVideo1Url(e.getTeaserVideo1Url());
-        dto.setTeaserVideo2Url(e.getTeaserVideo2Url());
+        // Stored as either a raw "events/..." key (media-upload flow) or an
+        // already-full URL (creation flow) — resolveEventImage handles both.
+        dto.setEventLogoUrl(getFileService.resolveEventImage(e.getEventLogoUrl()));
+        dto.setEventThumbnailUrl(getFileService.resolveEventImage(e.getEventThumbnailUrl()));
+        dto.setTeaserVideo1Url(getFileService.resolveEventImage(e.getTeaserVideo1Url()));
+        dto.setTeaserVideo2Url(getFileService.resolveEventImage(e.getTeaserVideo2Url()));
         dto.setOrganizationName(e.getOrganizationName());
         dto.setVenueName(e.getVenueName());
         dto.setCity(e.getCity());

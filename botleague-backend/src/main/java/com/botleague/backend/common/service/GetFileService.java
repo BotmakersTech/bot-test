@@ -50,6 +50,34 @@ public class GetFileService {
         return null;
     }
 
+    /**
+     * Resolves any stored event logo/thumbnail/teaser value to what the
+     * frontend should render:
+     *   - null/blank                -> null (caller shows its own placeholder)
+     *   - already a full URL        -> returned as-is — some write paths
+     *                                  (event creation) store a
+     *                                  frontend-supplied full URL directly,
+     *                                  while the media-upload flow
+     *                                  (EventService.saveMedia /
+     *                                  applyEventSlot) stores just the raw
+     *                                  "events/..." key, so both shapes can
+     *                                  exist in the same column.
+     *   - "events/..."              -> CDN-prefixed into a full public URL.
+     *   - anything else unexpected  -> null, rather than throwing.
+     */
+    public String resolveEventImage(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        if (raw.startsWith("http://") || raw.startsWith("https://")) {
+            return raw;
+        }
+        if (raw.startsWith("events/")) {
+            return publicBaseUrl + "/" + raw;
+        }
+        return null;
+    }
+
     /** Certificate template backgrounds and issued certificate PDFs/images/QR codes. */
     public String getCertificateUrl(String key) {
         if (key == null || key.isEmpty()) {
