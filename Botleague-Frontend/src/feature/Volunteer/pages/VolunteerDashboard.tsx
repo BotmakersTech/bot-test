@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
 import { CalendarClock, CheckCircle2, HeartHandshake, Layers, MapPin, Timer } from "lucide-react"
 import type { RootState } from "../../../app/store"
-import RoleHeroDashboard, { type RoleHeroEvent } from "../../../shared/components/RoleHeroDashboard"
+import RoleHeroDashboard from "../../../shared/components/RoleHeroDashboard"
 import { getMyVolunteerAssignments, type VolunteerAssignment } from "../../Event/api/volunteerApplication.api"
 
 function fmtDate(d?: string | null) {
@@ -12,6 +12,7 @@ function fmtDate(d?: string | null) {
 }
 
 export default function VolunteerDashboard() {
+  const navigate = useNavigate()
   const [assignments, setAssignments] = useState<VolunteerAssignment[]>([])
   const [loading, setLoading] = useState(true)
   const user = useSelector((state: RootState) => state.auth.user)
@@ -27,39 +28,32 @@ export default function VolunteerDashboard() {
   const pending  = assignments.filter(a => a.status === "PENDING")
   const checkedIn = approved.filter(a => a.checkedInAt && !a.checkedOutAt)
 
-  const previousEvents: RoleHeroEvent[] = [...approved]
-    .sort((a, b) => {
-      const at = a.eventStartDate ? new Date(a.eventStartDate).getTime() : 0
-      const bt = b.eventStartDate ? new Date(b.eventStartDate).getTime() : 0
-      return bt - at
-    })
-    .slice(0, 3)
-    .map(a => ({
-      id: a.id,
-      title: a.eventName || "Event",
-      tag: a.checkedOutAt ? "Completed" : a.checkedInAt ? "Checked In" : "Confirmed",
-      imageUrl: null,
-      meta: [
-        ...(a.dutyStation ? [{ icon: <MapPin size={14} />, label: "Duty Station", value: a.dutyStation }] : []),
-        ...(a.shift ? [{ icon: <Timer size={14} />, label: "Shift", value: a.shift.replace("_", " ") }] : []),
-        ...(a.eventStartDate ? [{ icon: <CalendarClock size={14} />, label: "Event Date", value: fmtDate(a.eventStartDate) }] : []),
-        ...(a.eventCity ? [{ icon: <MapPin size={14} />, label: "City", value: a.eventCity }] : []),
-      ],
-      onView: () => { window.location.href = `/events/${a.eventId}` },
-      viewLabel: "View Event",
-    }))
+  const sortedApproved = [...approved].sort((a, b) => {
+    const at = a.eventStartDate ? new Date(a.eventStartDate).getTime() : 0
+    const bt = b.eventStartDate ? new Date(b.eventStartDate).getTime() : 0
+    return bt - at
+  })
+  const [latest, ...rest] = sortedApproved
+  const miniEvents = rest.slice(0, 2).map(a => a.eventName || "Event")
 
-  const achievements = [
-    { label: "3+ Events Volunteered", status: approved.length >= 3 ? "Unlocked" : `${approved.length}/3`, unlocked: approved.length >= 3, icon: <HeartHandshake size={18} /> },
-    { label: "10+ Events Volunteered", status: approved.length >= 10 ? "Unlocked" : `${approved.length}/10`, unlocked: approved.length >= 10, icon: <Layers size={18} /> },
-  ]
+  const featuredEvent = latest ? {
+    title: latest.eventName || "Event",
+    tag: latest.checkedOutAt ? "Completed" : latest.checkedInAt ? "Checked In" : "Confirmed",
+    meta: [
+      ...(latest.dutyStation ? [{ icon: <MapPin size={14} />, label: "Duty", value: latest.dutyStation }] : []),
+      ...(latest.shift ? [{ icon: <Timer size={14} />, label: "Shift", value: latest.shift.replace("_", " ") }] : []),
+      ...(latest.eventStartDate ? [{ icon: <CalendarClock size={14} />, label: "Date", value: fmtDate(latest.eventStartDate) }] : []),
+      ...(latest.eventCity ? [{ icon: <MapPin size={14} />, label: "City", value: latest.eventCity }] : []),
+    ],
+    onView: () => navigate(`/events/${latest.eventId}`),
+    viewLabel: "View Event",
+  } : null
 
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.userName || "Volunteer"
 
   return (
     <div className="min-h-full p-6 space-y-8">
       <RoleHeroDashboard
-        welcomeLabel={`Welcome back, ${user?.firstName || "Volunteer"}!`}
         name={fullName}
         photoUrl={user?.profilePhotoUrl}
         idLabel="Volunteer ID"
@@ -67,14 +61,14 @@ export default function VolunteerDashboard() {
         roleLabel="Event Volunteer"
         roleIcon={<HeartHandshake size={16} />}
         active
-        stats={[
-          { value: approved.length, label: "Confirmed Events", icon: <CheckCircle2 size={17} /> },
-          { value: pending.length, label: "Pending Applications", icon: <Timer size={17} /> },
-          { value: assignments.length, label: "Total Applications", icon: <Layers size={17} /> },
-        ]}
-        previousEvents={previousEvents}
+        stat1={{ value: approved.length, label: "Confirmed Events", icon: <CheckCircle2 size={22} /> }}
+        stat2={{ value: pending.length, label: "Pending Applications", icon: <Timer size={22} /> }}
+        stat3={{ value: assignments.length, label: "Total Applications", icon: <Layers size={22} /> }}
+        miniEvents={miniEvents}
+        featuredEvent={featuredEvent}
         emptyEventsLabel="No confirmed events yet — apply to volunteer from any event's page to get started."
-        achievements={achievements}
+        achievement1={{ label: "3+ Events Volunteered", status: approved.length >= 3 ? "Unlocked" : `${approved.length}/3`, unlocked: approved.length >= 3, icon: <HeartHandshake size={26} /> }}
+        achievement2={{ label: "10+ Events Volunteered", status: approved.length >= 10 ? "Unlocked" : `${approved.length}/10`, unlocked: approved.length >= 10, icon: <Layers size={26} /> }}
       />
 
       {/* Quick links */}
