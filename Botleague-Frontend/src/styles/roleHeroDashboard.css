@@ -1,23 +1,23 @@
-/* Shared "hero dashboard" for role-portal landing pages (Judge, Volunteer).
-   Ported 1:1 from the supplied JudgeDashboard.jsx/JudgeDashboard.css
-   Figma export — same fixed-canvas + scale-to-fit technique, same class
-   structure/positions, `.jd-` renamed to `.rhd-` since it's shared by two
-   roles now. Fonts (Sarpanch/Poppins/Inter) are already loaded app-wide
-   via index.html, same convention as eventDetail.css — no @import here.
-   Navbar/sidenav rules from the source are dropped — that JSX was already
-   commented out in the export (it renders inside the app's own Layout
-   chrome instead). */
+@import url("https://fonts.googleapis.com/css2?family=Sarpanch:wght@500;600&family=Poppins:wght@500;600&family=Inter:wght@500;600;700&family=Racing+Sans+One&display=swap");
+
+/* Ported 1:1 from the supplied JudgeDashboard.css — only the `.jd-`
+   selector prefix is renamed to `.rhd-` (shared by two roles now), no
+   rule/value additions or removals. */
 
 :root {
     --rhd-blue: #0162d1;
     --rhd-purple: #8c6cff;
 }
 
+/* Responsive canvas: the outer wrapper is fluid (100% width), and the
+   fixed-size (1513x1010) design canvas is scaled to fit it via a CSS
+   transform computed in JS. overflow is hidden so no scrollbar — custom
+   or native — ever appears, on any screen size. */
 .rhd-canvas-outer {
     position: relative;
     width: 100%;
     overflow: hidden;
-    background: transparent;
+    background: #ffffff;
 }
 
 .rhd-canvas {
@@ -26,12 +26,15 @@
     left: 0;
     width: 1513px;
     height: 1010px;
+    background: #ffffff;
     font-family: "Inter", sans-serif;
     transform-origin: top left;
     will-change: transform;
 }
 
-.rhd-abs { position: absolute; }
+.rhd-abs {
+    position: absolute;
+}
 
 .rhd-fill-img {
     display: block;
@@ -40,18 +43,45 @@
     width: 100%;
     height: 100%;
     max-width: none;
-    object-fit: cover;
 }
 
-.rhd-fade { opacity: 0.11; pointer-events: none; overflow: hidden; }
-.rhd-fade-soft { opacity: 1; }
+.rhd-fade {
+    opacity: 0.11;
+    pointer-events: none;
+    overflow: hidden;
+}
 
-.rhd-star-rot-a { transform: rotate(-7.91deg) skewX(-2.63deg); width: 100%; height: 100%; }
-.rhd-star-rot-b { transform: rotate(-16.68deg) skewX(-5.42deg); width: 100%; height: 100%; }
-.rhd-star-rot-c { transform: rotate(-16.54deg); }
-.rhd-star-rot-d { transform: rotate(30.6deg); }
-.rhd-star-rot-e { transform: rotate(12.15deg); }
-.rhd-star-rot-f { transform: rotate(-16.54deg); }
+.rhd-fade-soft {
+    opacity: 1;
+}
+
+.rhd-star-rot-a {
+    transform: rotate(-7.91deg) skewX(-2.63deg);
+    width: 100%;
+    height: 100%;
+}
+
+.rhd-star-rot-b {
+    transform: rotate(-16.68deg) skewX(-5.42deg);
+    width: 100%;
+    height: 100%;
+}
+
+.rhd-star-rot-c {
+    transform: rotate(-16.54deg);
+}
+
+.rhd-star-rot-d {
+    transform: rotate(30.6deg);
+}
+
+.rhd-star-rot-e {
+    transform: rotate(12.15deg);
+}
+
+.rhd-star-rot-f {
+    transform: rotate(-16.54deg);
+}
 
 /* ---------- heading ---------- */
 .rhd-welcome {
@@ -67,7 +97,7 @@
 .rhd-profile-card {
     border: 1px solid var(--rhd-blue);
     border-radius: 12px;
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.43);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     overflow: hidden;
@@ -79,7 +109,7 @@
     left: 0;
     right: 0;
     height: 2px;
-    background: rgba(180, 197, 255, 0.4);
+    background: rgba(180, 197, 255, 0.1);
 }
 
 .rhd-name {
@@ -93,7 +123,6 @@
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    white-space: nowrap;
 }
 
 .rhd-active-badge {
@@ -109,12 +138,16 @@
     font-size: 12px;
     letter-spacing: 0.24px;
     transition: box-shadow 0.15s ease;
-    white-space: nowrap;
 }
-.rhd-active-badge:hover { box-shadow: 0 0 0 4px rgba(1, 98, 209, 0.15); }
-.rhd-active-dot { width: 9px; height: 9px; border-radius: 50%; background: #22c55e; flex-shrink: 0; }
-.rhd-active-badge.rhd-inactive { border-color: #9ca3af; color: #6b7280; }
-.rhd-active-badge.rhd-inactive .rhd-active-dot { background: #9ca3af; }
+
+.rhd-active-badge:hover {
+    box-shadow: 0 0 0 4px rgba(1, 98, 209, 0.15);
+}
+
+.rhd-active-dot {
+    width: 9px;
+    height: 9px;
+}
 
 .rhd-btn-gradient {
     display: flex;
@@ -133,10 +166,27 @@
     cursor: pointer;
     transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
 }
-.rhd-btn-gradient:hover { filter: brightness(1.12); transform: translateY(-1px); box-shadow: 0px 6px 14px rgba(1, 98, 209, 0.35); }
-.rhd-btn-gradient:active { transform: translateY(0); filter: brightness(0.95); box-shadow: none; }
-.rhd-btn-gradient.rhd-btn-sm { font-size: 12px; box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25); }
-.rhd-btn-gradient.rhd-btn-sm:hover { box-shadow: 0px 6px 14px rgba(1, 98, 209, 0.4); }
+
+.rhd-btn-gradient:hover {
+    filter: brightness(1.12);
+    transform: translateY(-1px);
+    box-shadow: 0px 6px 14px rgba(1, 98, 209, 0.35);
+}
+
+.rhd-btn-gradient:active {
+    transform: translateY(0);
+    filter: brightness(0.95);
+    box-shadow: none;
+}
+
+.rhd-btn-gradient.rhd-btn-sm {
+    font-size: 12px;
+    box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+}
+
+.rhd-btn-gradient.rhd-btn-sm:hover {
+    box-shadow: 0px 6px 14px rgba(1, 98, 209, 0.4);
+}
 
 .rhd-id-text {
     margin: 0;
@@ -145,7 +195,6 @@
     font-size: 20px;
     line-height: 20px;
     color: #000000;
-    white-space: nowrap;
 }
 
 .rhd-role-text {
@@ -155,13 +204,6 @@
     font-size: 18px;
     line-height: 20px;
     color: #000000;
-    white-space: nowrap;
-}
-.rhd-role-icon { display: flex; align-items: center; justify-content: center; color: var(--rhd-blue); }
-
-.rhd-stat-backdrop {
-    border-radius: 14px;
-    background: linear-gradient(90deg, rgba(1, 98, 209, 0.08), rgba(140, 108, 255, 0.1));
 }
 
 .rhd-stat-num {
@@ -171,7 +213,6 @@
     font-size: 36px;
     color: #000000;
     white-space: nowrap;
-    font-variant-numeric: tabular-nums;
 }
 
 .rhd-stat-label {
@@ -180,18 +221,12 @@
     font-weight: 500;
     font-size: 20px;
     color: #000000;
-    white-space: nowrap;
-}
-
-.rhd-stat-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--rhd-blue);
 }
 
 /* ---------- shared gradient fill (decorative chip) ---------- */
-.rhd-gradient-fill { background: linear-gradient(180deg, rgba(1, 98, 209, 0.75) 0%, rgba(140, 108, 255, 0.75) 100%); }
+.rhd-gradient-fill {
+    background: linear-gradient(180deg, rgba(1, 98, 209, 0.75) 0%, rgba(140, 108, 255, 0.75) 100%);
+}
 
 /* ---------- outlined info cards ---------- */
 .rhd-outline-card {
@@ -213,27 +248,24 @@
 .rhd-event-placeholder {
     border-radius: 5px;
     background: linear-gradient(180deg, rgba(1, 98, 209, 0.4) 0%, rgba(140, 108, 255, 0.4) 100%);
-    cursor: default;
+    cursor: pointer;
     transition: filter 0.15s ease, transform 0.15s ease;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    padding: 0 14px;
-}
-.rhd-event-placeholder.rhd-clickable { cursor: pointer; }
-.rhd-event-placeholder.rhd-clickable:hover { filter: brightness(1.1); transform: translateX(3px); }
-.rhd-event-placeholder span {
-    font-family: "Inter", sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    color: #fff;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
-.rhd-vdivider-v { width: 0; border-left: 1px solid #d9d9d9; }
-.rhd-vdivider-h { height: 0; border-top: 1px solid #d9d9d9; }
+.rhd-event-placeholder:hover {
+    filter: brightness(1.1);
+    transform: translateX(3px);
+}
+
+.rhd-vdivider-v {
+    width: 0;
+    border-left: 1px solid #d9d9d9;
+}
+
+.rhd-vdivider-h {
+    height: 0;
+    border-top: 1px solid #d9d9d9;
+}
 
 .rhd-event-title {
     margin: 0;
@@ -242,19 +274,15 @@
     font-size: 22px;
     line-height: 26px;
     color: var(--rhd-purple);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
-.rhd-event-tag {
+.rhd-event-upcoming {
     margin: 0;
     font-family: "Poppins", sans-serif;
     font-weight: 500;
     font-size: 12px;
     line-height: 10px;
     color: rgba(0, 0, 0, 0.41);
-    white-space: nowrap;
 }
 
 .rhd-meta-label {
@@ -275,16 +303,6 @@
     line-height: 16px;
     color: #000000;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.rhd-meta-icon { display: flex; align-items: center; justify-content: center; color: var(--rhd-blue); }
-
-.rhd-empty-note {
-    font-family: "Inter", sans-serif;
-    font-size: 14px;
-    color: rgba(0, 0, 0, 0.4);
 }
 
 /* ---------- achievements ---------- */
@@ -296,65 +314,151 @@
     color: var(--rhd-purple);
     text-decoration: none;
     transition: color 0.15s ease;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
 }
-.rhd-view-all:hover { color: var(--rhd-blue); text-decoration: underline; }
+
+.rhd-view-all:hover {
+    color: var(--rhd-blue);
+    text-decoration: underline;
+}
 
 .rhd-achievement {
     border-radius: 8px;
     background: rgba(140, 108, 255, 0.13);
     overflow: hidden;
-    cursor: default;
+    cursor: pointer;
     transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
 }
-.rhd-achievement.rhd-unlocked:hover { transform: translateY(-4px); box-shadow: 0px 10px 24px rgba(140, 108, 255, 0.3); background: rgba(140, 108, 255, 0.2); }
-.rhd-achievement.rhd-locked { opacity: 0.45; }
 
-.rhd-achievement-badge {
-    width: 68px;
-    height: 68px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    background: linear-gradient(150deg, var(--rhd-blue), var(--rhd-purple));
-    box-shadow: 0 8px 18px rgba(1, 98, 209, 0.25);
+.rhd-achievement:hover {
+    transform: translateY(-4px);
+    box-shadow: 0px 10px 24px rgba(140, 108, 255, 0.3);
+    background: rgba(140, 108, 255, 0.2);
 }
-.rhd-achievement.rhd-locked .rhd-achievement-badge { background: #9ca3af; box-shadow: none; }
 
 .rhd-achievement-label {
     margin: 0;
     font-family: "Inter", sans-serif;
     font-weight: 500;
-    font-size: 12px;
-    color: rgba(0, 0, 0, 0.6);
-    white-space: nowrap;
-    text-align: center;
-}
-.rhd-achievement-status {
-    margin: 0;
-    font-family: "Inter", sans-serif;
-    font-weight: 700;
     font-size: 10px;
-    color: #9ca3af;
-    text-align: center;
+    line-height: 10px;
+    color: rgba(0, 0, 0, 0.47);
+    white-space: nowrap;
 }
-.rhd-achievement.rhd-unlocked .rhd-achievement-status { color: #15803d; }
 
-.rhd-achievement-dot { border-radius: 50%; background: var(--rhd-blue); }
-.rhd-achievement-dot.rhd-dot-light { background: rgba(1, 98, 209, 0.35); }
+/* ---------- top navbar (unused — this dashboard renders inside the app's
+   own Layout chrome, same as the source file's own commented-out JSX) ---------- */
+.rhd-navbar {
+    border: 1px solid var(--rhd-blue);
+    border-radius: 15px;
+    background: linear-gradient(180deg, rgba(1, 98, 209, 0.35) 0%, rgba(140, 108, 255, 0.35) 100%);
+    box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+}
 
-/* ---------- responsive: scale-to-fit handles width; below this we let the
-   canvas keep shrinking instead of ever introducing horizontal scroll ---------- */
-@media (max-width: 480px) {
-    .rhd-canvas-outer { min-height: 480px; }
+.rhd-navbar-title {
+    position: absolute;
+    left: 50%;
+    top: 6px;
+    transform: translateX(-50%);
+    margin: 0;
+    width: 318px;
+    text-align: center;
+    font-family: "Racing Sans One", sans-serif;
+    font-size: 42px;
+    color: #ffffff;
+}
+
+.rhd-navbar-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    padding: 4px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.rhd-navbar-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.08);
+}
+
+.rhd-navbar-icon-btn:active {
+    transform: scale(0.96);
+}
+
+/* ---------- side nav (unused, same reason as navbar above) ---------- */
+.rhd-sidenav {
+    border-radius: 15px;
+    background: linear-gradient(180deg, rgba(1, 98, 209, 0.25) 0%, rgba(140, 108, 255, 0.25) 100%);
+    box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+}
+
+.rhd-sidenav-icons {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+    width: 35px;
+}
+
+.rhd-sidenav-item {
+    position: relative;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.rhd-sidenav-item:hover {
+    background: rgba(1, 98, 209, 0.18);
+    transform: scale(1.06);
+}
+
+.rhd-sidenav-item:active {
+    transform: scale(0.96);
+}
+
+.rhd-sidenav-active {
+    background: var(--rhd-blue);
+}
+
+.rhd-sidenav-active:hover {
+    background: var(--rhd-blue);
+    filter: brightness(1.1);
+}
+
+.rhd-sidenav-logout-btn {
+    position: absolute;
+    left: 50%;
+    bottom: 10%;
+    transform: translateX(-50%);
+    border: none;
+    background: transparent;
+    padding: 6px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.rhd-sidenav-logout-btn:hover {
+    background: rgba(1, 98, 209, 0.15);
+    transform: translateX(-50%) scale(1.08);
+}
+
+.rhd-sidenav-logout {
+    width: 30px;
+    display: block;
 }

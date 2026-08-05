@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
-import { BarChart3, CalendarClock, Gavel, Swords, Trophy } from "lucide-react"
 import api from "../../../shared/api/Base"
 import type { RootState } from "../../../app/store"
 import RoleHeroDashboard from "../../../shared/components/RoleHeroDashboard"
@@ -56,44 +55,31 @@ export default function JudgeDashboard() {
     const bt = b.scheduledAt ? new Date(b.scheduledAt).getTime() : 0
     return bt - at
   })
-  const matchTitle = (m: AssignedMatch) => `${m.teamARobotName || m.teamAName || "TBD"} vs ${m.teamBRobotName || m.teamBName || "TBD"}`
-  const [latest, ...rest] = sortedCompleted
-  const miniEvents = rest.slice(0, 2).map(matchTitle)
-
-  const featuredEvent = latest ? {
-    title: matchTitle(latest),
-    tag: "Completed",
-    meta: [
-      { icon: <Swords size={14} />, label: "Match", value: `Round ${latest.roundNumber ?? "—"} · Match ${latest.matchNumber ?? "—"}` },
-      ...(latest.scheduledAt ? [{ icon: <CalendarClock size={14} />, label: "Time", value: fmt(latest.scheduledAt) }] : []),
-      ...(latest.teamAScore != null && latest.teamBScore != null
-        ? [{ icon: <Trophy size={14} />, label: "Score", value: `${latest.teamAScore} – ${latest.teamBScore}` }]
-        : []),
-    ],
-    onView: () => navigate("/judge/matches"),
-    viewLabel: "View Matches",
-  } : null
+  const latest = sortedCompleted[0]
 
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.userName || "Judge"
 
   return (
     <div className="min-h-full p-6 space-y-8">
       <RoleHeroDashboard
+        welcomeName={user?.firstName || "Judge"}
         name={fullName}
         photoUrl={user?.profilePhotoUrl}
         idLabel="Judge ID"
         idValue={user?.botleagueId || "—"}
         roleLabel="Match Judge"
-        roleIcon={<Swords size={16} />}
-        active
-        stat1={{ value: completed.length, label: "Matches Judged", icon: <Gavel size={22} /> }}
-        stat2={{ value: scheduled.length, label: "Upcoming Matches", icon: <CalendarClock size={22} /> }}
-        stat3={{ value: distinctSports, label: "Sports Experience", icon: <BarChart3 size={22} /> }}
-        miniEvents={miniEvents}
-        featuredEvent={featuredEvent}
-        emptyEventsLabel="No completed matches yet — they'll show up here once you've judged your first one."
-        achievement1={{ label: "5+ Matches Judged", status: completed.length >= 5 ? "Unlocked" : `${completed.length}/5`, unlocked: completed.length >= 5, icon: <Gavel size={26} /> }}
-        achievement2={{ label: "20+ Matches Judged", status: completed.length >= 20 ? "Unlocked" : `${completed.length}/20`, unlocked: completed.length >= 20, icon: <Trophy size={26} /> }}
+        stat1Value={completed.length}
+        stat1Label="Matches Judged"
+        stat2Value={scheduled.length}
+        stat2Label="Upcoming Matches"
+        stat3Value={distinctSports}
+        stat3Label="Sports Experience"
+        eventTitle={latest ? `${latest.teamARobotName || latest.teamAName || "TBD"} vs ${latest.teamBRobotName || latest.teamBName || "TBD"}` : "No matches judged yet"}
+        eventTag={latest ? `Round ${latest.roundNumber ?? "—"} · Match ${latest.matchNumber ?? "—"}` : ""}
+        eventTime={latest ? fmt(latest.scheduledAt) : undefined}
+        onViewEvent={latest ? () => navigate("/judge/matches") : undefined}
+        achievement1Label="5+ Matches Judged"
+        achievement2Label="20+ Matches Judged"
       />
 
       {/* Quick links */}
