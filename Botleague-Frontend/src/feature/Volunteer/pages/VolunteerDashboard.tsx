@@ -1,70 +1,135 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
+import { useSelector } from "react-redux"
+import { CalendarClock, CheckCircle2, HeartHandshake, Layers, MapPin, Timer } from "lucide-react"
+import type { RootState } from "../../../app/store"
+import RoleHeroDashboard, { type RoleHeroEvent } from "../../../shared/components/RoleHeroDashboard"
+import { getMyVolunteerAssignments, type VolunteerAssignment } from "../../Event/api/volunteerApplication.api"
 
-interface VolunteerInfo {
-  id: string
-  eventId: string
-  name: string
-  dutyStation?: string
-  shift?: string
-  checkedInAt?: string
-  checkedOutAt?: string
+function fmtDate(d?: string | null) {
+  if (!d) return "—"
+  return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
 }
 
 export default function VolunteerDashboard() {
-  const [assignments] = useState<VolunteerInfo[]>([])
+  const [assignments, setAssignments] = useState<VolunteerAssignment[]>([])
   const [loading, setLoading] = useState(true)
+  const user = useSelector((state: RootState) => state.auth.user)
 
   useEffect(() => {
-    // Fetch volunteer's own records (if a dedicated endpoint exists later)
-    setLoading(false)
+    getMyVolunteerAssignments()
+      .then(setAssignments)
+      .catch(() => setAssignments([]))
+      .finally(() => setLoading(false))
   }, [])
 
-  const checkedIn  = assignments.filter(a => a.checkedInAt && !a.checkedOutAt).length
-  const pending    = assignments.filter(a => !a.checkedInAt).length
+  const approved = assignments.filter(a => a.status === "APPROVED")
+  const pending  = assignments.filter(a => a.status === "PENDING")
+  const checkedIn = approved.filter(a => a.checkedInAt && !a.checkedOutAt)
+
+  const previousEvents: RoleHeroEvent[] = [...approved]
+    .sort((a, b) => {
+      const at = a.eventStartDate ? new Date(a.eventStartDate).getTime() : 0
+      const bt = b.eventStartDate ? new Date(b.eventStartDate).getTime() : 0
+      return bt - at
+    })
+    .slice(0, 3)
+    .map(a => ({
+      id: a.id,
+      title: a.eventName || "Event",
+      tag: a.checkedOutAt ? "Completed" : a.checkedInAt ? "Checked In" : "Confirmed",
+      imageUrl: null,
+      meta: [
+        ...(a.dutyStation ? [{ icon: <MapPin size={14} />, label: "Duty Station", value: a.dutyStation }] : []),
+        ...(a.shift ? [{ icon: <Timer size={14} />, label: "Shift", value: a.shift.replace("_", " ") }] : []),
+        ...(a.eventStartDate ? [{ icon: <CalendarClock size={14} />, label: "Event Date", value: fmtDate(a.eventStartDate) }] : []),
+        ...(a.eventCity ? [{ icon: <MapPin size={14} />, label: "City", value: a.eventCity }] : []),
+      ],
+      onView: () => { window.location.href = `/events/${a.eventId}` },
+      viewLabel: "View Event",
+    }))
+
+  const achievements = [
+    { label: "3+ Events Volunteered", status: approved.length >= 3 ? "Unlocked" : `${approved.length}/3`, unlocked: approved.length >= 3, icon: <HeartHandshake size={18} /> },
+    { label: "10+ Events Volunteered", status: approved.length >= 10 ? "Unlocked" : `${approved.length}/10`, unlocked: approved.length >= 10, icon: <Layers size={18} /> },
+  ]
+
+  const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.userName || "Volunteer"
 
   return (
-    <div className="min-h-full p-6 space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-white">Volunteer Dashboard</h1>
-        <p className="text-sm text-neutral-500 mt-0.5">Your event assignments and check-in status</p>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {[
-          { label: "Assignments",  value: assignments.length, color: "text-white" },
-          { label: "Checked In",   value: checkedIn,          color: "text-green-400" },
-          { label: "Pending",      value: pending,            color: "text-orange-400" },
-        ].map(s => (
-          <div key={s.label} className="rounded-2xl border border-white/[0.06] bg-[#0e0e10] p-4">
-            <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
-            <div className="text-xs text-neutral-500 mt-1">{s.label}</div>
-          </div>
-        ))}
-      </div>
+    <div className="min-h-full p-6 space-y-8">
+      <RoleHeroDashboard
+        welcomeLabel={`Welcome back, ${user?.firstName || "Volunteer"}!`}
+        name={fullName}
+        photoUrl={user?.profilePhotoUrl}
+        idLabel="Volunteer ID"
+        idValue={user?.botleagueId || "—"}
+        roleLabel="Event Volunteer"
+        roleIcon={<HeartHandshake size={16} />}
+        active
+        stats={[
+          { value: approved.length, label: "Confirmed Events", icon: <CheckCircle2 size={17} /> },
+          { value: pending.length, label: "Pending Applications", icon: <Timer size={17} /> },
+          { value: assignments.length, label: "Total Applications", icon: <Layers size={17} /> },
+        ]}
+        previousEvents={previousEvents}
+        emptyEventsLabel="No confirmed events yet — apply to volunteer from any event's page to get started."
+        achievements={achievements}
+      />
 
       {/* Quick links */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {[
           { label: "Check In / Out",  href: "/volunteer/checkin",  icon: "✅" },
           { label: "My Event",        href: "/volunteer/event",    icon: "📋" },
           { label: "My Schedule",     href: "/volunteer/schedule", icon: "📅" },
-          { label: "Notifications",   href: "/notifications",      icon: "🔔" },
         ].map(l => (
           <Link key={l.label} to={l.href}
-            className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-[#0e0e10] px-4 py-3 hover:border-[#fa4715]/30 hover:bg-white/[0.02] transition-colors">
+            className="flex items-center gap-3 rounded-xl border border-[#4b86e8]/20 bg-white px-4 py-3 hover:border-[#0162D1]/40 hover:bg-[#0162D1]/3 transition-colors">
             <span className="text-xl">{l.icon}</span>
-            <span className="text-sm text-neutral-300">{l.label}</span>
+            <span className="text-sm text-[#374151] font-medium">{l.label}</span>
           </Link>
         ))}
       </div>
 
-      {/* Current assignment card */}
-      {assignments.length === 0 && !loading && (
-        <div className="rounded-2xl border border-dashed border-white/10 py-16 text-center">
-          <p className="text-neutral-400 text-sm">No volunteer assignments found yet.</p>
-          <p className="text-neutral-600 text-xs mt-1">Your organiser will assign your duty station.</p>
+      {checkedIn.length > 0 && (
+        <section>
+          <h2 className="text-sm font-semibold text-green-600 mb-3 uppercase tracking-wide">Currently Checked In</h2>
+          <div className="space-y-2">
+            {checkedIn.map(a => (
+              <div key={a.id} className="flex items-center justify-between rounded-xl border border-green-500/30 bg-green-500/5 px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium text-[#111]">{a.eventName || "Event"}</p>
+                  <p className="text-xs text-[#6b7280]">{a.dutyStation || "No duty station set"}{a.shift ? ` · ${a.shift.replace("_", " ")}` : ""}</p>
+                </div>
+                <span className="text-xs font-bold text-green-600">CHECKED IN</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {pending.length > 0 && (
+        <section>
+          <h2 className="text-sm font-semibold text-[#b45309] mb-3 uppercase tracking-wide">Awaiting Review</h2>
+          <div className="space-y-2">
+            {pending.map(a => (
+              <div key={a.id} className="flex items-center justify-between rounded-xl border border-[#4b86e8]/20 bg-white px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium text-[#111]">{a.eventName || "Event"}</p>
+                  <p className="text-xs text-[#6b7280]">Applied {fmtDate(a.appliedAt)}</p>
+                </div>
+                <span className="text-xs font-semibold text-[#b45309]">PENDING</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {!loading && assignments.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-[#4b86e8]/30 py-16 text-center">
+          <p className="text-[#6b7280] text-sm">No volunteer applications yet.</p>
+          <p className="text-[#9ca3af] text-xs mt-1">Visit any event page to apply.</p>
         </div>
       )}
     </div>
