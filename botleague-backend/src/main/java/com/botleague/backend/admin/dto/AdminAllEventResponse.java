@@ -51,6 +51,8 @@ public class AdminAllEventResponse {
 
     private LocalDate endDate;
 
+    private boolean volunteersNeeded;
+
     // =====================================================
     // ORGANIZATION INFO
     // =====================================================
@@ -222,6 +224,14 @@ public class AdminAllEventResponse {
 
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
+    }
+
+    public boolean isVolunteersNeeded() {
+        return volunteersNeeded;
+    }
+
+    public void setVolunteersNeeded(boolean volunteersNeeded) {
+        this.volunteersNeeded = volunteersNeeded;
     }
 
     public String getOrganizationName() {

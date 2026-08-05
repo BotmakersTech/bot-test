@@ -257,6 +257,7 @@ public class AdminService {
         if (request.getEventDescription() != null) event.setEventDescription(request.getEventDescription());
         if (request.getEventLogoUrl()     != null) event.setEventLogoUrl(request.getEventLogoUrl());
         if (request.getOrganizationName() != null) event.setOrganizationName(request.getOrganizationName());
+        if (request.getVolunteersNeeded() != null) event.setVolunteersNeeded(request.getVolunteersNeeded());
 
         // Extended fields — only in DRAFT (or if admin)
         if (fullEdit) {
@@ -612,6 +613,7 @@ public class AdminService {
         dto.setVenueAddress(event.getVenueAddress());
         dto.setStartDate(event.getStartDate());
         dto.setEndDate(event.getEndDate());
+        dto.setVolunteersNeeded(event.isVolunteersNeeded());
         dto.setOrganizationName(event.getOrganizationName());
         dto.setOrganizationUrl(event.getOrganizationUrl());
         dto.setApprovedAt(event.getApprovedAt());

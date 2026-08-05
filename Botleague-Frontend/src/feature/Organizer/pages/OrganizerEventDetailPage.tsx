@@ -400,6 +400,7 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange }: {
     country:          event.country           ?? "",
     startDate:        fmt(event.startDate),
     endDate:          fmt(event.endDate),
+    volunteersNeeded: event.volunteersNeeded ?? false,
   })
   const [error, setError] = useState<string | null>(null)
   const set = (k: keyof UpdateEventInfoRequest, v: string) => setForm(f => ({ ...f, [k]: v }))
@@ -458,6 +459,16 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange }: {
             <FormField label="Start Date"><input type="date" style={dateInputStyle} value={form.startDate} onChange={e => set("startDate", e.target.value)} /></FormField>
             <FormField label="End Date"><input type="date" style={dateInputStyle} value={form.endDate} min={form.startDate || undefined} onChange={e => set("endDate", e.target.value)} /></FormField>
           </div>
+
+          <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", background: "rgba(75,134,232,0.04)", border: `1px solid ${BORDER}`, borderRadius: "10px", padding: "10px 14px" }}>
+            <span>
+              <span style={{ display: "block", fontSize: "0.85rem", fontWeight: 600 }}>Volunteers needed</span>
+              <span style={{ display: "block", fontSize: "0.72rem", color: MUTED, marginTop: "2px" }}>Shows an "Apply for Volunteer" button on the public event page</span>
+            </span>
+            <input type="checkbox" checked={form.volunteersNeeded ?? false}
+              onChange={e => setForm(f => ({ ...f, volunteersNeeded: e.target.checked }))}
+              style={{ width: "18px", height: "18px", accentColor: ACCENT, flexShrink: 0 }} />
+          </label>
 
           {error && <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "8px", padding: "10px 14px", color: DANGER, fontSize: "0.8rem", fontWeight: 600 }}>⚠️ {error}</div>}
         </div>

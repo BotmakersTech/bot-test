@@ -201,6 +201,23 @@ public class OrganizerController {
         return ResponseEntity.noContent().build();
     }
 
+    /** Approve/reject a self-service volunteer application. */
+    @PatchMapping("/events/{eventId}/volunteers/{volunteerId}/decision")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
+    public ResponseEntity<VolunteerResponse> decideVolunteerApplication(
+            @PathVariable UUID eventId,
+            @PathVariable UUID volunteerId,
+            @RequestBody com.botleague.backend.organizer.dto.OrganizerDTOs.VolunteerDecisionRequest req,
+            Authentication auth) {
+        com.botleague.backend.organizer.enums.VolunteerStatus decision;
+        try {
+            decision = com.botleague.backend.organizer.enums.VolunteerStatus.valueOf(req.status.toUpperCase());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new IllegalArgumentException("Status must be APPROVED or REJECTED");
+        }
+        return ResponseEntity.ok(peopleService.decideVolunteerApplication(volunteerId, decision, extractUserId(auth), req.reason));
+    }
+
     // =========================================================================
     // JUDGES
     // =========================================================================

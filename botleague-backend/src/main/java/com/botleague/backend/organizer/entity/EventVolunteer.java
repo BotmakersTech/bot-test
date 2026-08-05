@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.botleague.backend.organizer.enums.VolunteerStatus;
+
 @Entity
 @Table(name = "event_volunteers", indexes = {
     @Index(name = "idx_volunteer_event", columnList = "event_id")
@@ -46,6 +48,25 @@ public class EventVolunteer {
     @Column(name = "checked_out_at")
     private LocalDateTime checkedOutAt;
 
+    /**
+     * APPROVED for organiser-added rows (default — no review step needed);
+     * PENDING/REJECTED only occur on self-service applications
+     * (see VolunteerApplicationService).
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private VolunteerStatus status;
+
+    /** Set only for self-service applications. */
+    @Column(name = "applied_at")
+    private LocalDateTime appliedAt;
+
+    @Column(name = "decided_at")
+    private LocalDateTime decidedAt;
+
+    @Column(name = "decided_by")
+    private UUID decidedBy;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -55,6 +76,7 @@ public class EventVolunteer {
     @PrePersist
     public void onCreate() {
         if (this.id == null) this.id = UUID.randomUUID();
+        if (this.status == null) this.status = VolunteerStatus.APPROVED;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -85,6 +107,14 @@ public class EventVolunteer {
     public void setCheckedInAt(LocalDateTime checkedInAt) { this.checkedInAt = checkedInAt; }
     public LocalDateTime getCheckedOutAt() { return checkedOutAt; }
     public void setCheckedOutAt(LocalDateTime checkedOutAt) { this.checkedOutAt = checkedOutAt; }
+    public VolunteerStatus getStatus() { return status; }
+    public void setStatus(VolunteerStatus status) { this.status = status; }
+    public LocalDateTime getAppliedAt() { return appliedAt; }
+    public void setAppliedAt(LocalDateTime appliedAt) { this.appliedAt = appliedAt; }
+    public LocalDateTime getDecidedAt() { return decidedAt; }
+    public void setDecidedAt(LocalDateTime decidedAt) { this.decidedAt = decidedAt; }
+    public UUID getDecidedBy() { return decidedBy; }
+    public void setDecidedBy(UUID decidedBy) { this.decidedBy = decidedBy; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

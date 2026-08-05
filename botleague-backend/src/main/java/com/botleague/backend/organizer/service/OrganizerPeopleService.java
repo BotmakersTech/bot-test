@@ -2,7 +2,16 @@ package com.botleague.backend.organizer.service;
 
 import com.botleague.backend.organizer.dto.OrganizerDTOs.*;
 import com.botleague.backend.organizer.entity.*;
+import com.botleague.backend.organizer.enums.VolunteerStatus;
 import com.botleague.backend.organizer.repository.*;
+import com.botleague.backend.auth.enums.AccountType;
+import com.botleague.backend.common.exception.ApiException;
+import com.botleague.backend.events.repository.EventRepository;
+import com.botleague.backend.notification.enums.NotificationPriority;
+import com.botleague.backend.notification.enums.NotificationTargetType;
+import com.botleague.backend.notification.enums.NotificationType;
+import com.botleague.backend.notification.service.NotificationService;
+import com.botleague.backend.role.service.UserRoleService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.botleague.backend.common.exception.ResourceNotFoundException;
@@ -24,16 +33,25 @@ public class OrganizerPeopleService {
     private final EventVolunteerRepository volunteerRepo;
     private final EventJudgeRepository     judgeRepo;
     private final EventStaffRepository     staffRepo;
+    private final EventRepository          eventRepo;
+    private final UserRoleService          userRoleService;
+    private final NotificationService      notificationService;
 
     public OrganizerPeopleService(
             EventArenaRepository     arenaRepo,
             EventVolunteerRepository volunteerRepo,
             EventJudgeRepository     judgeRepo,
-            EventStaffRepository     staffRepo) {
+            EventStaffRepository     staffRepo,
+            EventRepository          eventRepo,
+            UserRoleService          userRoleService,
+            NotificationService      notificationService) {
         this.arenaRepo     = arenaRepo;
         this.volunteerRepo = volunteerRepo;
         this.judgeRepo     = judgeRepo;
         this.staffRepo     = staffRepo;
+        this.eventRepo     = eventRepo;
+        this.userRoleService = userRoleService;
+        this.notificationService = notificationService;
     }
 
     // ── ARENA ────────────────────────────────────────────────────────────────
@@ -112,6 +130,52 @@ public class OrganizerPeopleService {
 
     public void deleteVolunteer(UUID volunteerId) {
         volunteerRepo.deleteById(volunteerId);
+    }
+
+    /**
+     * Organiser decision on a self-service volunteer application.
+     * Approving auto-grants the platform-wide VOLUNTEER role (idempotent —
+     * the applicant already holds it in practice since only VOLUNTEER-role
+     * accounts can apply, but this keeps the grant authoritative rather than
+     * assumed) and notifies the applicant either way.
+     */
+    public VolunteerResponse decideVolunteerApplication(UUID volunteerId, VolunteerStatus decision, UUID deciderId, String reason) {
+        if (decision != VolunteerStatus.APPROVED && decision != VolunteerStatus.REJECTED) {
+            throw ApiException.badRequest("Decision must be APPROVED or REJECTED");
+        }
+        EventVolunteer v = volunteerRepo.findById(volunteerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Volunteer not found"));
+        if (v.getStatus() != VolunteerStatus.PENDING) {
+            throw ApiException.badRequest("This application has already been decided.");
+        }
+
+        v.setStatus(decision);
+        v.setDecidedAt(LocalDateTime.now());
+        v.setDecidedBy(deciderId);
+        EventVolunteer saved = volunteerRepo.save(v);
+
+        if (decision == VolunteerStatus.APPROVED && v.getUserId() != null) {
+            userRoleService.assignRole(v.getUserId(), AccountType.VOLUNTEER);
+        }
+
+        if (v.getUserId() != null) {
+            String eventName = eventRepo.findById(v.getEventId()).map(e -> e.getEventName()).orElse("the event");
+            boolean approved = decision == VolunteerStatus.APPROVED;
+            notificationService.systemNotify(
+                    approved ? "Volunteer application approved" : "Volunteer application update",
+                    approved
+                            ? "You're confirmed as a volunteer for " + eventName + ". Check your duty station and shift."
+                            : "Your volunteer application for " + eventName + " was not approved"
+                                    + (reason != null && !reason.isBlank() ? ": " + reason : "."),
+                    NotificationType.CUSTOM_UPDATE,
+                    NotificationPriority.MEDIUM,
+                    NotificationTargetType.USER,
+                    v.getUserId(),
+                    "/volunteer/event"
+            );
+        }
+
+        return toVolunteerResponse(saved);
     }
 
     // ── JUDGE ────────────────────────────────────────────────────────────────
@@ -210,10 +274,12 @@ public class OrganizerPeopleService {
 
     private VolunteerResponse toVolunteerResponse(EventVolunteer v) {
         VolunteerResponse r = new VolunteerResponse();
-        r.id = v.getId(); r.eventId = v.getEventId(); r.name = v.getName();
+        r.id = v.getId(); r.eventId = v.getEventId(); r.userId = v.getUserId(); r.name = v.getName();
         r.email = v.getEmail(); r.phone = v.getPhone(); r.dutyStation = v.getDutyStation();
         r.shift = v.getShift(); r.notes = v.getNotes();
         r.checkedInAt = v.getCheckedInAt(); r.checkedOutAt = v.getCheckedOutAt();
+        r.status = v.getStatus() != null ? v.getStatus().name() : null;
+        r.appliedAt = v.getAppliedAt(); r.decidedAt = v.getDecidedAt();
         r.createdAt = v.getCreatedAt();
         return r;
     }

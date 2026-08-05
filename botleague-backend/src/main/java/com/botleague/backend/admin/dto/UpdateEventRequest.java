@@ -16,6 +16,7 @@ public class UpdateEventRequest {
     private String country;
     private LocalDate startDate;
     private LocalDate endDate;
+    private Boolean volunteersNeeded;
 
     public String getEventName()                    { return eventName; }
     public void setEventName(String v)              { this.eventName = v; }
@@ -41,4 +42,6 @@ public class UpdateEventRequest {
     public void setStartDate(LocalDate v)           { this.startDate = v; }
     public LocalDate getEndDate()                   { return endDate; }
     public void setEndDate(LocalDate v)             { this.endDate = v; }
+    public Boolean getVolunteersNeeded()            { return volunteersNeeded; }
+    public void setVolunteersNeeded(Boolean v)      { this.volunteersNeeded = v; }
 }

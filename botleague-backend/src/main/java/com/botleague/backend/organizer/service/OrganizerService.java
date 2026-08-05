@@ -174,6 +174,7 @@ public class OrganizerService {
         if (dto.getCountry()          != null) event.setCountry(dto.getCountry());
         if (dto.getStartDate()        != null) event.setStartDate(dto.getStartDate());
         if (dto.getEndDate()          != null) event.setEndDate(dto.getEndDate());
+        if (dto.getVolunteersNeeded() != null) event.setVolunteersNeeded(dto.getVolunteersNeeded());
 
         CreateEventResponseDTO saved = toEventResponse(eventRepository.save(event));
         realtimePublisher.pushEventUpdate(eventId, saved);
@@ -213,6 +214,7 @@ public class OrganizerService {
         dto.setCountry(e.getCountry());
         dto.setStartDate(e.getStartDate());
         dto.setEndDate(e.getEndDate());
+        dto.setVolunteersNeeded(e.isVolunteersNeeded());
         dto.setStatus(e.getStatus() != null ? e.getStatus().name() : null);
         dto.setCreatedAt(e.getCreatedAt());
         dto.setSports(eventSportsRepository.findByEventId(e.getId())

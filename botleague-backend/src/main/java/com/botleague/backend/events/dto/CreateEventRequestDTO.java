@@ -62,6 +62,11 @@ public class CreateEventRequestDTO {
     private String notes;
 
     // =========================
+    // Volunteers
+    // =========================
+    private Boolean volunteersNeeded;
+
+    // =========================
     // Getters & Setters
     // =========================
 
@@ -199,6 +204,14 @@ public class CreateEventRequestDTO {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public Boolean getVolunteersNeeded() {
+        return volunteersNeeded;
+    }
+
+    public void setVolunteersNeeded(Boolean volunteersNeeded) {
+        this.volunteersNeeded = volunteersNeeded;
     }
 
 }

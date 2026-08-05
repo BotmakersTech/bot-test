@@ -454,7 +454,7 @@ const STATUS_TRANSITIONS: Record<string, { value: string; label: string; color: 
 // ─────────────────────────────────────────────────────────────
 
 interface EditEventModalProps {
-  event: { id: string; eventName: string; eventDescription?: string; organizationName?: string; organizationUrl?: string; venueName?: string; city?: string; state?: string; country?: string; startDate?: string; endDate?: string; eventThumbnailUrl?: string; teaserVideo1Url?: string; teaserVideo2Url?: string }
+  event: { id: string; eventName: string; eventDescription?: string; organizationName?: string; organizationUrl?: string; venueName?: string; city?: string; state?: string; country?: string; startDate?: string; endDate?: string; eventThumbnailUrl?: string; teaserVideo1Url?: string; teaserVideo2Url?: string; volunteersNeeded?: boolean }
   onSave: (req: UpdateEventRequest) => Promise<unknown>
   saving: boolean
   onClose: () => void
@@ -476,6 +476,7 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange, limited
     country:         event.country          ?? "",
     startDate:       fmt(event.startDate),
     endDate:         fmt(event.endDate),
+    volunteersNeeded: event.volunteersNeeded ?? false,
   })
   const [error, setError] = useState<string | null>(null)
   const set = (k: keyof UpdateEventRequest, v: string) => setForm(f => ({ ...f, [k]: v }))
@@ -553,6 +554,16 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange, limited
               </div>
             </>
           )}
+
+          <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}`, borderRadius: "10px", padding: "10px 14px" }}>
+            <span>
+              <span style={{ display: "block", fontSize: "0.85rem", fontWeight: 600 }}>Volunteers needed</span>
+              <span style={{ display: "block", fontSize: "0.72rem", color: MUTED, marginTop: "2px" }}>Shows an "Apply for Volunteer" button on the public event page</span>
+            </span>
+            <input type="checkbox" checked={form.volunteersNeeded ?? false}
+              onChange={e => setForm(f => ({ ...f, volunteersNeeded: e.target.checked }))}
+              style={{ width: "18px", height: "18px", accentColor: ACCENT, flexShrink: 0 }} />
+          </label>
 
           {error && <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "8px", padding: "10px 14px", color: DANGER, fontSize: "0.8rem", fontWeight: 600 }}>⚠️ {error}</div>}
         </div>

@@ -11,6 +11,7 @@ import { useEventRealtime } from "../../../shared/realtime/useEventRealtime";
 import Hero from "../components/detail/Hero";
 import Overview from "../components/detail/Overview";
 import SportsSection from "../components/detail/SportsSection";
+import VolunteerCTA from "../components/detail/VolunteerCTA";
 import "../../../styles/eventDetail.css";
 
 export default function UserEventDetail() {
@@ -63,6 +64,7 @@ export default function UserEventDetail() {
     <div className="evd-page">
       <Hero title={event.eventName} />
       <Overview description={event.eventDescription} />
+      <VolunteerCTA eventId={event.id} eventName={event.eventName} volunteersNeeded={event.volunteersNeeded} />
       <SportsSection eventId={event.id} eventSports={eventSports} />
     </div>
   );

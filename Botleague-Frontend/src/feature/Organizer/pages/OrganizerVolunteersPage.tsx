@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import {
   getMyEvents, getVolunteers, createVolunteer, updateVolunteer,
-  checkInVolunteer, checkOutVolunteer, deleteVolunteer,
+  checkInVolunteer, checkOutVolunteer, deleteVolunteer, decideVolunteerApplication,
   type OrganizerEvent, type Volunteer, type VolunteerRequest,
 } from "../api/organizer.api"
 
@@ -24,6 +24,19 @@ function ShiftBadge({ shift }: { shift?: string | null }) {
   return (
     <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${colors[shift] ?? "bg-[#4b86e8]/8 text-[#5d5d5d]"}`}>
       {shift.replace("_", " ")}
+    </span>
+  )
+}
+
+function StatusBadge({ status }: { status?: string }) {
+  if (!status || status === "APPROVED") return null
+  const colors: Record<string, string> = {
+    PENDING: "bg-[#eab308]/12 text-[#92660a]",
+    REJECTED: "bg-[#e04b4b]/12 text-[#e04b4b]",
+  }
+  return (
+    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${colors[status] ?? "bg-[#4b86e8]/8 text-[#5d5d5d]"}`}>
+      {status}
     </span>
   )
 }
@@ -88,6 +101,16 @@ export default function OrganizerVolunteersPage() {
     if (!confirm(`Remove ${v.name}?`)) return
     deleteVolunteer(selectedEventId, v.id).then(refresh)
   }
+  const [decidingId, setDecidingId] = useState<string | null>(null)
+  const handleApprove = (v: Volunteer) => {
+    setDecidingId(v.id)
+    decideVolunteerApplication(selectedEventId, v.id, "APPROVED").then(refresh).catch(() => setError("Failed to approve application")).finally(() => setDecidingId(null))
+  }
+  const handleReject = (v: Volunteer) => {
+    const reason = prompt(`Reason for rejecting ${v.name}'s application? (optional)`) ?? undefined
+    setDecidingId(v.id)
+    decideVolunteerApplication(selectedEventId, v.id, "REJECTED", reason).then(refresh).catch(() => setError("Failed to reject application")).finally(() => setDecidingId(null))
+  }
 
   const visible = filter
     ? volunteers.filter(v => v.name.toLowerCase().includes(filter.toLowerCase())
@@ -95,6 +118,7 @@ export default function OrganizerVolunteersPage() {
     : volunteers
 
   const checkedIn = volunteers.filter(v => v.checkedInAt && !v.checkedOutAt).length
+  const pendingApplications = volunteers.filter(v => v.status === "PENDING").length
 
   return (
     <div className="min-h-full p-6 space-y-6">
@@ -110,13 +134,20 @@ export default function OrganizerVolunteersPage() {
         </button>
       </div>
 
+      {pendingApplications > 0 && (
+        <div className="rounded-xl border border-[#eab308]/40 bg-[#eab308]/10 px-4 py-3 text-sm font-semibold text-[#92660a]">
+          {pendingApplications} volunteer application{pendingApplications > 1 ? "s" : ""} waiting for review
+        </div>
+      )}
+
       {/* Stats strip */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {[
           { label: "Total", value: volunteers.length, color: "text-[#111111]" },
+          { label: "Applications Pending", value: pendingApplications, color: "text-[#92660a]" },
           { label: "Checked In", value: checkedIn, color: "text-[#1fa952]" },
           { label: "Checked Out", value: volunteers.filter(v => v.checkedOutAt).length, color: "text-[#5d5d5d]" },
-          { label: "Pending", value: volunteers.filter(v => !v.checkedInAt).length, color: "text-[#b45309]" },
+          { label: "Not Checked In", value: volunteers.filter(v => v.status !== "PENDING" && !v.checkedInAt).length, color: "text-[#b45309]" },
         ].map(s => (
           <div key={s.label} className="rounded-2xl border border-[#4b86e8]/25 bg-white/90 p-4">
             <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
@@ -161,8 +192,14 @@ export default function OrganizerVolunteersPage() {
             </thead>
             <tbody>
               {visible.map(v => (
-                <tr key={v.id} className="border-b border-[#4b86e8]/10 bg-white/60 hover:bg-white transition-colors">
-                  <td className="px-4 py-3 font-medium text-[#111111]">{v.name}</td>
+                <tr key={v.id} className={`border-b border-[#4b86e8]/10 transition-colors ${v.status === "PENDING" ? "bg-[#eab308]/6" : "bg-white/60 hover:bg-white"}`}>
+                  <td className="px-4 py-3 font-medium text-[#111111]">
+                    <div className="flex items-center gap-2">
+                      {v.name}
+                      <StatusBadge status={v.status} />
+                    </div>
+                    {v.userId && <div className="text-[10px] font-normal text-[#9a9a9a] mt-0.5">Self-applied</div>}
+                  </td>
                   <td className="px-4 py-3 text-[#5d5d5d] text-xs">
                     {v.email && <div>{v.email}</div>}
                     {v.phone && <div>{v.phone}</div>}
@@ -171,7 +208,9 @@ export default function OrganizerVolunteersPage() {
                   <td className="px-4 py-3 text-[#374151]">{v.dutyStation || "—"}</td>
                   <td className="px-4 py-3"><ShiftBadge shift={v.shift} /></td>
                   <td className="px-4 py-3">
-                    {v.checkedOutAt ? (
+                    {v.status === "PENDING" ? (
+                      <span className="text-xs text-[#92660a]">Awaiting review</span>
+                    ) : v.checkedOutAt ? (
                       <span className="text-xs text-[#5d5d5d]">Out {fmt(v.checkedOutAt)}</span>
                     ) : v.checkedInAt ? (
                       <span className="text-xs text-[#1fa952]">In {fmt(v.checkedInAt)}</span>
@@ -181,26 +220,41 @@ export default function OrganizerVolunteersPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
-                      {!v.checkedInAt && (
-                        <button onClick={() => handleCheckIn(v)}
-                          className="rounded-lg bg-[#1fa952]/10 px-2.5 py-1 text-xs font-semibold text-[#1fa952] hover:bg-[#1fa952]/20 transition-colors">
-                          Check In
-                        </button>
+                      {v.status === "PENDING" ? (
+                        <>
+                          <button onClick={() => handleApprove(v)} disabled={decidingId === v.id}
+                            className="rounded-lg bg-[#1fa952]/10 px-2.5 py-1 text-xs font-semibold text-[#1fa952] hover:bg-[#1fa952]/20 transition-colors disabled:opacity-50">
+                            Approve
+                          </button>
+                          <button onClick={() => handleReject(v)} disabled={decidingId === v.id}
+                            className="rounded-lg bg-[#e04b4b]/10 px-2.5 py-1 text-xs font-semibold text-[#e04b4b] hover:bg-[#e04b4b]/20 transition-colors disabled:opacity-50">
+                            Reject
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          {!v.checkedInAt && (
+                            <button onClick={() => handleCheckIn(v)}
+                              className="rounded-lg bg-[#1fa952]/10 px-2.5 py-1 text-xs font-semibold text-[#1fa952] hover:bg-[#1fa952]/20 transition-colors">
+                              Check In
+                            </button>
+                          )}
+                          {v.checkedInAt && !v.checkedOutAt && (
+                            <button onClick={() => handleCheckOut(v)}
+                              className="rounded-lg bg-[#4c8ee7]/10 px-2.5 py-1 text-xs font-semibold text-[#3567cf] hover:bg-[#4c8ee7]/20 transition-colors">
+                              Check Out
+                            </button>
+                          )}
+                          <button onClick={() => openEdit(v)}
+                            className="rounded-lg bg-[#4b86e8]/10 px-2.5 py-1 text-xs text-[#3567cf] hover:bg-[#4b86e8]/20 transition-colors">
+                            Edit
+                          </button>
+                          <button onClick={() => handleDelete(v)}
+                            className="rounded-lg bg-[#e04b4b]/10 px-2.5 py-1 text-xs text-[#e04b4b] hover:bg-[#e04b4b]/20 transition-colors">
+                            Remove
+                          </button>
+                        </>
                       )}
-                      {v.checkedInAt && !v.checkedOutAt && (
-                        <button onClick={() => handleCheckOut(v)}
-                          className="rounded-lg bg-[#4c8ee7]/10 px-2.5 py-1 text-xs font-semibold text-[#3567cf] hover:bg-[#4c8ee7]/20 transition-colors">
-                          Check Out
-                        </button>
-                      )}
-                      <button onClick={() => openEdit(v)}
-                        className="rounded-lg bg-[#4b86e8]/10 px-2.5 py-1 text-xs text-[#3567cf] hover:bg-[#4b86e8]/20 transition-colors">
-                        Edit
-                      </button>
-                      <button onClick={() => handleDelete(v)}
-                        className="rounded-lg bg-[#e04b4b]/10 px-2.5 py-1 text-xs text-[#e04b4b] hover:bg-[#e04b4b]/20 transition-colors">
-                        Remove
-                      </button>
                     </div>
                   </td>
                 </tr>

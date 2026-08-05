@@ -37,6 +37,8 @@ public class CreateEventResponseDTO {
 
     private LocalDate endDate;
 
+    private boolean volunteersNeeded;
+
     private String status;
 
     private LocalDateTime createdAt;
@@ -163,6 +165,14 @@ public class CreateEventResponseDTO {
 
     public void setEndDate(LocalDate localDate) {
         this.endDate = localDate;
+    }
+
+    public boolean isVolunteersNeeded() {
+        return volunteersNeeded;
+    }
+
+    public void setVolunteersNeeded(boolean volunteersNeeded) {
+        this.volunteersNeeded = volunteersNeeded;
     }
 
     public String getStatus() {

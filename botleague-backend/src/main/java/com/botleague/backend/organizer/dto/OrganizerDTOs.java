@@ -68,6 +68,7 @@ public final class OrganizerDTOs {
     public static class VolunteerResponse {
         public UUID id;
         public UUID eventId;
+        public UUID userId;
         public String name;
         public String email;
         public String phone;
@@ -76,7 +77,43 @@ public final class OrganizerDTOs {
         public String notes;
         public LocalDateTime checkedInAt;
         public LocalDateTime checkedOutAt;
+        public String status;
+        public LocalDateTime appliedAt;
+        public LocalDateTime decidedAt;
         public LocalDateTime createdAt;
+    }
+
+    // =========================================================================
+    // VOLUNTEER APPLICATION (self-service)
+    // =========================================================================
+
+    public static class VolunteerApplicationRequest {
+        /** Optional preference — organiser assigns the final shift on approval. */
+        public String shift;
+        public String notes;
+    }
+
+    public static class VolunteerDecisionRequest {
+        /** APPROVED | REJECTED */
+        public String status;
+        public String reason;
+    }
+
+    /** A volunteer's own assignment across one event — "my assignments" listing. */
+    public static class VolunteerAssignmentResponse {
+        public UUID id;
+        public UUID eventId;
+        public String eventName;
+        public String eventCity;
+        public java.time.LocalDate eventStartDate;
+        public java.time.LocalDate eventEndDate;
+        public String dutyStation;
+        public String shift;
+        public LocalDateTime checkedInAt;
+        public LocalDateTime checkedOutAt;
+        public String status;
+        public LocalDateTime appliedAt;
+        public LocalDateTime decidedAt;
     }
 
     // =========================================================================

@@ -167,6 +167,8 @@ public class EventService {
                 request.getEndDate()
         );
 
+        event.setVolunteersNeeded(Boolean.TRUE.equals(request.getVolunteersNeeded()));
+
         event.setCreatedBy(userId);
 
         // =============================================
@@ -456,6 +458,8 @@ public class EventService {
         response.setEndDate(
                 event.getEndDate()
         );
+
+        response.setVolunteersNeeded(event.isVolunteersNeeded());
 
         response.setStatus(
                 event.getStatus().name()

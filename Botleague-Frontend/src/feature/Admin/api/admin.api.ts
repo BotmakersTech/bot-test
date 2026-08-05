@@ -17,6 +17,7 @@ export interface CreateEventRequest {
   country: string
   startDate: string
   endDate: string
+  volunteersNeeded?: boolean
 }
 
 // =====================================================
@@ -104,6 +105,7 @@ export interface AdminEventResponse {
   status?: string
   startDate: string
   endDate: string
+  volunteersNeeded?: boolean
   sports?: AdminEventSportResponse[]
 }
 
@@ -196,6 +198,7 @@ export interface UpdateEventRequest {
   country?: string
   startDate?: string
   endDate?: string
+  volunteersNeeded?: boolean
 }
 
 // =====================================================

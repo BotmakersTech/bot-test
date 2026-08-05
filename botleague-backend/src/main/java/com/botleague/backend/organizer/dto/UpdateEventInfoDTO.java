@@ -37,6 +37,9 @@ public class UpdateEventInfoDTO {
     private String websiteUrl;
     private String notes;
 
+    // ── Volunteers ───────────────────────────────────────────────────────────
+    private Boolean volunteersNeeded;
+
     // ── Getters & Setters ────────────────────────────────────────────────────
 
     public String getEventName()                    { return eventName; }
@@ -86,4 +89,7 @@ public class UpdateEventInfoDTO {
 
     public String getNotes()                        { return notes; }
     public void setNotes(String v)                  { this.notes = v; }
+
+    public Boolean getVolunteersNeeded()             { return volunteersNeeded; }
+    public void setVolunteersNeeded(Boolean v)       { this.volunteersNeeded = v; }
 }

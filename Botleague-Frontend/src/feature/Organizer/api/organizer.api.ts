@@ -20,6 +20,7 @@ export interface OrganizerEvent {
   country: string | null;
   startDate: string | null;
   endDate: string | null;
+  volunteersNeeded?: boolean;
   status: string;
   createdAt: string;
   sports?: OrganizerSport[];
@@ -141,6 +142,7 @@ export interface CreateEventRequest {
   country: string;
   startDate: string;
   endDate: string;
+  volunteersNeeded?: boolean;
 }
 
 export const createEvent = async (request: CreateEventRequest): Promise<OrganizerEvent> => {
@@ -197,6 +199,7 @@ export interface UpdateEventInfoRequest {
   contactPhone?: string;
   websiteUrl?: string;
   notes?: string;
+  volunteersNeeded?: boolean;
 }
 
 export const updateEventInfo = async (
@@ -512,6 +515,7 @@ export const deleteArena = async (eventId: string, arenaId: string): Promise<voi
 export interface Volunteer {
   id: string;
   eventId: string;
+  userId?: string | null;
   name: string;
   email: string | null;
   phone: string | null;
@@ -520,6 +524,9 @@ export interface Volunteer {
   notes: string | null;
   checkedInAt: string | null;
   checkedOutAt: string | null;
+  status?: "PENDING" | "APPROVED" | "REJECTED";
+  appliedAt?: string | null;
+  decidedAt?: string | null;
   createdAt: string;
 }
 
@@ -561,6 +568,16 @@ export const checkOutVolunteer = async (eventId: string, volunteerId: string): P
 
 export const deleteVolunteer = async (eventId: string, volunteerId: string): Promise<void> => {
   await api.delete(`/organizer/events/${eventId}/volunteers/${volunteerId}`);
+};
+
+export const decideVolunteerApplication = async (
+  eventId: string,
+  volunteerId: string,
+  status: "APPROVED" | "REJECTED",
+  reason?: string
+): Promise<Volunteer> => {
+  const res = await api.patch(`/organizer/events/${eventId}/volunteers/${volunteerId}/decision`, { status, reason });
+  return res.data;
 };
 
 // ── Judges ────────────────────────────────────────────────────────────────────

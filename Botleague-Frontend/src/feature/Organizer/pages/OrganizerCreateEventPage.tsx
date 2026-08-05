@@ -21,6 +21,7 @@ interface FormData {
   country: string
   startDate: string
   endDate: string
+  volunteersNeeded: boolean
 }
 
 // =====================================================
@@ -99,6 +100,7 @@ export default function OrganizerCreateEventPage() {
     country: "India",
     startDate: "",
     endDate: "",
+    volunteersNeeded: false,
   })
 
   const [submitting, setSubmitting] = useState(false)
@@ -135,6 +137,7 @@ export default function OrganizerCreateEventPage() {
         country: formData.country,
         startDate: formData.startDate,
         endDate: formData.endDate,
+        volunteersNeeded: formData.volunteersNeeded,
       }
       const createdEvent = await createEvent(req)
 
@@ -284,6 +287,29 @@ export default function OrganizerCreateEventPage() {
               />
             </Field>
           </div>
+
+          {/* ── 5. Volunteers ── */}
+          <SectionBadge n={5} title="Volunteers" />
+
+          <label
+            className="flex w-full cursor-pointer items-center justify-between rounded-[15px] px-4 py-3.5"
+            style={inputStyle}
+          >
+            <span>
+              <span className="block text-[15px] font-medium text-[#111827]" style={{ fontFamily: "'Inter', sans-serif" }}>
+                Volunteers needed
+              </span>
+              <span className="mt-0.5 block text-xs text-zinc-500" style={{ fontFamily: "'Inter', sans-serif" }}>
+                Shows an "Apply for Volunteer" button on the public event page
+              </span>
+            </span>
+            <input
+              type="checkbox"
+              checked={formData.volunteersNeeded}
+              onChange={(e) => setFormData((f) => ({ ...f, volunteersNeeded: e.target.checked }))}
+              className="h-5 w-5 flex-shrink-0 accent-[#0162D1]"
+            />
+          </label>
 
         </form>
 

@@ -89,6 +89,11 @@ public class Event {
     @Column(name = "end_date")
     private LocalDate endDate;
 
+    // =========================
+    // Volunteers
+    // =========================
+    @Column(name = "volunteers_needed", nullable = false)
+    private boolean volunteersNeeded = false;
 
     // =========================
     // Status Lifecycle
@@ -307,7 +312,13 @@ public class Event {
         this.endDate = endDate;
     }
 
- 
+    public boolean isVolunteersNeeded() {
+        return volunteersNeeded;
+    }
+
+    public void setVolunteersNeeded(boolean volunteersNeeded) {
+        this.volunteersNeeded = volunteersNeeded;
+    }
 
     public EventStatus getStatus() {
         return status;

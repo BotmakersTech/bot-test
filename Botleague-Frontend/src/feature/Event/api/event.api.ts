@@ -25,6 +25,7 @@ export interface EventResponse {
   country?: string;
   startDate?: string;
   endDate?: string;
+  volunteersNeeded?: boolean;
   status: string;
   createdAt: string;
 }
