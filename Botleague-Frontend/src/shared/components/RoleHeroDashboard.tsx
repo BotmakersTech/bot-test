@@ -215,13 +215,13 @@ export default function RoleHeroDashboard({
         <div className="rhd-abs rhd-profile-card" style={{ left: 224, top: 214, width: 1175, height: 343 }}>
           <div className="rhd-hdivider" />
 
-          <p className="rhd-abs rhd-name" style={{ left: 46, top: 87, width: 283 }}>
-            {name}
-          </p>
-
-          <div className="rhd-abs rhd-active-badge" style={{ left: 304, top: 106, width: 66, height: 20 }}>
-            <img alt="" className="rhd-active-dot" src={img.ellipse19} />
-            <span>Active</span>
+         <div className="rhd-prof-info">
+           <div className="rhd-abs rhd-name-row" style={{ left: 46, top: 87, width: 560 }}>
+            <p className="rhd-name">{name}</p>
+            <div className="rhd-active-badge">
+              <img alt="" className="rhd-active-dot" src={img.ellipse19} />
+              <span>Active</span>
+            </div>
           </div>
 
           {onShare && (
@@ -238,13 +238,15 @@ export default function RoleHeroDashboard({
             </button>
           )}
 
-          <p className="rhd-abs rhd-id-text" style={{ left: 46, top: 138, width: 210 }}>
+          <div className="rhd-prof-id">
+            <p className="rhd-abs rhd-id-text" style={{ left: 46, top: 136, width: 400 }}>
             {idLabel} - {idValue}
           </p>
-          <p className="rhd-abs rhd-role-text" style={{ left: 74, top: 168, width: 154 }}>
+          <p className="rhd-abs rhd-role-text" style={{ left: 74, top: 176, width: 300 }}>
             {roleLabel}
           </p>
-          <div className="rhd-abs" style={{ left: 46, top: 168, width: 23, height: 23 }}>
+            </div>
+          <div className="rhd-abs" style={{ left: 46, top: 176, width: 23, height: 23 }}>
             <img alt="" className="rhd-fill-img" src={img.eosRoleBinding} />
           </div>
 

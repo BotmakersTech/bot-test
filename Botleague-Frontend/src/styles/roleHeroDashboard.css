@@ -112,6 +112,13 @@
     background: rgba(180, 197, 255, 0.1);
 }
 
+.rhd-name-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: nowrap;
+}
+
 .rhd-name {
     margin: 0;
     font-family: "Poppins", sans-serif;
@@ -119,6 +126,7 @@
     font-size: 35px;
     letter-spacing: 0.7px;
     text-transform: capitalize;
+    white-space: nowrap;
     background: linear-gradient(180deg, var(--rhd-blue) 0%, var(--rhd-purple) 100%);
     -webkit-background-clip: text;
     background-clip: text;
@@ -126,10 +134,11 @@
 }
 
 .rhd-active-badge {
-    display: flex;
+    display: inline-flex;
+    flex-shrink: 0;
     align-items: center;
     gap: 6px;
-    padding-left: 6px;
+    padding: 4px 10px 4px 6px;
     border: 2px solid var(--rhd-blue);
     border-radius: 10px;
     color: var(--rhd-blue);
@@ -137,6 +146,7 @@
     font-weight: 600;
     font-size: 12px;
     letter-spacing: 0.24px;
+    white-space: nowrap;
     transition: box-shadow 0.15s ease;
 }
 
@@ -195,6 +205,7 @@
     font-size: 20px;
     line-height: 20px;
     color: #000000;
+    white-space: nowrap;
 }
 
 .rhd-role-text {
@@ -204,6 +215,7 @@
     font-size: 18px;
     line-height: 20px;
     color: #000000;
+    white-space: nowrap;
 }
 
 .rhd-stat-num {
