@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { sendOtp, resendOTP, register } from "../api/auth.api";
+import { sendOtp, resendOTP, register, getCurrentUser } from "../api/auth.api";
 import { useNavigate } from "react-router-dom";
 import { getProfile } from "../../Profile/api/profile.api";
 import { loginSuccess } from "../store/authSlice";
@@ -188,11 +188,21 @@ if (res.pendingApproval) {
   return;
 }
 
-// fetch authenticated user
-const user = await getProfile();
+// fetch authenticated user — getProfile() alone never carries allRoles
+// (that field only exists on /auth/me's response), so without this merge
+// MandatoryRoleModal's "no role yet" check reads allRoles as empty right
+// after a normal registration and incorrectly pops up again. Same merge
+// useLogin.ts already does.
+const [profile, me] = await Promise.all([getProfile(), getCurrentUser()]);
 
 // update redux auth state
-dispatch(loginSuccess(user));
+dispatch(loginSuccess({
+  ...profile,
+  role: me.role,
+  allRoles: me.allRoles,
+  assignedEventIds: me.assignedEventIds,
+  assignedSportIds: me.assignedSportIds,
+}));
 
 // flag this session so the "you made it" welcome popup shows once,
 // as soon as they land on their (empty) profile
