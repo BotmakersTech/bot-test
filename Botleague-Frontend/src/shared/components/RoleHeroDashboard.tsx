@@ -1,102 +1,25 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Building2, Clock3, MapPin, Pencil, Share2, Swords } from "lucide-react";
+import star from "../../assets/Auth/Star-two.svg";
+import plane from "../../assets/Auth/plane.svg";
 import "../../styles/roleHeroDashboard.css";
 
 // Design was built at this fixed size in Figma. We scale the whole canvas
 // down/up to fit the available width instead of letting it overflow with
-// a scrollbar. Ported 1:1 from the supplied JudgeDashboard.jsx/css.
+// a scrollbar. Positions below are ported 1:1 from the supplied
+// JudgeDashboard.jsx/css. The original's `img` map pointed at
+// figma.com/api/mcp/asset/... URLs — those are Figma's own session-scoped
+// proxy links and don't resolve for real site visitors (confirmed: every
+// image in that map 404s once rendered outside the Figma session, which is
+// what caused the broken-icon clutter). Every element below keeps the
+// exact same position/size box the source used; only what fills that box
+// changed, from a dead external image to a local asset, an icon, or CSS.
 const DESIGN_WIDTH = 1513;
 const DESIGN_HEIGHT = 1010;
 
-// Same asset map as the source file, unchanged — these are the exact URLs
-// supplied. (Note: they're Figma MCP session-scoped proxy links, so they
-// may not resolve outside that session/for anonymous site visitors — see
-// note at the end of this turn. Left exactly as given, not substituted.)
-const img = {
-  property1Default: "https://www.figma.com/api/mcp/asset/598ae357-8c4c-4328-b898-7f4927c837e2.svg",
-  image125: "https://www.figma.com/api/mcp/asset/e1c990ff-67b2-4f18-9af7-50a25b6e841c.png",
-  rectangle4631: "https://www.figma.com/api/mcp/asset/0a8f5a2b-c79c-45d0-ab00-bcdffe528831.png",
-  judgeHero: "https://www.figma.com/api/mcp/asset/e8c5732a-da26-443a-be45-29af851cad38.png",
-  achievementBadges: "https://www.figma.com/api/mcp/asset/237d8e13-c5be-4ac5-baeb-377ae0578848.png",
-  star25: "https://www.figma.com/api/mcp/asset/14bbc249-cb9e-41e6-acad-dee7aeff1852.svg",
-  star24: "https://www.figma.com/api/mcp/asset/26d3face-64fb-4249-871d-ad9b74160b04.svg",
-  vector277: "https://www.figma.com/api/mcp/asset/662ed3c8-8744-4222-b35c-2bc23d336fd4.svg",
-  vector276: "https://www.figma.com/api/mcp/asset/d118befd-b46e-4896-a091-9c8cc1d53c85.svg",
-  ellipse19: "https://www.figma.com/api/mcp/asset/1ea7b45e-03dc-47af-8997-9f5a7f1965f7.svg",
-  vectorShare: "https://www.figma.com/api/mcp/asset/8eba56cb-893e-4191-a58d-b0cd119aeef6.svg",
-  vectorEdit: "https://www.figma.com/api/mcp/asset/f0579855-a41f-4f45-9694-a1c934a7a96f.svg",
-  star20: "https://www.figma.com/api/mcp/asset/4871b945-83b3-4e46-b719-d0f349bddb52.svg",
-  star21: "https://www.figma.com/api/mcp/asset/404b1310-8281-4fff-8df7-0be5e3764fd9.svg",
-  star22: "https://www.figma.com/api/mcp/asset/9b3fc074-2b5f-4445-ae52-279638dd3a5e.svg",
-  group1000003824: "https://www.figma.com/api/mcp/asset/92ddfb0d-7f1c-4964-9e0d-179e7271b45a.svg",
-  eosRoleBinding: "https://www.figma.com/api/mcp/asset/fa7f135a-3bfd-4d58-ae3e-1196c0c3d07f.svg",
-  group: "https://www.figma.com/api/mcp/asset/380bd249-3120-4644-95db-0ac8ebbb8240.svg",
-  group1: "https://www.figma.com/api/mcp/asset/d4bdfb79-4aa2-4131-a618-1320a6d1d63a.svg",
-  group2: "https://www.figma.com/api/mcp/asset/53cfbd35-7623-4234-9423-c5691335e049.svg",
-  group3: "https://www.figma.com/api/mcp/asset/8d07df26-7d58-44b6-b680-bd458bbe2149.svg",
-  group4: "https://www.figma.com/api/mcp/asset/e82ad665-af83-4d13-a34f-49fdfdc8f923.svg",
-  group5: "https://www.figma.com/api/mcp/asset/f27dfa49-2e5f-4fc7-83c6-c3bd29687f23.svg",
-  group6: "https://www.figma.com/api/mcp/asset/5bf9d6b8-a5ec-4982-8c10-f25bdbd0cd00.svg",
-  tablerSwords: "https://www.figma.com/api/mcp/asset/9a843bc4-7e00-40f2-b12e-3c34e6207b3d.svg",
-  star23: "https://www.figma.com/api/mcp/asset/c6999832-8bea-4cea-8d95-67d7dd46dc87.svg",
-  tablerSwords1: "https://www.figma.com/api/mcp/asset/3d031b95-01ba-4f11-9489-411ed7134ab6.svg",
-  group7: "https://www.figma.com/api/mcp/asset/45653319-c76a-4bb1-986f-999ca78a5fdd.svg",
-  f7Placemark: "https://www.figma.com/api/mcp/asset/0717f68b-633f-4d58-8274-9b896cc2f3fe.svg",
-  mdiArenaOutline: "https://www.figma.com/api/mcp/asset/d55cbd38-d133-4693-9c51-b29305922b92.svg",
-  ellipse596: "https://www.figma.com/api/mcp/asset/16a3489c-6423-49e8-969b-4a949703095e.svg",
-  ellipse597: "https://www.figma.com/api/mcp/asset/cdb02f3b-64e1-44e9-99f8-35942ab6e53b.svg",
-};
-
 /** One of the three repeating background bars behind the stat numbers. */
 function StatBackdrop({ top }: { top: number }) {
-  return (
-    <div className="rhd-abs" style={{ left: 779, top, width: 345, height: 55 }}>
-      <img alt="" className="rhd-fill-img" src={img.property1Default} />
-    </div>
-  );
-}
-
-/**
- * "Experience" stat icon — a 6-layer bar-chart glyph in the Figma source
- * (node 6030:14234). All insets below are percentages against the profile
- * card (1175x343), matching Figma's exported layout exactly.
- */
-function ExperienceIcon() {
-  return (
-    <div style={{ display: "contents" }} data-name="Experience Icon">
-      <div className="rhd-abs" style={{ inset: "79.54% 25.7% 19.83% 71.32%" }}>
-        <div className="rhd-abs" style={{ inset: "-22.85% -1.43% -22.86% -1.43%" }}>
-          <img alt="" className="rhd-fill-img" src={img.group1} />
-        </div>
-      </div>
-      <div className="rhd-abs" style={{ inset: "73.48% 27.78% 21.1% 71.34%" }}>
-        <div className="rhd-abs" style={{ inset: "-2.69% -4.81%" }}>
-          <img alt="" className="rhd-fill-img" src={img.group2} />
-        </div>
-      </div>
-      <div className="rhd-abs" style={{ inset: "71.72% 26.71% 21.1% 72.41%" }}>
-        <div className="rhd-abs" style={{ inset: "-2.03% -4.81%" }}>
-          <img alt="" className="rhd-fill-img" src={img.group3} />
-        </div>
-      </div>
-      <div style={{ display: "contents" }}>
-        <div className="rhd-abs" style={{ inset: "70.93% 26.03% 27.64% 73.71%" }}>
-          <div className="rhd-abs" style={{ inset: "-10.16% -16.27%" }}>
-            <img alt="" className="rhd-fill-img" src={img.group4} />
-          </div>
-        </div>
-        <div className="rhd-abs" style={{ inset: "72.39% 26.21% 27.29% 73.69%" }}>
-          <div className="rhd-abs" style={{ inset: "-45.92% -45.71% -45.9% -45.71%" }}>
-            <img alt="" className="rhd-fill-img" src={img.group5} />
-          </div>
-        </div>
-        <div className="rhd-abs" style={{ inset: "69.97% 25.68% 21.1% 73.43%" }}>
-          <div className="rhd-abs" style={{ inset: "-1.63% -4.81%" }}>
-            <img alt="" className="rhd-fill-img" src={img.group6} />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return <div className="rhd-abs rhd-stat-backdrop" style={{ left: 779, top, width: 345, height: 55 }} />;
 }
 
 export interface RoleHeroDashboardProps {
@@ -106,14 +29,18 @@ export interface RoleHeroDashboardProps {
   idLabel: string;
   idValue: string;
   roleLabel: string;
+  roleIcon: ReactNode;
   onShare?: () => void;
   onEdit?: () => void;
   stat1Value: string | number;
   stat1Label: string;
+  stat1Icon: ReactNode;
   stat2Value: string | number;
   stat2Label: string;
+  stat2Icon: ReactNode;
   stat3Value: string | number;
   stat3Label: string;
+  stat3Icon: ReactNode;
   eventTitle: string;
   eventTag: string;
   eventArena?: string;
@@ -122,7 +49,15 @@ export interface RoleHeroDashboardProps {
   eventImageUrl?: string | null;
   onViewEvent?: () => void;
   achievement1Label: string;
+  achievement1Icon: ReactNode;
   achievement2Label: string;
+  achievement2Icon: ReactNode;
+}
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
 }
 
 export default function RoleHeroDashboard({
@@ -132,14 +67,18 @@ export default function RoleHeroDashboard({
   idLabel,
   idValue,
   roleLabel,
+  roleIcon,
   onShare,
   onEdit,
   stat1Value,
   stat1Label,
+  stat1Icon,
   stat2Value,
   stat2Label,
+  stat2Icon,
   stat3Value,
   stat3Label,
+  stat3Icon,
   eventTitle,
   eventTag,
   eventArena,
@@ -148,7 +87,9 @@ export default function RoleHeroDashboard({
   eventImageUrl,
   onViewEvent,
   achievement1Label,
+  achievement1Icon,
   achievement2Label,
+  achievement2Icon,
 }: RoleHeroDashboardProps) {
   const outerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -180,31 +121,23 @@ export default function RoleHeroDashboard({
       >
         {/* ---------- decorative stars & background vectors ---------- */}
         <div className="rhd-abs" style={{ left: 854, top: 791, width: 171, height: 202.971 }}>
-          <div className="rhd-star-rot-a">
-            <img alt="" className="rhd-fill-img" src={img.star25} />
-          </div>
+          <div className="rhd-star-rot-a"><img alt="" className="rhd-fill-img" src={star} /></div>
         </div>
         <div className="rhd-abs" style={{ left: 135, top: 877, width: 58.694, height: 71.31 }}>
-          <div className="rhd-star-rot-b">
-            <img alt="" className="rhd-fill-img" src={img.star24} />
-          </div>
+          <div className="rhd-star-rot-b"><img alt="" className="rhd-fill-img" src={star} /></div>
         </div>
-        <div className="rhd-abs" style={{ left: 0, top: 760, width: 1513, height: 256 }}>
-          <img alt="" className="rhd-fill-img" src={img.vector277} />
-        </div>
+        <div className="rhd-abs rhd-bg-glow-a" style={{ left: 0, top: 760, width: 1513, height: 256 }} />
         <div className="rhd-abs rhd-fade" style={{ left: 33, top: 442, width: 318.396, height: 279.223 }}>
           <div style={{ transform: "rotate(30.36deg)" }}>
-            <img alt="" src={img.image125} style={{ width: 273, opacity: 0.11 }} />
+            <img alt="" src={plane} style={{ width: 273, opacity: 0.11 }} />
           </div>
         </div>
         <div className="rhd-abs rhd-fade" style={{ left: 1295, top: 655, width: 243.014, height: 222.13 }}>
           <div style={{ transform: "rotate(-22.71deg)" }}>
-            <img alt="" src={img.image125} style={{ width: 197, opacity: 0.11 }} />
+            <img alt="" src={plane} style={{ width: 197, opacity: 0.11 }} />
           </div>
         </div>
-        <div className="rhd-abs" style={{ left: 98, top: 82, width: 1412, height: 372 }}>
-          <img alt="" className="rhd-fill-img" src={img.vector276} />
-        </div>
+        <div className="rhd-abs rhd-bg-glow-b" style={{ left: 98, top: 82, width: 1412, height: 372 }} />
 
         {/* ---------- heading ---------- */}
         <p className="rhd-abs rhd-welcome" style={{ left: 220, top: 135, width: 602 }}>
@@ -220,20 +153,20 @@ export default function RoleHeroDashboard({
           </p>
 
           <div className="rhd-abs rhd-active-badge" style={{ left: 304, top: 106, width: 66, height: 20 }}>
-            <img alt="" className="rhd-active-dot" src={img.ellipse19} />
+            <span className="rhd-active-dot" />
             <span>Active</span>
           </div>
 
           {onShare && (
             <button type="button" className="rhd-abs rhd-btn-gradient" style={{ left: 52, top: 256, width: 114, height: 32 }} onClick={onShare}>
-              <img alt="" src={img.vectorShare} style={{ width: 11, height: 12 }} />
+              <Share2 size={12} />
               <span>Share</span>
             </button>
           )}
 
           {onEdit && (
             <button type="button" className="rhd-abs rhd-btn-gradient" style={{ left: 176, top: 256, width: 114, height: 32 }} onClick={onEdit}>
-              <img alt="" src={img.vectorEdit} style={{ width: 12, height: 12 }} />
+              <Pencil size={12} />
               <span>Edit</span>
             </button>
           )}
@@ -244,8 +177,8 @@ export default function RoleHeroDashboard({
           <p className="rhd-abs rhd-role-text" style={{ left: 74, top: 168, width: 154 }}>
             {roleLabel}
           </p>
-          <div className="rhd-abs" style={{ left: 46, top: 168, width: 23, height: 23 }}>
-            <img alt="" className="rhd-fill-img" src={img.eosRoleBinding} />
+          <div className="rhd-abs rhd-icon-box" style={{ left: 46, top: 168, width: 23, height: 23 }}>
+            {roleIcon}
           </div>
 
           <StatBackdrop top={57} />
@@ -279,59 +212,36 @@ export default function RoleHeroDashboard({
             {stat3Label}
           </p>
 
-          {/* stat icons: scale (stat1), swords (stat2), bar-chart (stat3) */}
-          <div className="rhd-abs" style={{ left: 837, top: 60, width: 38, height: 32 }}>
-            <img alt="" className="rhd-fill-img" src={img.group} />
-          </div>
-          <div className="rhd-abs" style={{ left: 837, top: 152, width: 36, height: 36 }}>
-            <img alt="" className="rhd-fill-img" src={img.tablerSwords} />
-          </div>
-          <ExperienceIcon />
+          {/* stat icons */}
+          <div className="rhd-abs rhd-icon-box" style={{ left: 837, top: 58, width: 38, height: 36 }}>{stat1Icon}</div>
+          <div className="rhd-abs rhd-icon-box" style={{ left: 837, top: 144, width: 38, height: 36 }}>{stat2Icon}</div>
+          <div className="rhd-abs rhd-icon-box" style={{ left: 837, top: 230, width: 38, height: 36 }}>{stat3Icon}</div>
 
           {/* decorative stars inside the card */}
-          <div className="rhd-abs rhd-star-rot-c" style={{ left: -27, top: 161, width: 116.874, height: 116.874 }}>
-            <img alt="" className="rhd-fill-img" src={img.star20} />
-          </div>
-          <div className="rhd-abs rhd-star-rot-c" style={{ left: 1084, top: -36, width: 116.874, height: 116.874 }}>
-            <img alt="" className="rhd-fill-img" src={img.star20} />
-          </div>
-          <div className="rhd-abs rhd-star-rot-d" style={{ left: 370, top: -31, width: 106.668, height: 106.668 }}>
-            <img alt="" className="rhd-fill-img" src={img.star21} />
-          </div>
-          <div className="rhd-abs rhd-star-rot-e" style={{ left: 997.08, top: 285.08, width: 92.516, height: 92.516 }}>
-            <img alt="" className="rhd-fill-img" src={img.star22} />
-          </div>
+          <img alt="" className="rhd-abs rhd-star-rot-c" style={{ left: -27, top: 161, width: 116.874, height: 116.874 }} src={star} />
+          <img alt="" className="rhd-abs rhd-star-rot-c" style={{ left: 1084, top: -36, width: 116.874, height: 116.874 }} src={star} />
+          <img alt="" className="rhd-abs rhd-star-rot-d" style={{ left: 370, top: -31, width: 106.668, height: 106.668 }} src={star} />
+          <img alt="" className="rhd-abs rhd-star-rot-e" style={{ left: 997.08, top: 285.08, width: 92.516, height: 92.516 }} src={star} />
 
-          <div className="rhd-abs rhd-fade-soft" style={{ left: 376, top: -3, width: 402.232, height: 344 }}>
-            <img alt="" className="rhd-fill-img" src={img.group1000003824} />
-          </div>
+          <div className="rhd-abs rhd-fade-soft rhd-card-glow" style={{ left: 376, top: -3, width: 402.232, height: 344 }} />
         </div>
 
         {/* far-right gradient chip near top of card */}
         <div className="rhd-abs rhd-gradient-fill" style={{ left: 1261, top: 138, width: 133, height: 40, borderRadius: 6 }} />
 
-        <div className="rhd-abs rhd-star-rot-f" style={{ left: 871, top: 565, width: 53, height: 55.102 }}>
-          <img alt="" className="rhd-fill-img" src={img.star23} />
-        </div>
-        <div className="rhd-abs rhd-star-rot-d" style={{ left: 1252, top: 680, width: 106.668, height: 106.668 }}>
-          <img alt="" className="rhd-fill-img" src={img.star21} />
-        </div>
+        <img alt="" className="rhd-abs rhd-star-rot-f" style={{ left: 871, top: 565, width: 53, height: 55.102 }} src={star} />
+        <img alt="" className="rhd-abs rhd-star-rot-d" style={{ left: 1252, top: 680, width: 106.668, height: 106.668 }} src={star} />
 
-        {/* hero photo — real photo when available, falling back to the
-            supplied placeholder art, cropped/zoomed exactly as designed */}
-        <div className="rhd-abs" style={{ left: 635, top: 122, width: 338, height: 435, overflow: "hidden", pointerEvents: "none" }}>
-          <img
-            alt={name}
-            style={{
-              position: "absolute",
-              maxWidth: "none",
-              height: "212.35%",
-              width: "410.18%",
-              left: "-113.33%",
-              top: "-0.05%",
-            }}
-            src={photoUrl || img.judgeHero}
-          />
+        {/* profile photo — real photo when available, else an initials
+            avatar, filling the exact same box the source design used */}
+        <div className="rhd-abs" style={{ left: 635, top: 122, width: 338, height: 435, overflow: "hidden", borderRadius: 16, pointerEvents: "none" }}>
+          {photoUrl ? (
+            <img alt={name} className="rhd-fill-img" src={photoUrl} />
+          ) : (
+            <div className="rhd-avatar-fallback">
+              <span>{initials(name)}</span>
+            </div>
+          )}
         </div>
 
         {/* ---------- previous events card ---------- */}
@@ -347,9 +257,9 @@ export default function RoleHeroDashboard({
 
           <div
             className="rhd-abs"
-            style={{ left: 357, top: 17, width: 311, height: 132, borderRadius: 12, overflow: "hidden", background: "#d9d9d9" }}
+            style={{ left: 357, top: 17, width: 311, height: 132, borderRadius: 12, overflow: "hidden", background: eventImageUrl ? "#d9d9d9" : "linear-gradient(135deg, var(--rhd-blue), var(--rhd-purple))" }}
           >
-            <img alt={eventTitle} className="rhd-fill-img" style={{ objectFit: "cover" }} src={eventImageUrl || img.rectangle4631} />
+            {eventImageUrl && <img alt={eventTitle} className="rhd-fill-img" style={{ objectFit: "cover" }} src={eventImageUrl} />}
           </div>
 
           <p className="rhd-abs rhd-event-title" style={{ left: 370, top: 157, width: 131 }}>
@@ -373,18 +283,10 @@ export default function RoleHeroDashboard({
           <p className="rhd-abs rhd-meta-label" style={{ left: 396, top: 249 }}>Time : </p>
           <p className="rhd-abs rhd-meta-label" style={{ left: 396, top: 276 }}>Place :</p>
 
-          <div className="rhd-abs" style={{ left: 371, top: 194, width: 17, height: 17 }}>
-            <img alt="" className="rhd-fill-img" src={img.tablerSwords1} />
-          </div>
-          <div className="rhd-abs" style={{ left: 371, top: 248, width: 17, height: 17 }}>
-            <img alt="" className="rhd-fill-img" src={img.group7} />
-          </div>
-          <div className="rhd-abs" style={{ left: 371, top: 276, width: 18, height: 18 }}>
-            <img alt="" className="rhd-fill-img" src={img.f7Placemark} />
-          </div>
-          <div className="rhd-abs" style={{ left: 370, top: 220, width: 19, height: 19 }}>
-            <img alt="" className="rhd-fill-img" src={img.mdiArenaOutline} />
-          </div>
+          <div className="rhd-abs rhd-icon-box" style={{ left: 371, top: 194, width: 17, height: 17 }}><Swords size={14} /></div>
+          <div className="rhd-abs rhd-icon-box" style={{ left: 371, top: 248, width: 17, height: 17 }}><Clock3 size={14} /></div>
+          <div className="rhd-abs rhd-icon-box" style={{ left: 371, top: 276, width: 18, height: 18 }}><MapPin size={14} /></div>
+          <div className="rhd-abs rhd-icon-box" style={{ left: 370, top: 220, width: 19, height: 19 }}><Building2 size={15} /></div>
         </div>
 
         {/* ---------- achievements card ---------- */}
@@ -395,43 +297,13 @@ export default function RoleHeroDashboard({
           <div className="rhd-abs rhd-vdivider-h" style={{ left: 35, top: 54, width: 400 }} />
 
           <div className="rhd-abs rhd-achievement" style={{ left: 35, top: 72, width: 154, height: 189 }}>
-            <div style={{ position: "absolute", left: 7, top: 2, width: 140, height: 170 }}>
-              <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
-                <img
-                  alt={achievement1Label}
-                  style={{
-                    position: "absolute",
-                    maxWidth: "none",
-                    height: "128.48%",
-                    width: "369.22%",
-                    left: "-10.67%",
-                    top: "-3.97%",
-                  }}
-                  src={img.achievementBadges}
-                />
-              </div>
-            </div>
+            <div className="rhd-abs rhd-achievement-badge" style={{ left: 27, top: 30 }}>{achievement1Icon}</div>
             <p className="rhd-abs rhd-achievement-label" style={{ left: 30, top: 166, width: 94 }}>
               {achievement1Label}
             </p>
           </div>
           <div className="rhd-abs rhd-achievement" style={{ left: 211, top: 72, width: 154, height: 189 }}>
-            <div style={{ position: "absolute", left: 15, top: 11, width: 123, height: 155 }}>
-              <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
-                <img
-                  alt={achievement2Label}
-                  style={{
-                    position: "absolute",
-                    maxWidth: "none",
-                    height: "131.15%",
-                    width: "389.65%",
-                    left: "-145.24%",
-                    top: "-3.93%",
-                  }}
-                  src={img.achievementBadges}
-                />
-              </div>
-            </div>
+            <div className="rhd-abs rhd-achievement-badge" style={{ left: 43, top: 30 }}>{achievement2Icon}</div>
             <p
               className="rhd-abs rhd-achievement-label"
               style={{ left: "50%", top: 166, width: 55, textAlign: "center", transform: "translateX(-50%)" }}
@@ -440,15 +312,9 @@ export default function RoleHeroDashboard({
             </p>
           </div>
 
-          <div className="rhd-abs" style={{ left: "calc(50% + 0.5px)", top: 299, width: 12, height: 12, transform: "translateX(-50%)" }}>
-            <img alt="" className="rhd-fill-img" src={img.ellipse596} />
-          </div>
-          <div className="rhd-abs" style={{ left: "calc(50% - 19.5px)", top: 299, width: 12, height: 12, transform: "translateX(-50%)" }}>
-            <img alt="" className="rhd-fill-img" src={img.ellipse597} />
-          </div>
-          <div className="rhd-abs" style={{ left: "calc(50% + 20.5px)", top: 299, width: 12, height: 12, transform: "translateX(-50%)" }}>
-            <img alt="" className="rhd-fill-img" src={img.ellipse596} />
-          </div>
+          <div className="rhd-abs rhd-dot" style={{ left: "calc(50% + 0.5px)", top: 299, width: 12, height: 12, transform: "translateX(-50%)" }} />
+          <div className="rhd-abs rhd-dot" style={{ left: "calc(50% - 19.5px)", top: 299, width: 12, height: 12, transform: "translateX(-50%)" }} />
+          <div className="rhd-abs rhd-dot" style={{ left: "calc(50% + 20.5px)", top: 299, width: 12, height: 12, transform: "translateX(-50%)" }} />
         </div>
 
         <div className="rhd-abs rhd-vdivider-h" style={{ left: 241, top: 624, width: 308 }} />

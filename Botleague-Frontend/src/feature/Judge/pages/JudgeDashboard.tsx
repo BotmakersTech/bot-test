@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
+import { BarChart3, CalendarClock, Gavel, Swords, Trophy } from "lucide-react"
 import api from "../../../shared/api/Base"
 import type { RootState } from "../../../app/store"
 import RoleHeroDashboard from "../../../shared/components/RoleHeroDashboard"
@@ -68,18 +69,24 @@ export default function JudgeDashboard() {
         idLabel="Judge ID"
         idValue={user?.botleagueId || "—"}
         roleLabel="Match Judge"
+        roleIcon={<Swords size={14} />}
         stat1Value={completed.length}
         stat1Label="Matches Judged"
+        stat1Icon={<Gavel size={20} />}
         stat2Value={scheduled.length}
         stat2Label="Upcoming Matches"
+        stat2Icon={<CalendarClock size={20} />}
         stat3Value={distinctSports}
         stat3Label="Sports Experience"
+        stat3Icon={<BarChart3 size={20} />}
         eventTitle={latest ? `${latest.teamARobotName || latest.teamAName || "TBD"} vs ${latest.teamBRobotName || latest.teamBName || "TBD"}` : "No matches judged yet"}
         eventTag={latest ? `Round ${latest.roundNumber ?? "—"} · Match ${latest.matchNumber ?? "—"}` : ""}
         eventTime={latest ? fmt(latest.scheduledAt) : undefined}
         onViewEvent={latest ? () => navigate("/judge/matches") : undefined}
         achievement1Label="5+ Matches Judged"
+        achievement1Icon={<Gavel size={40} />}
         achievement2Label="20+ Matches Judged"
+        achievement2Icon={<Trophy size={40} />}
       />
 
       {/* Quick links */}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
+import { CheckCircle2, HeartHandshake, Layers, Timer } from "lucide-react"
 import type { RootState } from "../../../app/store"
 import RoleHeroDashboard from "../../../shared/components/RoleHeroDashboard"
 import { getMyVolunteerAssignments, type VolunteerAssignment } from "../../Event/api/volunteerApplication.api"
@@ -45,12 +46,16 @@ export default function VolunteerDashboard() {
         idLabel="Volunteer ID"
         idValue={user?.botleagueId || "—"}
         roleLabel="Event Volunteer"
+        roleIcon={<HeartHandshake size={14} />}
         stat1Value={approved.length}
         stat1Label="Confirmed Events"
+        stat1Icon={<CheckCircle2 size={20} />}
         stat2Value={pending.length}
         stat2Label="Pending Applications"
+        stat2Icon={<Timer size={20} />}
         stat3Value={assignments.length}
         stat3Label="Total Applications"
+        stat3Icon={<Layers size={20} />}
         eventTitle={latest ? (latest.eventName || "Event") : "No confirmed events yet"}
         eventTag={latest ? (latest.checkedOutAt ? "Completed" : latest.checkedInAt ? "Checked In" : "Confirmed") : ""}
         eventArena={latest?.dutyStation || undefined}
@@ -58,7 +63,9 @@ export default function VolunteerDashboard() {
         eventPlace={latest?.eventCity || undefined}
         onViewEvent={latest ? () => navigate(`/events/${latest.eventId}`) : undefined}
         achievement1Label="3+ Events Volunteered"
+        achievement1Icon={<HeartHandshake size={40} />}
         achievement2Label="10+ Events Volunteered"
+        achievement2Icon={<Layers size={40} />}
       />
 
       {/* Quick links */}
