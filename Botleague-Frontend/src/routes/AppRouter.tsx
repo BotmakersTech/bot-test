@@ -138,15 +138,12 @@ import SuperAdminDashboard from "../feature/SuperAdmin/pages/SuperAdminDashboard
 import JudgeDashboard    from "../feature/Judge/pages/JudgeDashboard";
 import JudgeMatchesPage  from "../feature/Judge/pages/JudgeMatchesPage";
 import JudgeScoresPage   from "../feature/Judge/pages/JudgeScoresPage";
-import JudgeSchedulePage from "../feature/Judge/pages/JudgeSchedulePage";
 
 // ============================
 // VOLUNTEER PAGES
 // ============================
 import VolunteerDashboard    from "../feature/Volunteer/pages/VolunteerDashboard";
 import VolunteerEventPage    from "../feature/Volunteer/pages/VolunteerEventPage";
-import VolunteerCheckInPage  from "../feature/Volunteer/pages/VolunteerCheckInPage";
-import VolunteerSchedulePage from "../feature/Volunteer/pages/VolunteerSchedulePage";
 
 import TeamPublicPage  from "../feature/Team/pages/TeamPublicPage";
 import RobotPublicPage from "../feature/Robots/pages/RobotPublicPage";
@@ -347,13 +344,10 @@ function AppRoutes() {
         <Route path="/judge-dashboard" element={<RoleRoute roles={[AppRole.JUDGE]}><JudgeDashboard /></RoleRoute>} />
         <Route path="/judge/matches"   element={<RoleRoute roles={[AppRole.JUDGE]}><JudgeMatchesPage /></RoleRoute>} />
         <Route path="/judge/scores"    element={<RoleRoute roles={[AppRole.JUDGE]}><JudgeScoresPage /></RoleRoute>} />
-        <Route path="/judge/schedule"  element={<RoleRoute roles={[AppRole.JUDGE]}><JudgeSchedulePage /></RoleRoute>} />
 
         {/* ── Volunteer Portal ── */}
         <Route path="/volunteer-dashboard" element={<RoleRoute roles={[AppRole.VOLUNTEER]}><VolunteerDashboard /></RoleRoute>} />
         <Route path="/volunteer/event"     element={<RoleRoute roles={[AppRole.VOLUNTEER]}><VolunteerEventPage /></RoleRoute>} />
-        <Route path="/volunteer/checkin"   element={<RoleRoute roles={[AppRole.VOLUNTEER]}><VolunteerCheckInPage /></RoleRoute>} />
-        <Route path="/volunteer/schedule"  element={<RoleRoute roles={[AppRole.VOLUNTEER]}><VolunteerSchedulePage /></RoleRoute>} />
 
         {/* ── Authenticated 404 (shows sidebar) ── */}
         <Route

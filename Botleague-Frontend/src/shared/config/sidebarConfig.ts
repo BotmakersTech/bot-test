@@ -145,7 +145,7 @@ export const NAV_CONFIG: NavItem[] = [
   { id: "j-dash",    label: "Dashboard",        link: "/judge-dashboard",      iconName: "dashboard", roles: [JDG] },
   { id: "j-matches", label: "Assigned Matches", link: "/judge/matches",        iconName: "matches",   roles: [JDG] },
   { id: "j-scores",  label: "Score Entry",      link: "/judge/scores",         iconName: "rankings",  roles: [JDG] },
-  { id: "j-sched",   label: "My Schedule",      link: "/judge/schedule",       iconName: "schedule",  roles: [JDG] },
+  { id: "j-cert",    label: "Certificates",     link: "/certificates",         iconName: "certificate", roles: [JDG] },
   { id: "j-notif",   label: "Notifications",    link: "/notifications",        iconName: "bell",      roles: [JDG] },
   { id: "j-news",    label: "News",             link: "/news",                 iconName: "communication", roles: [JDG] },
 
@@ -154,8 +154,7 @@ export const NAV_CONFIG: NavItem[] = [
   // ══════════════════════════════════════════════════════════════════════════
   { id: "v-dash",    label: "Dashboard",        link: "/volunteer-dashboard",  iconName: "dashboard", roles: [VOL] },
   { id: "v-event",   label: "My Event",         link: "/volunteer/event",      iconName: "calendar",  roles: [VOL] },
-  { id: "v-checkin", label: "Check In / Out",   link: "/volunteer/checkin",    iconName: "users",     roles: [VOL] },
-  { id: "v-schedule",label: "My Schedule",      link: "/volunteer/schedule",   iconName: "schedule",  roles: [VOL] },
+  { id: "v-cert",    label: "Certificates",     link: "/certificates",         iconName: "certificate", roles: [VOL] },
   { id: "v-notif",   label: "Notifications",    link: "/notifications",        iconName: "bell",      roles: [VOL] },
   { id: "v-news",    label: "News",             link: "/news",                 iconName: "communication", roles: [VOL] },
 ];

@@ -17,6 +17,11 @@ import com.botleague.backend.notification.enums.NotificationType;
 import com.botleague.backend.notification.repository.NotificationRecipientRepository;
 import com.botleague.backend.notification.repository.NotificationRepository;
 import com.botleague.backend.auth.enums.AccountType;
+import com.botleague.backend.organizer.entity.EventJudge;
+import com.botleague.backend.organizer.entity.EventVolunteer;
+import com.botleague.backend.organizer.enums.VolunteerStatus;
+import com.botleague.backend.organizer.repository.EventJudgeRepository;
+import com.botleague.backend.organizer.repository.EventVolunteerRepository;
 import com.botleague.backend.role.entity.UserRole;
 import com.botleague.backend.role.repository.UserRoleRepository;
 import com.botleague.backend.team.entity.TeamMembership;
@@ -51,6 +56,9 @@ public class NotificationService {
     private static final List<AccountType> PLATFORM_ADMIN_ROLES =
             List.of(AccountType.SUPER_ADMIN, AccountType.ADMIN);
 
+    private final EventVolunteerRepository eventVolunteerRepository;
+    private final EventJudgeRepository eventJudgeRepository;
+
     public NotificationService(
             NotificationRepository notificationRepository,
             NotificationRecipientRepository recipientRepository,
@@ -59,7 +67,9 @@ public class NotificationService {
             EventSportsRepository eventSportsRepository,
             SportRegistrationRepository sportRegistrationRepository,
             RealtimePublisher realtimePublisher,
-            UserRoleRepository userRoleRepository) {
+            UserRoleRepository userRoleRepository,
+            EventVolunteerRepository eventVolunteerRepository,
+            EventJudgeRepository eventJudgeRepository) {
         this.notificationRepository = notificationRepository;
         this.recipientRepository = recipientRepository;
         this.userRepository = userRepository;
@@ -68,6 +78,8 @@ public class NotificationService {
         this.sportRegistrationRepository = sportRegistrationRepository;
         this.realtimePublisher = realtimePublisher;
         this.userRoleRepository = userRoleRepository;
+        this.eventVolunteerRepository = eventVolunteerRepository;
+        this.eventJudgeRepository = eventJudgeRepository;
     }
 
     /**
@@ -391,6 +403,17 @@ public class NotificationService {
                 }
             }
         }
+        // Approved volunteers and judges assigned to this event are part of its
+        // audience too — userId is nullable (a roster entry may not correspond
+        // to a platform account), so only confirmed self-service accounts count.
+        eventVolunteerRepository.findByEventId(eventId).stream()
+                .filter(v -> v.getUserId() != null && v.getStatus() == VolunteerStatus.APPROVED)
+                .map(EventVolunteer::getUserId)
+                .forEach(userIds::add);
+        eventJudgeRepository.findByEventId(eventId).stream()
+                .map(EventJudge::getUserId)
+                .filter(Objects::nonNull)
+                .forEach(userIds::add);
         return new ArrayList<>(userIds);
     }
 
@@ -408,6 +431,13 @@ public class NotificationService {
                         .forEach(userIds::add);
             }
         }
+        // Judges specifically assigned to this sport (volunteers have no
+        // sport-level association, only event-level, so they're not included here).
+        eventSportsRepository.findById(sportId).ifPresent(sport ->
+                eventJudgeRepository.findByEventIdAndAssignedSportId(sport.getEventId(), sportId).stream()
+                        .map(EventJudge::getUserId)
+                        .filter(Objects::nonNull)
+                        .forEach(userIds::add));
         return new ArrayList<>(userIds);
     }
 

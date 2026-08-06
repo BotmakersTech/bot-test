@@ -62,11 +62,10 @@ export default function VolunteerDashboard() {
       />
 
       {/* Quick links */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
         {[
-          { label: "Check In / Out",  href: "/volunteer/checkin",  icon: "✅" },
-          { label: "My Event",        href: "/volunteer/event",    icon: "📋" },
-          { label: "My Schedule",     href: "/volunteer/schedule", icon: "📅" },
+          { label: "My Event",        href: "/volunteer/event", icon: "📋" },
+          { label: "Certificates",    href: "/certificates",    icon: "🏅" },
         ].map(l => (
           <Link key={l.label} to={l.href}
             className="flex items-center gap-3 rounded-xl border border-[#4b86e8]/20 bg-white px-4 py-3 hover:border-[#0162D1]/40 hover:bg-[#0162D1]/3 transition-colors">

@@ -18,10 +18,10 @@ interface JudgeMatch {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  LIVE:      "bg-green-500/10 text-green-400",
-  SCHEDULED: "bg-blue-500/10 text-blue-400",
-  COMPLETED: "bg-neutral-500/10 text-neutral-400",
-  CANCELLED: "bg-red-500/10 text-red-400",
+  LIVE:      "bg-green-500/10 text-green-600",
+  SCHEDULED: "bg-blue-500/10 text-blue-600",
+  COMPLETED: "bg-neutral-500/10 text-neutral-600",
+  CANCELLED: "bg-red-500/10 text-red-600",
 }
 
 function fmt(d?: string) {
@@ -47,8 +47,8 @@ export default function JudgeMatchesPage() {
   return (
     <div className="min-h-full p-6 space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-white">Assigned Matches</h1>
-        <p className="text-sm text-neutral-500 mt-0.5">All matches you have been assigned to judge</p>
+        <h1 className="text-xl font-bold text-[#111]">Assigned Matches</h1>
+        <p className="text-sm text-[#6b7280] mt-0.5">All matches you have been assigned to judge</p>
       </div>
 
       {/* Filter tabs */}
@@ -57,8 +57,8 @@ export default function JudgeMatchesPage() {
           <button key={t} onClick={() => setFilter(t)}
             className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
               filter === t
-                ? "bg-[#fa4715] text-white"
-                : "bg-white/[0.06] text-neutral-400 hover:bg-white/10"
+                ? "bg-linear-to-br from-[#4c8ee7] to-[#8c6cff] text-white"
+                : "bg-[#4b86e8]/10 text-[#6b7280] hover:bg-[#4b86e8]/20"
             }`}>
             {t}
           </button>
@@ -66,16 +66,16 @@ export default function JudgeMatchesPage() {
       </div>
 
       {loading ? (
-        <div className="space-y-2">{[1,2,3].map(i => <div key={i} className="h-16 animate-pulse rounded-xl bg-white/[0.04]" />)}</div>
+        <div className="space-y-2">{[1,2,3].map(i => <div key={i} className="h-16 animate-pulse rounded-xl bg-[#4b86e8]/8" />)}</div>
       ) : visible.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-white/10 py-16 text-center">
-          <p className="text-neutral-400 text-sm">No {filter === "ALL" ? "" : filter.toLowerCase() + " "}matches.</p>
+        <div className="rounded-2xl border border-dashed border-[#4b86e8]/30 py-16 text-center">
+          <p className="text-[#6b7280] text-sm">No {filter === "ALL" ? "" : filter.toLowerCase() + " "}matches.</p>
         </div>
       ) : (
-        <div className="overflow-auto rounded-xl ring-1 ring-white/[0.07]">
+        <div className="overflow-auto rounded-xl ring-1 ring-[#4b86e8]/25">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/[0.07] text-left text-[11px] text-neutral-500 uppercase">
+              <tr className="border-b border-[#4b86e8]/20 text-left text-[11px] text-[#5d5d5d] uppercase">
                 <th className="px-4 py-3">Match</th>
                 <th className="px-4 py-3">Teams</th>
                 <th className="px-4 py-3">Score</th>
@@ -85,23 +85,23 @@ export default function JudgeMatchesPage() {
             </thead>
             <tbody>
               {visible.map(m => (
-                <tr key={m.matchId} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
-                  <td className="px-4 py-3 text-white font-medium">
+                <tr key={m.matchId} className="border-b border-[#4b86e8]/10 bg-white hover:bg-[#4b86e8]/5 transition-colors">
+                  <td className="px-4 py-3 text-[#111] font-medium">
                     R{m.roundNumber} · M{m.matchNumber}
                   </td>
-                  <td className="px-4 py-3 text-neutral-300 text-xs">
+                  <td className="px-4 py-3 text-[#374151] text-xs">
                     <div>{m.teamARobotName || m.teamAName || "TBD"}</div>
-                    <div className="text-neutral-500">vs</div>
+                    <div className="text-[#9a9a9a]">vs</div>
                     <div>{m.teamBRobotName || m.teamBName || "TBD"}</div>
                   </td>
-                  <td className="px-4 py-3 text-white font-mono">
+                  <td className="px-4 py-3 text-[#111] font-mono">
                     {m.status !== "SCHEDULED"
                       ? `${m.teamAScore ?? 0} – ${m.teamBScore ?? 0}`
-                      : <span className="text-neutral-600">—</span>}
+                      : <span className="text-[#9a9a9a]">—</span>}
                   </td>
-                  <td className="px-4 py-3 text-neutral-400 text-xs">{fmt(m.scheduledAt)}</td>
+                  <td className="px-4 py-3 text-[#6b7280] text-xs">{fmt(m.scheduledAt)}</td>
                   <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_COLORS[m.status] ?? "bg-white/5 text-neutral-400"}`}>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_COLORS[m.status] ?? "bg-[#4b86e8]/8 text-[#5d5d5d]"}`}>
                       {m.status}
                     </span>
                   </td>
