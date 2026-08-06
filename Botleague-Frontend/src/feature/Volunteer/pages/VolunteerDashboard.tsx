@@ -39,7 +39,7 @@ export default function VolunteerDashboard() {
   return (
     <div className="min-h-full p-6 space-y-8">
       <RoleHeroDashboard
-        welcomeName={user?.firstName || "Volunteer"}
+        welcomeName="Volunteer"
         name={fullName}
         photoUrl={user?.profilePhotoUrl}
         idLabel="Volunteer ID"

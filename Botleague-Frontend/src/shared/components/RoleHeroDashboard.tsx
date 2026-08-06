@@ -7,6 +7,17 @@ import "../../styles/roleHeroDashboard.css";
 const DESIGN_WIDTH = 1513;
 const DESIGN_HEIGHT = 1010;
 
+// The Figma source reserved this band at the top/left for a navbar+sidenav
+// that don't exist here (the app's own Layout renders that chrome instead —
+// same reason the source JSX had them commented out). Left in, that band
+// renders as dead white space. Every element keeps its original coordinate;
+// we just crop the visible canvas to start past this band instead of
+// re-deriving 30+ positions.
+const CROP_LEFT = 170;
+const CROP_TOP = 60;
+const VISIBLE_WIDTH = DESIGN_WIDTH - CROP_LEFT;
+const VISIBLE_HEIGHT = DESIGN_HEIGHT - CROP_TOP;
+
 // Same asset map as the source file, unchanged — these are the exact URLs
 // supplied. (Note: they're Figma MCP session-scoped proxy links, so they
 // may not resolve outside that session/for anonymous site visitors — see
@@ -160,7 +171,7 @@ export default function RoleHeroDashboard({
     const updateScale = () => {
       const containerWidth = node.offsetWidth;
       if (containerWidth > 0) {
-        setScale(containerWidth / DESIGN_WIDTH);
+        setScale(containerWidth / VISIBLE_WIDTH);
       }
     };
 
@@ -172,11 +183,11 @@ export default function RoleHeroDashboard({
   }, []);
 
   return (
-    <div className="rhd-canvas-outer" ref={outerRef} style={{ height: DESIGN_HEIGHT * scale }}>
+    <div className="rhd-canvas-outer" ref={outerRef} style={{ height: VISIBLE_HEIGHT * scale }}>
       <div
         className="rhd-canvas"
         data-name="Role Hero Dashboard"
-        style={{ transform: `scale(${scale})` }}
+        style={{ transform: `scale(${scale}) translate(-${CROP_LEFT}px, -${CROP_TOP}px)` }}
       >
         {/* ---------- decorative stars & background vectors ---------- */}
         <div className="rhd-abs" style={{ left: 854, top: 791, width: 171, height: 202.971 }}>

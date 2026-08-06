@@ -62,7 +62,7 @@ export default function JudgeDashboard() {
   return (
     <div className="min-h-full p-6 space-y-8">
       <RoleHeroDashboard
-        welcomeName={user?.firstName || "Judge"}
+        welcomeName="Judge"
         name={fullName}
         photoUrl={user?.profilePhotoUrl}
         idLabel="Judge ID"
@@ -82,21 +82,7 @@ export default function JudgeDashboard() {
         achievement2Label="20+ Matches Judged"
       />
 
-      {/* Quick links */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {[
-          { label: "Score Entry",       href: "/judge/scores",   icon: "⚡" },
-          { label: "Assigned Matches",  href: "/judge/matches",  icon: "🥊" },
-          { label: "My Schedule",       href: "/judge/schedule", icon: "📅" },
-          { label: "Notifications",     href: "/notifications",  icon: "🔔" },
-        ].map(l => (
-          <Link key={l.label} to={l.href}
-            className="flex items-center gap-3 rounded-xl border border-[#4b86e8]/20 bg-white px-4 py-3 hover:border-[#0162D1]/40 hover:bg-[#0162D1]/3 transition-colors">
-            <span className="text-xl">{l.icon}</span>
-            <span className="text-sm text-[#374151] font-medium">{l.label}</span>
-          </Link>
-        ))}
-      </div>
+      
 
       {/* Live matches */}
       {live.length > 0 && (
