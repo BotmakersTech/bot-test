@@ -179,7 +179,8 @@
   border-radius: 10px;
   color: #5b5b5b;
   background: #ffffff;
-  font-size: 17px;
+  font-size: 18px;
+  font-family: "Inter", system-ui, sans-serif;
   font-weight: 500;
   cursor: pointer;
   transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease;
@@ -196,11 +197,7 @@
   gap: 22px;
 }
 
-/* Each row is just [image | content] now — the name/status/View-Profile
-   line and the BotID/Weight/Sports line are both inside the content
-   column as their own flex rows (see RobotsPages.tsx), not flat grid
-   siblings. Keep .robot-empty-row's own 3-column override below intact —
-   it's a genuinely different layout (image, message, action). */
+
 .robot-data-row {
   display: grid;
   grid-template-columns: 150px 1fr;
@@ -244,8 +241,9 @@
   display: inline;
   margin: 0;
   color: #5e67ee;
-  font-size: 38px;
+  font-size: 40px;
   font-weight: 800;
+  font-family: "Roboto", system-ui, sans-serif;
   line-height: 1.08;
   overflow-wrap: anywhere;
 }
@@ -309,7 +307,7 @@
   border: 0;
   color: #006bc7;
   background: transparent;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 800;
   cursor: pointer;
   white-space: nowrap;
