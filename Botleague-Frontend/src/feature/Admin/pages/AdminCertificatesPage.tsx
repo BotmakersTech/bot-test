@@ -11,6 +11,7 @@ import {
   updateAdminCertificateType,
   triggerAdminGeneration,
   getAdminGenerationJobs,
+  getAdminGenerationJob,
   getAdminIssuedCertificates,
   revokeAdminCertificate,
 } from "../api/certificate.api";
@@ -123,6 +124,7 @@ export default function AdminCertificatesPage() {
               updateType={updateAdminCertificateType}
               triggerGeneration={triggerAdminGeneration}
               listJobs={getAdminGenerationJobs}
+              getJob={getAdminGenerationJob}
               listIssued={getAdminIssuedCertificates}
               revoke={revokeAdminCertificate}
             />

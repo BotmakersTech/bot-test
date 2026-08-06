@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 import {
   type CertificateTemplate,
   type CertificateType,
@@ -23,9 +24,13 @@ interface CertificateTypeManagerProps {
   updateType: (typeId: string, req: UpdateCertificateTypeRequest) => Promise<CertificateType>;
   triggerGeneration: (typeId: string, manualRecipients?: ManualRecipientRequest[]) => Promise<CertificateGenerationJob>;
   listJobs: (typeId: string) => Promise<CertificateGenerationJob[]>;
+  getJob: (jobId: string) => Promise<CertificateGenerationJob>;
   listIssued: (typeId: string) => Promise<IssuedCertificate[]>;
   revoke: (issuedCertificateId: string, reason: string) => Promise<void>;
 }
+
+const POLL_INTERVAL_MS = 2000;
+const RUNNING_STATUSES = new Set(["PENDING", "RUNNING"]);
 
 const CATEGORIES = Object.keys(CATEGORY_LABELS) as CertificateCategory[];
 const RULES: { value: EligibilityRule; label: string }[] = [
@@ -57,6 +62,7 @@ export default function CertificateTypeManager({
   updateType,
   triggerGeneration,
   listJobs,
+  getJob,
   listIssued,
   revoke,
 }: CertificateTypeManagerProps) {
@@ -74,6 +80,23 @@ export default function CertificateTypeManager({
   const [panelTab, setPanelTab] = useState<"jobs" | "issued">("jobs");
   const [manualNames, setManualNames] = useState("");
   const [generating, setGenerating] = useState(false);
+
+  // Live-tracked job while a generation run is in flight — polled every
+  // POLL_INTERVAL_MS via getJob() until it leaves PENDING/RUNNING, so the
+  // "Generating…" state shows real progress/elapsed time instead of going
+  // dark the moment the trigger POST returns (generation itself is async
+  // on the backend).
+  const [activeJob, setActiveJob] = useState<CertificateGenerationJob | null>(null);
+  const [elapsedSec, setElapsedSec] = useState(0);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const tickTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+      if (tickTimerRef.current) clearInterval(tickTimerRef.current);
+    };
+  }, []);
 
   const refresh = () => {
     setLoading(true);
@@ -147,6 +170,53 @@ export default function CertificateTypeManager({
     listIssued(typeId).then(setIssued).catch(() => {});
   };
 
+  const stopTimers = () => {
+    if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null; }
+    if (tickTimerRef.current) { clearInterval(tickTimerRef.current); tickTimerRef.current = null; }
+  };
+
+  const watchJob = (typeId: string, job: CertificateGenerationJob) => {
+    const startedAt = Date.now();
+    setActiveJob(job);
+    setElapsedSec(0);
+    stopTimers();
+
+    tickTimerRef.current = setInterval(() => {
+      setElapsedSec(Math.round((Date.now() - startedAt) / 1000));
+    }, 1000);
+
+    pollTimerRef.current = setInterval(async () => {
+      try {
+        const latest = await getJob(job.id);
+        setActiveJob(latest);
+        if (RUNNING_STATUSES.has(latest.status)) return;
+
+        stopTimers();
+        setActiveJob(null);
+        const took = Math.round((Date.now() - startedAt) / 1000);
+        openPanel(typeId, "issued"); // jump straight to the freshly generated certificates
+        refresh();
+
+        if (latest.status === "COMPLETED") {
+          toast.success(
+            `🎉 ${latest.succeededCount} certificate${latest.succeededCount === 1 ? "" : "s"} generated successfully in ${took}s!`,
+            { id: job.id, duration: 5000 }
+          );
+        } else if (latest.status === "PARTIAL") {
+          toast.error(
+            `Generated ${latest.succeededCount}/${latest.totalRecipients} in ${took}s — ${latest.failedCount} failed. See Jobs for details.`,
+            { id: job.id, duration: 6500 }
+          );
+        } else {
+          toast.error(`Certificate generation failed after ${took}s.${latest.errorSummary ? ` ${latest.errorSummary}` : ""}`, { id: job.id, duration: 6500 });
+        }
+      } catch {
+        stopTimers();
+        setActiveJob(null);
+      }
+    }, POLL_INTERVAL_MS);
+  };
+
   const handleGenerate = async (t: CertificateType) => {
     let manual: ManualRecipientRequest[] | undefined;
     if (t.eligibilityRule === "MANUAL_SELECT") {
@@ -160,12 +230,15 @@ export default function CertificateTypeManager({
     setGenerating(true);
     setError(null);
     try {
-      await triggerGeneration(t.id, manual);
+      const job = await triggerGeneration(t.id, manual);
       setManualNames("");
       openPanel(t.id, "jobs");
       refresh();
+      toast.loading(`Generating ${job.totalRecipients} certificate${job.totalRecipients === 1 ? "" : "s"}…`, { id: job.id });
+      watchJob(t.id, job);
     } catch (e) {
       setError(extractErrorMessage(e, "Failed to trigger generation"));
+      toast.error(extractErrorMessage(e, "Failed to trigger generation"));
     } finally {
       setGenerating(false);
     }
@@ -242,10 +315,32 @@ export default function CertificateTypeManager({
                         style={{ boxShadow: `inset 0 0 0 1px ${ORG.blue}4d` }}
                       />
                     )}
-                    <PrimaryButton onClick={() => handleGenerate(t)} disabled={generating || t.status !== "ACTIVE"}>
-                      {generating ? "Generating…" : "Generate"}
+                    <PrimaryButton onClick={() => handleGenerate(t)} disabled={generating || activeJob?.certificateTypeId === t.id || t.status !== "ACTIVE"}>
+                      {generating ? "Starting…" : activeJob?.certificateTypeId === t.id ? "Generating…" : "Generate"}
                     </PrimaryButton>
                   </div>
+
+                  {activeJob?.certificateTypeId === t.id && (
+                    <div className="rounded-lg px-3 py-2 space-y-1.5" style={{ background: ORG.blue + "0d" }}>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold" style={{ color: ORG.blueHeading }}>
+                          Generating certificates… {elapsedSec}s
+                        </span>
+                        <span style={{ color: ORG.muted }}>
+                          {activeJob.succeededCount + activeJob.failedCount}/{activeJob.totalRecipients}
+                        </span>
+                      </div>
+                      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: ORG.blue + "1a" }}>
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{
+                            background: ORG.blueHeading,
+                            width: `${activeJob.totalRecipients > 0 ? Math.min(100, ((activeJob.succeededCount + activeJob.failedCount) / activeJob.totalRecipients) * 100) : 0}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   <div className="flex gap-2 text-xs font-semibold">
                     <button onClick={() => setPanelTab("jobs")} style={{ color: panelTab === "jobs" ? ORG.blueHeading : ORG.muted }}>Jobs ({jobs.length})</button>

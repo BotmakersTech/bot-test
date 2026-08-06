@@ -11,6 +11,7 @@ import {
   updateOrganizerCertificateType,
   triggerOrganizerGeneration,
   getOrganizerGenerationJobs,
+  getOrganizerGenerationJob,
   getOrganizerIssuedCertificates,
   revokeOrganizerCertificate,
 } from "../api/certificate.api";
@@ -129,6 +130,7 @@ export default function OrganizerCertificatesPage() {
               updateType={updateOrganizerCertificateType}
               triggerGeneration={triggerOrganizerGeneration}
               listJobs={getOrganizerGenerationJobs}
+              getJob={getOrganizerGenerationJob}
               listIssued={getOrganizerIssuedCertificates}
               revoke={revokeOrganizerCertificate}
             />
