@@ -42,7 +42,7 @@ interface MyTeamEmptyStateProps {
  */
 export default function MyTeamEmptyState({ onCreateClick }: MyTeamEmptyStateProps) {
   return (
-    <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-10 lg:py-14">
+    <div className="relative max-w-6xl mx-auto ">
 
       <OutlineStar className="myteam-empty-star absolute top-4 left-[42%] w-16 h-16 text-indigo-200 opacity-70" />
       <OutlineStar className="myteam-empty-star absolute top-[30%] right-[10%] w-16 h-16 text-indigo-200 opacity-70" />
@@ -50,7 +50,7 @@ export default function MyTeamEmptyState({ onCreateClick }: MyTeamEmptyStateProp
       <OutlineStar className="myteam-empty-star absolute bottom-[6%] right-[8%] w-20 h-20 text-indigo-200 opacity-60" />
       <OutlineStar className="myteam-empty-star absolute top-[30%] right-[24%] w-10 h-10 text-indigo-200 opacity-60" />
 
-      <h1 className="myteam-empty-title text-3xl font-bold text-[#4F6EF7] tracking-wide mb-10">Team Dashboard</h1>
+      <h1 className="myteam-empty-title text-[38px] font-medium text-[#4F6EF7] tracking-wide mb-10">Team Dashboard</h1>
 
       <div className="flex flex-wrap gap-x-12 gap-y-6 mb-10">
         <StatItem

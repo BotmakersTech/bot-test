@@ -25,7 +25,7 @@
 .dash-content {
   position: relative;
   z-index: 1;
-  width: min(1294px, 100%);
+  
   margin: 0 auto;
 }
 

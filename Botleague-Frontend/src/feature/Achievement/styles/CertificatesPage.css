@@ -61,7 +61,7 @@
 .bl-content {
     position: relative;
     z-index: 1;
-    max-width: 1280px;
+   
     margin: 0 auto;
 }
 
@@ -77,10 +77,10 @@
 
 .bl-page-title {
     font-family: "Sarpanch", sans-serif;
-    font-weight: 800;
-    font-style: italic;
+    font-weight: 500;
+
     color: var(--cp-blue);
-    font-size: 2.1rem;
+    font-size: 38px;
     margin: 0;
 }
 

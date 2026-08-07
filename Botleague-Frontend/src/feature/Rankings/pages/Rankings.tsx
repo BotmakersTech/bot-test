@@ -157,7 +157,7 @@ export default function GlobalRankingsPage() {
 
   return (
     <div className="rank-page min-h-screen overflow-auto w-full">
-      <main className="relative w-full max-w-[1300px] mx-auto p-4 sm:p-6 lg:p-8">
+      <main className="relative w-full  mx-auto p-8 ">
 
         {/* Background star — hidden below 1100px */}
         <span
@@ -166,7 +166,7 @@ export default function GlobalRankingsPage() {
         />
 
         {/* Page title */}
-        <h1 className="font-sarpanch text-[26px] sm:text-[30px] lg:text-[35px] font-semibold text-[#0162D1] mb-2" style={{ fontFamily: "Sarpanch, sans-serif" }}>
+        <h1 className="font-sarpanch text-[26px] sm:text-[30px] lg:text-[38px] font-medium text-[#0162D1] mb-2" style={{ fontFamily: "Sarpanch, sans-serif" }}>
           Rankings
         </h1>
 
