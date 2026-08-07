@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { Phone } from "lucide-react";
 import type { RootState } from "../../app/store";
 import logo from "../../assets/home/Img/BOT-LEAGUE-white.png";
+import { LEAGUES } from "../../temp/pages/leagues/leagueData";
 
 const LINKS_BEFORE_LEAGUES = [{ label: "Home", to: "/" }];
 const LINKS_AFTER_LEAGUES = [
@@ -12,17 +13,13 @@ const LINKS_AFTER_LEAGUES = [
   { label: "About Us", to: "/about-us" },
 ];
 
-/** Matches LeaguesSection.tsx's LEAGUES array order exactly — index here is
- *  what drives which card the pinned-scroll section lands on. */
-const LEAGUE_ITEMS = ["Ignite League", "Inferno League", "Apex League"];
-
 interface PublicNavbarProps {
   /** Home's hero sits directly under this nav and the nav overlaps it via a
    * negative margin synced to its own height (sticky header pulled over the
    * hero below). Other public pages don't have that layout, so this
    * defaults to off. */
   overlapHero?: boolean;
-  /** The Leagues dropdown only has anywhere to scroll to on Home. */
+  /** Whether to show the Leagues dropdown at all. */
   showLeagues?: boolean;
 }
 
@@ -67,30 +64,10 @@ export default function PublicNavbar({ overlapHero = false, showLeagues = false 
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, [leaguesOpen]);
 
-  /**
-   * Scrolls to the given league's card in LeaguesSection's pinned-scroll
-   * stack — same technique as RobotStage's own click-to-step (land in the
-   * middle of that step's scroll range so the scroll-driven step
-   * calculation picks it up immediately, not right on a boundary edge).
-   * Only works on Home, where #leagues actually exists; from another page
-   * this can only get the visitor to Home, not deep-link the scroll
-   * position across a navigation.
-   */
-  const scrollToLeague = (index: number) => {
+  const goToLeague = (slug: string) => {
     setLeaguesOpen(false);
     setMenuOpen(false);
-    const section = document.getElementById("leagues");
-    if (!section) {
-      navigate("/");
-      return;
-    }
-    const total = section.offsetHeight - window.innerHeight;
-    if (total <= 0) {
-      section.scrollIntoView({ behavior: "smooth" });
-      return;
-    }
-    const progress = (index + 0.5) / LEAGUE_ITEMS.length;
-    window.scrollTo({ top: section.offsetTop + progress * total, behavior: "smooth" });
+    navigate(`/leagues/${slug}`);
   };
 
   const linkClass = "font-sans text-[12px] font-semibold tracking-widest uppercase text-white rounded-full px-6 py-3 transition hover:bg-white/10";
@@ -98,11 +75,11 @@ export default function PublicNavbar({ overlapHero = false, showLeagues = false 
   return (
     <header
       ref={headerRef}
-      className="sticky top-0 z-50 px-6 md:px-10 pt-6 pb-4 bg-[#0a0a14]/90 backdrop-blur-[15px] border-b border-white/10"
+      className="sticky top-0 z-50 px-6 md:px-10 pt-6 pb-4 bg-[#0a0a14]/45 backdrop-blur-xl backdrop-saturate-150 border-b border-white/10 shadow-[0_1px_0_rgba(255,255,255,0.06)_inset]"
     >
       <div className="max-w-[1300px] mx-auto flex items-center justify-between gap-6">
         <button onClick={() => navigate("/")} aria-label="BotLeague home" className="shrink-0">
-          <img src={logo} alt="BotLeague" className="h-8 md:h-9 object-contain" />
+          <img src={logo} alt="BotLeague" className="h-5 sm:h-8 md:h-9 object-contain" />
         </button>
 
         <nav className="hidden md:flex items-center gap-1 border-2 border-white rounded-full px-1.5 py-1.5 backdrop-blur-[15px]">
@@ -123,13 +100,13 @@ export default function PublicNavbar({ overlapHero = false, showLeagues = false 
               </button>
               {leaguesOpen && (
                 <div className="absolute left-1/2 top-full mt-2 w-48 -translate-x-1/2 rounded-2xl border-2 border-white/70 bg-[#0a0a14]/95 backdrop-blur-[15px] p-1.5 flex flex-col gap-1 shadow-[0_12px_30px_rgba(0,0,0,.4)]">
-                  {LEAGUE_ITEMS.map((league, i) => (
+                  {LEAGUES.map((league) => (
                     <button
-                      key={league}
-                      onClick={() => scrollToLeague(i)}
+                      key={league.slug}
+                      onClick={() => goToLeague(league.slug)}
                       className="font-sans text-left text-[11px] font-semibold tracking-widest uppercase text-white rounded-xl px-4 py-2.5 transition hover:bg-white/10"
                     >
-                      {league}
+                      {league.name}
                     </button>
                   ))}
                 </div>
@@ -144,7 +121,7 @@ export default function PublicNavbar({ overlapHero = false, showLeagues = false 
           ))}
         </nav>
 
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           <button
             onClick={() => navigate("/contact-us")}
             aria-label="Contact us"
@@ -155,7 +132,7 @@ export default function PublicNavbar({ overlapHero = false, showLeagues = false 
 
           <button
             onClick={() => navigate(isAuthenticated ? "/profile" : "/login")}
-            className="font-sans bg-[#0D5FE0] hover:brightness-110 active:scale-95 text-white text-[13px] font-bold tracking-widest uppercase px-8 md:px-9 py-3.5 rounded-full transition"
+            className="font-sans bg-[#0D5FE0] hover:brightness-110 active:scale-95 text-white text-[10px] sm:text-[13px] font-bold tracking-wide sm:tracking-widest uppercase px-3.5 sm:px-8 md:px-9 py-2.5 sm:py-3.5 rounded-full transition"
           >
             {isAuthenticated ? "Dashboard" : "Login"}
           </button>
@@ -163,7 +140,7 @@ export default function PublicNavbar({ overlapHero = false, showLeagues = false 
           <button
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Toggle menu"
-            className="md:hidden w-10 h-10 flex flex-col items-center justify-center gap-1.5 border-2 border-white rounded-full"
+            className="md:hidden w-9 h-9 sm:w-10 sm:h-10 flex flex-col items-center justify-center gap-1.5 border-2 border-white rounded-full"
           >
             <span className="w-4 h-0.5 bg-white" />
             <span className="w-4 h-0.5 bg-white" />
@@ -187,13 +164,13 @@ export default function PublicNavbar({ overlapHero = false, showLeagues = false 
           {showLeagues && (
             <div className="flex flex-col">
               <span className="font-sans text-[11px] font-semibold tracking-widest uppercase text-white/50 px-4 pt-2 pb-1">Leagues</span>
-              {LEAGUE_ITEMS.map((league, i) => (
+              {LEAGUES.map((league) => (
                 <button
-                  key={league}
-                  onClick={() => scrollToLeague(i)}
+                  key={league.slug}
+                  onClick={() => goToLeague(league.slug)}
                   className="font-sans text-left text-[12px] font-semibold tracking-widest uppercase text-white rounded-lg px-6 py-3 hover:bg-white/10"
                 >
-                  {league}
+                  {league.name}
                 </button>
               ))}
             </div>

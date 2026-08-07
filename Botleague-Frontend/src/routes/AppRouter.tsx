@@ -29,6 +29,7 @@ import Home from "../temp/pages/Home";
 import ContactUs from "../temp/pages/ContactUs";
 import AboutUs from "../temp/pages/AboutUs";
 import EventsLandingPage from "../temp/pages/EventsLandingPage";
+import LeagueDetailPage from "../temp/pages/leagues/LeagueDetailPage";
 
 // ============================
 // TEAM PAGES
@@ -48,7 +49,7 @@ import UserEventPage from "../feature/Event/pages/UserEventPage";
 import UserEventDetail from "../feature/Event/pages/UserEventDetail";
 import UserSportDetail from "../feature/Event/pages/UserSportDetail";
 import MatchesPage from "../feature/Matches/Pages/Matches";
-import RankingsPage from "../feature/Rankings/pages/Rankings";
+import RankingsRoute from "../feature/Rankings/pages/RankingsRoute";
 import AchievementsPage from "../feature/Achievement/pages/AchievementsPage";
 import CertificatesPage from "../feature/Achievement/pages/CertificatesPage";
 import VerifyCertificatePage from "../feature/Certificates/pages/VerifyCertificatePage";
@@ -184,6 +185,12 @@ function AppRoutes() {
       <Route path="/about-us" element={<FooterShell><AboutUs /></FooterShell>} />
       <Route path="/contact-us" element={<FooterShell><ContactUs /></FooterShell>} />
       <Route path="/events" element={<FooterShell><EventsLandingPage /></FooterShell>} />
+      <Route path="/leagues/:slug" element={<FooterShell><LeagueDetailPage /></FooterShell>} />
+      {/* Viewable without an account — RankingsRoute picks its own chrome
+          (public navbar vs. the authenticated Navbar+Sidebar shell)
+          internally based on auth state, so it isn't wrapped in FooterShell
+          like the rest of this block. */}
+      <Route path="/rankings" element={<RankingsRoute />} />
       {/* Event/sport browsing is fully public — registration/lineup actions
           inside these pages prompt login only when actually used. */}
       <Route path="/events/:eventId" element={<FooterShell><UserEventDetail /></FooterShell>} />
@@ -249,7 +256,6 @@ function AppRoutes() {
             inside those pages still prompt login when actually used. */}
         <Route path="/browse-events" element={<UserEventPage />} />
         <Route path="/matches" element={<MatchesPage />} />
-        <Route path="/rankings" element={<RankingsPage />} />
         <Route path="/achievements" element={<AchievementsPage />} />
         <Route path="/certificates" element={<CertificatesPage />} />
         <Route path="/support" element={<SupportPage />} />

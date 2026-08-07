@@ -103,7 +103,7 @@ export default function EventsLandingPage() {
   return (
     <div className="events-landing">
       <section className="events-hero">
-        <PublicNavbar />
+        <PublicNavbar showLeagues />
 
         <div className="events-hero-content">
           <span className="events-hero-eyebrow">Events</span>

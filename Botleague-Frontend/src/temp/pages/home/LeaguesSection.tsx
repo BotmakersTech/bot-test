@@ -1,37 +1,13 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import igniteImg from "../../../assets/home/Img/ignite.png";
-
-const LEAGUES = [
-  {
-    name: "IGNITE LEAGUE",
-    border: "#e05fa8",
-    imgGradient: "from-[#1a1035] via-[#3b1d6e] to-[#6d28d9]",
-    textGradient: "from-[#8b5cf6] to-[#e05fa8]",
-    desc: "Perfect for beginners. Learn robotics, compete in your first events, and build confidence.",
-    cta: "Enter Ignite",
-  },
-  {
-    name: "INFERNO LEAGUE",
-    border: "#f2994a",
-    imgGradient: "from-[#3a0f0f] via-[#7a1f1f] to-[#f2994a]",
-    textGradient: "from-[#f2994a] to-[#ef4444]",
-    desc: "For rising builders. Sharper rules, tougher arenas, and matches that count toward your national ranking.",
-    cta: "Enter Inferno",
-  },
-  {
-    name: "APEX LEAGUE",
-    border: "#22c55e",
-    imgGradient: "from-[#07230f] via-[#0f5c33] to-[#22c55e]",
-    textGradient: "from-[#22c55e] to-[#16a34a]",
-    desc: "The top tier. Elite arenas, national spotlight, and a straight line to Battle of Robots, Russia.",
-    cta: "Enter Apex",
-  },
-];
+import { LEAGUES } from "../leagues/leagueData";
 
 type CardState = "hidden" | "collapsed" | "expanded";
 
 /** Cards stack and reveal one at a time as the tall wrapper scrolls past, matching OneSection's pinned-scroll pattern. */
 export default function LeaguesSection() {
+  const navigate = useNavigate();
   const wrapRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState(0);
 
@@ -86,7 +62,10 @@ export default function LeaguesSection() {
                     </h3>
                     <div className="home-league-desc-wrap">
                       <p className="text-[24px] text-[#222] leading-relaxed pt-1">{league.desc}</p>
-                      <button className={`font-sans mt-3 bg-linear-to-r ${league.textGradient} text-white font-semibold text-base px-6 py-2.5 rounded-xl`}>
+                      <button
+                        onClick={() => navigate(`/leagues/${league.slug}`)}
+                        className={`font-sans mt-3 bg-linear-to-r ${league.textGradient} text-white font-semibold text-base px-6 py-2.5 rounded-xl`}
+                      >
                         {league.cta}
                       </button>
                     </div>

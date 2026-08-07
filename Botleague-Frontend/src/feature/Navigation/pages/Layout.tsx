@@ -12,7 +12,15 @@ import OnboardingTour, { TOUR_DONE_FLAG } from "../../../shared/components/Onboa
 import pageBackground from "../../../assets/background.png";
 import "../../../styles/onboarding.css";
 
-export default function Layout() {
+interface LayoutProps {
+  /** Normally omitted — nested protected routes render via <Outlet/>. Pass
+   *  content directly only when reusing this authenticated shell outside the
+   *  nested-route tree (e.g. a page that's also reachable while logged out,
+   *  like /rankings, and composes this shell itself for the logged-in case). */
+  children?: React.ReactNode;
+}
+
+export default function Layout({ children }: LayoutProps) {
   const [tourOpen, setTourOpen] = useState(false);
 
   const openTour = useCallback(() => setTourOpen(true), []);
@@ -32,7 +40,7 @@ export default function Layout() {
           <Sidebar />
 
           <main className="min-w-0 flex-1">
-            <Outlet />
+            {children ?? <Outlet />}
           </main>
         </div>
 
