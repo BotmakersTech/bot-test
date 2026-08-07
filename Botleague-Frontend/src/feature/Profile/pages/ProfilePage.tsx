@@ -156,7 +156,7 @@ export default function ProfilePage() {
 
   return (
     <div className="pfm-page min-h-screen p-4 sm:p-6 lg:p-8">
-      <div className="max-w-5xl mx-auto relative overflow-hidden">
+      <div className=" mx-auto relative overflow-hidden">
 
         <OutlineStar className="absolute top-24 right-16 w-16 h-16 text-indigo-100 opacity-70" />
         <OutlineStar className="absolute bottom-16 left-10 w-10 h-10 text-indigo-100 opacity-70" />
