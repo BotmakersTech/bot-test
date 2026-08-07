@@ -3,18 +3,28 @@ package com.botleague.backend.certificate.service;
 import com.botleague.backend.audit.service.AuditLogService;
 import com.botleague.backend.certificate.dto.CertificateTemplateResponse;
 import com.botleague.backend.certificate.dto.CreateCertificateTemplateRequest;
+import com.botleague.backend.certificate.dto.PreviewTemplateRequest;
 import com.botleague.backend.certificate.dto.TemplatePlaceholderPosition;
+import com.botleague.backend.certificate.dto.TemplatePreviewResponse;
 import com.botleague.backend.certificate.dto.UpdateCertificateTemplateRequest;
+import com.botleague.backend.certificate.engine.PlaceholderContext;
 import com.botleague.backend.certificate.engine.PlaceholderKey;
+import com.botleague.backend.certificate.engine.PdfCertificateRenderer;
+import com.botleague.backend.certificate.engine.QrCodeGenerator;
+import com.botleague.backend.certificate.engine.RenderedCertificate;
 import com.botleague.backend.certificate.entity.CertificateTemplate;
 import com.botleague.backend.certificate.repository.CertificateTemplateRepository;
 import com.botleague.backend.common.exception.ApiException;
 import com.botleague.backend.common.service.GetFileService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -29,20 +39,34 @@ import java.util.stream.Collectors;
 @Service
 public class CertificateTemplateService {
 
+    private static final DateTimeFormatter PREVIEW_DATE_FORMAT = DateTimeFormatter.ofPattern("dd MMM yyyy");
+
     private final CertificateTemplateRepository templateRepository;
     private final GetFileService getFileService;
     private final ObjectMapper objectMapper;
     private final AuditLogService auditLogService;
+    private final CertificateStorageService storageService;
+    private final PdfCertificateRenderer pdfCertificateRenderer;
+    private final QrCodeGenerator qrCodeGenerator;
+    private final String verificationBaseUrl;
 
     public CertificateTemplateService(
             CertificateTemplateRepository templateRepository,
             GetFileService getFileService,
             ObjectMapper objectMapper,
-            AuditLogService auditLogService) {
+            AuditLogService auditLogService,
+            CertificateStorageService storageService,
+            PdfCertificateRenderer pdfCertificateRenderer,
+            QrCodeGenerator qrCodeGenerator,
+            @Value("${app.frontend.url}") String frontendBaseUrl) {
         this.templateRepository = templateRepository;
         this.getFileService = getFileService;
         this.objectMapper = objectMapper;
         this.auditLogService = auditLogService;
+        this.storageService = storageService;
+        this.pdfCertificateRenderer = pdfCertificateRenderer;
+        this.qrCodeGenerator = qrCodeGenerator;
+        this.verificationBaseUrl = frontendBaseUrl.replaceAll("/+$", "") + "/verify";
     }
 
     @Transactional
@@ -125,6 +149,62 @@ public class CertificateTemplateService {
         auditLogService.log("CERTIFICATE_TEMPLATE_ARCHIVED", "CERTIFICATE_TEMPLATE", template.getId(), template.getName(), null, null);
     }
 
+    /**
+     * Renders one sample certificate from whatever the editor currently has —
+     * not a saved template row, so it reflects unsaved drags/edits and works
+     * for a template that hasn't been created yet (background already
+     * uploaded via the existing upload-url flow, just not persisted). Uses
+     * placeholder sample data ("Jane Doe", "Sample Event"…) and a real QR
+     * pointing at a fake verification URL, so an editor can actually SEE
+     * whether their QR code (and everything else) renders correctly before
+     * ever issuing a real certificate — previously the only way to find out
+     * was to generate one for a real recipient.
+     */
+    @Transactional(readOnly = true)
+    public TemplatePreviewResponse preview(PreviewTemplateRequest req) {
+        if (req.getBackgroundAssetKey() == null || req.getBackgroundAssetKey().isBlank()) {
+            throw ApiException.badRequest("Upload a background image before previewing");
+        }
+        if (req.getPageWidthPx() == null || req.getPageHeightPx() == null
+                || req.getPageWidthPx() <= 0 || req.getPageHeightPx() <= 0) {
+            throw ApiException.badRequest("Page width and height (in px) are required");
+        }
+        List<TemplatePlaceholderPosition> positions = req.getPlaceholderMap() != null ? req.getPlaceholderMap() : List.of();
+        validatePlaceholderMap(positions);
+
+        byte[] backgroundBytes = storageService.download(req.getBackgroundAssetKey());
+
+        String sampleCertNumber = "SAMPLE-0001";
+        String sampleVerificationUrl = verificationBaseUrl + "/" + sampleCertNumber;
+
+        PlaceholderContext context = new PlaceholderContext();
+        context.put(PlaceholderKey.PARTICIPANT_NAME, "Jane Doe");
+        context.put(PlaceholderKey.TEAM_NAME, "Sample Team");
+        context.put(PlaceholderKey.ROBOT_NAME, "Sample Bot");
+        context.put(PlaceholderKey.EVENT_NAME, "Sample Championship 2026");
+        context.put(PlaceholderKey.EVENT_SPORT, "Sample Sport");
+        context.put(PlaceholderKey.COMPETITION_CATEGORY, "Winner");
+        context.put(PlaceholderKey.POSITION, "1st Place");
+        context.put(PlaceholderKey.RANK, "1");
+        context.put(PlaceholderKey.INSTITUTE_NAME, "Sample Institute");
+        context.put(PlaceholderKey.ORGANIZER_NAME, "BotLeague");
+        context.put(PlaceholderKey.CERTIFICATE_ID, sampleCertNumber);
+        context.put(PlaceholderKey.DATE, LocalDate.now().format(PREVIEW_DATE_FORMAT));
+        context.put(PlaceholderKey.VERIFICATION_URL, sampleVerificationUrl);
+        context.setQrPayloadUrl(sampleVerificationUrl);
+
+        boolean hasQr = positions.stream().anyMatch(p -> PlaceholderKey.QR_CODE.name().equals(p.getKey()));
+        byte[] qrBytes = hasQr ? qrCodeGenerator.generatePng(sampleVerificationUrl, 300) : null;
+
+        RenderedCertificate rendered = pdfCertificateRenderer.render(
+                backgroundBytes, req.getPageWidthPx(), req.getPageHeightPx(), positions, context, qrBytes);
+
+        TemplatePreviewResponse response = new TemplatePreviewResponse();
+        response.setImageBase64("data:image/png;base64," + Base64.getEncoder().encodeToString(rendered.getImageBytes()));
+        response.setHasQrPlaceholder(hasQr);
+        return response;
+    }
+
     private CertificateTemplate loadOwned(UUID templateId, String provider, UUID ownerUserId) {
         CertificateTemplate template = templateRepository.findById(templateId)
                 .orElseThrow(() -> ApiException.notFound("Certificate template not found"));
@@ -191,6 +271,7 @@ public class CertificateTemplateService {
         dto.setOwnerUserId(template.getOwnerUserId());
         dto.setName(template.getName());
         dto.setBackgroundUrl(getFileService.getCertificateUrl(template.getBackgroundAssetKey()));
+        dto.setBackgroundAssetKey(template.getBackgroundAssetKey());
         dto.setPageWidthPx(template.getPageWidthPx());
         dto.setPageHeightPx(template.getPageHeightPx());
         dto.setPlaceholderMap(deserialize(template.getPlaceholderMap()));

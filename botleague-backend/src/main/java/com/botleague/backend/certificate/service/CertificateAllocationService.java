@@ -85,9 +85,11 @@ public class CertificateAllocationService {
             String instituteName = team != null ? team.getInstitutionName() : null;
 
             for (TeamMembership membership : teamMembershipRepository.findByTeamIdAndStatus(teamId, TeamMembershipStatus.ACTIVE)) {
+                User user = userRepository.findById(membership.getUserId()).orElse(null);
                 recipients.add(new CertificateRecipient(
                         membership.getUserId(),
-                        resolveUserName(membership.getUserId()),
+                        displayNameOrNull(user),
+                        user != null ? user.getEmail() : null,
                         teamId,
                         teamName,
                         null,
@@ -120,9 +122,11 @@ public class CertificateAllocationService {
             String instituteName = team != null ? team.getInstitutionName() : null;
 
             for (TeamMembership membership : teamMembershipRepository.findByTeamIdAndStatus(entry.getTeamId(), TeamMembershipStatus.ACTIVE)) {
+                User user = userRepository.findById(membership.getUserId()).orElse(null);
                 recipients.add(new CertificateRecipient(
                         membership.getUserId(),
-                        resolveUserName(membership.getUserId()),
+                        displayNameOrNull(user),
+                        user != null ? user.getEmail() : null,
                         entry.getTeamId(),
                         entry.getTeamName(),
                         entry.getRobotId(),
@@ -142,16 +146,22 @@ public class CertificateAllocationService {
         }
         List<CertificateRecipient> recipients = new ArrayList<>();
         for (ManualRecipientRequest request : requests) {
-            String recipientName = request.getRecipientUserId() != null
-                    ? resolveUserName(request.getRecipientUserId())
-                    : request.getRecipientName();
+            User user = request.getRecipientUserId() != null
+                    ? userRepository.findById(request.getRecipientUserId()).orElse(null)
+                    : null;
+            String recipientName = user != null ? displayNameOrNull(user) : request.getRecipientName();
             if (recipientName == null || recipientName.isBlank()) {
                 throw ApiException.badRequest("Each manual recipient needs either a recipientUserId or an explicit recipientName");
             }
+            // An account's own email always wins over a manually-typed one for a
+            // recipientUserId recipient — the account is the source of truth, and
+            // recipientEmail only exists to cover the no-account (role-based) case.
+            String recipientEmail = user != null ? user.getEmail() : request.getRecipientEmail();
             Team team = request.getTeamId() != null ? teamRepository.findById(request.getTeamId()).orElse(null) : null;
             recipients.add(new CertificateRecipient(
                     request.getRecipientUserId(),
                     recipientName,
+                    recipientEmail,
                     request.getTeamId(),
                     team != null ? team.getTeamName() : null,
                     request.getRobotId(),
@@ -163,14 +173,10 @@ public class CertificateAllocationService {
         return recipients;
     }
 
-    private String resolveUserName(UUID userId) {
-        if (userId == null) {
+    private String displayNameOrNull(User user) {
+        if (user == null) {
             return null;
         }
-        return userRepository.findById(userId).map(this::displayName).orElse(null);
-    }
-
-    private String displayName(User user) {
         String first = user.getFirstName() != null ? user.getFirstName() : "";
         String last = user.getLastName() != null ? user.getLastName() : "";
         String full = (first + " " + last).trim();

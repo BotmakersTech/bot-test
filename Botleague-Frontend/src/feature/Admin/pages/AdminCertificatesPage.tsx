@@ -14,6 +14,8 @@ import {
   getAdminGenerationJob,
   getAdminIssuedCertificates,
   revokeAdminCertificate,
+  resendAdminCertificate,
+  previewAdminTemplate,
 } from "../api/certificate.api";
 import type { CertificateTemplate } from "../../Certificates/api/certificate.api";
 import TemplateManager from "../../Certificates/components/TemplateManager";
@@ -87,6 +89,7 @@ export default function AdminCertificatesPage() {
           createTemplate={createAdminTemplate}
           updateTemplate={updateAdminTemplate}
           archiveTemplate={archiveAdminTemplate}
+          previewTemplate={previewAdminTemplate}
           templates={templates}
           onChanged={refreshTemplates}
         />
@@ -127,6 +130,7 @@ export default function AdminCertificatesPage() {
               getJob={getAdminGenerationJob}
               listIssued={getAdminIssuedCertificates}
               revoke={revokeAdminCertificate}
+              resend={resendAdminCertificate}
             />
           ) : (
             <p className="text-sm" style={{ color: ORG.muted }}>Select an event sport to configure its certificates.</p>

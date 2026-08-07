@@ -43,6 +43,8 @@ public class CertificateVerificationService {
     private final GetFileService getFileService;
     private final AuthorizationService authorizationService;
     private final AuditLogService auditLogService;
+    private final CertificateStorageService storageService;
+    private final CertificateDeliveryService deliveryService;
 
     public CertificateVerificationService(
             IssuedCertificateRepository issuedCertificateRepository,
@@ -52,7 +54,9 @@ public class CertificateVerificationService {
             EventSportsRepository eventSportsRepository,
             GetFileService getFileService,
             AuthorizationService authorizationService,
-            AuditLogService auditLogService) {
+            AuditLogService auditLogService,
+            CertificateStorageService storageService,
+            CertificateDeliveryService deliveryService) {
         this.issuedCertificateRepository = issuedCertificateRepository;
         this.verificationLogRepository = verificationLogRepository;
         this.certificateTypeRepository = certificateTypeRepository;
@@ -61,6 +65,8 @@ public class CertificateVerificationService {
         this.getFileService = getFileService;
         this.authorizationService = authorizationService;
         this.auditLogService = auditLogService;
+        this.storageService = storageService;
+        this.deliveryService = deliveryService;
     }
 
     @Transactional
@@ -139,6 +145,44 @@ public class CertificateVerificationService {
                 issued.getCertificateNumber(), null, reason);
     }
 
+    /**
+     * Re-attempts delivery of an already-generated certificate — no re-render,
+     * just re-downloads the stored PDF and runs it through the same
+     * deliverAndNotify path the bulk-generation worker uses. Covers a bounced
+     * email, an initially-down SMTP server, or simply "the organizer wants to
+     * make sure this one specific person got it."
+     */
+    @Transactional
+    public IssuedCertificateResponse resendDelivery(UUID issuedCertificateId, UUID callerId) {
+        IssuedCertificate issued = issuedCertificateRepository.findById(issuedCertificateId)
+                .orElseThrow(() -> ApiException.notFound("Certificate not found"));
+        authorizationService.assertCanManageSport(callerId, issued.getEventSportId());
+
+        if (IssuedCertificate.STATUS_REVOKED.equals(issued.getStatus())) {
+            throw ApiException.conflict("This certificate has been revoked and can't be resent");
+        }
+        if (issued.getRecipientEmailSnapshot() == null || issued.getRecipientEmailSnapshot().isBlank()) {
+            throw ApiException.badRequest("No email address on file for this recipient — nothing to resend to");
+        }
+
+        CertificateType type = certificateTypeRepository.findById(issued.getCertificateTypeId())
+                .orElseThrow(() -> ApiException.notFound("Certificate type not found"));
+        Event event = eventRepository.findById(issued.getEventId()).orElse(null);
+        EventSports eventSport = eventSportsRepository.findById(issued.getEventSportId()).orElse(null);
+        byte[] pdfBytes = storageService.download(issued.getPdfKey());
+
+        deliveryService.deliverAndNotify(
+                issued, type.getLabel(),
+                event != null ? event.getEventName() : "your event",
+                eventSport != null ? eventSport.getSport() : null,
+                pdfBytes);
+
+        auditLogService.log("CERTIFICATE_DELIVERY_RESENT", "ISSUED_CERTIFICATE", issued.getId(),
+                issued.getCertificateNumber(), null, "deliveryStatus=" + issued.getDeliveryStatus());
+
+        return toResponse(issued);
+    }
+
     private void populatePublicFields(PublicVerificationResponse response, IssuedCertificate issued) {
         response.setRecipientName(issued.getRecipientNameSnapshot());
         response.setTeamName(issued.getTeamNameSnapshot());
@@ -185,6 +229,12 @@ public class CertificateVerificationService {
         dto.setRevokedReason(issued.getRevokedReason());
         dto.setRevokedAt(issued.getRevokedAt());
         dto.setIssuedAt(issued.getIssuedAt());
+        dto.setRecipientEmail(issued.getRecipientEmailSnapshot());
+        dto.setDeliveryStatus(issued.getDeliveryStatus());
+        dto.setDeliveryAttempts(issued.getDeliveryAttempts());
+        dto.setLastDeliveryError(issued.getLastDeliveryError());
+        dto.setDeliveredAt(issued.getDeliveredAt());
+        dto.setInAppNotified(issued.isInAppNotified());
         return dto;
     }
 

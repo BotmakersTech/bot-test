@@ -12,6 +12,7 @@ public class CertificateRecipient {
 
     private final UUID recipientUserId;
     private final String recipientName;
+    private final String recipientEmail;
     private final UUID teamId;
     private final String teamName;
     private final UUID robotId;
@@ -19,10 +20,11 @@ public class CertificateRecipient {
     private final String instituteName;
     private final Integer positionRank;
 
-    public CertificateRecipient(UUID recipientUserId, String recipientName, UUID teamId, String teamName,
+    public CertificateRecipient(UUID recipientUserId, String recipientName, String recipientEmail, UUID teamId, String teamName,
                                  UUID robotId, String robotName, String instituteName, Integer positionRank) {
         this.recipientUserId = recipientUserId;
         this.recipientName = recipientName;
+        this.recipientEmail = recipientEmail;
         this.teamId = teamId;
         this.teamName = teamName;
         this.robotId = robotId;
@@ -33,6 +35,7 @@ public class CertificateRecipient {
 
     public UUID getRecipientUserId() { return recipientUserId; }
     public String getRecipientName() { return recipientName; }
+    public String getRecipientEmail() { return recipientEmail; }
     public UUID getTeamId() { return teamId; }
     public String getTeamName() { return teamName; }
     public UUID getRobotId() { return robotId; }

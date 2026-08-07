@@ -14,6 +14,8 @@ import {
   getOrganizerGenerationJob,
   getOrganizerIssuedCertificates,
   revokeOrganizerCertificate,
+  resendOrganizerCertificate,
+  previewOrganizerTemplate,
 } from "../api/certificate.api";
 import type { CertificateTemplate } from "../../Certificates/api/certificate.api";
 import TemplateManager from "../../Certificates/components/TemplateManager";
@@ -93,6 +95,7 @@ export default function OrganizerCertificatesPage() {
           createTemplate={createOrganizerTemplate}
           updateTemplate={updateOrganizerTemplate}
           archiveTemplate={archiveOrganizerTemplate}
+          previewTemplate={previewOrganizerTemplate}
           templates={templates}
           onChanged={refreshTemplates}
         />
@@ -133,6 +136,7 @@ export default function OrganizerCertificatesPage() {
               getJob={getOrganizerGenerationJob}
               listIssued={getOrganizerIssuedCertificates}
               revoke={revokeOrganizerCertificate}
+              resend={resendOrganizerCertificate}
             />
           ) : (
             <p className="text-sm" style={{ color: ORG.muted }}>Select an event sport to configure its certificates.</p>

@@ -5,6 +5,8 @@ import {
   type UpdateCertificateTemplateRequest,
   type TemplatePlaceholderPosition,
   type PlaceholderKey,
+  type PreviewTemplateRequest,
+  type TemplatePreviewResponse,
   PLACEHOLDER_LABELS,
   validateTemplateFile,
   readImageDimensions,
@@ -23,6 +25,7 @@ interface TemplateManagerProps {
   createTemplate: (req: CreateCertificateTemplateRequest) => Promise<CertificateTemplate>;
   updateTemplate: (id: string, req: UpdateCertificateTemplateRequest) => Promise<CertificateTemplate>;
   archiveTemplate: (id: string) => Promise<void>;
+  previewTemplate: (req: PreviewTemplateRequest) => Promise<TemplatePreviewResponse>;
   templates: CertificateTemplate[];
   onChanged: () => void;
 }
@@ -41,6 +44,7 @@ export default function TemplateManager({
   createTemplate,
   updateTemplate,
   archiveTemplate,
+  previewTemplate,
   templates,
   onChanged,
 }: TemplateManagerProps) {
@@ -54,11 +58,17 @@ export default function TemplateManager({
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const dragIndex = useRef<number | null>(null);
   const imageRef = useRef<HTMLDivElement | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [previewResult, setPreviewResult] = useState<TemplatePreviewResponse | null>(null);
 
   const openAdd = () => {
     setEditing(null);
     setForm(emptyForm());
     setError(null);
+    setPreviewOpen(false);
+    setPreviewResult(null);
     setShowForm(true);
   };
 
@@ -66,13 +76,18 @@ export default function TemplateManager({
     setEditing(t);
     setForm({
       name: t.name,
-      backgroundAssetKey: "",
+      // The background image itself can't be replaced once a template exists
+      // (no re-upload control renders in edit mode below), but the key is
+      // still needed here so Preview can re-render against it.
+      backgroundAssetKey: t.backgroundAssetKey,
       backgroundUrl: t.backgroundUrl,
       pageWidthPx: t.pageWidthPx,
       pageHeightPx: t.pageHeightPx,
       placeholderMap: t.placeholderMap ?? [],
     });
     setError(null);
+    setPreviewOpen(false);
+    setPreviewResult(null);
     setShowForm(true);
   };
 
@@ -145,6 +160,30 @@ export default function TemplateManager({
       ...p,
       placeholderMap: p.placeholderMap.map((entry, i) => (i === index ? { ...entry, ...patch } : entry)),
     }));
+  };
+
+  const handlePreview = async () => {
+    if (!form.backgroundAssetKey) {
+      setPreviewError("Upload a background image first");
+      setPreviewOpen(true);
+      return;
+    }
+    setPreviewOpen(true);
+    setPreviewLoading(true);
+    setPreviewError(null);
+    try {
+      const result = await previewTemplate({
+        backgroundAssetKey: form.backgroundAssetKey,
+        pageWidthPx: form.pageWidthPx,
+        pageHeightPx: form.pageHeightPx,
+        placeholderMap: form.placeholderMap,
+      });
+      setPreviewResult(result);
+    } catch (e) {
+      setPreviewError(extractErrorMessage(e, "Failed to render preview"));
+    } finally {
+      setPreviewLoading(false);
+    }
   };
 
   const onMarkerPointerDown = (index: number) => (e: React.PointerEvent) => {
@@ -300,28 +339,63 @@ export default function TemplateManager({
 
             {form.backgroundUrl && form.pageWidthPx > 0 && (
               <div>
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                   <label className="text-xs font-semibold" style={{ color: ORG.muted }}>
-                    Placeholders — drag markers to position them
+                    {previewOpen ? "Rendered preview — sample data" : "Placeholders — drag markers to position them"}
                   </label>
                   <div className="flex gap-2">
-                    <select
-                      value={addKey}
-                      onChange={(e) => setAddKey(e.target.value as PlaceholderKey | "")}
-                      className="rounded-lg bg-white px-2 py-1 text-xs ring-1 focus:outline-none"
-                      style={{ boxShadow: `inset 0 0 0 1px ${ORG.blue}4d` }}
+                    {!previewOpen && (
+                      <>
+                        <select
+                          value={addKey}
+                          onChange={(e) => setAddKey(e.target.value as PlaceholderKey | "")}
+                          className="rounded-lg bg-white px-2 py-1 text-xs ring-1 focus:outline-none"
+                          style={{ boxShadow: `inset 0 0 0 1px ${ORG.blue}4d` }}
+                        >
+                          <option value="">Add placeholder…</option>
+                          {unusedKeys.map((k) => (
+                            <option key={k} value={k}>{PLACEHOLDER_LABELS[k]}</option>
+                          ))}
+                        </select>
+                        <button onClick={addPlaceholder} disabled={!addKey} className="rounded-lg text-xs px-3 py-1 disabled:opacity-50" style={{ background: ORG.blue + "1a", color: ORG.blueHeading }}>
+                          Add
+                        </button>
+                      </>
+                    )}
+                    <button
+                      onClick={previewOpen ? () => setPreviewOpen(false) : handlePreview}
+                      className="rounded-lg text-xs px-3 py-1 font-semibold"
+                      style={{ background: ORG.violet + "1a", color: ORG.violetHeading }}
                     >
-                      <option value="">Add placeholder…</option>
-                      {unusedKeys.map((k) => (
-                        <option key={k} value={k}>{PLACEHOLDER_LABELS[k]}</option>
-                      ))}
-                    </select>
-                    <button onClick={addPlaceholder} disabled={!addKey} className="rounded-lg text-xs px-3 py-1 disabled:opacity-50" style={{ background: ORG.blue + "1a", color: ORG.blueHeading }}>
-                      Add
+                      {previewOpen ? "← Back to editing" : "👁 Preview with sample data"}
                     </button>
                   </div>
                 </div>
 
+                {previewOpen ? (
+                  <div className="rounded-lg overflow-hidden" style={{ background: ORG.blue + "0a", minHeight: 200 }}>
+                    {previewLoading ? (
+                      <div className="flex items-center justify-center py-16 text-xs" style={{ color: ORG.muted }}>Rendering sample certificate…</div>
+                    ) : previewError ? (
+                      <p className="text-xs p-4" style={{ color: ORG.danger }}>{previewError}</p>
+                    ) : previewResult ? (
+                      <>
+                        <img
+                          src={previewResult.imageBase64}
+                          alt="Sample rendered certificate"
+                          className="w-full rounded-lg"
+                          style={{ maxWidth: PREVIEW_WIDTH }}
+                        />
+                        {!previewResult.hasQrPlaceholder && (
+                          <p className="text-[11px] mt-1.5" style={{ color: ORG.warning }}>
+                            No QR code marker on this template — add one above if certificates using it need to be scannable/verifiable.
+                          </p>
+                        )}
+                      </>
+                    ) : null}
+                  </div>
+                ) : (
+                <>
                 <div
                   ref={imageRef}
                   onPointerMove={onImagePointerMove}
@@ -427,6 +501,8 @@ export default function TemplateManager({
                     );
                   })}
                 </div>
+                </>
+                )}
               </div>
             )}
 

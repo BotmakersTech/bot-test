@@ -83,6 +83,11 @@ public class AdminCertificateController {
         return ResponseEntity.ok("Template archived");
     }
 
+    @PostMapping("/templates/preview")
+    public ResponseEntity<TemplatePreviewResponse> previewTemplate(@RequestBody PreviewTemplateRequest req) {
+        return ResponseEntity.ok(templateService.preview(req));
+    }
+
     // ── Certificate types ────────────────────────────────────────────────
 
     @PostMapping("/sports/{eventSportId}/types")
@@ -138,6 +143,12 @@ public class AdminCertificateController {
             @PathVariable UUID issuedCertificateId, @RequestBody RevokeCertificateRequest req, Authentication auth) {
         verificationService.revoke(issuedCertificateId, req.getReason(), extractUserId(auth));
         return ResponseEntity.ok("Certificate revoked");
+    }
+
+    @PostMapping("/issued/{issuedCertificateId}/resend")
+    public ResponseEntity<IssuedCertificateResponse> resend(
+            @PathVariable UUID issuedCertificateId, Authentication auth) {
+        return ResponseEntity.ok(verificationService.resendDelivery(issuedCertificateId, extractUserId(auth)));
     }
 
     private UUID extractUserId(Authentication auth) {

@@ -25,6 +25,7 @@ export type IssueMode = "AUTO_ON_FINALIZE" | "MANUAL_TRIGGER";
 export type CertificateTypeStatus = "ACTIVE" | "DISABLED";
 export type GenerationJobStatus = "PENDING" | "RUNNING" | "COMPLETED" | "PARTIAL" | "FAILED";
 export type IssuedCertificateStatus = "ACTIVE" | "REVOKED" | "SUPERSEDED";
+export type DeliveryStatus = "PENDING" | "SENT" | "FAILED" | "SKIPPED";
 
 export type PlaceholderKey =
   | "PARTICIPANT_NAME"
@@ -86,6 +87,7 @@ export interface CertificateTemplate {
   ownerUserId: string | null;
   name: string;
   backgroundUrl: string;
+  backgroundAssetKey: string;
   pageWidthPx: number;
   pageHeightPx: number;
   placeholderMap: TemplatePlaceholderPosition[];
@@ -152,6 +154,10 @@ export type UpdateCertificateTypeRequest = Partial<CreateCertificateTypeRequest>
 export interface ManualRecipientRequest {
   recipientUserId?: string;
   recipientName?: string;
+  /** Only meaningful when recipientUserId is absent (a role-based recipient
+   *  with no account) — the sole way that recipient's certificate can be
+   *  emailed at all, since there's no account to resolve an address from. */
+  recipientEmail?: string;
   teamId?: string;
   robotId?: string;
   robotName?: string;
@@ -165,6 +171,8 @@ export interface CertificateGenerationJob {
   totalRecipients: number;
   succeededCount: number;
   failedCount: number;
+  deliveredCount: number;
+  deliveryFailedCount: number;
   errorSummary: string | null;
   triggeredBy: string;
   startedAt: string | null;
@@ -197,6 +205,25 @@ export interface IssuedCertificate {
   revokedReason?: string | null;
   revokedAt?: string | null;
   issuedAt: string;
+  recipientEmail: string | null;
+  deliveryStatus: DeliveryStatus;
+  deliveryAttempts: number;
+  lastDeliveryError: string | null;
+  deliveredAt: string | null;
+  inAppNotified: boolean;
+}
+
+export interface PreviewTemplateRequest {
+  backgroundAssetKey: string;
+  pageWidthPx: number;
+  pageHeightPx: number;
+  placeholderMap: TemplatePlaceholderPosition[];
+}
+
+export interface TemplatePreviewResponse {
+  /** Ready-to-use `data:image/png;base64,...` URI. */
+  imageBase64: string;
+  hasQrPlaceholder: boolean;
 }
 
 export interface PublicVerificationResponse {

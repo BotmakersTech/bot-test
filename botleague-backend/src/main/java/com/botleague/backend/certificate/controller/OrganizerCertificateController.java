@@ -97,6 +97,11 @@ public class OrganizerCertificateController {
         return ResponseEntity.ok("Template archived");
     }
 
+    @PostMapping("/templates/preview")
+    public ResponseEntity<TemplatePreviewResponse> previewTemplate(@RequestBody PreviewTemplateRequest req) {
+        return ResponseEntity.ok(templateService.preview(req));
+    }
+
     // ── Certificate types (per-sport) ────────────────────────────────────
 
     @PostMapping("/sports/{eventSportId}/types")
@@ -176,6 +181,13 @@ public class OrganizerCertificateController {
         // against the certificate's own eventSportId — no need to duplicate here.
         verificationService.revoke(issuedCertificateId, req.getReason(), extractUserId(auth));
         return ResponseEntity.ok("Certificate revoked");
+    }
+
+    @PostMapping("/issued/{issuedCertificateId}/resend")
+    public ResponseEntity<IssuedCertificateResponse> resend(
+            @PathVariable UUID issuedCertificateId, Authentication auth) {
+        // resendDelivery() itself calls assertCanManageSport, same as revoke() above.
+        return ResponseEntity.ok(verificationService.resendDelivery(issuedCertificateId, extractUserId(auth)));
     }
 
     private UUID extractUserId(Authentication auth) {

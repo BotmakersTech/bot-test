@@ -28,4 +28,6 @@ public interface IssuedCertificateRepository extends JpaRepository<IssuedCertifi
             UUID certificateTypeId, String recipientNameSnapshot, UUID robotId, String excludedStatus);
 
     long countByCertificateTypeIdAndStatusNot(UUID certificateTypeId, String excludedStatus);
+
+    long countByGenerationJobIdAndDeliveryStatus(UUID generationJobId, String deliveryStatus);
 }

@@ -11,6 +11,8 @@ public class CertificateGenerationJobResponse {
     private Integer totalRecipients;
     private Integer succeededCount;
     private Integer failedCount;
+    private Integer deliveredCount;
+    private Integer deliveryFailedCount;
     private String errorSummary;
     private UUID triggeredBy;
     private LocalDateTime startedAt;
@@ -34,6 +36,12 @@ public class CertificateGenerationJobResponse {
 
     public Integer getFailedCount() { return failedCount; }
     public void setFailedCount(Integer failedCount) { this.failedCount = failedCount; }
+
+    public Integer getDeliveredCount() { return deliveredCount; }
+    public void setDeliveredCount(Integer deliveredCount) { this.deliveredCount = deliveredCount; }
+
+    public Integer getDeliveryFailedCount() { return deliveryFailedCount; }
+    public void setDeliveryFailedCount(Integer deliveryFailedCount) { this.deliveryFailedCount = deliveryFailedCount; }
 
     public String getErrorSummary() { return errorSummary; }
     public void setErrorSummary(String errorSummary) { this.errorSummary = errorSummary; }

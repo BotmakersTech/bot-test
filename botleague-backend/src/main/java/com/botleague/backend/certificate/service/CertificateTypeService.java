@@ -7,10 +7,14 @@ import com.botleague.backend.certificate.dto.UpdateCertificateTypeRequest;
 import com.botleague.backend.certificate.entity.CertificateTemplate;
 import com.botleague.backend.certificate.entity.CertificateType;
 import com.botleague.backend.certificate.entity.IssuedCertificate;
+import com.botleague.backend.certificate.dto.TemplatePlaceholderPosition;
+import com.botleague.backend.certificate.engine.PlaceholderKey;
 import com.botleague.backend.certificate.repository.CertificateTemplateRepository;
 import com.botleague.backend.certificate.repository.CertificateTypeRepository;
 import com.botleague.backend.certificate.repository.IssuedCertificateRepository;
 import com.botleague.backend.common.exception.ApiException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,16 +35,19 @@ public class CertificateTypeService {
     private final CertificateTemplateRepository certificateTemplateRepository;
     private final IssuedCertificateRepository issuedCertificateRepository;
     private final AuditLogService auditLogService;
+    private final ObjectMapper objectMapper;
 
     public CertificateTypeService(
             CertificateTypeRepository certificateTypeRepository,
             CertificateTemplateRepository certificateTemplateRepository,
             IssuedCertificateRepository issuedCertificateRepository,
-            AuditLogService auditLogService) {
+            AuditLogService auditLogService,
+            ObjectMapper objectMapper) {
         this.certificateTypeRepository = certificateTypeRepository;
         this.certificateTemplateRepository = certificateTemplateRepository;
         this.issuedCertificateRepository = issuedCertificateRepository;
         this.auditLogService = auditLogService;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
@@ -56,6 +63,8 @@ public class CertificateTypeService {
         if (!template.getProvider().equals(provider)) {
             throw ApiException.badRequest("The selected template does not belong to your provider scope");
         }
+        boolean effectiveQrEnabled = req.getQrEnabled() != null ? req.getQrEnabled() : Boolean.TRUE;
+        validateQrConsistency(template, effectiveQrEnabled);
 
         String label = req.getLabel().trim();
         if (certificateTypeRepository.findByEventSportIdAndProviderAndCategoryAndLabel(eventSportId, provider, req.getCategory(), label).isPresent()) {
@@ -133,6 +142,14 @@ public class CertificateTypeService {
             type.setSignatureEnabled(req.getSignatureEnabled());
         }
 
+        // Re-checked here (not just on templateId/qrEnabled change individually) since
+        // either one changing can put the pair out of sync with the other's existing value.
+        if (Boolean.TRUE.equals(type.getQrEnabled())) {
+            CertificateTemplate effectiveTemplate = certificateTemplateRepository.findById(type.getTemplateId())
+                    .orElseThrow(() -> ApiException.notFound("Certificate template not found"));
+            validateQrConsistency(effectiveTemplate, true);
+        }
+
         CertificateType saved = certificateTypeRepository.save(type);
         auditLogService.log("CERTIFICATE_TYPE_UPDATED", "CERTIFICATE_TYPE", saved.getId(), saved.getLabel(), null, null);
         return toResponse(saved);
@@ -184,6 +201,33 @@ public class CertificateTypeService {
         }
         if (CertificateType.RULE_RANK_EQUALS.equals(rule) && (rank == null || rank <= 0)) {
             throw ApiException.badRequest("eligibilityRank is required and must be a positive number when eligibilityRule=RANK_EQUALS");
+        }
+    }
+
+    /**
+     * The single fix for "QR code enabled but nothing prints" — that toggle
+     * only controls whether a QR PNG gets *generated*; whether it ever
+     * appears on the actual certificate depends entirely on the template
+     * having a QR_CODE marker placed in its placeholder_map. Previously
+     * nothing connected the two, so a template author could forget to place
+     * the marker (or pick the wrong template) and every certificate of that
+     * type would silently render with no QR, discovered only after the fact.
+     */
+    private void validateQrConsistency(CertificateTemplate template, boolean qrEnabled) {
+        if (!qrEnabled) {
+            return;
+        }
+        List<TemplatePlaceholderPosition> positions;
+        try {
+            positions = objectMapper.readValue(template.getPlaceholderMap(), new TypeReference<List<TemplatePlaceholderPosition>>() {});
+        } catch (Exception e) {
+            positions = List.of();
+        }
+        boolean hasQrPlaceholder = positions.stream().anyMatch(p -> PlaceholderKey.QR_CODE.name().equals(p.getKey()));
+        if (!hasQrPlaceholder) {
+            throw ApiException.badRequest(
+                    "QR code is enabled, but \"" + template.getName() + "\" has no QR code position — "
+                            + "add one in the template editor first, or turn QR code off for this certificate.");
         }
     }
 

@@ -3,6 +3,8 @@ import type {
   CertificateTemplate,
   CreateCertificateTemplateRequest,
   UpdateCertificateTemplateRequest,
+  PreviewTemplateRequest,
+  TemplatePreviewResponse,
   CertificateType,
   CreateCertificateTypeRequest,
   UpdateCertificateTypeRequest,
@@ -35,6 +37,11 @@ export const updateOrganizerTemplate = async (
 
 export const archiveOrganizerTemplate = async (templateId: string): Promise<void> => {
   await api.delete(`${BASE}/templates/${templateId}`);
+};
+
+export const previewOrganizerTemplate = async (req: PreviewTemplateRequest): Promise<TemplatePreviewResponse> => {
+  const res = await api.post(`${BASE}/templates/preview`, req);
+  return res.data;
 };
 
 // ── Certificate types (per-sport, RBAC-scoped by the backend) ──────────
@@ -89,4 +96,9 @@ export const getOrganizerIssuedCertificates = async (typeId: string): Promise<Is
 
 export const revokeOrganizerCertificate = async (issuedCertificateId: string, reason: string): Promise<void> => {
   await api.post(`${BASE}/issued/${issuedCertificateId}/revoke`, { reason });
+};
+
+export const resendOrganizerCertificate = async (issuedCertificateId: string): Promise<IssuedCertificate> => {
+  const res = await api.post(`${BASE}/issued/${issuedCertificateId}/resend`);
+  return res.data;
 };

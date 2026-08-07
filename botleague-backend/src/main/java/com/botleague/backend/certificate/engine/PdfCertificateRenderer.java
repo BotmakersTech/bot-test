@@ -52,8 +52,23 @@ public class PdfCertificateRenderer {
             PlaceholderContext context,
             byte[] qrPngBytes
     ) {
-        List<TemplatePlaceholderPosition> positions = parsePositions(placeholderMapJson);
+        return render(backgroundImageBytes, pageWidthPx, pageHeightPx, parsePositions(placeholderMapJson), context, qrPngBytes);
+    }
 
+    /**
+     * Same rendering, but takes the placeholder positions already parsed —
+     * used by the template preview flow, which renders from in-progress
+     * editor state that was never serialized to (or read back from) a saved
+     * template row.
+     */
+    public RenderedCertificate render(
+            byte[] backgroundImageBytes,
+            int pageWidthPx,
+            int pageHeightPx,
+            List<TemplatePlaceholderPosition> positions,
+            PlaceholderContext context,
+            byte[] qrPngBytes
+    ) {
         try (PDDocument document = new PDDocument()) {
             PDPage page = new PDPage(new PDRectangle(pageWidthPx, pageHeightPx));
             document.addPage(page);

@@ -29,6 +29,12 @@ public class IssuedCertificateResponse {
     private String revokedReason;
     private LocalDateTime revokedAt;
     private LocalDateTime issuedAt;
+    private String recipientEmail;
+    private String deliveryStatus;
+    private int deliveryAttempts;
+    private String lastDeliveryError;
+    private LocalDateTime deliveredAt;
+    private boolean inAppNotified;
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
@@ -101,4 +107,22 @@ public class IssuedCertificateResponse {
 
     public LocalDateTime getIssuedAt() { return issuedAt; }
     public void setIssuedAt(LocalDateTime issuedAt) { this.issuedAt = issuedAt; }
+
+    public String getRecipientEmail() { return recipientEmail; }
+    public void setRecipientEmail(String recipientEmail) { this.recipientEmail = recipientEmail; }
+
+    public String getDeliveryStatus() { return deliveryStatus; }
+    public void setDeliveryStatus(String deliveryStatus) { this.deliveryStatus = deliveryStatus; }
+
+    public int getDeliveryAttempts() { return deliveryAttempts; }
+    public void setDeliveryAttempts(int deliveryAttempts) { this.deliveryAttempts = deliveryAttempts; }
+
+    public String getLastDeliveryError() { return lastDeliveryError; }
+    public void setLastDeliveryError(String lastDeliveryError) { this.lastDeliveryError = lastDeliveryError; }
+
+    public LocalDateTime getDeliveredAt() { return deliveredAt; }
+    public void setDeliveredAt(LocalDateTime deliveredAt) { this.deliveredAt = deliveredAt; }
+
+    public boolean isInAppNotified() { return inAppNotified; }
+    public void setInAppNotified(boolean inAppNotified) { this.inAppNotified = inAppNotified; }
 }

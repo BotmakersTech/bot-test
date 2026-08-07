@@ -24,6 +24,11 @@ public class IssuedCertificate {
     public static final String STATUS_REVOKED = "REVOKED";
     public static final String STATUS_SUPERSEDED = "SUPERSEDED";
 
+    public static final String DELIVERY_PENDING = "PENDING";
+    public static final String DELIVERY_SENT = "SENT";
+    public static final String DELIVERY_FAILED = "FAILED";
+    public static final String DELIVERY_SKIPPED = "SKIPPED";
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -95,6 +100,26 @@ public class IssuedCertificate {
 
     @Column(name = "issued_at", nullable = false)
     private LocalDateTime issuedAt;
+
+    /** Snapshot at issuance time, same rationale as the other snapshot fields — a later
+     *  email change on the account must never alter where a past certificate was sent. */
+    @Column(name = "recipient_email_snapshot")
+    private String recipientEmailSnapshot;
+
+    @Column(name = "delivery_status", nullable = false, length = 20)
+    private String deliveryStatus = DELIVERY_PENDING;
+
+    @Column(name = "delivery_attempts", nullable = false)
+    private int deliveryAttempts = 0;
+
+    @Column(name = "last_delivery_error", columnDefinition = "TEXT")
+    private String lastDeliveryError;
+
+    @Column(name = "delivered_at")
+    private LocalDateTime deliveredAt;
+
+    @Column(name = "in_app_notified", nullable = false)
+    private boolean inAppNotified = false;
 
     @Version
     @Column(name = "version", nullable = false)
@@ -172,4 +197,22 @@ public class IssuedCertificate {
 
     public LocalDateTime getIssuedAt() { return issuedAt; }
     public Long getVersion() { return version; }
+
+    public String getRecipientEmailSnapshot() { return recipientEmailSnapshot; }
+    public void setRecipientEmailSnapshot(String recipientEmailSnapshot) { this.recipientEmailSnapshot = recipientEmailSnapshot; }
+
+    public String getDeliveryStatus() { return deliveryStatus; }
+    public void setDeliveryStatus(String deliveryStatus) { this.deliveryStatus = deliveryStatus; }
+
+    public int getDeliveryAttempts() { return deliveryAttempts; }
+    public void setDeliveryAttempts(int deliveryAttempts) { this.deliveryAttempts = deliveryAttempts; }
+
+    public String getLastDeliveryError() { return lastDeliveryError; }
+    public void setLastDeliveryError(String lastDeliveryError) { this.lastDeliveryError = lastDeliveryError; }
+
+    public LocalDateTime getDeliveredAt() { return deliveredAt; }
+    public void setDeliveredAt(LocalDateTime deliveredAt) { this.deliveredAt = deliveredAt; }
+
+    public boolean isInAppNotified() { return inAppNotified; }
+    public void setInAppNotified(boolean inAppNotified) { this.inAppNotified = inAppNotified; }
 }

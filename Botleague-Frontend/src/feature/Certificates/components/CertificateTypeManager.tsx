@@ -27,6 +27,7 @@ interface CertificateTypeManagerProps {
   getJob: (jobId: string) => Promise<CertificateGenerationJob>;
   listIssued: (typeId: string) => Promise<IssuedCertificate[]>;
   revoke: (issuedCertificateId: string, reason: string) => Promise<void>;
+  resend: (issuedCertificateId: string) => Promise<IssuedCertificate>;
 }
 
 const POLL_INTERVAL_MS = 2000;
@@ -54,6 +55,15 @@ const emptyForm = (): CreateCertificateTypeRequest => ({
 const badgeColor = (status: string) =>
   status === "COMPLETED" ? ORG.success : status === "FAILED" ? ORG.danger : status === "PARTIAL" ? ORG.warning : ORG.blueHeading;
 
+const DELIVERY_LABEL: Record<string, string> = {
+  SENT: "✓ Delivered",
+  FAILED: "✕ Delivery failed",
+  SKIPPED: "— No email on file",
+  PENDING: "Sending…",
+};
+const deliveryColor = (status: string) =>
+  status === "SENT" ? ORG.success : status === "FAILED" ? ORG.danger : status === "SKIPPED" ? ORG.muted : ORG.warning;
+
 export default function CertificateTypeManager({
   eventSportId,
   activeTemplates,
@@ -65,6 +75,7 @@ export default function CertificateTypeManager({
   getJob,
   listIssued,
   revoke,
+  resend,
 }: CertificateTypeManagerProps) {
   const [types, setTypes] = useState<CertificateType[]>([]);
   const [loading, setLoading] = useState(false);
@@ -80,6 +91,7 @@ export default function CertificateTypeManager({
   const [panelTab, setPanelTab] = useState<"jobs" | "issued">("jobs");
   const [manualNames, setManualNames] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [resendingId, setResendingId] = useState<string | null>(null);
 
   // Live-tracked job while a generation run is in flight — polled every
   // POLL_INTERVAL_MS via getJob() until it leaves PENDING/RUNNING, so the
@@ -197,14 +209,18 @@ export default function CertificateTypeManager({
         openPanel(typeId, "issued"); // jump straight to the freshly generated certificates
         refresh();
 
+        const deliveryNote = latest.deliveredCount || latest.deliveryFailedCount
+          ? ` · ${latest.deliveredCount} emailed${latest.deliveryFailedCount ? `, ${latest.deliveryFailedCount} delivery failed` : ""}`
+          : "";
+
         if (latest.status === "COMPLETED") {
           toast.success(
-            `🎉 ${latest.succeededCount} certificate${latest.succeededCount === 1 ? "" : "s"} generated successfully in ${took}s!`,
-            { id: job.id, duration: 5000 }
+            `🎉 ${latest.succeededCount} certificate${latest.succeededCount === 1 ? "" : "s"} generated in ${took}s${deliveryNote}`,
+            { id: job.id, duration: 5500 }
           );
         } else if (latest.status === "PARTIAL") {
           toast.error(
-            `Generated ${latest.succeededCount}/${latest.totalRecipients} in ${took}s — ${latest.failedCount} failed. See Jobs for details.`,
+            `Generated ${latest.succeededCount}/${latest.totalRecipients} in ${took}s — ${latest.failedCount} failed${deliveryNote}. See Jobs for details.`,
             { id: job.id, duration: 6500 }
           );
         } else {
@@ -249,6 +265,25 @@ export default function CertificateTypeManager({
     if (reason === null) return;
     await revoke(cert.id, reason);
     if (expandedTypeId) openPanel(expandedTypeId, "issued");
+  };
+
+  const handleResend = async (cert: IssuedCertificate) => {
+    setResendingId(cert.id);
+    const toastId = `resend-${cert.id}`;
+    toast.loading(`Resending to ${cert.recipientName}…`, { id: toastId });
+    try {
+      const updated = await resend(cert.id);
+      setIssued((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+      if (updated.deliveryStatus === "SENT") {
+        toast.success(`Certificate re-sent to ${cert.recipientName}`, { id: toastId });
+      } else {
+        toast.error(`Still couldn't deliver to ${cert.recipientName}${updated.lastDeliveryError ? `: ${updated.lastDeliveryError}` : ""}`, { id: toastId, duration: 6000 });
+      }
+    } catch (e) {
+      toast.error(extractErrorMessage(e, "Failed to resend certificate"), { id: toastId });
+    } finally {
+      setResendingId(null);
+    }
   };
 
   return (
@@ -366,8 +401,8 @@ export default function CertificateTypeManager({
                   ) : (
                     <div className="space-y-1.5 max-h-56 overflow-y-auto">
                       {issued.map((c) => (
-                        <div key={c.id} className="flex items-center justify-between text-xs rounded-lg px-2 py-1.5 gap-2" style={{ background: ORG.blue + "0d" }}>
-                          <span className="font-semibold flex-1" style={{ color: ORG.textStrong }}>{c.recipientName}</span>
+                        <div key={c.id} className="flex items-center justify-between text-xs rounded-lg px-2 py-1.5 gap-2 flex-wrap" style={{ background: ORG.blue + "0d" }}>
+                          <span className="font-semibold flex-1 min-w-24" style={{ color: ORG.textStrong }}>{c.recipientName}</span>
                           <span style={{ color: ORG.muted }}>{c.certificateNumber}</span>
                           <span
                             className="font-bold"
@@ -375,7 +410,24 @@ export default function CertificateTypeManager({
                           >
                             {c.status}
                           </span>
+                          <span
+                            className="font-semibold"
+                            style={{ color: deliveryColor(c.deliveryStatus) }}
+                            title={c.deliveryStatus === "FAILED" ? c.lastDeliveryError ?? undefined : c.recipientEmail ?? undefined}
+                          >
+                            {DELIVERY_LABEL[c.deliveryStatus] ?? c.deliveryStatus}
+                          </span>
                           <a href={c.pdfUrl} target="_blank" rel="noreferrer" className="underline" style={{ color: ORG.blueHeading }}>PDF</a>
+                          {c.status === "ACTIVE" && c.deliveryStatus !== "SKIPPED" && (
+                            <button
+                              onClick={() => handleResend(c)}
+                              disabled={resendingId === c.id}
+                              className="px-2 py-0.5 rounded disabled:opacity-50"
+                              style={{ background: ORG.blue + "14", color: ORG.blueHeading }}
+                            >
+                              {resendingId === c.id ? "Sending…" : "Resend"}
+                            </button>
+                          )}
                           {c.status === "ACTIVE" && (
                             <button onClick={() => handleRevoke(c)} className="px-2 py-0.5 rounded" style={{ background: ORG.danger + "1a", color: ORG.danger }}>Revoke</button>
                           )}

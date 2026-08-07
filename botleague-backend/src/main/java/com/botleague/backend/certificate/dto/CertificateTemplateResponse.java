@@ -11,6 +11,7 @@ public class CertificateTemplateResponse {
     private UUID ownerUserId;
     private String name;
     private String backgroundUrl;
+    private String backgroundAssetKey;
     private Integer pageWidthPx;
     private Integer pageHeightPx;
     private List<TemplatePlaceholderPosition> placeholderMap;
@@ -33,6 +34,9 @@ public class CertificateTemplateResponse {
 
     public String getBackgroundUrl() { return backgroundUrl; }
     public void setBackgroundUrl(String backgroundUrl) { this.backgroundUrl = backgroundUrl; }
+
+    public String getBackgroundAssetKey() { return backgroundAssetKey; }
+    public void setBackgroundAssetKey(String backgroundAssetKey) { this.backgroundAssetKey = backgroundAssetKey; }
 
     public Integer getPageWidthPx() { return pageWidthPx; }
     public void setPageWidthPx(Integer pageWidthPx) { this.pageWidthPx = pageWidthPx; }

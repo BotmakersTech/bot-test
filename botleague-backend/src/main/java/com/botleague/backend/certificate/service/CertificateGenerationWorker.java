@@ -61,6 +61,7 @@ public class CertificateGenerationWorker {
     private final PlaceholderResolver placeholderResolver;
     private final QrCodeGenerator qrCodeGenerator;
     private final PdfCertificateRenderer pdfCertificateRenderer;
+    private final CertificateDeliveryService deliveryService;
     private final String verificationBaseUrl;
 
     public CertificateGenerationWorker(
@@ -75,6 +76,7 @@ public class CertificateGenerationWorker {
             PlaceholderResolver placeholderResolver,
             QrCodeGenerator qrCodeGenerator,
             PdfCertificateRenderer pdfCertificateRenderer,
+            CertificateDeliveryService deliveryService,
             @Value("${app.frontend.url}") String frontendBaseUrl) {
         this.jobRepository = jobRepository;
         this.certificateTypeRepository = certificateTypeRepository;
@@ -87,6 +89,7 @@ public class CertificateGenerationWorker {
         this.placeholderResolver = placeholderResolver;
         this.qrCodeGenerator = qrCodeGenerator;
         this.pdfCertificateRenderer = pdfCertificateRenderer;
+        this.deliveryService = deliveryService;
         this.verificationBaseUrl = frontendBaseUrl.replaceAll("/+$", "") + "/verify";
     }
 
@@ -198,11 +201,20 @@ public class CertificateGenerationWorker {
         issued.setQrKey(qrKey);
         issued.setVerificationUrl(verificationUrl);
         issued.setStatus(IssuedCertificate.STATUS_ACTIVE);
+        issued.setRecipientEmailSnapshot(recipient.getRecipientEmail());
         if (Boolean.TRUE.equals(type.getSignatureEnabled())) {
             issued.setSignatureHash(signatureHash(certificateNumber, recipient, issueDate));
         }
 
         issuedCertificateRepository.save(issued);
+
+        // Delivery is a separate concern from generation: a delivery failure here
+        // never flips this recipient into the job's failed-count, since the
+        // certificate itself WAS successfully issued — only notifying the
+        // recipient about it failed, which is what deliveryStatus tracks and
+        // what the resend endpoint (CertificateVerificationService.resendDelivery,
+        // which calls this same deliverAndNotify) exists to retry independently.
+        deliveryService.deliverAndNotify(issued, type.getLabel(), event.getEventName(), eventSport.getSport(), rendered.getPdfBytes());
     }
 
     private boolean isAlreadyIssued(UUID typeId, CertificateRecipient recipient) {

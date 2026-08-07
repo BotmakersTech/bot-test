@@ -7,6 +7,11 @@ public class ManualRecipientRequest {
 
     private UUID recipientUserId;
     private String recipientName; // required when recipientUserId is null (role-based recipient)
+    /** Optional for a role-based recipient (external judge/mentor/sponsor with no account) —
+     *  the only way that recipient's certificate can be emailed at all, since there's no
+     *  User row to resolve an address from. Ignored when recipientUserId is set (the
+     *  account's own email is used instead). */
+    private String recipientEmail;
     private UUID teamId;
     private UUID robotId;
     private String robotName;
@@ -17,6 +22,9 @@ public class ManualRecipientRequest {
 
     public String getRecipientName() { return recipientName; }
     public void setRecipientName(String recipientName) { this.recipientName = recipientName; }
+
+    public String getRecipientEmail() { return recipientEmail; }
+    public void setRecipientEmail(String recipientEmail) { this.recipientEmail = recipientEmail; }
 
     public UUID getTeamId() { return teamId; }
     public void setTeamId(UUID teamId) { this.teamId = teamId; }

@@ -5,8 +5,10 @@ import com.botleague.backend.certificate.dto.CertificateGenerationJobResponse;
 import com.botleague.backend.certificate.dto.ManualRecipientRequest;
 import com.botleague.backend.certificate.entity.CertificateGenerationJob;
 import com.botleague.backend.certificate.entity.CertificateType;
+import com.botleague.backend.certificate.entity.IssuedCertificate;
 import com.botleague.backend.certificate.repository.CertificateGenerationJobRepository;
 import com.botleague.backend.certificate.repository.CertificateTypeRepository;
+import com.botleague.backend.certificate.repository.IssuedCertificateRepository;
 import com.botleague.backend.common.exception.ApiException;
 import com.botleague.backend.common.security.AuthorizationService;
 import org.springframework.stereotype.Service;
@@ -33,6 +35,7 @@ public class CertificateGenerationService {
     private final CertificateGenerationWorker worker;
     private final AuthorizationService authorizationService;
     private final AuditLogService auditLogService;
+    private final IssuedCertificateRepository issuedCertificateRepository;
 
     public CertificateGenerationService(
             CertificateTypeRepository certificateTypeRepository,
@@ -40,13 +43,15 @@ public class CertificateGenerationService {
             CertificateAllocationService allocationService,
             CertificateGenerationWorker worker,
             AuthorizationService authorizationService,
-            AuditLogService auditLogService) {
+            AuditLogService auditLogService,
+            IssuedCertificateRepository issuedCertificateRepository) {
         this.certificateTypeRepository = certificateTypeRepository;
         this.jobRepository = jobRepository;
         this.allocationService = allocationService;
         this.worker = worker;
         this.authorizationService = authorizationService;
         this.auditLogService = auditLogService;
+        this.issuedCertificateRepository = issuedCertificateRepository;
     }
 
     @Transactional
@@ -123,6 +128,8 @@ public class CertificateGenerationService {
         dto.setTotalRecipients(job.getTotalRecipients());
         dto.setSucceededCount(job.getSucceededCount());
         dto.setFailedCount(job.getFailedCount());
+        dto.setDeliveredCount((int) issuedCertificateRepository.countByGenerationJobIdAndDeliveryStatus(job.getId(), IssuedCertificate.DELIVERY_SENT));
+        dto.setDeliveryFailedCount((int) issuedCertificateRepository.countByGenerationJobIdAndDeliveryStatus(job.getId(), IssuedCertificate.DELIVERY_FAILED));
         dto.setErrorSummary(job.getErrorSummary());
         dto.setTriggeredBy(job.getTriggeredBy());
         dto.setStartedAt(job.getStartedAt());
