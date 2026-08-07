@@ -3,6 +3,22 @@
    else on the homepage uses plain Tailwind classes. Scoped by the .home-*
    class prefixes below so nothing here can leak onto other pages. */
 
+/* Fallback until PublicNavbar's own resize-synced effect measures the real
+   height (see PublicNavbar.tsx) — keeps every pinned-scroll section's sticky
+   content clear of the floating nav pills, which stay sticky at top:0 for
+   the entire page, not just the hero. Without the height rule here too, a
+   pinned section's sticky child has no explicit height at all and just
+   shrinks to fit its content instead of filling the screen — which is what
+   let RobotStage's title render underneath the nav instead of below it. */
+:root { --home-header-h: 96px; }
+.home-pinned-sticky {
+  top: var(--home-header-h);
+  height: calc(100dvh - var(--home-header-h));
+  min-height: 400px;
+}
+
+.home-bg-video { clip-path: polygon(100% 1%, 100% 93%, 93% 100%, 0 100%, 0 0); }
+
 /* ---- hero background drift (video not available yet, gradient is the look) ---- */
 .home-hero-anim {
   background:
@@ -29,9 +45,11 @@
 }
 .home-league-card-wrap[data-state="hidden"] { max-height: 0; opacity: 0; margin-bottom: 0; }
 .home-league-card-wrap[data-state="collapsed"] { max-height: 96px; opacity: 1; }
-.home-league-card-wrap[data-state="expanded"] { max-height: 620px; opacity: 1; }
+/* clamp so an expanded card can't ask for more height than a short pinned
+   viewport actually has — MAX matches the original flat 380px. */
+.home-league-card-wrap[data-state="expanded"] { max-height: clamp(220px, 48dvh, 380px); opacity: 1; }
 
-.home-league-img { min-height: 220px; transition: min-height .7s ease; }
+.home-league-img { min-height: clamp(120px, 24dvh, 220px); transition: min-height .7s ease; }
 .home-league-card-wrap[data-state="collapsed"] .home-league-img,
 .home-league-card-wrap[data-state="hidden"] .home-league-img { min-height: 64px; }
 
@@ -41,6 +59,24 @@
 
 /* ---- pinned "1" section row slide ---- */
 .home-one-row { transition: transform .7s cubic-bezier(.4, 0, .2, 1); will-change: transform; }
+
+/* Responsive "1" image height — clamp(MIN, Ndvh, MAX) instead of a flat px
+   value per breakpoint, so it also shrinks on short screens (a laptop
+   window resized down, landscape phones) instead of overflowing the pinned
+   section and getting clipped. MAX at each width tier matches the old flat
+   values exactly, so normal/tall screens render unchanged. */
+.home-one-img { height: clamp(160px, 40dvh, 340px); }
+@media (min-width: 640px)  { .home-one-img { height: clamp(180px, 42dvh, 380px); } }
+@media (min-width: 900px)  { .home-one-img { height: clamp(200px, 45dvh, 420px); } }
+@media (min-width: 1300px) { .home-one-img { height: clamp(220px, 48dvh, 520px); } }
+
+/* feature copy width — fixed per breakpoint so the shift offset computed in
+   OneSection.tsx doesn't jump around as the box's own content changes */
+.home-feature-box { width: 190px; }
+@media (min-width: 480px)  { .home-feature-box { width: 230px; } }
+@media (min-width: 640px)  { .home-feature-box { width: 300px; } }
+@media (min-width: 900px)  { .home-feature-box { width: 380px; } }
+@media (min-width: 1300px) { .home-feature-box { width: 460px; } }
 
 .home-doodle { position: absolute; pointer-events: none; opacity: .45; color: #c9c4e6; }
 
@@ -53,7 +89,12 @@
 .home-feature-box[data-anim="in"]    { transform: translateY(0);    opacity: 1; }
 .home-feature-box[data-anim="above"] { transform: translateY(-48px); opacity: 0; }
 
-/* ---- robot + progress bar — joined pillar ---- */
+/* ---- robot + progress bar — joined pillar ----
+   Height is clamp(MIN, Ndvh, MAX) driven by the data-active attribute
+   instead of a flat inline px style, so the active bar's 420px MAX (and
+   the inactive 80px MAX) only apply on screens tall enough to fit them —
+   short viewports shrink both proportionally instead of overflowing the
+   pinned section. */
 .home-robot-bar {
   position: relative;
   background: linear-gradient(180deg, #6d7cf9 0%, #8a7bf5 60%, #7b6cf0 100%);
@@ -64,7 +105,9 @@
   border-radius: 999px 999px 8px 8px / 60px 60px 8px 8px;
   transition: height 1.5s cubic-bezier(.34, 1.2, .4, 1), width .45s ease;
   will-change: height;
+  height: clamp(40px, 9dvh, 80px);
 }
+.home-robot-bar[data-active="true"] { height: clamp(160px, 42dvh, 420px); }
 .home-robot-bar::before {
   content: "";
   position: absolute; left: 50%; top: 0; transform: translateX(-50%);
@@ -84,8 +127,14 @@
 .home-robot-figure {
   position: relative;
   z-index: 2;
+  display: block;
+  object-fit: contain;
+  object-position: center bottom;
+  margin-bottom: -14px;
+  transform: translateX(5px);
+  filter: drop-shadow(0 12px 10px rgba(40, 20, 90, .35));
   transition: transform .3s ease;
 }
-.home-robot-col:hover .home-robot-figure { transform: translateY(-4px); }
+.home-robot-col:hover .home-robot-figure { transform: translateX(5px) translateY(-4px); }
 
 .home-robot-message { transition: left .5s cubic-bezier(.4, 0, .2, 1), top .5s cubic-bezier(.4, 0, .2, 1), opacity .3s ease; }

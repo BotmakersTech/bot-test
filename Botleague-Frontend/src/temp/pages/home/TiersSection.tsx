@@ -37,10 +37,8 @@ export default function TiersSection() {
               <button
                 onClick={() => navigate("/contact-us")}
                 aria-label={tier.cta}
-                className="font-sans mt-auto h-[38px] w-[170px] rounded-lg bg-linear-to-r from-[#2f3ef0] to-[#8b5cf6] text-white text-xs font-bold tracking-wide"
-              >
-                {tier.cta}
-              </button>
+                className="mt-auto h-[34px] w-[150px] rounded-lg bg-linear-to-r from-[#2f3ef0] to-[#8b5cf6]"
+              />
             </div>
           ))}
         </div>

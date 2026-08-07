@@ -18,8 +18,8 @@ type Phase = "below" | "in" | "above";
  */
 export default function OneSection() {
   const wrapRef = useRef<HTMLDivElement>(null);
-  const rowOuterRef = useRef<HTMLDivElement>(null);
   const rowRef = useRef<HTMLDivElement>(null);
+  const oneImgRef = useRef<HTMLImageElement>(null);
   const centerOffsetRef = useRef(0);
 
   const [step, setStep] = useState(0);
@@ -27,8 +27,11 @@ export default function OneSection() {
 
   useEffect(() => {
     const measureCenterOffset = () => {
-      if (!rowOuterRef.current || !rowRef.current) return;
-      centerOffsetRef.current = Math.max(0, (rowOuterRef.current.clientWidth - rowRef.current.scrollWidth) / 2);
+      if (!rowRef.current || !oneImgRef.current) return;
+      // At rest the row is pushed right by half the (gap + text width) so
+      // the "1" alone sits dead-center; scrolling snaps it to translateX(0),
+      // which is what visually reads as the "1" sliding left to make room.
+      centerOffsetRef.current = Math.max(0, (rowRef.current.scrollWidth - oneImgRef.current.offsetWidth) / 2);
     };
 
     const update = () => {
@@ -76,7 +79,7 @@ export default function OneSection() {
 
   return (
     <section ref={wrapRef} className="relative h-[480vh] bg-white">
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col items-center justify-center px-6 text-center">
+      <div className="home-pinned-sticky sticky w-full overflow-hidden flex flex-col items-center justify-center px-6 text-center">
         <div className="absolute inset-0 -z-10 opacity-70 [background:repeating-linear-gradient(115deg,transparent_0_120px,rgba(130,120,255,.08)_120px_122px)]" />
 
         <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
@@ -104,8 +107,8 @@ export default function OneSection() {
           <h2 className="font-display font-extrabold text-2xl sm:text-3xl md:text-5xl leading-tight">
             India Has Thousands Of Robotiers.<br />No One Knows Who's Actually The Best.
           </h2>
-          <p className="mt-4 text-xs md:text-base font-medium text-[#333]">Different Rules. Different Arenas. No National Ranking. No Global Pathway.</p>
-          <div className="mt-5 flex items-center justify-center gap-2 text-base md:text-xl font-bold">
+          <p className="mt-[clamp(6px,1.5dvh,16px)] text-xs md:text-base font-medium text-[#333]">Different Rules. Different Arenas. No National Ranking. No Global Pathway.</p>
+          <div className="mt-[clamp(8px,2dvh,20px)] flex items-center justify-center gap-2 text-base md:text-xl font-bold">
             <span className="font-display italic border-b-[3px] border-[#2f3ef0] pb-0.5">
               <span className="text-[#b22222]">BOT</span>
               <span className="bg-linear-to-r from-[#8C6CFF] to-[#0162D1] bg-clip-text text-transparent">LEAGUE</span>
@@ -114,15 +117,15 @@ export default function OneSection() {
           </div>
         </div>
 
-        <div
-          ref={rowOuterRef}
-          className="w-full max-w-[1180px] mx-auto flex justify-start overflow-visible mt-8 md:mt-12 pl-6 sm:pl-12 [@media(min-width:900px)]:pl-24 [@media(min-width:1300px)]:pl-36"
-        >
-          <div ref={rowRef} className="home-one-row relative flex items-center gap-6 md:gap-14">
-            <div className="relative select-none flex items-center h-[340px] sm:h-[380px] [@media(min-width:900px)]:h-[420px] [@media(min-width:1300px)]:h-[520px]">
-              <img src={oneImg} alt="1" className="h-full w-auto object-contain" />
-            </div>
-            <div className="home-feature-box text-left max-w-md" data-anim={phase}>
+        <div className="w-full max-w-[1180px] mx-auto flex justify-center overflow-visible mt-[clamp(10px,2.5dvh,32px)] md:mt-[clamp(10px,3dvh,48px)]">
+          <div ref={rowRef} className="home-one-row relative flex flex-col md:flex-row items-center gap-4 md:gap-10">
+            <img
+              ref={oneImgRef}
+              src={oneImg}
+              alt="1"
+              className="home-one-img w-auto select-none"
+            />
+            <div className="home-feature-box text-center md:text-left" data-anim={phase}>
               <h3 className="font-display font-extrabold text-5xl md:text-7xl bg-linear-to-r from-[#4f5ff5] to-[#8b5cf6] bg-clip-text text-transparent mb-2 md:mb-3">
                 {FEATURES[step].title}
               </h3>

@@ -23,8 +23,8 @@ export default function FeaturesSection() {
               key={title}
               className="bg-white rounded-xl p-5 pt-6 text-center flex flex-col shadow-[0_14px_30px_rgba(20,10,60,.25)] [clip-path:polygon(19%_0,100%_0,100%_82%,88%_100%,0_100%,0_17%)]"
             >
-              <div className="w-full h-[150px] md:h-[180px] mb-2.5 mx-auto flex items-center justify-center">
-                <img src={img} alt={title} className="max-w-full max-h-full object-contain" />
+              <div className="w-full h-[150px] md:h-[180px] mb-2.5 mx-auto">
+                <img src={img} alt={title} className="w-full h-full object-contain" />
               </div>
               <h4 className="text-xl font-display font-semibold text-[#7b3ff2] mb-1.5">{title}</h4>
               <p className="text-[12px] text-[#000] leading-relaxed">{desc}</p>

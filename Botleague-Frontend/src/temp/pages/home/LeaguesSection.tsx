@@ -59,9 +59,9 @@ export default function LeaguesSection() {
 
   return (
     <section id="leagues" ref={wrapRef} className="relative h-[340vh] bg-linear-to-br from-[#dcd6fb] via-[#efe9ff] to-[#e4defc]">
-      <div className="sticky top-0 h-screen w-full flex flex-col justify-center px-6 overflow-hidden">
+      <div className="home-pinned-sticky sticky w-full flex flex-col justify-center px-6 pt-6 overflow-hidden">
         <div className="max-w-[1180px] mx-auto w-full px-0">
-          <h2 className="text-center font-display text-3xl md:text-5xl mb-10 bg-linear-to-r from-[#7b3ff2] to-[#e05fa8] bg-clip-text text-transparent">
+          <h2 className="text-center font-display text-3xl md:text-5xl mb-6 md:mb-8 bg-linear-to-r from-[#7b3ff2] to-[#e05fa8] bg-clip-text text-transparent">
             Compete at your level. Grow through the ranks.
           </h2>
         </div>
@@ -75,7 +75,7 @@ export default function LeaguesSection() {
                   style={{ borderColor: league.border }}
                 >
                   <div className={`home-league-img relative overflow-hidden bg-linear-to-br ${league.imgGradient} [clip-path:polygon(75%_0,100%_100%,0_100%,0_0)]`}>
-                    <img src={igniteImg} alt={league.name} className="absolute inset-0 w-full h-full object-cover mix-blend-luminosity opacity-80" />
+                    <img src={igniteImg} alt={league.name} className="absolute inset-0 w-full h-full object-cover" />
                   </div>
                   <div className="p-6 md:p-9 flex flex-col justify-center gap-2">
                     <h3
