@@ -60,7 +60,7 @@ export default function JudgeDashboard() {
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.userName || "Judge"
 
   return (
-    <div className="min-h-full p-4 sm:p-6 lg:p-8 space-y-8">
+    <div className="min-h-full p-8 space-y-8">
       <RoleHeroDashboard
         welcomeName="Judge"
         name={fullName}

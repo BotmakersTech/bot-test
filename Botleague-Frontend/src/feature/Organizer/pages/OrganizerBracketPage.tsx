@@ -599,7 +599,7 @@ export default function OrganizerBracketPage() {
 
   if (view === "setup") {
     return (
-      <div className="p-4 sm:p-6 lg:p-8" style={styles.page}>
+      <div className="p-8" style={styles.page}>
         <div style={styles.setupWrap}>
 
           <div style={styles.setupHeader}>
@@ -767,7 +767,7 @@ export default function OrganizerBracketPage() {
   // =====================================================
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8" style={styles.page}>
+    <div className="p-8" style={styles.page}>
 
       {/* ── HEADER ── */}
       <div style={styles.header}>
@@ -1779,7 +1779,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em",
     textTransform: "uppercase" as const, color: T.accent, marginBottom: 4,
   },
-  title: { fontSize: "1.5rem", fontWeight: 800, color: T.text, margin: 0, letterSpacing: "-0.02em" },
+  title: { fontSize: "38px", fontWeight: 500, color: "#0162d1", fontFamily: "'Sarpanch', sans-serif", margin: 0, letterSpacing: "-0.02em" },
   legend: { display: "flex", gap: 16, alignItems: "center" },
   legendItem: { display: "flex", alignItems: "center", gap: 6 },
   legendDot: { width: 8, height: 8, borderRadius: "50%" },

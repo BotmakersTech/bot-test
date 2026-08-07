@@ -7,8 +7,6 @@ import { listUsers } from "../../SuperAdmin/api/userManagement.api"
 import { searchAdminRobots } from "../../SuperAdmin/api/robotManagement.api"
 import { searchAdminTeams } from "../../SuperAdmin/api/teamManagement.api"
 
-const FONT_HEADING = "'Sarpanch', sans-serif"
-
 function normalizeStatus(s?: string) {
   const v = s?.toLowerCase() ?? ""
   if (v === "live" || v === "ongoing") return "live"
@@ -93,10 +91,9 @@ export default function AdminRoleDashboard() {
   const totalSports = events.reduce((n, e) => n + (e.sports?.length ?? 0), 0)
 
   return (
-    <div className="min-h-full p-4 sm:p-6 lg:p-8" style={{ background: "#fafafa" }}>
+    <div className="min-h-full p-8" style={{ background: "#fafafa" }}>
       <h1
-        className="mb-9 text-[32px] font-semibold tracking-wide text-[#0162D1] md:text-[38px]"
-        style={{ fontFamily: FONT_HEADING }}
+        className="font-display mb-9 text-[38px] font-medium tracking-wide text-[#0162d1]"
       >
         Welcome back, {authUser?.firstName || "Admin"}!
       </h1>

@@ -133,10 +133,10 @@ export default function OrganizerVenuePage() {
   )
 
   return (
-    <div className="min-h-full p-4 sm:p-6 lg:p-8 space-y-6">
+    <div className="min-h-full p-8 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold text-[#3567cf]" style={{ fontFamily: "'Sarpanch', 'Inter', sans-serif" }}>Venue &amp; Logistics</h1>
+          <h1 className="font-display text-[38px] font-medium text-[#0162d1]">Venue &amp; Logistics</h1>
           <p className="text-sm text-[#5d5d5d] mt-0.5">Facilities, arenas, and readiness checklist</p>
         </div>
         <select value={selectedEventId} onChange={e => setSelectedEventId(e.target.value)}

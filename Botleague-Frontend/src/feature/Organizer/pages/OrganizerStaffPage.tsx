@@ -77,10 +77,10 @@ export default function OrganizerStaffPage() {
   const fmt = (d?: string | null) => d ? new Date(d).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : null
 
   return (
-    <div className="min-h-full p-4 sm:p-6 lg:p-8 space-y-6">
+    <div className="min-h-full p-8 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold text-[#3567cf]" style={{ fontFamily: "'Sarpanch', 'Inter', sans-serif" }}>Staff Management</h1>
+          <h1 className="font-display text-[38px] font-medium text-[#0162d1]">Staff Management</h1>
           <p className="text-sm text-[#5d5d5d] mt-0.5">Operations, technical, security and medical teams</p>
         </div>
         <button onClick={openAdd}

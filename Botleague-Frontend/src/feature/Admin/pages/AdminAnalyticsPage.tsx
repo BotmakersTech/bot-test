@@ -65,9 +65,9 @@ export default function AdminAnalyticsPage() {
   const maxSportCount = sportCounts[0]?.[1] ?? 1
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-white p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-[#0a0c10] text-white p-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Analytics</h1>
+        <h1 className="font-display text-[38px] font-medium text-[#0162d1]">Analytics</h1>
         <p className="text-gray-400 text-sm mt-1">Platform-wide metrics and trends</p>
       </div>
 

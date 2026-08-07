@@ -27,9 +27,9 @@ export default function AdminJudgesPage() {
   }, [activeSearch])
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-white p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-[#0a0c10] text-white p-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Judge Ecosystem</h1>
+        <h1 className="font-display text-[38px] font-medium text-[#0162d1]">Judge Ecosystem</h1>
         <p className="text-gray-400 text-sm mt-1">
           {loading ? "Loading…" : `${judges.length} user${judges.length !== 1 ? "s" : ""} with judge-level access`}
         </p>

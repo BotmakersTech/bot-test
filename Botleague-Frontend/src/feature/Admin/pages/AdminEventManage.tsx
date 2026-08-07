@@ -396,7 +396,7 @@ export default function AdminEventManage() {
   ];
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8" style={{ minHeight: "100vh", background: BG, width: "100%", position: "relative", overflow: "hidden", color: TEXT }}>
+    <div className="p-8" style={{ minHeight: "100vh", background: BG, width: "100%", position: "relative", overflow: "hidden", color: TEXT }}>
       {/* Top accent bar */}
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "3px", background: `linear-gradient(to right, ${ACCENT}, ${ACCENT2}, transparent)` }} />
 
@@ -417,7 +417,7 @@ export default function AdminEventManage() {
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "6px" }}>
             <div style={{ width: "4px", height: "34px", background: `linear-gradient(to bottom, ${ACCENT}, ${ACCENT2})`, borderRadius: "2px", boxShadow: "0 0 10px rgba(250,71,21,0.6)" }} />
             <div>
-              <h1 style={{ margin: 0, fontSize: "1.6rem", fontFamily: "'Orbitron', sans-serif", fontWeight: 700, letterSpacing: "0.06em", color: TEXT }}>{eventName.toUpperCase()}</h1>
+              <h1 className="font-display" style={{ margin: 0, fontSize: "38px", fontWeight: 500, letterSpacing: "0.06em", color: "#0162d1" }}>{eventName.toUpperCase()}</h1>
               <div style={{ fontSize: "0.8rem", color: ACCENT, fontWeight: 600, marginTop: "3px", letterSpacing: "0.05em" }}>{sport}</div>
             </div>
           </div>

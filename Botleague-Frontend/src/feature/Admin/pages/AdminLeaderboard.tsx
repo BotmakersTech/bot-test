@@ -49,7 +49,7 @@ export default function AdminLeaderboard() {
   const inputStyle = { background: "rgba(0,0,0,0.3)", border: `1px solid rgba(250,71,21,0.4)`, borderRadius: "6px", padding: "5px 10px", color: TEXT, fontSize: "0.85rem", outline: "none", width: "70px", textAlign: "center" as const };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8" style={{ minHeight: "100vh", background: BG, width: "100%", position: "relative", overflow: "hidden", color: TEXT }}>
+    <div className="p-8" style={{ minHeight: "100vh", background: BG, width: "100%", position: "relative", overflow: "hidden", color: TEXT }}>
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "3px", background: `linear-gradient(to right, ${ACCENT}, ${ACCENT2}, transparent)` }} />
 
       <div style={{ position: "relative", zIndex: 1 }}>
@@ -59,7 +59,7 @@ export default function AdminLeaderboard() {
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "6px" }}>
               <div style={{ width: "4px", height: "34px", background: `linear-gradient(to bottom, ${ACCENT}, ${ACCENT2})`, borderRadius: "2px", boxShadow: "0 0 10px rgba(250,71,21,0.6)" }} />
-              <h1 style={{ margin: 0, fontSize: "1.9rem", fontFamily: "'Orbitron', sans-serif", fontWeight: 700, letterSpacing: "0.1em", color: TEXT }}>LEADERBOARD</h1>
+              <h1 className="font-display" style={{ margin: 0, fontSize: "38px", fontWeight: 500, letterSpacing: "0.1em", color: "#0162d1" }}>LEADERBOARD</h1>
             </div>
             <p style={{ margin: "0 0 0 16px", color: MUTED, fontSize: "0.85rem" }}>Update event points and rankings manually</p>
           </div>

@@ -165,7 +165,7 @@ export default function OrganizerCreateEventPage() {
       <img src={starDeco} alt="" aria-hidden className="pointer-events-none absolute right-16 top-72 hidden w-12 opacity-70 lg:block" />
       <img src={starDeco} alt="" aria-hidden className="pointer-events-none absolute left-10 bottom-24 hidden w-16 opacity-60 lg:block" />
 
-      <div className="relative mx-auto w-full max-w-[1155px] p-4 sm:p-6 lg:p-8">
+      <div className="relative w-full p-8">
 
         {/* Heading */}
         <div className="mb-8 flex items-center gap-4">
@@ -179,8 +179,7 @@ export default function OrganizerCreateEventPage() {
           </button>
           <div>
             <h2
-              className="text-[28px] font-semibold capitalize tracking-wide text-[#0162D1] sm:text-[32px] lg:text-[35px]"
-              style={{ fontFamily: "'Sarpanch', sans-serif" }}
+              className="font-display capitalize tracking-wide text-[38px] font-medium text-[#0162d1]"
             >
               Create Event
             </h2>

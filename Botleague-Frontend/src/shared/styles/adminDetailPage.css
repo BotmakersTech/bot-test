@@ -52,17 +52,7 @@
 .adp-back-link:hover { text-decoration: underline; }
 
 .adp-content {
-  max-width: 980px;
-  margin: 0 auto;
-  padding: 16px;
-}
-
-@media (min-width: 640px) {
-  .adp-content { padding: 24px; }
-}
-
-@media (min-width: 1024px) {
-  .adp-content { padding: 32px; }
+  padding: 32px;
 }
 
 .adp-banner {
@@ -158,9 +148,9 @@
 
 .adp-entity-name {
   font-family: 'Sarpanch', sans-serif;
-  font-weight: 600;
-  font-size: 26px;
-  color: var(--adp-primary-dark);
+  font-weight: 500;
+  font-size: 38px;
+  color: #0162d1;
   letter-spacing: .3px;
 }
 

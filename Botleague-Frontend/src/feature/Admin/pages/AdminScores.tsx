@@ -142,7 +142,7 @@ const [showScores, setShowScores] =
 
   return (
     <div
-      className="p-4 sm:p-6 lg:p-8"
+      className="p-8"
       style={{
         minHeight: "100vh",
         background:
@@ -158,12 +158,12 @@ const [showScores, setShowScores] =
         }}
       >
         <h1
+          className="font-display"
           style={{
-            color: "#fff",
-            fontSize: "3rem",
-            fontWeight: 900,
+            color: "#0162d1",
+            fontSize: "38px",
+            fontWeight: 500,
             margin: 0,
-            fontFamily: "'Orbitron', sans-serif",
             letterSpacing: "0.04em",
           }}
         >

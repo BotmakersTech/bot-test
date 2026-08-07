@@ -23,17 +23,7 @@
 }
 
 .adb-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 16px;
-}
-
-@media (min-width: 640px) {
-  .adb-content { padding: 24px; }
-}
-
-@media (min-width: 1024px) {
-  .adb-content { padding: 32px; }
+  padding: 32px;
 }
 
 /* ── Heading ── */
@@ -54,9 +44,10 @@
 }
 
 .adb-heading-title {
-  font-size: 34px;
+  font-size: 38px;
+  font-weight: 500;
   font-family: 'Sarpanch', sans-serif;
-  color: var(--adb-primary);
+  color: #0162d1;
   margin-top: 4px;
 }
 

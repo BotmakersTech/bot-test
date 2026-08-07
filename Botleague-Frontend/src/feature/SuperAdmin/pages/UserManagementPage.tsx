@@ -195,8 +195,8 @@ export default function UserManagementPage() {
   })();
 
   return (
-    <div className="org-page-bg p-4 sm:p-6 lg:p-8">
-      <div style={{ maxWidth: "1400px", margin: "0 auto", position: "relative", zIndex: 1 }}>
+    <div className="org-page-bg p-8">
+      <div style={{ position: "relative", zIndex: 1 }}>
 
         {showCreate && (
           <CreateUserModal
@@ -205,10 +205,7 @@ export default function UserManagementPage() {
           />
         )}
 
-        <h1
-          className="mb-8 text-4xl font-bold tracking-wide"
-          style={{ fontFamily: ORG.fontHeading, color: ORG.blueHeading }}
-        >
+        <h1 className="font-display mb-8 text-[38px] font-medium text-[#0162d1] tracking-wide">
           User Management
         </h1>
 

@@ -34,10 +34,10 @@
 .sdt-title {
   margin: 0;
   font-family: "Sarpanch", sans-serif;
-  font-weight: 700;
+  font-weight: 500;
   font-style: italic;
-  font-size: clamp(1.5rem, 2.4vw, 2rem);
-  color: var(--sdt-primary);
+  font-size: 38px;
+  color: #0162d1;
 }
 
 .sdt-badge-status {
@@ -426,7 +426,6 @@
 }
 
 @media (max-width: 767.98px) {
-  .sdt-title { font-size: 1.4rem; }
   .sdt-btn { font-size: 0.72rem; padding: 6px 12px; }
   .sdt-panel-body { padding: 14px; }
   .sdt-fields-box { padding: 1rem; }

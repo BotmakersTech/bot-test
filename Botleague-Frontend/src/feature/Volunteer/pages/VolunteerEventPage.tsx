@@ -154,15 +154,15 @@ export default function VolunteerEventPage() {
   const goToEvent = (id: string) => navigate(`/events/${id}`);
 
   return (
-    <div className="evt-page min-h-screen p-4 sm:p-6 lg:p-8 relative overflow-hidden">
+    <div className="evt-page min-h-screen p-8 relative overflow-hidden">
       <svg className="evt-outline-star hidden lg:block" style={{ top: 40, right: "6%", width: 70, height: 66 }} viewBox="0 0 51 48" fill="rgba(74,132,230,0.10)"><path d="M25.5 2 L31 18.5 L48.4 18.5 L34.4 29 L39.9 45.5 L25.5 35 L11.1 45.5 L16.6 29 L2.6 18.5 L20 18.5 Z"/></svg>
       <svg className="evt-outline-star hidden lg:block" style={{ bottom: 60, left: "4%", width: 54, height: 50 }} viewBox="0 0 51 48" fill="rgba(74,132,230,0.10)"><path d="M25.5 2 L31 18.5 L48.4 18.5 L34.4 29 L39.9 45.5 L25.5 35 L11.1 45.5 L16.6 29 L2.6 18.5 L20 18.5 Z"/></svg>
 
-      <div className="relative z-10 max-w-[1100px] mx-auto flex flex-col gap-6">
+      <div className="relative z-10 flex flex-col gap-6">
         {/* HEADER */}
         <div>
-          <h1 className="evt-font-sarpanch text-[24px] sm:text-[30px] font-semibold text-[#1a1a2e]">
-            My <span className="evt-text-gradient">Events</span>
+          <h1 className="font-display text-[38px] font-medium text-[#0162d1]">
+            My Events
           </h1>
           <p className="evt-font-poppins text-[13px] sm:text-[14px] text-gray-500 mt-1">
             Browse live events, or filter to just the ones you're volunteering for.

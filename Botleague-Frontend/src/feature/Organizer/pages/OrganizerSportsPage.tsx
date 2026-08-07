@@ -77,9 +77,9 @@ export default function OrganizerSportsPage() {
   })
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8" style={{ minHeight: "100vh", background: BG, fontFamily: "'Inter',sans-serif" }}>
+    <div className="p-8" style={{ minHeight: "100vh", background: BG, fontFamily: "'Inter',sans-serif" }}>
       <div style={{ marginBottom: "24px" }}>
-        <h1 style={{ color: TEXT, fontFamily: "'Sarpanch',sans-serif", fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>All Sports</h1>
+        <h1 style={{ color: "#0162d1", fontFamily: "'Sarpanch',sans-serif", fontSize: "38px", fontWeight: 500, margin: 0 }}>All Sports</h1>
         <p style={{ color: MUTED, fontSize: "0.85rem", margin: "4px 0 0" }}>
           {loading ? "Loading…" : `${filtered.length} sport${filtered.length !== 1 ? "s" : ""} across ${events.length} event${events.length !== 1 ? "s" : ""}`}
         </p>

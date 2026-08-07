@@ -489,13 +489,13 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange }: {
 
 function PageWrapper({ children }: { children: React.ReactNode }) {
   return (
-    <div className="p-4 sm:p-6 lg:p-8" style={{ minHeight: "100vh", background: BG, color: TEXT, position: "relative", overflow: "hidden" }}>
+    <div className="p-8" style={{ minHeight: "100vh", background: BG, color: TEXT, position: "relative", overflow: "hidden" }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         select option { background: #ffffff; color: #111111; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
       `}</style>
-      <div style={{ position: "relative", zIndex: 1, maxWidth: "1200px", margin: "0 auto" }}>
+      <div style={{ position: "relative", zIndex: 1 }}>
         {children}
       </div>
     </div>

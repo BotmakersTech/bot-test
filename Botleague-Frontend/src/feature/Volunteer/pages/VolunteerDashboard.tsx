@@ -37,7 +37,7 @@ export default function VolunteerDashboard() {
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.userName || "Volunteer"
 
   return (
-    <div className="min-h-full p-4 sm:p-6 lg:p-8 space-y-8">
+    <div className="min-h-full p-8 space-y-8">
       <RoleHeroDashboard
         welcomeName="Volunteer"
         name={fullName}
