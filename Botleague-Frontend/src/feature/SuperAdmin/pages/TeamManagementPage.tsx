@@ -57,7 +57,7 @@ function CreateTeamModal({ onClose, onCreated }: { onClose: () => void; onCreate
             {users.length === 0 && <p className="mt-1 text-xs text-gray-400">No users available without a team.</p>}
           </div>
           <div><label className={lbl}>Institution / School</label><input className={inp} value={form.institutionName} onChange={e=>set("institutionName",e.target.value)} placeholder="IIT Bombay" /></div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div><label className={lbl}>City</label><input className={inp} value={form.city} onChange={e=>set("city",e.target.value)} placeholder="Mumbai" /></div>
             <div><label className={lbl}>State</label><input className={inp} value={form.state} onChange={e=>set("state",e.target.value)} placeholder="MH" /></div>
             <div><label className={lbl}>Country</label><input className={inp} value={form.country} onChange={e=>set("country",e.target.value)} /></div>
@@ -143,7 +143,7 @@ export default function TeamManagementPage() {
   })()
 
   return (
-    <div className="org-page-bg" style={{ padding: "40px 48px" }}>
+    <div className="org-page-bg p-4 sm:p-6 lg:p-8">
       <div style={{ maxWidth: "1400px", margin: "0 auto", position: "relative", zIndex: 1 }}>
 
         {showCreate && (

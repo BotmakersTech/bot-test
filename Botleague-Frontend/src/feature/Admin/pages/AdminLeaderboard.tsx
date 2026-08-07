@@ -49,7 +49,7 @@ export default function AdminLeaderboard() {
   const inputStyle = { background: "rgba(0,0,0,0.3)", border: `1px solid rgba(250,71,21,0.4)`, borderRadius: "6px", padding: "5px 10px", color: TEXT, fontSize: "0.85rem", outline: "none", width: "70px", textAlign: "center" as const };
 
   return (
-    <div style={{ minHeight: "100vh", background: BG, width: "100%", padding: "40px 48px", position: "relative", overflow: "hidden", color: TEXT }}>
+    <div className="p-4 sm:p-6 lg:p-8" style={{ minHeight: "100vh", background: BG, width: "100%", position: "relative", overflow: "hidden", color: TEXT }}>
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "3px", background: `linear-gradient(to right, ${ACCENT}, ${ACCENT2}, transparent)` }} />
 
       <div style={{ position: "relative", zIndex: 1 }}>

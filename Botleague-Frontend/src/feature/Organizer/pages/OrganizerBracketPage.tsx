@@ -599,7 +599,7 @@ export default function OrganizerBracketPage() {
 
   if (view === "setup") {
     return (
-      <div style={styles.page}>
+      <div className="p-4 sm:p-6 lg:p-8" style={styles.page}>
         <div style={styles.setupWrap}>
 
           <div style={styles.setupHeader}>
@@ -767,7 +767,7 @@ export default function OrganizerBracketPage() {
   // =====================================================
 
   return (
-    <div style={styles.page}>
+    <div className="p-4 sm:p-6 lg:p-8" style={styles.page}>
 
       {/* ── HEADER ── */}
       <div style={styles.header}>
@@ -1652,7 +1652,6 @@ export default function OrganizerBracketPage() {
 const styles: Record<string, React.CSSProperties> = {
   page: {
     background: T.bg, minHeight: "100vh",
-    padding: "28px 32px",
     fontFamily: "'Inter', system-ui, sans-serif",
     color: T.text,
   },

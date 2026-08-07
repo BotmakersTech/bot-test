@@ -489,7 +489,7 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange }: {
 
 function PageWrapper({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ minHeight: "100vh", background: BG, color: TEXT, padding: "40px 48px", position: "relative", overflow: "hidden" }}>
+    <div className="p-4 sm:p-6 lg:p-8" style={{ minHeight: "100vh", background: BG, color: TEXT, position: "relative", overflow: "hidden" }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         select option { background: #ffffff; color: #111111; }

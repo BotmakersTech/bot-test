@@ -155,7 +155,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="pfm-page min-h-screen pt-11.5 px-13 pb-17.5">
+    <div className="pfm-page min-h-screen p-4 sm:p-6 lg:p-8">
       <div className="max-w-5xl mx-auto relative overflow-hidden">
 
         <OutlineStar className="absolute top-24 right-16 w-16 h-16 text-indigo-100 opacity-70" />
@@ -301,7 +301,7 @@ export default function ProfilePage() {
                         placeholder="10-digit mobile number"
                         value={p.phone}
                         onChange={(e) => p.setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                        className="flex-1 rounded-lg text-gray-500 placeholder-gray-400"
+                        className="flex-1 min-w-0 rounded-lg text-gray-500 placeholder-gray-400"
                       />
                       {phoneChanged && !phoneOtpSent && (
                         <button
@@ -324,7 +324,7 @@ export default function ProfilePage() {
                           onChange={(e) => setPhoneOtpValue(e.target.value.replace(/\D/g, "").slice(0, 4))}
                           maxLength={4}
                           autoFocus
-                          className="flex-1 rounded-lg text-gray-500 placeholder-gray-400"
+                          className="flex-1 min-w-0 rounded-lg text-gray-500 placeholder-gray-400"
                         />
                         <button
                           type="button"
@@ -365,7 +365,7 @@ export default function ProfilePage() {
                       placeholder="e.g. botmakers12@gmail.com"
                       value={p.pendingEmailInput}
                       onChange={(e) => p.setPendingEmailInput(e.target.value)}
-                      className="flex-1 rounded-lg text-gray-500 placeholder-gray-400"
+                      className="flex-1 min-w-0 rounded-lg text-gray-500 placeholder-gray-400"
                     />
                     <button
                       type="button"

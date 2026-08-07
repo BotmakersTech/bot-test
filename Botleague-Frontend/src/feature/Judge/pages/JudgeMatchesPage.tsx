@@ -45,7 +45,7 @@ export default function JudgeMatchesPage() {
   const visible = filter === "ALL" ? matches : matches.filter(m => m.status === filter)
 
   return (
-    <div className="min-h-full p-6 space-y-6">
+    <div className="min-h-full p-4 sm:p-6 lg:p-8 space-y-6">
       <div>
         <h1 className="text-xl font-bold text-[#111]">Assigned Matches</h1>
         <p className="text-sm text-[#6b7280] mt-0.5">All matches you have been assigned to judge</p>

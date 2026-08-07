@@ -157,7 +157,7 @@ export default function GlobalRankingsPage() {
 
   return (
     <div className="rank-page min-h-screen overflow-auto w-full">
-      <main className="relative w-full max-w-[1300px] mx-auto pt-11.5 px-13 pb-17.5">
+      <main className="relative w-full max-w-[1300px] mx-auto p-4 sm:p-6 lg:p-8">
 
         {/* Background star — hidden below 1100px */}
         <span

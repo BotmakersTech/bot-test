@@ -72,7 +72,7 @@ export default function AdminAllSportsPage() {
   })
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-white p-6">
+    <div className="min-h-screen bg-[#0a0c10] text-white p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white">All Sports</h1>
@@ -90,7 +90,7 @@ export default function AdminAllSportsPage() {
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && setActiveSearch(search)}
             placeholder="Search by sport name, event, age group…"
-            className="flex-1 rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50"
+            className="flex-1 min-w-0 rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50"
           />
           <button
             onClick={() => setActiveSearch(search)}
@@ -125,7 +125,7 @@ export default function AdminAllSportsPage() {
       ) : filtered.length === 0 ? (
         <div className="flex items-center justify-center py-20 text-gray-500">No sports found</div>
       ) : (
-        <div className="rounded-2xl border border-white/10 overflow-hidden">
+        <div className="rounded-2xl border border-white/10 overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-white/5 text-gray-400 text-xs uppercase">
               <tr>

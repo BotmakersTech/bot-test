@@ -142,9 +142,9 @@ const [showScores, setShowScores] =
 
   return (
     <div
+      className="p-4 sm:p-6 lg:p-8"
       style={{
         minHeight: "100vh",
-        padding: "32px",
         background:
           "linear-gradient(180deg,#3a3a3a,#2f2f2f)",
       }}

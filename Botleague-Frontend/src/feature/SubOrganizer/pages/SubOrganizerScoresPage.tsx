@@ -123,7 +123,7 @@ export default function SubOrganizerScoresPage() {
   const done      = matches.filter((m) => m.status === "COMPLETED")
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-white p-6">
+    <div className="min-h-screen bg-[#0a0c10] text-white p-4 sm:p-6 lg:p-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white">Score Management</h1>
         <p className="text-gray-400 text-sm mt-1">Update live scores and finalize match results</p>
@@ -158,7 +158,7 @@ export default function SubOrganizerScoresPage() {
             </select>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 mb-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
             <div className="rounded-xl bg-green-500/10 border border-green-500/20 px-4 py-3">
               <p className="text-xs text-gray-500">Live</p>
               <p className="text-2xl font-bold text-green-400">{live.length}</p>

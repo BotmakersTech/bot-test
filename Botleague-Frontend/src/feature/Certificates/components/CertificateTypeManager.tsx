@@ -311,7 +311,7 @@ export default function CertificateTypeManager({
                         onChange={(e) => setManualNames(e.target.value)}
                         placeholder="One recipient name per line"
                         rows={2}
-                        className="flex-1 rounded-lg text-xs px-2 py-1 ring-1"
+                        className="flex-1 min-w-0 rounded-lg text-xs px-2 py-1 ring-1"
                         style={{ boxShadow: `inset 0 0 0 1px ${ORG.blue}4d` }}
                       />
                     )}

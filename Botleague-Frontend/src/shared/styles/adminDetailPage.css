@@ -54,7 +54,15 @@
 .adp-content {
   max-width: 980px;
   margin: 0 auto;
-  padding: 40px 24px 80px;
+  padding: 16px;
+}
+
+@media (min-width: 640px) {
+  .adp-content { padding: 24px; }
+}
+
+@media (min-width: 1024px) {
+  .adp-content { padding: 32px; }
 }
 
 .adp-banner {
@@ -583,7 +591,6 @@
 }
 
 @media (max-width: 768px) {
-  .adp-content { padding: 28px 18px 60px; }
   .adp-card-left { flex-direction: column; text-align: center; }
   .adp-title-row { flex-direction: column; gap: 8px; }
   .adp-entity-name { font-size: 22px; }

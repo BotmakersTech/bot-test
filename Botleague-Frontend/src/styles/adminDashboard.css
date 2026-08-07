@@ -25,7 +25,15 @@
 .adb-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 32px 80px;
+  padding: 16px;
+}
+
+@media (min-width: 640px) {
+  .adb-content { padding: 24px; }
+}
+
+@media (min-width: 1024px) {
+  .adb-content { padding: 32px; }
 }
 
 /* ── Heading ── */
@@ -506,7 +514,6 @@
 /* ── Responsive ── */
 
 @media (max-width: 768px) {
-  .adb-content { padding: 28px 18px 60px; }
   .adb-event-card { flex-direction: column; }
   .adb-stats-box { margin-left: 0; margin-top: 16px; }
   .adb-status-pill { position: static; margin-bottom: 12px; }

@@ -33,7 +33,7 @@ function LargeCard({
       >
         {icon}
       </div>
-      <h2 className="mb-4 text-2xl font-semibold text-[#1d1d1d]">{label}</h2>
+      <h2 className="mb-4 pr-16 text-2xl font-semibold text-[#1d1d1d]">{label}</h2>
       <div className="text-[64px] font-semibold leading-none text-[#111] transition-colors group-hover:text-[#0162D1] sm:text-[76px]">
         {loading ? "—" : value.toLocaleString("en-IN")}
       </div>
@@ -93,7 +93,7 @@ export default function AdminRoleDashboard() {
   const totalSports = events.reduce((n, e) => n + (e.sports?.length ?? 0), 0)
 
   return (
-    <div className="min-h-full p-6 md:p-10" style={{ background: "#fafafa" }}>
+    <div className="min-h-full p-4 sm:p-6 lg:p-8" style={{ background: "#fafafa" }}>
       <h1
         className="mb-9 text-[32px] font-semibold tracking-wide text-[#0162D1] md:text-[38px]"
         style={{ fontFamily: FONT_HEADING }}

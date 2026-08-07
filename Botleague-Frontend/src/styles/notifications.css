@@ -9,7 +9,19 @@
     linear-gradient(132deg, transparent 0 82%, rgba(140, 108, 255, 0.06) 82% 85%, transparent 85% 100%),
     transparent;
   color: #070707;
-  padding: 46px 52px 70px;
+  padding: 16px;
+}
+
+@media (min-width: 640px) {
+  .notif-page {
+    padding: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .notif-page {
+    padding: 32px;
+  }
 }
 
 .notif-shell {
@@ -358,10 +370,6 @@
 }
 
 @media (max-width: 1180px) {
-  .notif-page {
-    padding: 46px 32px 72px;
-  }
-
   .notif-row {
     grid-template-columns: 1fr;
     gap: 14px;
@@ -376,10 +384,6 @@
 }
 
 @media (max-width: 760px) {
-  .notif-page {
-    padding: 34px 18px 58px;
-  }
-
   .notif-heading-row {
     align-items: flex-start;
     flex-direction: column;

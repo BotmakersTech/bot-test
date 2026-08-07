@@ -129,7 +129,7 @@ export default function OrganizerRegistrationsPage() {
   const activeCount = regs.filter(r => ["REGISTERED", "CHECKED_IN"].includes((r.status ?? "").toUpperCase())).length
 
   return (
-    <div style={{ minHeight: "100vh", background: BG, padding: "28px 32px", fontFamily: "'Inter',sans-serif" }}>
+    <div className="p-4 sm:p-6 lg:p-8" style={{ minHeight: "100vh", background: BG, fontFamily: "'Inter',sans-serif" }}>
       <div style={{ marginBottom: "24px" }}>
         <h1 style={{ color: TEXT, fontFamily: "'Sarpanch',sans-serif", fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>Registrations</h1>
         <p style={{ color: MUTED, fontSize: "0.85rem", margin: "4px 0 0" }}>
@@ -185,7 +185,7 @@ export default function OrganizerRegistrationsPage() {
           <p style={{ margin: 0 }}>No teams registered yet</p>
         </div>
       ) : (
-        <div style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: "16px", overflow: "hidden" }}>
+        <div style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: "16px", overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
             <thead>
               <tr style={{ background: "rgba(140,108,255,0.06)", borderBottom: `1px solid ${BORDER}` }}>

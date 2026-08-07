@@ -494,7 +494,7 @@ function MatchManagementPanelWithMatches({
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <div className="grid grid-cols-4 gap-3 flex-1">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1">
           {[
             { label: "Total Matches", value: total,     colour: "text-[#111111]" },
             { label: "Scheduled",     value: scheduled, colour: "text-[#4c8ee7]" },
@@ -596,7 +596,7 @@ export default function OrganizerSchedulePage() {
   if (eventsLoading) return <div className="flex h-64 items-center justify-center text-[#5d5d5d]">Loading…</div>;
 
   return (
-    <div className="min-h-screen p-6 text-[#111111]">
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8 text-[#111111]">
       <div className="max-w-5xl mx-auto">
         <h1 className="mb-1 text-2xl font-bold text-[#3567cf]" style={{ fontFamily: "'Sarpanch', 'Inter', sans-serif" }}>Schedule &amp; Brackets</h1>
         <p className="mb-6 text-sm text-[#5d5d5d]">Generate brackets, schedule matches, and manage live scores.</p>

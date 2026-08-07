@@ -26,7 +26,7 @@ export default function SubOrganizerSportsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 p-6 text-white">
+    <div className="min-h-screen bg-gray-950 p-4 sm:p-6 lg:p-8 text-white">
       <h1 className="mb-6 text-2xl font-bold text-red-500">My Sports</h1>
 
       {sports.length === 0 ? (

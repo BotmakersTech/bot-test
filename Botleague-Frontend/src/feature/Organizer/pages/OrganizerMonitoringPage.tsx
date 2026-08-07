@@ -100,7 +100,7 @@ export default function OrganizerMonitoringPage() {
   const done      = matches.filter(m => m.status === "COMPLETED");
 
   return (
-    <div className="min-h-screen p-6 text-[#111111]">
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8 text-[#111111]">
       <div className="mb-6 flex items-start justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[#3567cf]" style={{ fontFamily: "'Sarpanch', 'Inter', sans-serif" }}>Event Monitoring</h1>

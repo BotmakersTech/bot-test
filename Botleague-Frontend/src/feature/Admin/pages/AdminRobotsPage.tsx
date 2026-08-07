@@ -67,16 +67,16 @@ function CreateRobotModal({ onClose, onCreated }: { onClose: () => void; onCreat
               {teams.map(t => <option key={t.id} value={t.id}>{t.teamName} · {t.teamCode}</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><label className={lbl}>Robot Type</label><select className={sel} value={form.robotType} onChange={e=>set("robotType",e.target.value)}>{ROBOT_TYPES_CREATE.map(r=><option key={r} value={r}>{r.replace(/_/g," ")}</option>)}</select></div>
             <div><label className={lbl}>Sport</label><select className={sel} value={form.sport} onChange={e=>setSport(e.target.value)}>{SPORTS_CREATE.map(s=><option key={s} value={s}>{s.replace(/_/g," ")}</option>)}</select></div>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div><label className={lbl}>Age Category</label><select className={sel} value={form.ageCategory} onChange={e=>set("ageCategory",e.target.value)}>{AGE_CATS.map(a=><option key={a} value={a}>{a.replace(/_/g," ")}</option>)}</select></div>
             <div><label className={lbl}>Control Type</label><select className={sel} value={form.controlType} onChange={e=>set("controlType",e.target.value)}>{CTRL_TYPES.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
             <div><label className={lbl}>Connection</label><select className={sel} value={form.controlMode} onChange={e=>set("controlMode",e.target.value)}>{CTRL_MODES.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className={lbl}>Weight Class</label>
               {(() => {
@@ -186,7 +186,7 @@ export default function AdminRobotsPage() {
   })()
 
   return (
-    <div className="org-page-bg" style={{ padding: "40px 48px" }}>
+    <div className="org-page-bg p-4 sm:p-6 lg:p-8">
       <div style={{ maxWidth: "1400px", margin: "0 auto", position: "relative", zIndex: 1 }}>
 
         {showCreate && (

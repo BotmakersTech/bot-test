@@ -137,7 +137,7 @@ export default function OrganizerCommunicationPage() {
   const selectedEvent = events.find(e => e.id === selectedEventId);
 
   return (
-    <div className="min-h-screen p-6 text-[#111111]">
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8 text-[#111111]">
       <h1 className="mb-2 text-2xl font-bold text-[#3567cf]" style={{ fontFamily: "'Sarpanch', 'Inter', sans-serif" }}>Communication</h1>
       <p className="mb-6 text-sm text-[#5d5d5d]">Broadcast announcements and manage your event chat room.</p>
 

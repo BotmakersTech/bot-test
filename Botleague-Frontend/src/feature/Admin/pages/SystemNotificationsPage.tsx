@@ -301,7 +301,7 @@ export default function SystemNotificationsPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0c10] text-white">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -347,7 +347,7 @@ export default function SystemNotificationsPage() {
 
         {/* Table */}
         {notifications.length > 0 && (
-          <div className="border border-white/[0.08] rounded-xl overflow-hidden">
+          <div className="border border-white/[0.08] rounded-xl overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-white/[0.03] border-b border-white/[0.08]">

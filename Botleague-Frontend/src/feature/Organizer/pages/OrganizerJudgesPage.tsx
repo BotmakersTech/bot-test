@@ -71,7 +71,7 @@ export default function OrganizerJudgesPage() {
   const sportName = (id?: string | null) => sports.find(s => s.id === id)?.sport?.replace(/_/g, " ") ?? "—"
 
   return (
-    <div className="min-h-full p-6 space-y-6">
+    <div className="min-h-full p-4 sm:p-6 lg:p-8 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-bold text-[#3567cf]" style={{ fontFamily: "'Sarpanch', 'Inter', sans-serif" }}>Judge Management</h1>

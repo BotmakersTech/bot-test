@@ -7,8 +7,20 @@
 
 .teamdash-page {
   background: transparent;
-  padding: 46px 52px 70px;
+  padding: 16px;
   font-family: "Inter", sans-serif;
+}
+
+@media (min-width: 640px) {
+  .teamdash-page {
+    padding: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .teamdash-page {
+    padding: 32px;
+  }
 }
 
 .teamdash-state {
@@ -1036,10 +1048,6 @@
    =================================================================== */
 
 @media (max-width: 1180px) {
-  .teamdash-page {
-    padding: 36px 28px 56px;
-  }
-
   .teamdash-event-banner {
     flex-direction: column;
     align-items: flex-start;

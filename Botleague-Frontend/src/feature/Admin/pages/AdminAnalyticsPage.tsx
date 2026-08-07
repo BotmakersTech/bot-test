@@ -65,7 +65,7 @@ export default function AdminAnalyticsPage() {
   const maxSportCount = sportCounts[0]?.[1] ?? 1
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-white p-6">
+    <div className="min-h-screen bg-[#0a0c10] text-white p-4 sm:p-6 lg:p-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white">Analytics</h1>
         <p className="text-gray-400 text-sm mt-1">Platform-wide metrics and trends</p>
@@ -125,7 +125,7 @@ export default function AdminAnalyticsPage() {
           {/* Registration funnel */}
           <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
             <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Registration Funnel</h3>
-            <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
               <div>
                 <p className="text-2xl font-bold text-orange-400">{totalEvents}</p>
                 <p className="text-xs text-gray-500 mt-1">Events Created</p>

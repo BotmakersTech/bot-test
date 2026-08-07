@@ -75,7 +75,7 @@ export default function JudgeScoresPage() {
   }
 
   return (
-    <div className="min-h-full p-6 space-y-6 max-w-lg">
+    <div className="min-h-full p-4 sm:p-6 lg:p-8 space-y-6 max-w-lg">
       <div>
         <h1 className="text-xl font-bold text-[#111]">Score Entry</h1>
         <p className="text-sm text-[#6b7280] mt-0.5">Submit scores for live matches you are judging</p>

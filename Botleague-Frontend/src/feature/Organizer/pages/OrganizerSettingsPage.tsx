@@ -72,7 +72,7 @@ export default function OrganizerSettingsPage() {
     setForm(p => ({ ...p, [key]: val }))
 
   return (
-    <div className="min-h-full p-6 space-y-6 max-w-3xl">
+    <div className="min-h-full p-4 sm:p-6 lg:p-8 space-y-6 max-w-3xl">
       <div>
         <h1 className="text-xl font-bold text-[#3567cf]" style={{ fontFamily: "'Sarpanch', 'Inter', sans-serif" }}>Event Settings</h1>
         <p className="text-sm text-[#5d5d5d] mt-0.5">

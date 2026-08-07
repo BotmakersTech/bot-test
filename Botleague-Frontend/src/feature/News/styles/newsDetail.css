@@ -7,7 +7,19 @@
   overflow: hidden;
   background: #ffffff;
   color: #050505;
-  padding: 46px 52px 70px;
+  padding: 16px;
+}
+
+@media (min-width: 640px) {
+  .nwd-page {
+    padding: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .nwd-page {
+    padding: 32px;
+  }
 }
 
 .nwd-shell {
@@ -218,10 +230,6 @@
 }
 
 @media (max-width: 640px) {
-  .nwd-page {
-    padding: 34px 22px 56px;
-  }
-
   .nwd-divider {
     width: 100%;
   }

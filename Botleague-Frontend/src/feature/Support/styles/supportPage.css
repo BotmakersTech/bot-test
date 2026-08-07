@@ -7,7 +7,19 @@
   overflow-x: hidden;
   background: #fbfbfb;
   color: #111111;
-  padding: 46px 52px 70px;
+  padding: 16px;
+}
+
+@media (min-width: 640px) {
+  .support-page {
+    padding: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .support-page {
+    padding: 32px;
+  }
 }
 
 .support-shell {
@@ -352,10 +364,6 @@
 /* ---------------- Responsive ---------------- */
 
 @media (max-width: 640px) {
-  .support-page {
-    padding: 34px 22px 56px;
-  }
-
   .faq-card {
     padding: 18px;
     border-radius: 16px;

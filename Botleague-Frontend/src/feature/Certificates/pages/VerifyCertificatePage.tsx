@@ -38,7 +38,7 @@ export default function VerifyCertificatePage() {
   const copy = result ? RESULT_COPY[result.result] : null;
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-white flex flex-col items-center px-6 py-12">
+    <div className="min-h-screen bg-[#0a0c10] text-white flex flex-col items-center p-4 sm:p-6 lg:p-8">
       <img src={logo} alt="BotLeague" className="h-8 mb-10" />
 
       <div className="w-full max-w-lg">
@@ -59,7 +59,7 @@ export default function VerifyCertificatePage() {
             value={certificateNumber}
             onChange={(e) => setCertificateNumber(e.target.value)}
             placeholder="e.g. CERT-000123"
-            className="flex-1 rounded-lg bg-white/5 border border-white/10 px-4 py-2.5 text-sm placeholder-gray-500 focus:outline-none focus:border-white/30"
+            className="flex-1 min-w-0 rounded-lg bg-white/5 border border-white/10 px-4 py-2.5 text-sm placeholder-gray-500 focus:outline-none focus:border-white/30"
           />
           <button
             type="submit"

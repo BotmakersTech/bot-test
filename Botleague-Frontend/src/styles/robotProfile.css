@@ -7,7 +7,19 @@
     linear-gradient(132deg, transparent 0 79%, rgba(140, 108, 255, 0.05) 79% 82%, transparent 82% 100%),
     transparent;
   color: #111111;
-  padding: 46px 52px 70px;
+  padding: 16px;
+}
+
+@media (min-width: 640px) {
+  .rprofile-page {
+    padding: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .rprofile-page {
+    padding: 32px;
+  }
 }
 
 .rprofile-shell {
@@ -414,10 +426,6 @@
 }
 
 @media (max-width: 1180px) {
-  .rprofile-page {
-    padding: 36px 28px 56px;
-  }
-
   .rprofile-hero {
     grid-template-columns: 1fr;
     gap: 22px;

@@ -165,7 +165,7 @@ export default function OrganizerCreateEventPage() {
       <img src={starDeco} alt="" aria-hidden className="pointer-events-none absolute right-16 top-72 hidden w-12 opacity-70 lg:block" />
       <img src={starDeco} alt="" aria-hidden className="pointer-events-none absolute left-10 bottom-24 hidden w-16 opacity-60 lg:block" />
 
-      <div className="relative mx-auto w-full max-w-[1155px] px-3 py-8 sm:py-10">
+      <div className="relative mx-auto w-full max-w-[1155px] p-4 sm:p-6 lg:p-8">
 
         {/* Heading */}
         <div className="mb-8 flex items-center gap-4">

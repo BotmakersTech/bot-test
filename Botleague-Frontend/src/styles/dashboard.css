@@ -7,7 +7,19 @@
     linear-gradient(132deg, transparent 0 76%, rgba(140, 108, 255, 0.06) 76% 79%, transparent 79% 100%),
     transparent;
   color: #080808;
-  padding: 46px 52px 70px;
+  padding: 16px;
+}
+
+@media (min-width: 640px) {
+  .dash-page {
+    padding: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .dash-page {
+    padding: 32px;
+  }
 }
 
 .dash-content {
@@ -485,10 +497,6 @@
 }
 
 @media (max-width: 1180px) {
-  .dash-page {
-    padding: 36px 28px 56px;
-  }
-
   .dash-hero-card {
     grid-template-columns: 1fr;
     gap: 22px;

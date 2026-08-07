@@ -59,7 +59,7 @@ export default function OrganizerEventsPage() {
   }), [events, tab, search])
 
   return (
-    <div className="org-page-bg" style={{ padding: "28px 32px", fontFamily: ORG.fontBody }}>
+    <div className="org-page-bg p-4 sm:p-6 lg:p-8" style={{ fontFamily: ORG.fontBody }}>
       <div style={{ marginBottom: "24px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
         <div>
           <h1 style={{ color: ORG.blueHeading, fontFamily: ORG.fontHeading, fontSize: "1.75rem", fontWeight: 700, margin: 0, letterSpacing: "0.02em" }}>Event Management</h1>
@@ -108,7 +108,7 @@ export default function OrganizerEventsPage() {
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: "center", padding: "80px 0", color: MUTED }}>No events found</div>
       ) : (
-        <div style={{ background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "16px", overflow: "hidden" }}>
+        <div style={{ background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "16px", overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
             <thead>
               <tr style={{ background: "rgba(75,134,232,0.06)", borderBottom: `1px solid ${BORDER}` }}>

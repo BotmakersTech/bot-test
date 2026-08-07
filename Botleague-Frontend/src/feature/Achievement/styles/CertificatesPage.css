@@ -15,10 +15,22 @@
     position: relative;
     min-height: 100vh;
     overflow-x: hidden;
-    padding: 46px 52px 70px;
+    padding: 16px;
     background: #ffffff;
     color: var(--cp-ink);
     font-family: "Inter", sans-serif;
+}
+
+@media (min-width: 640px) {
+    .bl-page {
+        padding: 24px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .bl-page {
+        padding: 32px;
+    }
 }
 
 /* ---------- decorative corner shapes (CSS-only, no external assets) ---------- */
@@ -389,10 +401,6 @@
 
 /* ---------- Responsive ---------- */
 @media (max-width: 767px) {
-    .bl-page {
-        padding: 24px 16px 40px;
-    }
-
     .bl-grid {
         grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
         gap: 14px;

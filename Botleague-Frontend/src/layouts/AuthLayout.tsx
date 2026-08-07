@@ -91,7 +91,7 @@ export default function AuthLayout({ children, variant = "default" }: Props) {
 
         {/* Card */}
         {variant === "default" && (
-          <div className="cna-card w-[692px] mx-auto px-72 rounded-xl! overflow-hidden">
+          <div className="cna-card w-full max-w-[692px] mx-auto px-72 rounded-xl! overflow-hidden">
             <div className="cna-card-inner px-6 py-8 sm:px-10 md:px-14 lg:px-20">
               {children}
             </div>

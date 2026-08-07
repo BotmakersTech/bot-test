@@ -120,7 +120,7 @@ export default function AdminMatches() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-white p-6">
+    <div className="min-h-screen bg-[#0a0c10] text-white p-4 sm:p-6 lg:p-8">
       <div className="mb-6 flex items-start justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-white">Match Management</h1>
@@ -207,7 +207,7 @@ export default function AdminMatches() {
       ) : filtered.length === 0 ? (
         <div className="flex items-center justify-center py-20 text-gray-500">No matches found</div>
       ) : (
-        <div className="rounded-2xl border border-white/10 overflow-hidden">
+        <div className="rounded-2xl border border-white/10 overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-white/5 text-gray-400 text-xs uppercase">
               <tr>

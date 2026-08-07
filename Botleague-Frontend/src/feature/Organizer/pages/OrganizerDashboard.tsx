@@ -123,7 +123,7 @@ export default function OrganizerDashboard() {
   }), [events, tab, search])
 
   return (
-    <div style={{ minHeight: "100vh", background: BG, padding: "28px 32px", fontFamily: "'Inter',sans-serif" }}>
+    <div className="p-4 sm:p-6 lg:p-8" style={{ minHeight: "100vh", background: BG, fontFamily: "'Inter',sans-serif" }}>
       <div style={{ marginBottom: "24px" }}>
         <h1 style={{ color: TEXT, fontFamily: "'Sarpanch',sans-serif", fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>Events Dashboard</h1>
         <p style={{ color: MUTED, fontSize: "0.85rem", margin: "4px 0 0" }}>

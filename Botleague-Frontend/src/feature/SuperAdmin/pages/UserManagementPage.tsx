@@ -66,7 +66,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
         </div>
 
         <form onSubmit={handle} className="space-y-5">
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
               <label className={lbl}>First Name <span className="text-slate-400">*</span></label>
               <input style={gradientBorderStyle} className={inp} value={form.firstName} onChange={e=>set("firstName",e.target.value)} placeholder="Enter First Name" />
@@ -195,7 +195,7 @@ export default function UserManagementPage() {
   })();
 
   return (
-    <div className="org-page-bg" style={{ padding: "40px 48px" }}>
+    <div className="org-page-bg p-4 sm:p-6 lg:p-8">
       <div style={{ maxWidth: "1400px", margin: "0 auto", position: "relative", zIndex: 1 }}>
 
         {showCreate && (
@@ -247,7 +247,7 @@ export default function UserManagementPage() {
         )}
 
         {/* ── User table ── */}
-        <div className="overflow-hidden rounded-2xl border" style={{ borderColor: "rgba(75,134,232,0.25)" }}>
+        <div className="overflow-x-auto rounded-2xl border" style={{ borderColor: "rgba(75,134,232,0.25)" }}>
           <table className="w-full border-collapse text-left">
             <thead>
               <tr style={{ background: ORG.gradientPill }}>

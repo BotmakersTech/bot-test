@@ -58,7 +58,7 @@ export default function AdminReportsPage() {
   const completedCount = events.filter((e) => (e.status ?? "").toUpperCase() === "COMPLETED").length
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-white p-6">
+    <div className="min-h-screen bg-[#0a0c10] text-white p-4 sm:p-6 lg:p-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white">Reports</h1>
         <p className="text-gray-400 text-sm mt-1">Platform-wide overview across all events</p>
