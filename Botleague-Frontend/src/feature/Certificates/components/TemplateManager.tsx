@@ -39,6 +39,28 @@ const emptyForm = () => ({
   placeholderMap: [] as TemplatePlaceholderPosition[],
 });
 
+/**
+ * Fills in the exact same defaults the per-field Size/Color/Align controls
+ * below display via `??` fallbacks (e.g. `p.align ?? "CENTER"`) — so those
+ * fields never show a value that isn't actually the one saved. Without this,
+ * a template loaded from before a field had an explicit default (or edited
+ * without ever touching an already-correct-looking dropdown) renders using
+ * the *backend's* fallback instead of the value the editor visibly showed —
+ * this is exactly what caused "I set it to Center but it printed on the left".
+ */
+function normalizePlaceholder(p: TemplatePlaceholderPosition): TemplatePlaceholderPosition {
+  if (p.key === "QR_CODE") {
+    return { ...p, sizePx: p.sizePx ?? 120 };
+  }
+  return {
+    ...p,
+    fontSize: p.fontSize ?? 24,
+    color: p.color ?? "#1a1a1a",
+    align: p.align ?? "CENTER",
+    bold: p.bold ?? false,
+  };
+}
+
 export default function TemplateManager({
   uploadBasePath,
   createTemplate,
@@ -83,7 +105,7 @@ export default function TemplateManager({
       backgroundUrl: t.backgroundUrl,
       pageWidthPx: t.pageWidthPx,
       pageHeightPx: t.pageHeightPx,
-      placeholderMap: t.placeholderMap ?? [],
+      placeholderMap: (t.placeholderMap ?? []).map(normalizePlaceholder),
     });
     setError(null);
     setPreviewOpen(false);

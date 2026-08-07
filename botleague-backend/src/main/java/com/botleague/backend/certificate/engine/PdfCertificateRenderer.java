@@ -33,9 +33,16 @@ import java.util.List;
 @Component
 public class PdfCertificateRenderer {
 
-    private static final float DEFAULT_FONT_SIZE = 18f;
+    // Kept identical to the template editor's own defaults (TemplateManager.tsx
+    // addPlaceholder()) so a placeholder saved without an explicit value renders
+    // the same way the editor visually implied it would — a mismatch here is
+    // exactly what caused "I set it to center but it rendered on the left":
+    // the editor's dropdown showed "Center" (its own fallback for an unset
+    // value) while this class was defaulting the same unset value to LEFT.
+    private static final float DEFAULT_FONT_SIZE = 24f;
     private static final float DEFAULT_QR_SIZE_PX = 120f;
-    private static final Color DEFAULT_COLOR = Color.BLACK;
+    private static final Color DEFAULT_COLOR = new Color(0x1a, 0x1a, 0x1a);
+    private static final String DEFAULT_ALIGN = "CENTER";
     private static final int RASTER_DPI = 150;
 
     private final ObjectMapper objectMapper;
@@ -130,7 +137,7 @@ public class PdfCertificateRenderer {
 
         float fontSize = position.getFontSize() != null ? position.getFontSize().floatValue() : DEFAULT_FONT_SIZE;
         Color color = parseColor(position.getColor());
-        String align = position.getAlign() != null ? position.getAlign().toUpperCase() : "LEFT";
+        String align = position.getAlign() != null ? position.getAlign().toUpperCase() : DEFAULT_ALIGN;
         Float maxWidth = position.getMaxWidth() != null ? position.getMaxWidth().floatValue() : null;
 
         List<String> lines = wrap(text, font, fontSize, maxWidth);
