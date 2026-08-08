@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react"
 import { getMySports, getMatchesForSport, type OrganizerSport, type OrganizerMatch } from "../../Organizer/api/organizer.api"
 import { updateMatchScore, startMatch, completeMatch } from "../../Admin/api/adminMatches.api"
+import { useSportMatchRealtime, mergeMatchUpdate } from "../../../shared/realtime/useMatchRealtime"
 
 function toLabel(raw?: string | null) {
   if (!raw) return "—"
@@ -67,6 +68,14 @@ export default function SubOrganizerScoresPage() {
   useEffect(() => {
     if (selectedSportId) loadMatches(selectedSportId)
   }, [selectedSportId, loadMatches])
+
+  // Live match/status updates from other judges/organizers scoring the same
+  // sport. Deliberately doesn't touch the `scores` draft-input state, so it
+  // never overwrites a score this sub-organizer is mid-typing.
+  useSportMatchRealtime(selectedSportId || null, (type, payload) => {
+    if (type === 'RANKINGS_UPDATED' || type === 'BRACKET_CREATED') return
+    setMatches((prev) => mergeMatchUpdate(prev, payload as OrganizerMatch))
+  })
 
   const flash = (msg: string) => {
     setSuccess(msg)

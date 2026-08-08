@@ -5,6 +5,8 @@ import {
     useState
 } from "react"
 
+import { useSportMatchRealtime, mergeMatchUpdate } from "../../../shared/realtime/useMatchRealtime"
+
 import {
     approveMatchResult,
     rejectMatchResult,
@@ -59,6 +61,17 @@ export const useMatches = (
 
     const [error, setError] =
         useState<string | null>(null)
+
+    // =====================================================
+    // REALTIME — merge live match/score/approval updates into
+    // local `matches` state as they arrive over WebSocket,
+    // instead of requiring a manual refresh.
+    // =====================================================
+
+    useSportMatchRealtime(sportId, (type, payload) => {
+        if (type === 'RANKINGS_UPDATED' || type === 'BRACKET_CREATED') return
+        setMatches(prev => mergeMatchUpdate(prev, payload as MatchDTO))
+    })
 
     // =====================================================
     // REF — avoids fetchMatches in useEffect dep array

@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import api from "../../../shared/api/Base"
+import { useMultiSportMatchRealtime } from "../../../shared/realtime/useMatchRealtime"
 
 interface LiveMatch {
   matchId: string
+  eventSportId: string
   roundNumber?: number
   matchNumber?: number
   status: string
@@ -50,6 +52,34 @@ export default function JudgeScoresPage() {
     setScoreA(selected.teamAScore ?? 0)
     setScoreB(selected.teamBScore ?? 0)
   }, [selected?.matchId])
+
+  // Live-sync the match picker: if someone else's action moves a match out
+  // of LIVE (approved/rejected/cancelled elsewhere), drop it from the list
+  // instead of leaving a stale entry a judge could still try to score.
+  // Deliberately does NOT touch scoreA/scoreB — never clobber an in-progress edit.
+  const liveSportIds = useMemo(
+    () => liveMatches.map(m => m.eventSportId).filter(Boolean),
+    [liveMatches]
+  )
+  useMultiSportMatchRealtime(liveSportIds, (type, payload) => {
+    if (type === 'RANKINGS_UPDATED' || type === 'BRACKET_CREATED') return
+    const updated = payload as Partial<LiveMatch> & { matchId: string; status?: string }
+    setLiveMatches(prev => {
+      if (!prev.some(m => m.matchId === updated.matchId)) return prev
+      if (updated.status && updated.status !== "LIVE") {
+        return prev.filter(m => m.matchId !== updated.matchId)
+      }
+      return prev.map(m => (m.matchId === updated.matchId ? { ...m, ...updated } : m))
+    })
+  })
+
+  // If the selected match just got removed from the list above (someone
+  // else took it out of LIVE), fall back to whichever match is now first.
+  useEffect(() => {
+    if (selectedId && !liveMatches.some(m => m.matchId === selectedId)) {
+      setSelectedId(liveMatches[0]?.matchId ?? "")
+    }
+  }, [liveMatches, selectedId])
 
   const handleSaveScore = async () => {
     if (!selectedId) return

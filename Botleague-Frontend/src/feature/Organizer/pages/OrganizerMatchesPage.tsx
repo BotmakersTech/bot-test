@@ -6,6 +6,7 @@ import {
   type OrganizerEvent, type OrganizerSport, type OrganizerMatch,
 } from "../api/organizer.api"
 import { ORG } from "../theme/organizerTheme"
+import { useSportMatchRealtime, mergeMatchUpdate } from "../../../shared/realtime/useMatchRealtime"
 
 // ── theme ─────────────────────────────────────────────────────────────────────
 const P      = "#8c6cff"
@@ -85,12 +86,18 @@ export default function OrganizerMatchesPage() {
   useEffect(() => { loadMatches() }, [loadMatches])
 
   // Match results are often submitted from a different page (judge/organizer
-  // scoring UI) — auto-refresh so PENDING_APPROVAL matches show up here
-  // without requiring a manual page reload.
+  // scoring UI). useSportMatchRealtime below merges live updates straight
+  // into `matches`; this poll is just a safety net for missed frames
+  // (reconnect gaps etc.), so it can be much less frequent now.
   useEffect(() => {
-    const id = setInterval(loadMatches, 10_000)
+    const id = setInterval(loadMatches, 60_000)
     return () => clearInterval(id)
   }, [loadMatches])
+
+  useSportMatchRealtime(selectedSportId || null, (type, payload) => {
+    if (type === 'RANKINGS_UPDATED' || type === 'BRACKET_CREATED') return
+    setMatches((prev) => mergeMatchUpdate(prev, payload as OrganizerMatch))
+  })
 
   const [actingOnId, setActingOnId] = useState<string | null>(null)
 

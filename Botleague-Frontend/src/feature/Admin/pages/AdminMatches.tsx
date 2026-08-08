@@ -8,6 +8,7 @@ import {
   type MatchDTO,
   type MatchStatus,
 } from "../api/adminMatches.api"
+import { useSportMatchRealtime, mergeMatchUpdate } from "../../../shared/realtime/useMatchRealtime"
 
 function toLabel(raw?: string | null) {
   if (!raw) return "—"
@@ -72,12 +73,19 @@ export default function AdminMatches() {
   }, [load])
 
   // Match results are often submitted from a different page (judge/organizer
-  // scoring UI) — auto-refresh so PENDING_APPROVAL matches show up here
-  // without requiring a manual page reload.
+  // scoring UI). When a specific sport is selected, useSportMatchRealtime
+  // below merges live updates straight into `matches`. When viewing "ALL"
+  // sports there's no single topic to subscribe to, so fall back to polling.
   useEffect(() => {
+    if (selectedSportId !== "ALL") return
     const id = setInterval(load, 10_000)
     return () => clearInterval(id)
-  }, [load])
+  }, [load, selectedSportId])
+
+  useSportMatchRealtime(selectedSportId !== "ALL" ? selectedSportId : null, (type, payload) => {
+    if (type === 'RANKINGS_UPDATED' || type === 'BRACKET_CREATED') return
+    setMatches((prev) => mergeMatchUpdate(prev, payload as MatchDTO))
+  })
 
   const [actingOnId, setActingOnId] = useState<string | null>(null)
 

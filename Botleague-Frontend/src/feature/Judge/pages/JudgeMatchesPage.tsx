@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import api from "../../../shared/api/Base"
+import { useMultiSportMatchRealtime, mergeMatchUpdate } from "../../../shared/realtime/useMatchRealtime"
 
 interface JudgeMatch {
   matchId: string
+  eventSportId: string
   roundNumber?: number
   matchNumber?: number
   status: string
@@ -40,6 +42,20 @@ export default function JudgeMatchesPage() {
       .catch(() => setMatches([]))
       .finally(() => setLoading(false))
   }, [])
+
+  // A judge can be assigned matches across more than one sport — subscribe
+  // to live updates for every sport currently represented in the list.
+  const assignedSportIds = useMemo(
+    () => matches.map(m => m.eventSportId).filter(Boolean),
+    [matches]
+  )
+  useMultiSportMatchRealtime(assignedSportIds, (type, payload) => {
+    if (type === 'RANKINGS_UPDATED' || type === 'BRACKET_CREATED') return
+    const updated = payload as Partial<JudgeMatch> & { matchId: string }
+    // Only matches already in "my assigned matches" are relevant here —
+    // a sport-wide broadcast could include matches not assigned to this judge.
+    setMatches(prev => prev.some(m => m.matchId === updated.matchId) ? mergeMatchUpdate(prev, updated) : prev)
+  })
 
   const STATUS_TABS = ["ALL", "LIVE", "SCHEDULED", "COMPLETED"]
   const visible = filter === "ALL" ? matches : matches.filter(m => m.status === filter)
