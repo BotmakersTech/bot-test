@@ -650,7 +650,7 @@ function EditSportModal({
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <Edit2 size={16} style={{ color: ACCENT }} />
-            <span style={{ fontWeight: 700, fontSize: "0.95rem", fontFamily: ORG.fontHeading, letterSpacing: "0.06em" }}>
+            <span style={{ fontWeight: 700, fontSize: "0.95rem", fontFamily: ORG.fontHeading, letterSpacing: "0.06em", color: ORG.blueHeading }}>
               EDIT SPORT
             </span>
           </div>

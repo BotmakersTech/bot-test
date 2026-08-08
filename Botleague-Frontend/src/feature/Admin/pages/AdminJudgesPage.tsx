@@ -1,8 +1,36 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { Search, Users as UsersIcon } from "lucide-react"
 import { listUsers, type UserSummary } from "../../SuperAdmin/api/userManagement.api"
+import { ORG } from "../../Organizer/theme/organizerTheme"
+import "../../../styles/organizerTheme.css"
 
-const JUDGE_ROLES = ["ADMIN", "SUPER_ADMIN"]
+function RoleBadge({ role }: { role: string }) {
+  return (
+    <span
+      className="inline-flex items-center rounded-lg px-3 py-1 text-xs font-semibold italic"
+      style={{ color: ORG.violet, border: `1px solid ${ORG.violet}55`, background: "rgba(140,108,255,0.08)" }}
+    >
+      {role.replace(/_/g, " ")}
+    </span>
+  )
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const isActive = status === "ACTIVE"
+  const isPending = status === "PENDING"
+  const bg = isActive ? "#1fa952" : isPending ? "#a16207" : "#e04b4b"
+  return (
+    <span className="inline-block rounded-full px-4 py-1 text-xs font-semibold text-white" style={{ background: bg }}>
+      {status}
+    </span>
+  )
+}
+
+function avatarInitials(firstName?: string, lastName?: string, fallback?: string) {
+  const initials = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase()
+  return initials || fallback?.charAt(0).toUpperCase() || "?"
+}
 
 export default function AdminJudgesPage() {
   const navigate = useNavigate()
@@ -17,107 +45,131 @@ export default function AdminJudgesPage() {
     setError(null)
     listUsers(activeSearch || undefined, 0, 100)
       .then((res) => {
-        const filtered = res.content.filter((u) =>
-          u.allRoles?.some((r) => JUDGE_ROLES.includes(r))
-        )
+        const filtered = res.content.filter((u) => u.allRoles?.includes("JUDGE"))
         setJudges(filtered)
       })
       .catch(() => setError("Failed to load judges"))
       .finally(() => setLoading(false))
   }, [activeSearch])
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    setActiveSearch(search)
+  }
+
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-white p-8">
-      <div className="mb-6">
-        <h1 className="font-display text-[38px] font-medium text-[#0162d1]">Judge Ecosystem</h1>
-        <p className="text-gray-400 text-sm mt-1">
+    <div className="org-page-bg p-8">
+      <div style={{ position: "relative", zIndex: 1 }}>
+        <h1 className="font-display mb-2 text-[38px] font-medium text-[#0162d1] tracking-wide">
+          Judge Ecosystem
+        </h1>
+        <p className="mb-6 text-sm text-gray-500">
           {loading ? "Loading…" : `${judges.length} user${judges.length !== 1 ? "s" : ""} with judge-level access`}
         </p>
-      </div>
 
-      <div className="mb-5 rounded-xl bg-blue-500/10 border border-blue-500/20 px-4 py-3 text-sm text-blue-300">
-        Judges are users with <span className="font-semibold">MANAGER</span>,{" "}
-        <span className="font-semibold">ADMINISTRATOR</span>, or{" "}
-        <span className="font-semibold">SUPER_ADMIN</span> role. Assign roles via{" "}
-        <button
-          onClick={() => navigate("/admin/users")}
-          className="underline hover:text-blue-200"
+        <div
+          className="mb-6 rounded-xl px-4 py-3 text-sm"
+          style={{ background: "rgba(75,134,232,0.08)", border: "1px solid rgba(75,134,232,0.25)", color: ORG.blueHeading }}
         >
-          User Management
-        </button>
-        .
-      </div>
-
-      <div className="flex gap-2 mb-5">
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && setActiveSearch(search)}
-          placeholder="Search by name or email…"
-          className="flex-1 min-w-0 rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50"
-        />
-        <button
-          onClick={() => setActiveSearch(search)}
-          className="rounded-xl bg-[#fa4715] hover:bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition"
-        >
-          Search
-        </button>
-      </div>
-
-      {error ? (
-        <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-6 text-red-400 text-sm text-center">{error}</div>
-      ) : loading ? (
-        <div className="flex items-center justify-center py-20 text-gray-400">Loading…</div>
-      ) : judges.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <p className="text-gray-500">No judges found.</p>
-          <button
-            onClick={() => navigate("/admin/users")}
-            className="text-sm text-orange-400 hover:text-orange-300 transition"
-          >
-            Assign roles in User Management →
+          Judges are users with the <span className="font-semibold">JUDGE</span> role. Assign roles via{" "}
+          <button onClick={() => navigate("/admin/users")} className="underline hover:opacity-80">
+            User Management
           </button>
+          .
         </div>
-      ) : (
-        <div className="rounded-2xl border border-white/10 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-white/5 text-gray-400 text-xs uppercase">
-              <tr>
-                <th className="px-4 py-3 text-left">User</th>
-                <th className="px-4 py-3 text-left hidden md:table-cell">Email</th>
-                <th className="px-4 py-3 text-left hidden sm:table-cell">Role</th>
-                <th className="px-4 py-3 text-right">Action</th>
+
+        <form onSubmit={handleSearch} className="mb-6 flex flex-wrap items-center gap-4">
+          <div
+            className="flex flex-1 min-w-[300px] items-center overflow-hidden rounded-xl border shadow-sm"
+            style={{ borderColor: "rgba(75,134,232,0.3)" }}
+          >
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name or email…"
+              className="flex-1 px-5 py-3.5 text-[15px] text-[#374151] placeholder-gray-400 outline-none"
+            />
+            <button
+              type="submit"
+              className="flex h-full items-center justify-center self-stretch px-6"
+              style={{ background: ORG.gradientCta }}
+              aria-label="Search"
+            >
+              <Search size={18} className="text-white" />
+            </button>
+          </div>
+        </form>
+
+        {error && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">
+            {error}
+          </div>
+        )}
+
+        <div className="overflow-x-auto rounded-2xl border" style={{ borderColor: "rgba(75,134,232,0.25)" }}>
+          <table className="w-full border-collapse text-left">
+            <thead>
+              <tr style={{ background: ORG.gradientPill }}>
+                <th className="px-6 py-4 text-[15px] font-semibold text-white">User</th>
+                <th className="px-6 py-4 text-[15px] font-semibold text-white">BotLeague ID</th>
+                <th className="px-6 py-4 text-[15px] font-semibold text-white">Status</th>
+                <th className="px-6 py-4 text-[15px] font-semibold text-white">Mobile Number</th>
+                <th className="px-6 py-4 text-[15px] font-semibold text-white">Role</th>
+                <th className="px-6 py-4 text-[15px] font-semibold text-white">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
-              {judges.map((u) => (
-                <tr key={u.id} className="hover:bg-white/5 transition-colors">
-                  <td className="px-4 py-3">
+            <tbody className="bg-white">
+              {!error && loading && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-10 text-center text-sm text-gray-400">
+                    Loading judges…
+                  </td>
+                </tr>
+              )}
+              {!error && !loading && judges.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-10 text-center text-sm text-gray-400">
+                    No judges found.{" "}
+                    <button onClick={() => navigate("/admin/users")} className="font-semibold underline" style={{ color: ORG.blueHeading }}>
+                      Assign roles in User Management →
+                    </button>
+                  </td>
+                </tr>
+              )}
+              {!error && !loading && judges.map((u) => (
+                <tr key={u.id} className="border-t transition-colors hover:bg-[#f8f9ff]" style={{ borderColor: "rgba(75,134,232,0.14)" }}>
+                  <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       {u.profilePhotoUrl ? (
-                        <img src={u.profilePhotoUrl} alt="" className="h-8 w-8 rounded-full object-cover border border-white/10 shrink-0" />
+                        <img src={u.profilePhotoUrl} alt="" className="h-10 w-10 rounded-full object-cover" />
                       ) : (
-                        <div className="h-8 w-8 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center text-xs font-bold shrink-0">
-                          {(u.firstName ?? u.email ?? "?").charAt(0).toUpperCase()}
-                        </div>
+                        <span
+                          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                          style={{ background: ORG.gradientCta }}
+                        >
+                          {avatarInitials(u.firstName, u.lastName, u.email)}
+                        </span>
                       )}
-                      <span className="font-medium text-white">
-                        {[u.firstName, u.lastName].filter(Boolean).join(" ") || u.username || "—"}
-                      </span>
+                      <div>
+                        <div className="font-medium text-[#374151]">
+                          {[u.firstName, u.lastName].filter(Boolean).join(" ") || u.username || "—"}
+                        </div>
+                        <div className="text-xs text-gray-400">{u.email || u.phone}</div>
+                      </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-400 hidden md:table-cell">{u.email}</td>
-                  <td className="px-4 py-3 hidden sm:table-cell">
-                    <span className="rounded-full bg-purple-500/15 text-purple-400 border border-purple-500/30 px-2.5 py-0.5 text-xs font-semibold">
-                      {u.primaryRole}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-6 py-4 font-mono text-xs text-gray-500">{u.botleagueId}</td>
+                  <td className="px-6 py-4"><StatusBadge status={u.accountStatus} /></td>
+                  <td className="px-6 py-4 text-gray-500">{u.phone || "—"}</td>
+                  <td className="px-6 py-4"><RoleBadge role={u.primaryRole} /></td>
+                  <td className="px-6 py-4">
                     <button
                       onClick={() => navigate(`/admin/users/${u.id}`)}
-                      className="rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 text-xs font-medium text-white transition"
+                      className="rounded-lg px-5 py-2 text-sm font-semibold text-white"
+                      style={{ background: ORG.blue }}
                     >
-                      View →
+                      View
                     </button>
                   </td>
                 </tr>
@@ -125,7 +177,13 @@ export default function AdminJudgesPage() {
             </tbody>
           </table>
         </div>
-      )}
+
+        {!loading && !error && judges.length > 0 && (
+          <div className="mt-6 flex items-center gap-1.5 text-sm text-gray-400">
+            <UsersIcon size={13} /> {judges.length} total
+          </div>
+        )}
+      </div>
     </div>
   )
 }

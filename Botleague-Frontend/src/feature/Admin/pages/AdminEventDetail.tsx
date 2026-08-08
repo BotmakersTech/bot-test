@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { Plus, X, ChevronDown, Info, Calendar, Trash2 } from "lucide-react"
+import { Plus, X, ChevronDown, Info, Calendar, Trash2, Edit2 } from "lucide-react"
 import { useSelector } from "react-redux"
 import { useAdminEvents } from "../hooks/UseAdminEvent"
 import { useEventRealtime } from "../../../shared/realtime/useEventRealtime"
@@ -16,6 +16,7 @@ import SponsorManager from "../components/SponsorManager"
 import EventMediaField from "../../Organizer/components/EventMediaField"
 import EventDashboard from "../../../shared/components/EventDashboard/EventDashboard"
 import UserControlPanel from "../../../shared/components/EventDashboard/UserControlPanel"
+import { ORG } from "../../Organizer/theme/organizerTheme"
 
 // ─────────────────────────────────────────────────────────────
 // DESIGN TOKENS
@@ -28,7 +29,6 @@ const TEXT    = "#ffffff"
 const MUTED   = "#9ca3af"
 const LABEL   = "#e5e7eb"
 const SUCCESS = "#4ade80"
-const WARNING = "#fbbf24"
 const DANGER  = "#f87171"
 
 // ─────────────────────────────────────────────────────────────
@@ -488,54 +488,81 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange, limited
     catch (err: any) { setError(err?.message || "Save failed.") }
   }
 
+  // Same light chrome as AdminSport.tsx's EditSportModal — the two "Update"
+  // popups are meant to look identical, not just individually themed.
+  const evBorder = "rgba(75,134,232,0.3)"
+  const evInputStyle: React.CSSProperties = {
+    width: "100%", background: "#f8f9ff", border: `1px solid ${evBorder}`,
+    borderRadius: "8px", color: ORG.text, padding: "9px 12px", fontSize: "0.83rem",
+    outline: "none", boxSizing: "border-box",
+  }
+  const evSelectStyle: React.CSSProperties = { ...evInputStyle, appearance: "none", WebkitAppearance: "none", cursor: "pointer", paddingRight: "32px" }
+  const evDateInputStyle: React.CSSProperties = { ...evInputStyle, cursor: "pointer" }
+  const evLabelStyle: React.CSSProperties = {
+    fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
+    color: ORG.muted, marginBottom: "6px", display: "block",
+  }
+  const evGroupStyle: React.CSSProperties = { display: "flex", flexDirection: "column" }
+
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}
+    <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(8,8,8,0.6)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "32px 16px", overflowY: "auto" }}
          onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div style={{ background: "#2a2a2a", border: `1px solid rgba(250,71,21,0.22)`, borderRadius: "18px", width: "100%", maxWidth: "620px", maxHeight: "92vh", overflowY: "auto", boxShadow: "0 24px 60px rgba(0,0,0,0.5)" }}>
+      <div style={{ background: "#ffffff", border: `1.5px solid ${ORG.blue}`, borderRadius: "16px", width: "100%", maxWidth: "620px", overflow: "hidden", flexShrink: 0 }}>
         {/* header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 22px", borderBottom: `1px solid ${BORDER}`, background: "rgba(250,71,21,0.04)", borderRadius: "18px 18px 0 0" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 24px", borderBottom: "1px solid rgba(75,134,232,0.15)", background: "rgba(75,134,232,0.06)" }}>
           <div>
-            <div style={{ fontFamily: "'Sarpanch', sans-serif", fontWeight: 700, fontSize: "1rem", letterSpacing: "0.06em" }}>EDIT EVENT</div>
-            <div style={{ fontSize: "0.72rem", color: MUTED, marginTop: "2px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <Edit2 size={16} style={{ color: ORG.violet }} />
+              <span style={{ fontWeight: 700, fontSize: "0.95rem", fontFamily: ORG.fontHeading, letterSpacing: "0.06em", color: ORG.blueHeading }}>EDIT EVENT</span>
+            </div>
+            <div style={{ fontSize: "0.72rem", color: ORG.muted, marginTop: "2px", marginLeft: "26px" }}>
               {limitedEdit ? "Basic info only — event is published" : "Update event details"}
             </div>
           </div>
-          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${BORDER}`, borderRadius: "8px", color: MUTED, cursor: "pointer", padding: "6px", display: "flex" }}><X size={16} /></button>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: ORG.muted, cursor: "pointer", padding: "4px" }}><X size={18} /></button>
         </div>
         {/* body */}
-        <div style={{ padding: "20px 22px", display: "flex", flexDirection: "column", gap: "14px" }}>
+        <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "18px" }}>
           {limitedEdit && (
-            <div style={{ background: "rgba(251,191,36,0.07)", border: "1px solid rgba(251,191,36,0.22)", borderRadius: "8px", padding: "9px 13px", color: WARNING, fontSize: "0.78rem", fontWeight: 600 }}>
+            <div style={{ background: "rgba(161,98,7,0.08)", border: "1px solid rgba(161,98,7,0.25)", borderRadius: "8px", padding: "9px 13px", color: "#a16207", fontSize: "0.78rem", fontWeight: 600 }}>
               ✏️ Published events — only name, description, logo and organisation name can be changed.
             </div>
           )}
-          <FormField label="Event Name" required>
-            <input style={inputStyle} value={form.eventName} onChange={e => set("eventName", e.target.value)} />
-          </FormField>
-          <FormField label="Description">
-            <textarea style={{ ...inputStyle, resize: "vertical", minHeight: "80px", fontFamily: "inherit" }} value={form.eventDescription} onChange={e => set("eventDescription", e.target.value)} />
-          </FormField>
-          <FormField label="Logo URL">
-            <input style={inputStyle} placeholder="https://…" value={form.eventLogoUrl ?? ""} onChange={e => set("eventLogoUrl", e.target.value)} />
-          </FormField>
+          <div style={evGroupStyle}>
+            <label style={evLabelStyle}>Event Name <span style={{ color: ORG.violet }}>*</span></label>
+            <input style={evInputStyle} value={form.eventName} onChange={e => set("eventName", e.target.value)} />
+          </div>
+          <div style={evGroupStyle}>
+            <label style={evLabelStyle}>Description</label>
+            <textarea style={{ ...evInputStyle, resize: "vertical", minHeight: "80px", fontFamily: "inherit" }} value={form.eventDescription} onChange={e => set("eventDescription", e.target.value)} />
+          </div>
+          <div style={evGroupStyle}>
+            <label style={evLabelStyle}>Logo URL</label>
+            <input style={evInputStyle} placeholder="https://…" value={form.eventLogoUrl ?? ""} onChange={e => set("eventLogoUrl", e.target.value)} />
+          </div>
 
-          <EventMediaField eventId={event.id} slot="THUMBNAIL" kind="image" label="Thumbnail Image" currentUrl={event.eventThumbnailUrl} onMediaChange={onMediaChange} colors={{ border: BORDER, muted: MUTED, accent: ACCENT, danger: DANGER, uploadBg: "rgba(255,255,255,0.06)" }} />
-          <EventMediaField eventId={event.id} slot="TEASER_1" kind="video" label="Teaser Video 1" currentUrl={event.teaserVideo1Url} onMediaChange={onMediaChange} colors={{ border: BORDER, muted: MUTED, accent: ACCENT, danger: DANGER, uploadBg: "rgba(255,255,255,0.06)" }} />
-          <EventMediaField eventId={event.id} slot="TEASER_2" kind="video" label="Teaser Video 2" currentUrl={event.teaserVideo2Url} onMediaChange={onMediaChange} colors={{ border: BORDER, muted: MUTED, accent: ACCENT, danger: DANGER, uploadBg: "rgba(255,255,255,0.06)" }} />
+          <div style={{ background: "#f8f9ff", border: `1px solid ${evBorder}`, borderRadius: "10px", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "16px" }}>
+            <EventMediaField eventId={event.id} slot="THUMBNAIL" kind="image" label="Thumbnail Image" currentUrl={event.eventThumbnailUrl} onMediaChange={onMediaChange} colors={{ border: evBorder, muted: ORG.muted, accent: ORG.violet, danger: ORG.danger, uploadBg: "#f8f9ff" }} />
+            <EventMediaField eventId={event.id} slot="TEASER_1" kind="video" label="Teaser Video 1" currentUrl={event.teaserVideo1Url} onMediaChange={onMediaChange} colors={{ border: evBorder, muted: ORG.muted, accent: ORG.violet, danger: ORG.danger, uploadBg: "#f8f9ff" }} />
+            <EventMediaField eventId={event.id} slot="TEASER_2" kind="video" label="Teaser Video 2" currentUrl={event.teaserVideo2Url} onMediaChange={onMediaChange} colors={{ border: evBorder, muted: ORG.muted, accent: ORG.violet, danger: ORG.danger, uploadBg: "#f8f9ff" }} />
+          </div>
 
-          <FormField label="Organization Name">
-            <input style={inputStyle} value={form.organizationName} onChange={e => set("organizationName", e.target.value)} />
-          </FormField>
+          <div style={evGroupStyle}>
+            <label style={evLabelStyle}>Organization Name</label>
+            <input style={evInputStyle} value={form.organizationName} onChange={e => set("organizationName", e.target.value)} />
+          </div>
 
           {/* Extended fields — DRAFT or admin only */}
           {!limitedEdit && (
             <>
-              <FormField label="Organization URL">
-                <input style={inputStyle} value={form.organizationUrl} onChange={e => set("organizationUrl", e.target.value)} />
-              </FormField>
-              <FormField label="Venue Name">
-                <input style={inputStyle} value={form.venueName} onChange={e => set("venueName", e.target.value)} />
-              </FormField>
+              <div style={evGroupStyle}>
+                <label style={evLabelStyle}>Organization URL</label>
+                <input style={evInputStyle} value={form.organizationUrl} onChange={e => set("organizationUrl", e.target.value)} />
+              </div>
+              <div style={evGroupStyle}>
+                <label style={evLabelStyle}>Venue Name</label>
+                <input style={evInputStyle} value={form.venueName} onChange={e => set("venueName", e.target.value)} />
+              </div>
               <LocationSelects
                 country={form.country ?? ""}
                 state={form.state ?? ""}
@@ -543,34 +570,40 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange, limited
                 onCountry={v => set("country", v)}
                 onState={v => set("state", v)}
                 onCity={v => set("city", v)}
-                selectStyle={selectStyle}
-                inputStyle={inputStyle}
-                labelStyle={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: MUTED, marginBottom: "6px", display: "block" }}
+                selectStyle={evSelectStyle}
+                inputStyle={evInputStyle}
+                labelStyle={evLabelStyle}
                 gridStyle={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}
               />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                <FormField label="Start Date"><input type="date" style={dateInputStyle} value={form.startDate} onChange={e => set("startDate", e.target.value)} /></FormField>
-                <FormField label="End Date"><input type="date" style={dateInputStyle} value={form.endDate} min={form.startDate || undefined} onChange={e => set("endDate", e.target.value)} /></FormField>
+                <div style={evGroupStyle}>
+                  <label style={evLabelStyle}>Start Date</label>
+                  <input type="date" style={evDateInputStyle} value={form.startDate} onChange={e => set("startDate", e.target.value)} />
+                </div>
+                <div style={evGroupStyle}>
+                  <label style={evLabelStyle}>End Date</label>
+                  <input type="date" style={evDateInputStyle} value={form.endDate} min={form.startDate || undefined} onChange={e => set("endDate", e.target.value)} />
+                </div>
               </div>
             </>
           )}
 
-          <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}`, borderRadius: "10px", padding: "10px 14px" }}>
+          <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", background: "#f8f9ff", border: `1px solid ${evBorder}`, borderRadius: "10px", padding: "10px 14px" }}>
             <span>
-              <span style={{ display: "block", fontSize: "0.85rem", fontWeight: 600 }}>Volunteers needed</span>
-              <span style={{ display: "block", fontSize: "0.72rem", color: MUTED, marginTop: "2px" }}>Shows an "Apply for Volunteer" button on the public event page</span>
+              <span style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: ORG.text }}>Volunteers needed</span>
+              <span style={{ display: "block", fontSize: "0.72rem", color: ORG.muted, marginTop: "2px" }}>Shows an "Apply for Volunteer" button on the public event page</span>
             </span>
             <input type="checkbox" checked={form.volunteersNeeded ?? false}
               onChange={e => setForm(f => ({ ...f, volunteersNeeded: e.target.checked }))}
-              style={{ width: "18px", height: "18px", accentColor: ACCENT, flexShrink: 0 }} />
+              style={{ width: "18px", height: "18px", accentColor: ORG.violet, flexShrink: 0 }} />
           </label>
 
-          {error && <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "8px", padding: "10px 14px", color: DANGER, fontSize: "0.8rem", fontWeight: 600 }}>⚠️ {error}</div>}
+          {error && <div style={{ background: "rgba(224,75,75,0.08)", border: "1px solid rgba(224,75,75,0.25)", borderRadius: "8px", padding: "10px 14px", color: ORG.danger, fontSize: "0.8rem", fontWeight: 600 }}>⚠️ {error}</div>}
         </div>
         {/* footer */}
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", padding: "14px 22px 20px", borderTop: `1px solid ${BORDER}` }}>
-          <button onClick={onClose} disabled={saving} style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "8px", padding: "9px 18px", fontSize: "0.82rem", fontWeight: 600, cursor: saving ? "not-allowed" : "pointer" }}>Cancel</button>
-          <button onClick={handleSave} disabled={saving} style={{ background: saving ? "rgba(250,71,21,0.3)" : ACCENT, border: "none", color: "#fff", borderRadius: "8px", padding: "9px 22px", fontSize: "0.82rem", fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", padding: "16px 24px 20px", borderTop: "1px solid rgba(75,134,232,0.15)" }}>
+          <button onClick={onClose} disabled={saving} style={{ background: "#f1f3f9", border: "none", color: ORG.muted, borderRadius: "8px", padding: "10px 20px", fontSize: "0.85rem", fontWeight: 600, cursor: saving ? "not-allowed" : "pointer" }}>Cancel</button>
+          <button onClick={handleSave} disabled={saving} style={{ background: saving ? "rgba(76,142,231,0.5)" : ORG.gradientCta, border: "none", color: "#fff", borderRadius: "8px", padding: "10px 24px", fontSize: "0.85rem", fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
             {saving ? <><Spinner size={14} color="#fff" />Saving…</> : <>Save Changes</>}
           </button>
         </div>
