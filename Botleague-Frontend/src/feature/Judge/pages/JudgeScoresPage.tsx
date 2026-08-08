@@ -64,7 +64,7 @@ export default function JudgeScoresPage() {
   }
 
   const handleComplete = async () => {
-    if (!selectedId || !confirm("Mark match as complete and advance winner?")) return
+    if (!selectedId || !confirm("Submit this as the final score? An organiser or admin will need to approve it before the match completes and the winner advances.")) return
     setSaving(true); setError(null)
     try {
       await api.patch(`/v1/matches/${selectedId}/complete`)
@@ -146,7 +146,7 @@ export default function JudgeScoresPage() {
                 </button>
                 <button onClick={handleComplete} disabled={saving}
                   className="flex-1 rounded-xl bg-green-500/10 border border-green-500/30 py-2.5 text-sm font-semibold text-green-600 disabled:opacity-50">
-                  Complete & Advance
+                  Submit Final Score
                 </button>
               </div>
             </div>

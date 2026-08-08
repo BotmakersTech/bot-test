@@ -61,6 +61,7 @@ import SupportPage from "../feature/Support/pages/SupportPage";
 import AdminDashboard from "../feature/Admin/pages/AdminDashboard";
 import AdminEventPage from "../feature/Admin/pages/AdminEventDetail";
 import AdminSport from "../feature/Admin/pages/AdminSport";
+import AdminSportRankingPage from "../feature/Admin/pages/AdminSportRankingPage";
 import AdminAllSportsPage from "../feature/Admin/pages/AdminAllSportsPage";
 import AdminMatches from "../feature/Admin/pages/AdminMatches";
 import AdminRegistrations from "../feature/Admin/pages/AdminRegistrations";
@@ -288,6 +289,10 @@ function AppRoutes() {
         <Route
           path="/admin/events/:eventId/sports/:sportId"
           element={<RoleRoute roles={SPORT_HEAD_AND_UP}><AdminSport /></RoleRoute>}
+        />
+        <Route
+          path="/admin/events/:eventId/sports/:sportId/ranking"
+          element={<RoleRoute roles={SPORT_HEAD_AND_UP}><AdminSportRankingPage /></RoleRoute>}
         />
         <Route
           path="/admin/events/:eventId/sports/:sportId/create-match"

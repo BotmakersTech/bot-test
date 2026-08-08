@@ -51,6 +51,9 @@ export function useSportMatchRealtime(eventSportId: string | null | undefined) {
           case 'MATCH_STARTED':
           case 'MATCH_SCORE_UPDATED':
           case 'MATCH_RESULT_SUBMITTED':
+          case 'MATCH_RESULT_PENDING_APPROVAL': // judge/sport-head submitted, awaiting approval
+          case 'MATCH_RESULT_APPROVED':         // admin/organiser/event-head approved — now COMPLETED
+          case 'MATCH_RESULT_REJECTED':         // sent back to LIVE for correction
           case 'MATCH_COMPLETED':
           case 'MATCH_UPDATED':      // participant slots filled after winner/loser advancement
             dispatch(updateMatchRealtime(msg.payload as PublicMatchView))
