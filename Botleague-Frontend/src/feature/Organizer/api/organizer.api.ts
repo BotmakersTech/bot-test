@@ -585,6 +585,7 @@ export const decideVolunteerApplication = async (
 export interface Judge {
   id: string;
   eventId: string;
+  userId: string | null;
   name: string;
   email: string | null;
   phone: string | null;
@@ -597,6 +598,7 @@ export interface Judge {
 }
 
 export interface JudgeRequest {
+  userId?: string;
   name: string;
   email?: string;
   phone?: string;

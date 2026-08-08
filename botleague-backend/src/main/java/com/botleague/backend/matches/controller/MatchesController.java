@@ -331,4 +331,16 @@ public class MatchesController {
         UUID userId = UUID.fromString((String) authentication.getPrincipal());
         return ResponseEntity.ok(matchService.getMyMatches(userId));
     }
+
+    // =====================================================
+    // MY MATCHES AS JUDGE
+    // GET /api/v1/matches/my-judge-matches
+    // Returns only the matches an admin has explicitly assigned this judge to.
+    // =====================================================
+
+    @GetMapping("/my-judge-matches")
+    public ResponseEntity<List<MatchResponseDTO>> getMyMatchesAsJudge(Authentication authentication) {
+        UUID userId = UUID.fromString((String) authentication.getPrincipal());
+        return ResponseEntity.ok(matchService.getMyMatchesAsJudge(userId));
+    }
 }

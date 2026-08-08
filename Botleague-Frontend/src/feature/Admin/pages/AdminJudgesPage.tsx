@@ -165,11 +165,11 @@ export default function AdminJudgesPage() {
                   <td className="px-6 py-4"><RoleBadge role={u.primaryRole} /></td>
                   <td className="px-6 py-4">
                     <button
-                      onClick={() => navigate(`/admin/users/${u.id}`)}
+                      onClick={() => navigate(`/admin/judges/${u.id}`)}
                       className="rounded-lg px-5 py-2 text-sm font-semibold text-white"
                       style={{ background: ORG.blue }}
                     >
-                      View
+                      Manage
                     </button>
                   </td>
                 </tr>

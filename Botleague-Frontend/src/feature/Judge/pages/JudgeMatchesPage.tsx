@@ -35,7 +35,7 @@ export default function JudgeMatchesPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.get("/v1/matches/my")
+    api.get("/v1/matches/my-judge-matches")
       .then(r => setMatches(r.data ?? []))
       .catch(() => setMatches([]))
       .finally(() => setLoading(false))

@@ -30,9 +30,10 @@ export default function JudgeScoresPage() {
   const [saved, setSaved]   = useState(false)
   const [error, setError]   = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [submittedInfo, setSubmittedInfo] = useState<string | null>(null)
 
   useEffect(() => {
-    api.get("/v1/matches/my")
+    api.get("/v1/matches/my-judge-matches")
       .then(r => {
         const live = (r.data ?? []).filter((m: LiveMatch) => m.status === "LIVE")
         setLiveMatches(live)
@@ -69,6 +70,8 @@ export default function JudgeScoresPage() {
       await api.patch(`/v1/matches/${selectedId}/complete`)
       setLiveMatches(p => p.filter(m => m.matchId !== selectedId))
       setSelectedId(liveMatches.find(m => m.matchId !== selectedId)?.matchId ?? "")
+      setSubmittedInfo("Score submitted — waiting for an organiser or admin to approve.")
+      setTimeout(() => setSubmittedInfo(null), 5000)
     } catch (e: any) {
       setError(e?.response?.data?.message || "Failed to complete match")
     } finally { setSaving(false) }
@@ -80,6 +83,12 @@ export default function JudgeScoresPage() {
         <h1 className="font-display text-[38px] font-medium text-[#0162d1]">Score Entry</h1>
         <p className="text-sm text-[#6b7280] mt-0.5">Submit scores for live matches you are judging</p>
       </div>
+
+      {submittedInfo && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm font-medium text-amber-700">
+          {submittedInfo}
+        </div>
+      )}
 
       {loading ? (
         <div className="h-32 animate-pulse rounded-2xl bg-[#4b86e8]/8" />

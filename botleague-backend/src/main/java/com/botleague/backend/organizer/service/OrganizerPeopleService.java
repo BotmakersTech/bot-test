@@ -4,7 +4,9 @@ import com.botleague.backend.organizer.dto.OrganizerDTOs.*;
 import com.botleague.backend.organizer.entity.*;
 import com.botleague.backend.organizer.enums.VolunteerStatus;
 import com.botleague.backend.organizer.repository.*;
+import com.botleague.backend.auth.entity.User;
 import com.botleague.backend.auth.enums.AccountType;
+import com.botleague.backend.auth.repository.UserRepository;
 import com.botleague.backend.common.exception.ApiException;
 import com.botleague.backend.events.repository.EventRepository;
 import com.botleague.backend.notification.enums.NotificationPriority;
@@ -34,6 +36,7 @@ public class OrganizerPeopleService {
     private final EventJudgeRepository     judgeRepo;
     private final EventStaffRepository     staffRepo;
     private final EventRepository          eventRepo;
+    private final UserRepository           userRepo;
     private final UserRoleService          userRoleService;
     private final NotificationService      notificationService;
 
@@ -43,6 +46,7 @@ public class OrganizerPeopleService {
             EventJudgeRepository     judgeRepo,
             EventStaffRepository     staffRepo,
             EventRepository          eventRepo,
+            UserRepository           userRepo,
             UserRoleService          userRoleService,
             NotificationService      notificationService) {
         this.arenaRepo     = arenaRepo;
@@ -50,6 +54,7 @@ public class OrganizerPeopleService {
         this.judgeRepo     = judgeRepo;
         this.staffRepo     = staffRepo;
         this.eventRepo     = eventRepo;
+        this.userRepo      = userRepo;
         this.userRoleService = userRoleService;
         this.notificationService = notificationService;
     }
@@ -188,9 +193,21 @@ public class OrganizerPeopleService {
     public JudgeResponse createJudge(UUID eventId, JudgeRequest req) {
         EventJudge j = new EventJudge();
         j.setEventId(eventId);
-        j.setName(req.name);
-        j.setEmail(req.email);
-        j.setPhone(req.phone);
+        j.setUserId(req.userId);
+        // A real platform user's own profile is the source of truth for
+        // contact details — free-text overrides only apply to roster entries
+        // with no linked account.
+        if (req.userId != null) {
+            User user = userRepo.findById(req.userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+            j.setName(String.join(" ", java.util.Objects.toString(user.getFirstName(), ""), java.util.Objects.toString(user.getLastName(), "")).trim());
+            j.setEmail(user.getEmail());
+            j.setPhone(user.getPhone());
+        } else {
+            j.setName(req.name);
+            j.setEmail(req.email);
+            j.setPhone(req.phone);
+        }
         j.setCredentials(req.credentials);
         j.setAssignedSportId(req.assignedSportId);
         j.setAssignedArena(req.assignedArena);
@@ -201,6 +218,7 @@ public class OrganizerPeopleService {
 
     public JudgeResponse updateJudge(UUID judgeId, JudgeRequest req) {
         EventJudge j = judgeRepo.findById(judgeId).orElseThrow(() -> new ResourceNotFoundException("Judge not found"));
+        if (req.userId           != null) j.setUserId(req.userId);
         if (req.name            != null) j.setName(req.name);
         if (req.email           != null) j.setEmail(req.email);
         if (req.phone           != null) j.setPhone(req.phone);
@@ -286,7 +304,7 @@ public class OrganizerPeopleService {
 
     private JudgeResponse toJudgeResponse(EventJudge j) {
         JudgeResponse r = new JudgeResponse();
-        r.id = j.getId(); r.eventId = j.getEventId(); r.name = j.getName();
+        r.id = j.getId(); r.eventId = j.getEventId(); r.userId = j.getUserId(); r.name = j.getName();
         r.email = j.getEmail(); r.phone = j.getPhone(); r.credentials = j.getCredentials();
         r.assignedSportId = j.getAssignedSportId(); r.assignedArena = j.getAssignedArena();
         r.scoringRights = j.getScoringRights(); r.notes = j.getNotes(); r.createdAt = j.getCreatedAt();

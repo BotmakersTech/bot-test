@@ -11,5 +11,7 @@ import java.util.UUID;
 public interface EventJudgeRepository extends JpaRepository<EventJudge, UUID> {
     List<EventJudge> findByEventId(UUID eventId);
     List<EventJudge> findByEventIdAndAssignedSportId(UUID eventId, UUID sportId);
+    List<EventJudge> findByUserId(UUID userId);
+    java.util.Optional<EventJudge> findByEventIdAndUserId(UUID eventId, UUID userId);
     long countByEventId(UUID eventId);
 }

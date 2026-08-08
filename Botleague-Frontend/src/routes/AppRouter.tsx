@@ -68,6 +68,7 @@ import AdminReportsPage from "../feature/Admin/pages/AdminReportsPage";
 import AdminAnalyticsPage from "../feature/Admin/pages/AdminAnalyticsPage";
 import AdminAuditLogsPage from "../feature/Admin/pages/AdminAuditLogsPage";
 import AdminJudgesPage from "../feature/Admin/pages/AdminJudgesPage";
+import AdminJudgeAssignmentPage from "../feature/Admin/pages/AdminJudgeAssignmentPage";
 import AdminSponsorsPage from "../feature/Admin/pages/AdminSponsorsPage";
 import AdminSupportTicketsPage from "../feature/Admin/pages/AdminSupportTicketsPage";
 import AdminCertificatesPage from "../feature/Admin/pages/AdminCertificatesPage";
@@ -281,6 +282,7 @@ function AppRoutes() {
         <Route path="/admin/analytics"       element={<RoleRoute roles={ADMIN_AND_UP}><AdminAnalyticsPage /></RoleRoute>} />
         <Route path="/admin/audit-logs"      element={<RoleRoute roles={ADMIN_AND_UP}><AdminAuditLogsPage /></RoleRoute>} />
         <Route path="/admin/judges"          element={<RoleRoute roles={ADMIN_AND_UP}><AdminJudgesPage /></RoleRoute>} />
+        <Route path="/admin/judges/:userId"  element={<RoleRoute roles={ADMIN_AND_UP}><AdminJudgeAssignmentPage /></RoleRoute>} />
         <Route path="/admin/sponsors"        element={<RoleRoute roles={ADMIN_AND_UP}><AdminSponsorsPage /></RoleRoute>} />
         <Route path="/admin/support-tickets" element={<RoleRoute roles={ADMIN_AND_UP}><AdminSupportTicketsPage /></RoleRoute>} />
         <Route

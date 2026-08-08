@@ -11,7 +11,7 @@ import com.botleague.backend.common.exception.ApiException;
 import com.botleague.backend.events.entity.EventSports;
 import com.botleague.backend.events.repository.EventRepository;
 import com.botleague.backend.events.repository.EventSportsRepository;
-import com.botleague.backend.organizer.repository.EventJudgeRepository;
+import com.botleague.backend.matches.repository.MatchJudgeAssignmentRepository;
 import com.botleague.backend.ranking.repository.EventLeaderboardEntryRepository;
 import com.botleague.backend.role.repository.UserRoleRepository;
 
@@ -32,22 +32,22 @@ public class AuthorizationService {
     private final ResourceRoleAssignmentRepository resourceRoleAssignmentRepository;
     private final EventRepository eventRepository;
     private final EventSportsRepository eventSportsRepository;
-    private final EventJudgeRepository eventJudgeRepository;
     private final EventLeaderboardEntryRepository eventLeaderboardEntryRepository;
+    private final MatchJudgeAssignmentRepository matchJudgeAssignmentRepository;
 
     public AuthorizationService(
             UserRoleRepository userRoleRepository,
             ResourceRoleAssignmentRepository resourceRoleAssignmentRepository,
             EventRepository eventRepository,
             EventSportsRepository eventSportsRepository,
-            EventJudgeRepository eventJudgeRepository,
-            EventLeaderboardEntryRepository eventLeaderboardEntryRepository) {
+            EventLeaderboardEntryRepository eventLeaderboardEntryRepository,
+            MatchJudgeAssignmentRepository matchJudgeAssignmentRepository) {
         this.userRoleRepository = userRoleRepository;
         this.resourceRoleAssignmentRepository = resourceRoleAssignmentRepository;
         this.eventRepository = eventRepository;
         this.eventSportsRepository = eventSportsRepository;
-        this.eventJudgeRepository = eventJudgeRepository;
         this.eventLeaderboardEntryRepository = eventLeaderboardEntryRepository;
+        this.matchJudgeAssignmentRepository = matchJudgeAssignmentRepository;
     }
 
     // ── Checks ───────────────────────────────────────────────────────────
@@ -145,26 +145,21 @@ public class AuthorizationService {
     }
 
     /**
-     * A JUDGE may only score a match if they hold an EventJudge assignment
-     * for THIS event (linked to their own user account) with scoringRights
-     * still true, and — when that assignment is scoped to a specific sport —
-     * only for that sport. Previously any account with the global JUDGE role
-     * could score any match on the platform, which also meant revoking
-     * scoringRights on misconduct did nothing. Anyone who can manage the
-     * sport outright (admin/organiser/sport-head) can always score.
+     * A JUDGE may only score a match an admin has explicitly assigned them
+     * to (match_judge_assignments) — event-level EventJudge membership alone
+     * is onboarding, not a scoring grant, so revoking a single match
+     * assignment (or the whole EventJudge row) immediately removes scoring
+     * ability without touching anything else. Anyone who can manage the
+     * sport outright (admin/organiser/sport-head) can always score, and
+     * doesn't need a per-match assignment.
      */
-    public boolean canScoreMatch(UUID userId, UUID eventSportId) {
+    public boolean canScoreMatch(UUID userId, UUID eventSportId, UUID matchId) {
         if (eventSportId == null) return false;
         if (canManageSport(userId, eventSportId)) return true;
+        if (matchId == null) return false;
         if (!userRoleRepository.existsByUserIdAndRoleType(userId, AccountType.JUDGE)) return false;
 
-        UUID eventId = resolveEventIdForSport(eventSportId);
-        if (eventId == null) return false;
-
-        return eventJudgeRepository.findByEventId(eventId).stream()
-                .anyMatch(judge -> userId.equals(judge.getUserId())
-                        && Boolean.TRUE.equals(judge.getScoringRights())
-                        && (judge.getAssignedSportId() == null || eventSportId.equals(judge.getAssignedSportId())));
+        return matchJudgeAssignmentRepository.existsByMatchIdAndJudgeUserId(matchId, userId);
     }
 
     /** Deliberately excludes SPORT_HEAD and JUDGE — a submitter shouldn't self-approve. */
@@ -208,9 +203,9 @@ public class AuthorizationService {
         }
     }
 
-    public void assertCanScoreMatch(UUID userId, UUID eventSportId) {
-        if (!canScoreMatch(userId, eventSportId)) {
-            throw ApiException.forbidden("Insufficient role or event assignment required");
+    public void assertCanScoreMatch(UUID userId, UUID eventSportId, UUID matchId) {
+        if (!canScoreMatch(userId, eventSportId, matchId)) {
+            throw ApiException.forbidden("You are not assigned to judge this match");
         }
     }
 

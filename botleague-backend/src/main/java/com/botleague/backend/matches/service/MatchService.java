@@ -75,6 +75,7 @@ public class MatchService {
     private final ResourceRoleAssignmentRepository resourceRoleAssignmentRepository;
     private final NotificationService notificationService;
     private final AuditLogService auditLogService;
+    private final com.botleague.backend.matches.repository.MatchJudgeAssignmentRepository matchJudgeAssignmentRepository;
     private TournamentNotificationService tournamentNotificationService;
     private com.botleague.backend.ranking.service.RankingEngineService rankingEngineService;
 
@@ -94,7 +95,8 @@ public class MatchService {
             EventRepository eventRepository,
             ResourceRoleAssignmentRepository resourceRoleAssignmentRepository,
             NotificationService notificationService,
-            AuditLogService auditLogService
+            AuditLogService auditLogService,
+            com.botleague.backend.matches.repository.MatchJudgeAssignmentRepository matchJudgeAssignmentRepository
     ) {
         this.matchRepository = matchRepository;
         this.eventSportsRepository = eventSportsRepository;
@@ -108,6 +110,7 @@ public class MatchService {
         this.resourceRoleAssignmentRepository = resourceRoleAssignmentRepository;
         this.notificationService = notificationService;
         this.auditLogService = auditLogService;
+        this.matchJudgeAssignmentRepository = matchJudgeAssignmentRepository;
     }
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
@@ -743,7 +746,7 @@ public class MatchService {
                 .findById(matchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
 
-        validateCanScoreMatchForSport(authentication, match.getEventSportId());
+        validateCanScoreMatchForSport(authentication, match.getEventSportId(), match.getId());
 
         if (match.getStatus() != MatchStatus.LIVE) {
             throw ApiException.conflict(
@@ -802,7 +805,7 @@ public class MatchService {
         // matches from still being mutated.
         authorizationService.assertEventActiveForSport(match.getEventSportId());
 
-        validateCanScoreMatchForSport(authentication, match.getEventSportId());
+        validateCanScoreMatchForSport(authentication, match.getEventSportId(), match.getId());
 
         if (match.getStatus() != MatchStatus.LIVE) {
             throw ApiException.conflict(
@@ -923,7 +926,7 @@ public class MatchService {
         // matches from still being mutated.
         authorizationService.assertEventActiveForSport(match.getEventSportId());
 
-        validateCanScoreMatchForSport(authentication, match.getEventSportId());
+        validateCanScoreMatchForSport(authentication, match.getEventSportId(), match.getId());
 
         if (match.getStatus() != MatchStatus.LIVE) {
             throw ApiException.conflict(
@@ -1644,9 +1647,9 @@ public class MatchService {
      * the sport (platform admin, organiser owner, or an approved EVENT_HEAD/
      * SPORT_HEAD assignment). Delegates to the centralized AuthorizationService.
      */
-    private void validateCanScoreMatchForSport(Authentication authentication, UUID eventSportId) {
+    private void validateCanScoreMatchForSport(Authentication authentication, UUID eventSportId, UUID matchId) {
         UUID currentUserId = extractUserId(authentication);
-        authorizationService.assertCanScoreMatch(currentUserId, eventSportId);
+        authorizationService.assertCanScoreMatch(currentUserId, eventSportId, matchId);
     }
 
     /**
@@ -1854,6 +1857,30 @@ public class MatchService {
                 m -> m.getScheduledAt() != null ? m.getScheduledAt() : LocalDateTime.MIN));
 
         return toResponseList(myMatches);
+    }
+
+    // =====================================================
+    // GET MY MATCHES AS JUDGE
+    // GET /v1/matches/my-judge-matches
+    //
+    // Distinct from getMyMatches() above, which resolves matches via team
+    // membership (the competitor view) and always returns [] for a judge,
+    // who has no team. This resolves via match_judge_assignments instead —
+    // the explicit per-match grants an admin hands out on the Judge
+    // Ecosystem page.
+    // =====================================================
+
+    public List<MatchResponseDTO> getMyMatchesAsJudge(UUID userId) {
+        List<UUID> matchIds = matchJudgeAssignmentRepository.findByJudgeUserId(userId).stream()
+                .map(com.botleague.backend.matches.entity.MatchJudgeAssignment::getMatchId)
+                .collect(java.util.stream.Collectors.toList());
+        if (matchIds.isEmpty()) return List.of();
+
+        List<Match> matches = matchRepository.findAllById(matchIds);
+        matches.sort(java.util.Comparator.comparing(
+                m -> m.getScheduledAt() != null ? m.getScheduledAt() : LocalDateTime.MIN));
+
+        return toResponseList(matches);
     }
 
     private UUID extractUserId(Authentication authentication) {

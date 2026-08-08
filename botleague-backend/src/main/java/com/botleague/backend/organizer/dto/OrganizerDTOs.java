@@ -121,6 +121,7 @@ public final class OrganizerDTOs {
     // =========================================================================
 
     public static class JudgeRequest {
+        public UUID userId;
         public String name;
         public String email;
         public String phone;
@@ -134,6 +135,7 @@ public final class OrganizerDTOs {
     public static class JudgeResponse {
         public UUID id;
         public UUID eventId;
+        public UUID userId;
         public String name;
         public String email;
         public String phone;
