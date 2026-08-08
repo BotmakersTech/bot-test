@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { Plus, X, ChevronDown, Info, Calendar, Trash2, Edit2 } from "lucide-react"
+import { X, Trash2, Edit2 } from "lucide-react"
 import { useSelector } from "react-redux"
 import { useAdminEvents } from "../hooks/UseAdminEvent"
 import { useEventRealtime } from "../../../shared/realtime/useEventRealtime"
@@ -16,6 +16,7 @@ import SponsorManager from "../components/SponsorManager"
 import EventMediaField from "../../Organizer/components/EventMediaField"
 import EventDashboard from "../../../shared/components/EventDashboard/EventDashboard"
 import UserControlPanel from "../../../shared/components/EventDashboard/UserControlPanel"
+import AddSportModal from "../../../shared/components/AddSportModal/AddSportModal"
 import { ORG } from "../../Organizer/theme/organizerTheme"
 
 // ─────────────────────────────────────────────────────────────
@@ -27,7 +28,6 @@ const BORDER  = "rgba(255,255,255,0.08)"
 const ACCENT  = "#fa4715"
 const TEXT    = "#ffffff"
 const MUTED   = "#9ca3af"
-const LABEL   = "#e5e7eb"
 const SUCCESS = "#4ade80"
 const DANGER  = "#f87171"
 
@@ -57,23 +57,6 @@ interface EventSportItem {
   registrations?: { id: string; teamName: string; teamLogoUrl?: string; lineup?: unknown[] }[]
 }
 
-interface SportConfig {
-  value: string
-  label: string
-  weightClasses: { value: string; label: string }[]
-  hint?: string
-}
-
-interface AgeGroupConfig {
-  value: string
-  label: string
-  subLabel: string
-  connectivity: string
-  sports: SportConfig[]
-}
-
-type AddSportForm = CreateEventSportRequest
-
 // ─────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────
@@ -87,353 +70,9 @@ function toLabel(raw?: string | null): string {
     .replace(/\b\w/g, c => c.toUpperCase())
 }
 
-// ─────────────────────────────────────────────────────────────
-// AGE GROUP → SPORT CATALOGUE
-// ─────────────────────────────────────────────────────────────
-
-const AGE_GROUP_CATALOGUE: AgeGroupConfig[] = [
-  {
-    value: "JUNIOR_INNOVATORS",
-    label: "Junior Innovators",
-    subLabel: "8–12 yrs",
-    connectivity: "Wired / Wireless",
-    sports: [
-      { value: "PROJECT_BASED",           label: "Project Based Competition",  hint: "Concept & prototype presentation", weightClasses: [] },
-      { value: "PLUG_N_PLAY_RACE_SOCCER", label: "Plug N Play — Race / Soccer", hint: "1 kg · 20×20×20 cm · single bot",   weightClasses: [{ value: "1KG", label: "1 kg" }] },
-      { value: "LINE_FOLLOWER",           label: "Line Follower",               hint: "1 kg · 20×20×20 cm",               weightClasses: [{ value: "1KG", label: "1 kg" }] },
-      { value: "MANUAL_TASK",             label: "Manual Task",                 hint: "1 kg · 20×20×20 cm",               weightClasses: [{ value: "1KG", label: "1 kg" }] },
-      { value: "ROBO_SUMO",              label: "Robo Sumo",                   hint: "1 kg · 20×20×20 cm",               weightClasses: [{ value: "1KG", label: "1 kg" }] }
-    ]
-  },
-  {
-    value: "YOUNG_ENGINEERS",
-    label: "Young Engineers",
-    subLabel: "12–18 yrs",
-    connectivity: "Wireless",
-    sports: [
-      { value: "ROBO_SOCCER",         label: "Robo Soccer",                hint: "3 kg · 30×30×30 cm",   weightClasses: [{ value: "3KG",   label: "3 kg"   }] },
-      { value: "LINE_FOLLOWER_AUTO",  label: "Line Follower (Auto)",        hint: "1.5 kg",               weightClasses: [{ value: "1_5KG", label: "1.5 kg" }] },
-      { value: "THEME_BASED_TASKING", label: "Theme-Based Tasking",         hint: "3 kg",                 weightClasses: [{ value: "3KG",   label: "3 kg"   }] },
-      { value: "ROBO_WAR",            label: "RoboWar",                     hint: "1.5 kg only",          weightClasses: [{ value: "1_5KG", label: "1.5 kg" }] },
-      { value: "DRONE_RACING_SOCCER", label: "Drone Racing / Drone Soccer", hint: "20 cm · 30×30×30 cm", weightClasses: [{ value: "OPEN",  label: "Open"   }] },
-      { value: "RC_ROBO_RACING",      label: "RC Racing / Robo Racing",     hint: "",                     weightClasses: [{ value: "OPEN",  label: "Open"   }] }
-    ]
-  },
-  {
-    value: "ROBO_MINDS",
-    label: "Robo Minds",
-    subLabel: "18+ yrs",
-    connectivity: "Wireless",
-    sports: [
-      { value: "ROBO_SOCCER_OPEN",         label: "Robo Soccer",                      hint: "5 kg · 45×45×45 cm",         weightClasses: [{ value: "5KG", label: "5 kg" }] },
-      { value: "THEME_BASED_TASKING_OPEN", label: "Theme-Based Tasking",               hint: "5 kg · 45×45×45 cm",         weightClasses: [{ value: "5KG", label: "5 kg" }] },
-      { value: "ROBO_WAR_OPEN",            label: "RoboWar",                            hint: "1.5 / 8 / 15 / 30 / 60 kg", weightClasses: [
-        { value: "1_5KG", label: "1.5 kg" },
-        { value: "8KG",   label: "8 kg"   },
-        { value: "15KG",  label: "15 kg"  },
-        { value: "30KG",  label: "30 kg"  },
-        { value: "60KG",  label: "60 kg"  }
-      ]},
-      { value: "DRONE_RACING_FPV",  label: "Drone Racing (FPV) / Drone Soccer", hint: "",          weightClasses: [{ value: "OPEN", label: "Open" }] },
-      { value: "RC_RACING_NITRO",   label: "RC Racing (Nitro + Electric)",       hint: "1:8 · 1:12", weightClasses: [{ value: "OPEN", label: "Open" }] },
-      { value: "AEROMODELLING",     label: "Aeromodelling",                      hint: "",          weightClasses: [{ value: "OPEN", label: "Open" }] }
-    ]
-  }
-]
-
-const FORMAT_TYPE_OPTIONS = [
-  { value: "KNOCKOUT",           label: "Knockout"           },
-  { value: "ROUND_ROBIN",        label: "Round Robin"        },
-  { value: "SWISS",              label: "Swiss"              },
-  { value: "DOUBLE_ELIMINATION", label: "Double Elimination" }
-]
-
-const INITIAL_FORM: AddSportForm = {
-  sport: "",
-  ageGroup: "",
-  sportData: "",
-  weightClass: "",
-  minTeamSize: 2,
-  maxTeamSize: 5,
-  maxTeams: 16,
-  entryFee: 0,
-  prizeMoney: 0,
-  formatType: "",
-  registrationStartDate: "",
-  registrationEndDate: ""
-}
-
-// ─────────────────────────────────────────────────────────────
-// SPINNER
-// ─────────────────────────────────────────────────────────────
-
 function Spinner({ size = 16, color = ACCENT }: { size?: number; color?: string }) {
   return (
     <span style={{ display: "inline-block", width: size, height: size, border: `2px solid rgba(255,255,255,0.12)`, borderTop: `2px solid ${color}`, borderRadius: "50%", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
-  )
-}
-
-// ─────────────────────────────────────────────────────────────
-// FORM FIELD
-// ─────────────────────────────────────────────────────────────
-
-function FormField({ label, children, required }: { label: string; children: React.ReactNode; required?: boolean }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-      <label style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: MUTED }}>
-        {label}{required && <span style={{ color: ACCENT, marginLeft: "3px" }}>*</span>}
-      </label>
-      {children}
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────
-// INPUT STYLES
-// ─────────────────────────────────────────────────────────────
-
-const inputStyle: React.CSSProperties = {
-  background: "rgba(0,0,0,0.35)",
-  border: `1px solid rgba(255,255,255,0.12)`,
-  borderRadius: "8px",
-  color: TEXT,
-  fontSize: "0.85rem",
-  padding: "9px 12px",
-  outline: "none",
-  width: "100%",
-  boxSizing: "border-box"
-}
-const selectStyle: React.CSSProperties = { ...inputStyle, appearance: "none", WebkitAppearance: "none", cursor: "pointer", paddingRight: "32px" }
-const dateInputStyle: React.CSSProperties = { ...inputStyle, colorScheme: "dark", cursor: "pointer" }
-
-// ─────────────────────────────────────────────────────────────
-// SECTION HEADER
-// ─────────────────────────────────────────────────────────────
-
-function SectionHeader({ step, currentStep, label, subLabel }: { step: number; currentStep: number; totalSteps: number; label: string; subLabel?: string }) {
-  const done   = currentStep > step
-  const active = currentStep === step
-  return (
-    <div style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", color: active ? ACCENT : done ? "rgba(250,71,21,0.55)" : MUTED, marginBottom: "10px", display: "flex", alignItems: "center", gap: "7px" }}>
-      <span style={{ background: active ? ACCENT : done ? "rgba(250,71,21,0.4)" : "rgba(255,255,255,0.12)", color: "#fff", borderRadius: "50%", width: "18px", height: "18px", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: 800, flexShrink: 0 }}>
-        {done ? "✓" : step}
-      </span>
-      {label}
-      {subLabel && <span style={{ color: MUTED, fontWeight: 400, textTransform: "none", letterSpacing: 0, fontSize: "0.7rem" }}>— {subLabel}</span>}
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────
-// AGE GROUP PICKER
-// ─────────────────────────────────────────────────────────────
-
-function AgeGroupPicker({ selected, onSelect }: { selected: string; onSelect: (v: string) => void }) {
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
-      {AGE_GROUP_CATALOGUE.map(ag => {
-        const active = selected === ag.value
-        return (
-          <button key={ag.value} onClick={() => onSelect(ag.value)} style={{ background: active ? "rgba(250,71,21,0.12)" : "rgba(0,0,0,0.3)", border: `1.5px solid ${active ? "rgba(250,71,21,0.5)" : "rgba(255,255,255,0.09)"}`, borderRadius: "10px", padding: "12px 14px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", display: "flex", flexDirection: "column", gap: "3px" }}>
-            <span style={{ color: active ? ACCENT : TEXT, fontWeight: 700, fontSize: "0.82rem", display: "block" }}>{ag.label}</span>
-            <span style={{ color: active ? "rgba(250,71,21,0.75)" : MUTED, fontSize: "0.68rem", display: "block" }}>{ag.subLabel}</span>
-            <span style={{ marginTop: "4px", background: active ? "rgba(250,71,21,0.15)" : "rgba(255,255,255,0.06)", border: `1px solid ${active ? "rgba(250,71,21,0.25)" : BORDER}`, color: active ? ACCENT : MUTED, borderRadius: "4px", fontSize: "0.6rem", padding: "2px 6px", display: "inline-block", fontWeight: 600 }}>{ag.connectivity}</span>
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────
-// SPORT PICKER
-// ─────────────────────────────────────────────────────────────
-
-function SportPicker({ ageGroupValue, selected, onSelect }: { ageGroupValue: string; selected: string; onSelect: (s: SportConfig) => void }) {
-  const ag = AGE_GROUP_CATALOGUE.find(a => a.value === ageGroupValue)
-  if (!ag) return null
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
-      {ag.sports.map(sp => {
-        const active = selected === sp.value
-        return (
-          <button key={sp.value} onClick={() => onSelect(sp)} style={{ background: active ? "rgba(250,71,21,0.1)" : "rgba(0,0,0,0.25)", border: `1.5px solid ${active ? "rgba(250,71,21,0.45)" : "rgba(255,255,255,0.07)"}`, borderRadius: "9px", padding: "10px 14px", cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", transition: "all 0.12s" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-              <span style={{ color: active ? ACCENT : TEXT, fontWeight: 600, fontSize: "0.83rem" }}>{sp.label}</span>
-              {sp.hint && <span style={{ color: MUTED, fontSize: "0.68rem", display: "flex", alignItems: "center", gap: "4px" }}><Info size={10} style={{ flexShrink: 0 }} />{sp.hint}</span>}
-            </div>
-            <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", justifyContent: "flex-end" }}>
-              {sp.weightClasses.map(wc => (
-                <span key={wc.value} style={{ background: active ? "rgba(250,71,21,0.18)" : "rgba(255,255,255,0.07)", border: `1px solid ${active ? "rgba(250,71,21,0.3)" : BORDER}`, color: active ? ACCENT : MUTED, borderRadius: "5px", fontSize: "0.62rem", padding: "2px 7px", fontWeight: 700, whiteSpace: "nowrap" }}>{wc.label}</span>
-              ))}
-            </div>
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────
-// WEIGHT CLASS PICKER
-// ─────────────────────────────────────────────────────────────
-
-function WeightClassPicker({ weightClasses, selected, onSelect }: { weightClasses: { value: string; label: string }[]; selected: string; onSelect: (v: string) => void }) {
-  if (weightClasses.length <= 1) return null
-  return (
-    <FormField label="Weight Class" required>
-      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-        {weightClasses.map(wc => {
-          const active = selected === wc.value
-          return <button key={wc.value} onClick={() => onSelect(wc.value)} style={{ background: active ? "rgba(250,71,21,0.15)" : "rgba(0,0,0,0.3)", border: `1.5px solid ${active ? "rgba(250,71,21,0.5)" : "rgba(255,255,255,0.1)"}`, color: active ? ACCENT : LABEL, borderRadius: "8px", fontSize: "0.8rem", fontWeight: 700, padding: "7px 16px", cursor: "pointer", transition: "all 0.12s" }}>{wc.label}</button>
-        })}
-      </div>
-    </FormField>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────
-// ADD SPORT MODAL
-// ─────────────────────────────────────────────────────────────
-
-interface AddSportModalProps {
-  eventId: string
-  onAddSport: (request: CreateEventSportRequest) => Promise<unknown>
-  submitting: boolean
-  onClose: () => void
-}
-
-function AddSportModal({ eventId: _eventId, onAddSport, submitting, onClose }: AddSportModalProps) {
-  const [form, setForm]   = useState<AddSportForm>(INITIAL_FORM)
-  const [error, setError] = useState<string | null>(null)
-
-  const selectedAg       = AGE_GROUP_CATALOGUE.find(a => a.value === form.ageGroup) || null
-  const selectedSp       = selectedAg?.sports.find(s => s.value === form.sport) || null
-  const needWeightPicker = (selectedSp?.weightClasses?.length ?? 0) > 1
-  const step             = !form.ageGroup ? 1 : !form.sport ? 2 : 3
-
-  const set = (key: keyof AddSportForm, value: string | number) => setForm(f => ({ ...f, [key]: value }))
-
-  const handleAgeGroupSelect = (value: string) => setForm(f => ({ ...f, ageGroup: value, sport: "", weightClass: "" }))
-
-  const handleSportSelect = (sport: SportConfig) => {
-    const wc = sport.weightClasses.length === 1 ? sport.weightClasses[0].value : ""
-    setForm(f => ({ ...f, sport: sport.value, weightClass: wc }))
-  }
-
-  const handleSubmit = async () => {
-    if (!form.ageGroup)                                              { setError("Please select an age group.");                         return }
-    if (!form.sport)                                                 { setError("Please select a sport.");                              return }
-    if (needWeightPicker && !form.weightClass)                       { setError("Please select a weight class.");                       return }
-    if (!form.formatType)                                            { setError("Please select a format type.");                        return }
-    if (!form.registrationStartDate)                                 { setError("Please set a registration start date.");               return }
-    if (!form.registrationEndDate)                                   { setError("Please set a registration end date.");                 return }
-    if (form.registrationStartDate > form.registrationEndDate)       { setError("Registration start date must be before end date.");    return }
-    if ((form.minTeamSize ?? 0) > (form.maxTeamSize ?? 0))           { setError("Min team size cannot exceed max team size.");          return }
-    setError(null)
-    try {
-      await onAddSport({ ...form, weightClass: form.weightClass || "OPEN" })
-      onClose()
-    } catch (err: any) {
-      setError(err?.message || "Something went wrong.")
-    }
-  }
-
-  return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div style={{ background: "#2a2a2a", border: `1px solid rgba(250,71,21,0.22)`, borderRadius: "18px", width: "100%", maxWidth: "640px", maxHeight: "92vh", overflowY: "auto", boxShadow: "0 24px 60px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column" }}>
-
-        {/* HEADER */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 22px", borderBottom: `1px solid ${BORDER}`, background: "rgba(250,71,21,0.04)", borderRadius: "18px 18px 0 0", flexShrink: 0 }}>
-          <div>
-            <div style={{ fontFamily: "'Sarpanch', sans-serif", fontWeight: 700, fontSize: "1rem", letterSpacing: "0.06em" }}>ADD SPORT</div>
-            <div style={{ fontSize: "0.72rem", color: MUTED, marginTop: "2px" }}>Configure a new sport for this event</div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            {[1, 2, 3].map(n => <div key={n} style={{ width: n === step ? "20px" : "8px", height: "8px", borderRadius: "99px", background: n <= step ? ACCENT : "rgba(255,255,255,0.18)", opacity: n < step ? 0.5 : 1, transition: "all 0.25s" }} />)}
-            <button onClick={onClose} style={{ marginLeft: "8px", background: "rgba(255,255,255,0.06)", border: `1px solid ${BORDER}`, borderRadius: "8px", color: MUTED, cursor: "pointer", padding: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={16} /></button>
-          </div>
-        </div>
-
-        {/* BODY */}
-        <div style={{ padding: "20px 22px", display: "flex", flexDirection: "column", gap: "20px", flex: 1, overflowY: "auto" }}>
-
-          {/* STEP 1 */}
-          <div>
-            <SectionHeader step={1} currentStep={step} totalSteps={3} label="Age Category" />
-            <AgeGroupPicker selected={form.ageGroup} onSelect={handleAgeGroupSelect} />
-          </div>
-
-          {/* STEP 2 */}
-          {form.ageGroup && (
-            <div>
-              <SectionHeader step={2} currentStep={step} totalSteps={3} label="Select Sport" subLabel={`${selectedAg?.label} · ${selectedAg?.subLabel}`} />
-              <SportPicker ageGroupValue={form.ageGroup} selected={form.sport} onSelect={handleSportSelect} />
-            </div>
-          )}
-
-          {/* STEP 3 */}
-          {form.sport && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-              <SectionHeader step={3} currentStep={step} totalSteps={3} label="Configuration" />
-
-              {needWeightPicker && <WeightClassPicker weightClasses={selectedSp!.weightClasses} selected={form.weightClass ?? ""} onSelect={v => set("weightClass", v)} />}
-
-              <FormField label="Format Type" required>
-                <div style={{ position: "relative" }}>
-                  <select style={selectStyle} value={form.formatType} onChange={e => set("formatType", e.target.value)}>
-                    <option value="">Select format…</option>
-                    {FORMAT_TYPE_OPTIONS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
-                  </select>
-                  <ChevronDown size={14} style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", color: MUTED, pointerEvents: "none" }} />
-                </div>
-              </FormField>
-
-              <FormField label="Description">
-                <textarea style={{ ...inputStyle, resize: "vertical", minHeight: "68px", fontFamily: "inherit" }} placeholder="Describe this sport category…" value={form.sportData} onChange={e => set("sportData", e.target.value)} />
-              </FormField>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
-                <FormField label="Min Team Size" required><input type="number" min={1} style={inputStyle} value={form.minTeamSize} onChange={e => set("minTeamSize", parseInt(e.target.value) || 1)} /></FormField>
-                <FormField label="Max Team Size" required><input type="number" min={1} style={inputStyle} value={form.maxTeamSize} onChange={e => set("maxTeamSize", parseInt(e.target.value) || 1)} /></FormField>
-                <FormField label="Max Teams" required><input type="number" min={2} style={inputStyle} value={form.maxTeams} onChange={e => set("maxTeams", parseInt(e.target.value) || 2)} /></FormField>
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                <FormField label="Entry Fee (₹)" required><input type="number" min={0} step={50} style={inputStyle} value={form.entryFee} onChange={e => set("entryFee", parseFloat(e.target.value) || 0)} /></FormField>
-                <FormField label="Prize Money (₹)" required><input type="number" min={0} step={1000} style={inputStyle} value={form.prizeMoney} onChange={e => set("prizeMoney", parseFloat(e.target.value) || 0)} /></FormField>
-              </div>
-
-              {/* REGISTRATION DATES */}
-              <div style={{ background: "rgba(250,71,21,0.04)", border: "1px solid rgba(250,71,21,0.14)", borderRadius: "10px", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: ACCENT }}>
-                  <Calendar size={13} />Registration Window
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                  <FormField label="Start Date" required><input type="date" style={dateInputStyle} value={form.registrationStartDate} onChange={e => set("registrationStartDate", e.target.value)} /></FormField>
-                  <FormField label="End Date" required><input type="date" style={dateInputStyle} value={form.registrationEndDate} min={form.registrationStartDate || undefined} onChange={e => set("registrationEndDate", e.target.value)} /></FormField>
-                </div>
-                {form.registrationStartDate && form.registrationEndDate && (
-                  <div style={{ fontSize: "0.72rem", color: SUCCESS, background: "rgba(74,222,128,0.07)", border: "1px solid rgba(74,222,128,0.18)", borderRadius: "6px", padding: "6px 10px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                    ✅ Open from <strong>{new Date(form.registrationStartDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</strong> to <strong>{new Date(form.registrationEndDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</strong>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {error && <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "8px", padding: "10px 14px", color: DANGER, fontSize: "0.8rem", fontWeight: 600 }}>⚠️ {error}</div>}
-        </div>
-
-        {/* FOOTER */}
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", padding: "14px 22px 20px", borderTop: `1px solid ${BORDER}`, flexShrink: 0 }}>
-          <button onClick={onClose} disabled={submitting} style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "8px", padding: "9px 18px", fontSize: "0.82rem", fontWeight: 600, cursor: submitting ? "not-allowed" : "pointer" }}>Cancel</button>
-          <button onClick={handleSubmit} disabled={submitting || step < 3} style={{ background: (submitting || step < 3) ? "rgba(250,71,21,0.3)" : ACCENT, border: "none", color: step < 3 ? MUTED : "#fff", borderRadius: "8px", padding: "9px 22px", fontSize: "0.82rem", fontWeight: 700, cursor: (submitting || step < 3) ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "8px", transition: "all 0.15s" }}>
-            {submitting ? <><Spinner size={14} color="#fff" />Adding…</> : <><Plus size={14} />Add Sport</>}
-          </button>
-        </div>
-      </div>
-    </div>
   )
 }
 
@@ -797,7 +436,7 @@ export default function AdminEventPage() {
       `}</style>
 
       {showAddSport && eventId && (
-        <AddSportModal eventId={eventId} onAddSport={handleAddSport} submitting={sportLoading} onClose={() => setShowAddSport(false)} />
+        <AddSportModal onAddSport={handleAddSport} submitting={sportLoading} onClose={() => setShowAddSport(false)} />
       )}
 
       {showEditEvent && event && (

@@ -1,11 +1,13 @@
 // Canonical age-group -> sport catalogue.
 //
-// This exact value set is independently duplicated (in two different
-// shapes) across AdminEventDetail.tsx, OrganizerEventDetailPage.tsx,
-// AdminSport.tsx, and OrganizerSportDetailPage.tsx — the underlying
-// value/label strings are confirmed identical everywhere, so this file is a
-// new, independent canonical copy (of the richer shape) for the News
-// feature to import, rather than touching any of those four working files.
+// This value set was previously duplicated (in slightly different shapes)
+// across AdminEventDetail.tsx, OrganizerEventDetailPage.tsx, AdminSport.tsx,
+// and OrganizerSportDetailPage.tsx. AdminEventDetail.tsx and
+// OrganizerEventDetailPage.tsx have since been migrated to import this file
+// directly (see shared/components/AddSportModal/AddSportModal.tsx, which
+// both pages now render). AdminSport.tsx and OrganizerSportDetailPage.tsx
+// still carry their own separate copies for unrelated display/lookup
+// purposes and remain out of scope.
 
 export interface SportConfig {
   value: string;
