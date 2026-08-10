@@ -174,7 +174,8 @@ public class NewsService {
         }
         newsRepository.deleteById(id);
         try {
-            auditLogService.log("NEWS_DELETED", "NEWS", id, news.getTitle(), null, null);
+            auditLogService.log("NEWS_DELETED", "NEWS", id, news.getTitle(),
+                    "isPinned=" + news.getIsPinned() + ", isArchived=" + news.getIsArchived(), "DELETED");
         } catch (Exception ignored) {
         }
     }

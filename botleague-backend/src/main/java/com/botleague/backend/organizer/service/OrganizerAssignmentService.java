@@ -83,6 +83,18 @@ public class OrganizerAssignmentService {
             throw ApiException.conflict("User is already assigned to this event");
         }
 
+        // Multiple simultaneous EVENT_HEADs per event are allowed, so this new
+        // assignment isn't necessarily "replacing" a single prior holder — capture
+        // whoever currently holds it (if anyone) for the audit trail.
+        List<ResourceRoleAssignment> existingHeads = assignmentRepo.findByEventIdAndScopeTypeAndRoleTypeAndStatus(
+                eventId, ResourceRoleAssignment.SCOPE_EVENT, "EVENT_HEAD", ResourceRoleAssignment.STATUS_APPROVED);
+        String oldHeads = existingHeads.isEmpty() ? "NONE" : existingHeads.stream()
+                .map(a -> {
+                    User existingUser = userRepository.findById(a.getUserId()).orElse(null);
+                    return "EVENT_HEAD:" + (existingUser != null ? existingUser.getEmail() : a.getUserId());
+                })
+                .collect(Collectors.joining(", "));
+
         ResourceRoleAssignment assignment = new ResourceRoleAssignment();
         assignment.setUserId(userId);
         assignment.setScopeType(ResourceRoleAssignment.SCOPE_EVENT);
@@ -107,7 +119,7 @@ public class OrganizerAssignmentService {
                 NotificationTargetType.USER, userId,
                 "/organizer/events/" + eventId
         );
-        auditLogService.log("ROLE_ASSIGNED", "EVENT", eventId, event.getEventName(), null, "EVENT_HEAD:" + userId);
+        auditLogService.log("ROLE_ASSIGNED", "EVENT", eventId, event.getEventName(), oldHeads, "EVENT_HEAD:" + userId);
 
         return toResponse(saved, event, null);
     }

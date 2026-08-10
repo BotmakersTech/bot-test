@@ -14,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.botleague.backend.audit.util.AuditDiff;
 import com.botleague.backend.chat.service.ChatService;
 import com.botleague.backend.common.security.AuthorizationService;
 import com.botleague.backend.admin.dto.AdminAllEventResponse;
@@ -252,6 +253,20 @@ public class AdminService {
 
         boolean fullEdit = isAdmin || status == EventStatus.DRAFT;
 
+        String oldEventName        = event.getEventName();
+        String oldEventDescription = event.getEventDescription();
+        String oldEventLogoUrl     = event.getEventLogoUrl();
+        String oldOrganizationName = event.getOrganizationName();
+        boolean oldVolunteersNeeded = event.isVolunteersNeeded();
+        String oldOrganizationUrl  = event.getOrganizationUrl();
+        String oldVenueName        = event.getVenueName();
+        String oldVenueAddress     = event.getVenueAddress();
+        String oldCity             = event.getCity();
+        String oldState            = event.getState();
+        String oldCountry          = event.getCountry();
+        Object oldStartDate        = event.getStartDate();
+        Object oldEndDate          = event.getEndDate();
+
         // Basic fields — always allowed when editing is permitted
         if (request.getEventName()        != null) event.setEventName(request.getEventName());
         if (request.getEventDescription() != null) event.setEventDescription(request.getEventDescription());
@@ -272,7 +287,21 @@ public class AdminService {
         }
 
         Event saved = eventRepository.save(event);
-        auditLogService.log("EVENT_UPDATED", "EVENT", saved.getId(), saved.getEventName(), null, null);
+        AuditDiff diff = new AuditDiff()
+                .field("eventName", oldEventName, saved.getEventName())
+                .field("eventDescription", oldEventDescription, saved.getEventDescription())
+                .field("eventLogoUrl", oldEventLogoUrl, saved.getEventLogoUrl())
+                .field("organizationName", oldOrganizationName, saved.getOrganizationName())
+                .field("volunteersNeeded", oldVolunteersNeeded, saved.isVolunteersNeeded())
+                .field("organizationUrl", oldOrganizationUrl, saved.getOrganizationUrl())
+                .field("venueName", oldVenueName, saved.getVenueName())
+                .field("venueAddress", oldVenueAddress, saved.getVenueAddress())
+                .field("city", oldCity, saved.getCity())
+                .field("state", oldState, saved.getState())
+                .field("country", oldCountry, saved.getCountry())
+                .field("startDate", oldStartDate, saved.getStartDate())
+                .field("endDate", oldEndDate, saved.getEndDate());
+        auditLogService.log("EVENT_UPDATED", "EVENT", saved.getId(), saved.getEventName(), diff.oldValue(), diff.newValue());
         realtimePublisher.pushEventUpdate(saved.getId(), mapToResponse(saved));
         return mapToResponse(saved);
     }

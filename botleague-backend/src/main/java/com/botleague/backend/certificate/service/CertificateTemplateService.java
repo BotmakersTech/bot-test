@@ -1,6 +1,7 @@
 package com.botleague.backend.certificate.service;
 
 import com.botleague.backend.audit.service.AuditLogService;
+import com.botleague.backend.audit.util.AuditDiff;
 import com.botleague.backend.certificate.dto.CertificateTemplateResponse;
 import com.botleague.backend.certificate.dto.CreateCertificateTemplateRequest;
 import com.botleague.backend.certificate.dto.PreviewTemplateRequest;
@@ -104,6 +105,9 @@ public class CertificateTemplateService {
                                                UpdateCertificateTemplateRequest req, UUID callerId) {
         CertificateTemplate template = loadOwned(templateId, provider, ownerUserId);
 
+        String oldName = template.getName();
+        String oldStatus = template.getStatus();
+
         if (req.getName() != null && !req.getName().isBlank()) {
             template.setName(req.getName().trim());
         }
@@ -117,7 +121,11 @@ public class CertificateTemplateService {
         }
 
         CertificateTemplate saved = templateRepository.save(template);
-        auditLogService.log("CERTIFICATE_TEMPLATE_UPDATED", "CERTIFICATE_TEMPLATE", saved.getId(), saved.getName(), null, null);
+        AuditDiff diff = new AuditDiff()
+                .field("name", oldName, saved.getName())
+                .field("status", oldStatus, saved.getStatus());
+        auditLogService.log("CERTIFICATE_TEMPLATE_UPDATED", "CERTIFICATE_TEMPLATE", saved.getId(), saved.getName(),
+                diff.oldValue(), diff.newValue());
         return toResponse(saved);
     }
 
@@ -144,9 +152,11 @@ public class CertificateTemplateService {
     @Transactional
     public void archive(UUID templateId, String provider, UUID ownerUserId) {
         CertificateTemplate template = loadOwned(templateId, provider, ownerUserId);
+        String oldStatus = template.getStatus();
         template.setStatus(CertificateTemplate.STATUS_ARCHIVED);
         templateRepository.save(template);
-        auditLogService.log("CERTIFICATE_TEMPLATE_ARCHIVED", "CERTIFICATE_TEMPLATE", template.getId(), template.getName(), null, null);
+        auditLogService.log("CERTIFICATE_TEMPLATE_ARCHIVED", "CERTIFICATE_TEMPLATE", template.getId(), template.getName(),
+                oldStatus, CertificateTemplate.STATUS_ARCHIVED);
     }
 
     /**

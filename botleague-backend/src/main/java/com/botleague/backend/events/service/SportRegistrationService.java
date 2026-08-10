@@ -546,6 +546,7 @@ public class SportRegistrationService {
                     "Cannot cancel a registration in status: " + registration.getStatus());
         }
 
+        RegistrationStatus oldStatus = registration.getStatus();
         registration.setStatus(RegistrationStatus.CANCELLED);
         sportRegistrationRepository.save(registration);
 
@@ -559,7 +560,7 @@ public class SportRegistrationService {
 
         try {
             auditLogService.log("REGISTRATION_CANCELLED", "REGISTRATION", registration.getId(),
-                    registration.getRobotName(), "REGISTERED", "CANCELLED");
+                    registration.getRobotName(), oldStatus.name(), "CANCELLED");
         } catch (Exception ignored) {}
 
         // Free the slot on the competition

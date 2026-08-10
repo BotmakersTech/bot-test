@@ -1,6 +1,7 @@
 package com.botleague.backend.certificate.service;
 
 import com.botleague.backend.audit.service.AuditLogService;
+import com.botleague.backend.audit.util.AuditDiff;
 import com.botleague.backend.certificate.dto.CertificateTypeResponse;
 import com.botleague.backend.certificate.dto.CreateCertificateTypeRequest;
 import com.botleague.backend.certificate.dto.UpdateCertificateTypeRequest;
@@ -97,6 +98,19 @@ public class CertificateTypeService {
     public CertificateTypeResponse update(UUID typeId, String provider, UpdateCertificateTypeRequest req) {
         CertificateType type = loadForProvider(typeId, provider);
 
+        String oldLabel = type.getLabel();
+        UUID oldTemplateId = type.getTemplateId();
+        String oldEligibilityRule = type.getEligibilityRule();
+        Integer oldEligibilityRank = type.getEligibilityRank();
+        String oldIssueMode = type.getIssueMode();
+        String oldStatus = type.getStatus();
+        String oldNumberPrefix = type.getNumberPrefix();
+        String oldNumberFormat = type.getNumberFormat();
+        Integer oldValidityYears = type.getValidityYears();
+        Boolean oldVerificationEnabled = type.getVerificationEnabled();
+        Boolean oldQrEnabled = type.getQrEnabled();
+        Boolean oldSignatureEnabled = type.getSignatureEnabled();
+
         if (req.getLabel() != null && !req.getLabel().isBlank()) {
             type.setLabel(req.getLabel().trim());
         }
@@ -151,7 +165,22 @@ public class CertificateTypeService {
         }
 
         CertificateType saved = certificateTypeRepository.save(type);
-        auditLogService.log("CERTIFICATE_TYPE_UPDATED", "CERTIFICATE_TYPE", saved.getId(), saved.getLabel(), null, null);
+
+        AuditDiff diff = new AuditDiff()
+                .field("label", oldLabel, saved.getLabel())
+                .field("templateId", oldTemplateId, saved.getTemplateId())
+                .field("eligibilityRule", oldEligibilityRule, saved.getEligibilityRule())
+                .field("eligibilityRank", oldEligibilityRank, saved.getEligibilityRank())
+                .field("issueMode", oldIssueMode, saved.getIssueMode())
+                .field("status", oldStatus, saved.getStatus())
+                .field("numberPrefix", oldNumberPrefix, saved.getNumberPrefix())
+                .field("numberFormat", oldNumberFormat, saved.getNumberFormat())
+                .field("validityYears", oldValidityYears, saved.getValidityYears())
+                .field("verificationEnabled", oldVerificationEnabled, saved.getVerificationEnabled())
+                .field("qrEnabled", oldQrEnabled, saved.getQrEnabled())
+                .field("signatureEnabled", oldSignatureEnabled, saved.getSignatureEnabled());
+        auditLogService.log("CERTIFICATE_TYPE_UPDATED", "CERTIFICATE_TYPE", saved.getId(), saved.getLabel(),
+                diff.oldValue(), diff.newValue());
         return toResponse(saved);
     }
 

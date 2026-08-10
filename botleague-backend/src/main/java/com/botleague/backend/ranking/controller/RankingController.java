@@ -1,6 +1,8 @@
 package com.botleague.backend.ranking.controller;
 
 import com.botleague.backend.audit.service.AuditLogService;
+import com.botleague.backend.events.entity.EventSports;
+import com.botleague.backend.events.repository.EventSportsRepository;
 import com.botleague.backend.ranking.dto.RankingDTOs.*;
 import java.util.Map;
 import com.botleague.backend.ranking.dto.RankingResponse;
@@ -45,20 +47,23 @@ import java.util.UUID;
 @RequestMapping("/api/rankings")
 public class RankingController {
 
-    private final RankingService       rankingService;
-    private final RankingQueryService  queryService;
-    private final RankingEngineService engineService;
-    private final AuditLogService      auditLogService;
+    private final RankingService          rankingService;
+    private final RankingQueryService     queryService;
+    private final RankingEngineService    engineService;
+    private final AuditLogService         auditLogService;
+    private final EventSportsRepository   eventSportsRepository;
 
     public RankingController(
             RankingService rankingService,
             RankingQueryService queryService,
             RankingEngineService engineService,
-            AuditLogService auditLogService) {
+            AuditLogService auditLogService,
+            EventSportsRepository eventSportsRepository) {
         this.rankingService = rankingService;
         this.queryService   = queryService;
         this.engineService  = engineService;
         this.auditLogService = auditLogService;
+        this.eventSportsRepository = eventSportsRepository;
     }
 
     // =========================================================================
@@ -310,7 +315,12 @@ public class RankingController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<String> pushToGlobalRankings(@PathVariable UUID eventSportId, Authentication auth) {
         engineService.pushToGlobalRankings(eventSportId);
-        auditLogService.log("GLOBAL_RANKINGS_PUSHED", "EVENT_SPORT", eventSportId, null, null, "PUSHED");
+        EventSports sport = eventSportsRepository.findById(eventSportId).orElse(null);
+        // "FINALIZED" isn't a placeholder — it's the precondition pushToGlobalRankings()
+        // itself already enforces (it throws unless a finalized leaderboard exists), so
+        // it's the real "before" state, not a fabricated one.
+        auditLogService.log("GLOBAL_RANKINGS_PUSHED", "EVENT_SPORT", eventSportId,
+                sport != null ? sport.getSport() : null, "FINALIZED", "PUSHED");
         return ResponseEntity.ok("Pushed to global rankings for eventSportId=" + eventSportId);
     }
 }

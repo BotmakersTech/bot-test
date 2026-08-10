@@ -135,6 +135,7 @@ public class CertificateVerificationService {
         if (IssuedCertificate.STATUS_REVOKED.equals(issued.getStatus())) {
             throw ApiException.conflict("This certificate is already revoked");
         }
+        String oldStatus = issued.getStatus();
         issued.setStatus(IssuedCertificate.STATUS_REVOKED);
         issued.setRevokedReason(reason);
         issued.setRevokedBy(callerId);
@@ -142,7 +143,7 @@ public class CertificateVerificationService {
         issuedCertificateRepository.save(issued);
 
         auditLogService.log("CERTIFICATE_REVOKED", "ISSUED_CERTIFICATE", issued.getId(),
-                issued.getCertificateNumber(), null, reason);
+                issued.getCertificateNumber(), oldStatus, IssuedCertificate.STATUS_REVOKED, reason);
     }
 
     /**
@@ -171,6 +172,7 @@ public class CertificateVerificationService {
         EventSports eventSport = eventSportsRepository.findById(issued.getEventSportId()).orElse(null);
         byte[] pdfBytes = storageService.download(issued.getPdfKey());
 
+        String oldDeliveryStatus = issued.getDeliveryStatus();
         deliveryService.deliverAndNotify(
                 issued, type.getLabel(),
                 event != null ? event.getEventName() : "your event",
@@ -178,7 +180,9 @@ public class CertificateVerificationService {
                 pdfBytes);
 
         auditLogService.log("CERTIFICATE_DELIVERY_RESENT", "ISSUED_CERTIFICATE", issued.getId(),
-                issued.getCertificateNumber(), null, "deliveryStatus=" + issued.getDeliveryStatus());
+                issued.getCertificateNumber(),
+                "deliveryStatus=" + oldDeliveryStatus,
+                "deliveryStatus=" + issued.getDeliveryStatus());
 
         return toResponse(issued);
     }
