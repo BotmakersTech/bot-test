@@ -6,5 +6,5 @@
 -- surfaced it as a hard startup failure.
 
 ALTER TABLE matches
-    ADD COLUMN weight_class_snapshot VARCHAR(20),
-    ADD COLUMN age_group_snapshot VARCHAR(30);
+    ADD COLUMN IF NOT EXISTS weight_class_snapshot VARCHAR(20),
+    ADD COLUMN IF NOT EXISTS age_group_snapshot VARCHAR(30);

@@ -3,4 +3,4 @@
 -- Existing rows get 0 so Hibernate's version comparison has a real starting
 -- point instead of NULL.
 
-ALTER TABLE matches ADD COLUMN version INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE matches ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
