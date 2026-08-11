@@ -487,6 +487,15 @@ public class RankingEngineService {
                 // matches from the round count, misclassifying rounds.
                 .filter(m -> !Boolean.TRUE.equals(m.getAutoAdvanced()))
                 .filter(m -> m.getLeaderboardPosition() == null || m.getLeaderboardPosition() != 3)
+                // Double elimination's winners/losers brackets are independent
+                // round sequences that can overlap or exceed each other — scope
+                // the max to the SAME bracketSide as the match being classified
+                // (a no-op for single elimination, where bracketSide is always
+                // null on every match). Without this, an early losers-bracket
+                // match could be misclassified as SEMI_FINAL/QUARTER_FINAL just
+                // because its roundNumber happens to be close to the sport-wide
+                // max, which really belongs to a different, longer bracket side.
+                .filter(m -> java.util.Objects.equals(m.getBracketSide(), match.getBracketSide()))
                 .mapToInt(m -> m.getRoundNumber() != null ? m.getRoundNumber() : 1)
                 .max()
                 .orElse(1);

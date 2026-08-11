@@ -43,7 +43,9 @@ import com.botleague.backend.matches.enums.MatchFormat;
 import com.botleague.backend.matches.enums.MatchStatus;
 import com.botleague.backend.matches.enums.MatchType;
 import com.botleague.backend.matches.enums.TournamentFormat;
+import com.botleague.backend.matches.enums.BracketSide;
 import com.botleague.backend.matches.repository.MatchRepository;
+import com.botleague.backend.matches.tournament.DoubleEliminationBracketGenerator;
 import com.botleague.backend.matches.tournament.SingleEliminationBracketGenerator;
 import com.botleague.backend.realtime.enums.RealtimeEventType;
 import com.botleague.backend.realtime.service.RealtimePublisher;
@@ -69,6 +71,7 @@ public class MatchService {
     private final TeamRepository teamRepository;
     private final UserRoleService userRoleService;
     private final SingleEliminationBracketGenerator singleEliminationBracketGenerator;
+    private final DoubleEliminationBracketGenerator doubleEliminationBracketGenerator;
     private final RealtimePublisher realtimePublisher;
     private final AuthorizationService authorizationService;
     private final EventRepository eventRepository;
@@ -90,6 +93,7 @@ public class MatchService {
             TeamRepository teamRepository,
             UserRoleService userRoleService,
             SingleEliminationBracketGenerator singleEliminationBracketGenerator,
+            DoubleEliminationBracketGenerator doubleEliminationBracketGenerator,
             RealtimePublisher realtimePublisher,
             AuthorizationService authorizationService,
             EventRepository eventRepository,
@@ -104,6 +108,7 @@ public class MatchService {
         this.teamRepository = teamRepository;
         this.userRoleService = userRoleService;
         this.singleEliminationBracketGenerator = singleEliminationBracketGenerator;
+        this.doubleEliminationBracketGenerator = doubleEliminationBracketGenerator;
         this.realtimePublisher = realtimePublisher;
         this.authorizationService = authorizationService;
         this.eventRepository = eventRepository;
@@ -224,16 +229,7 @@ public class MatchService {
                 return generateSingleElimination(request);
 
             case DOUBLE_ELIMINATION:
-                // No DoubleEliminationBracketGenerator exists yet, so the losers-bracket
-                // routing (loserNextMatchId / loserNextMatchSlot) cannot be wired
-                // automatically. Silently falling back to a single-elimination bracket
-                // here would mislabel the tournament and eliminate teams with no
-                // second-chance bracket — refuse instead of generating something
-                // that doesn't match what was requested.
-                throw ApiException.badRequest(
-                        "Double-elimination bracket generation is not yet implemented. "
-                        + "Use SINGLE_ELIMINATION, or build the double-elimination bracket "
-                        + "manually via POST /v1/matches/bulk.");
+                return generateDoubleElimination(request);
 
             default:
                 throw ApiException.badRequest(
@@ -255,8 +251,8 @@ public class MatchService {
         List<Match> discarded = matchRepository.findByEventSportIdAndDeletedAtIsNotNull(eventSportId);
         if (discarded.isEmpty()) return;
 
-        String discardedIds = discarded.stream()
-                .map(m -> m.getId().toString())
+        String discardedLabels = discarded.stream()
+                .map(m -> "R" + m.getRoundNumber() + "M" + m.getMatchNumber())
                 .collect(java.util.stream.Collectors.joining(", "));
 
         auditLogService.log(
@@ -265,8 +261,59 @@ public class MatchService {
                 eventSportId,
                 null,
                 discarded.size() + " previously soft-deleted match(es)",
-                discardedIds
+                discardedLabels
         );
+    }
+
+    // =====================================================
+    // PRIVATE — DOUBLE ELIMINATION DISPATCHER
+    //
+    // 1v1 only (DoubleEliminationBracketGenerator enforces this). Mirrors
+    // generateSingleElimination()'s shape exactly — same ranking-pool
+    // snapshot stamping, same bracketGenerated flag, same realtime/
+    // notification firing.
+    // =====================================================
+
+    private List<MatchResponseDTO> generateDoubleElimination(
+            GenerateBracketRequestDTO request
+    ) {
+        List<Match> matches = doubleEliminationBracketGenerator.generate(request);
+
+        MatchFormat matchFormat = request.getFormat();
+        if (matchFormat != null) {
+            for (Match m : matches) {
+                m.setFormat(matchFormat);
+            }
+        }
+
+        UUID sportId = request.getEventSportId();
+        if (sportId != null) {
+            eventSportsRepository.findById(sportId).ifPresent(sport -> {
+                String weightClassSnapshot = sport.getWeightClass();
+                String ageGroupSnapshot = sport.getAgeGroup() != null ? sport.getAgeGroup().name() : null;
+                for (Match m : matches) {
+                    m.setWeightClassSnapshot(weightClassSnapshot);
+                    m.setAgeGroupSnapshot(ageGroupSnapshot);
+                }
+
+                sport.setBracketGenerated(true);
+                eventSportsRepository.save(sport);
+            });
+        }
+
+        matchRepository.saveAll(matches);
+
+        List<MatchResponseDTO> created = fetchOrderedResponse(request.getEventSportId());
+        for (MatchResponseDTO dto : created) {
+            realtimePublisher.pushMatchUpdate(
+                    dto.getMatchId(), request.getEventSportId(),
+                    RealtimeEventType.MATCH_CREATED, dto);
+        }
+        realtimePublisher.pushBracketCreated(request.getEventSportId());
+        if (tournamentNotificationService != null) {
+            tournamentNotificationService.onBracketCreated(request.getEventSportId(), "Tournament");
+        }
+        return created;
     }
 
     // =====================================================
@@ -857,6 +904,7 @@ public class MatchService {
 
         // ── 5. Advance winner ──────────────────────────────────────
         Match nextMatch = advanceWinner(savedMatch);
+        cascadeIfBye(nextMatch);
 
         // ── 6. Advance runner-up to 3rd-place match ────────────────
         Match thirdPlaceMatch = advanceRunnerUpToThirdPlace(savedMatch);
@@ -864,6 +912,11 @@ public class MatchService {
         // ── 7. Advance loser to losers bracket ─────────────────────
         Match loserMatch = TournamentFormat.DOUBLE_ELIMINATION.equals(savedMatch.getTournamentFormat())
                 ? advanceLoser(savedMatch) : null;
+        cascadeIfBye(loserMatch);
+
+        // ── 8. Bracket reset (double elimination only) ─────────────
+        Match resetMatch = TournamentFormat.DOUBLE_ELIMINATION.equals(savedMatch.getTournamentFormat())
+                ? maybeCreateBracketResetMatch(savedMatch) : null;
 
         MatchResponseDTO result = mapToResponseDTO(savedMatch);
         realtimePublisher.pushMatchUpdate(savedMatch.getId(), savedMatch.getEventSportId(),
@@ -880,11 +933,14 @@ public class MatchService {
         if (loserMatch != null)
             realtimePublisher.pushMatchUpdate(loserMatch.getId(), loserMatch.getEventSportId(),
                     RealtimeEventType.MATCH_UPDATED, mapToResponseDTO(loserMatch));
+        if (resetMatch != null)
+            realtimePublisher.pushMatchUpdate(resetMatch.getId(), resetMatch.getEventSportId(),
+                    RealtimeEventType.MATCH_CREATED, mapToResponseDTO(resetMatch));
 
         realtimePublisher.pushRankingsUpdated(savedMatch.getEventSportId());
 
         if (tournamentNotificationService != null) {
-            if (savedMatch.getNextMatchId() == null) {
+            if (savedMatch.getNextMatchId() == null && resetMatch == null && !hasBracketResetMatch(savedMatch)) {
                 tournamentNotificationService.onTournamentWinner(savedMatch, savedMatch.getEventSportId());
             } else {
                 tournamentNotificationService.onMatchCompleted(savedMatch);
@@ -952,9 +1008,13 @@ public class MatchService {
         Match savedMatch = matchRepository.save(match);
 
         Match nextMatch2       = advanceWinner(savedMatch);
+        cascadeIfBye(nextMatch2);
         Match thirdPlaceMatch2 = advanceRunnerUpToThirdPlace(savedMatch);
         Match loserMatch2      = TournamentFormat.DOUBLE_ELIMINATION.equals(savedMatch.getTournamentFormat())
                 ? advanceLoser(savedMatch) : null;
+        cascadeIfBye(loserMatch2);
+        Match resetMatch2      = TournamentFormat.DOUBLE_ELIMINATION.equals(savedMatch.getTournamentFormat())
+                ? maybeCreateBracketResetMatch(savedMatch) : null;
 
         MatchResponseDTO completed = mapToResponseDTO(savedMatch);
         realtimePublisher.pushMatchUpdate(savedMatch.getId(), savedMatch.getEventSportId(),
@@ -970,11 +1030,14 @@ public class MatchService {
         if (loserMatch2 != null)
             realtimePublisher.pushMatchUpdate(loserMatch2.getId(), loserMatch2.getEventSportId(),
                     RealtimeEventType.MATCH_UPDATED, mapToResponseDTO(loserMatch2));
+        if (resetMatch2 != null)
+            realtimePublisher.pushMatchUpdate(resetMatch2.getId(), resetMatch2.getEventSportId(),
+                    RealtimeEventType.MATCH_CREATED, mapToResponseDTO(resetMatch2));
 
         realtimePublisher.pushRankingsUpdated(savedMatch.getEventSportId());
 
         if (tournamentNotificationService != null) {
-            if (savedMatch.getNextMatchId() == null) {
+            if (savedMatch.getNextMatchId() == null && resetMatch2 == null && !hasBracketResetMatch(savedMatch)) {
                 tournamentNotificationService.onTournamentWinner(savedMatch, savedMatch.getEventSportId());
             } else {
                 tournamentNotificationService.onMatchCompleted(savedMatch);
@@ -1068,7 +1131,7 @@ public class MatchService {
         realtimePublisher.pushRankingsUpdated(savedMatch.getEventSportId());
 
         if (tournamentNotificationService != null) {
-            if (savedMatch.getNextMatchId() == null) {
+            if (savedMatch.getNextMatchId() == null && !hasBracketResetMatch(savedMatch)) {
                 tournamentNotificationService.onTournamentWinner(savedMatch, savedMatch.getEventSportId());
             } else {
                 tournamentNotificationService.onMatchCompleted(savedMatch);
@@ -1115,6 +1178,7 @@ public class MatchService {
         Match savedMatch = matchRepository.save(match);
 
         unwindOptimisticAdvancement(savedMatch);
+        retractBracketResetIfPresent(savedMatch);
 
         auditLogService.log("MATCH_RESULT_REJECTED", "MATCH", savedMatch.getId(), null,
                 "PENDING_APPROVAL", "LIVE", reason);
@@ -1156,6 +1220,7 @@ public class MatchService {
         // Retract any winner optimistically advanced into the next round —
         // mirrors rejectMatchResult (see unwindOptimisticAdvancement).
         unwindOptimisticAdvancement(savedMatch);
+        retractBracketResetIfPresent(savedMatch);
 
         return mapToResponseDTO(savedMatch);
     }
@@ -1478,6 +1543,73 @@ public class MatchService {
     }
 
     // =====================================================
+    // PRIVATE — BRACKET RESET (DOUBLE ELIMINATION ONLY)
+    //
+    // Not pre-generated — the reset match's existence and participants are
+    // conditional on the grand final's outcome, so it's created lazily
+    // right here, at grand-final completion time. The generator's fixed
+    // convention (slot A = WB-origin, slot B = LB-origin, see
+    // DoubleEliminationBracketGenerator.GF_SLOT_*) means: if slot B's team
+    // wins the first grand final, the previously-undefeated WB-origin team
+    // has taken their first loss — a decider is required. If slot A wins,
+    // the tournament is over; no reset is created.
+    // =====================================================
+
+    private Match maybeCreateBracketResetMatch(Match completedMatch) {
+        if (!BracketSide.GRAND_FINAL.equals(completedMatch.getBracketSide())) {
+            return null;
+        }
+        if (Boolean.TRUE.equals(completedMatch.getIsBracketReset())) {
+            return null; // this IS the reset/decider game — no third game, ever
+        }
+        UUID winner = completedMatch.getWinnerRegistrationId();
+        if (winner == null || !winner.equals(completedMatch.getTeamBRegistrationId())) {
+            return null; // WB-origin (slot A) won outright, or no winner yet
+        }
+        if (hasBracketResetMatch(completedMatch)) {
+            return null; // already created (e.g. a resubmitted result)
+        }
+
+        Match reset = new Match();
+        reset.setId(UUID.randomUUID());
+        reset.setEventSportId(completedMatch.getEventSportId());
+        reset.setTournamentFormat(completedMatch.getTournamentFormat());
+        reset.setMatchType(completedMatch.getMatchType());
+        reset.setRoundNumber(completedMatch.getRoundNumber() != null ? completedMatch.getRoundNumber() + 1 : null);
+        reset.setMatchNumber(1);
+        reset.setBracketPosition(1);
+        reset.setBracketSide(BracketSide.GRAND_FINAL);
+        reset.setIsBracketReset(true);
+        reset.setLeaderboardPosition(1);
+        reset.setStatus(MatchStatus.SCHEDULED);
+        reset.setTeamARegistrationId(completedMatch.getTeamARegistrationId());
+        reset.setTeamBRegistrationId(completedMatch.getTeamBRegistrationId());
+        reset.setTeamAScore(0);
+        reset.setTeamBScore(0);
+        reset.setIsBye(false);
+        reset.setAutoAdvanced(false);
+        reset.setWeightClassSnapshot(completedMatch.getWeightClassSnapshot());
+        reset.setAgeGroupSnapshot(completedMatch.getAgeGroupSnapshot());
+
+        try {
+            return matchRepository.save(reset);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // Lost a concurrent-creation race — the other request's row already exists.
+            return null;
+        }
+    }
+
+    private boolean hasBracketResetMatch(Match grandFinal) {
+        if (!BracketSide.GRAND_FINAL.equals(grandFinal.getBracketSide())) {
+            return false;
+        }
+        return matchRepository.findByEventSportIdAndLeaderboardPositionAndDeletedAtIsNull(
+                        grandFinal.getEventSportId(), 1)
+                .stream()
+                .anyMatch(m -> Boolean.TRUE.equals(m.getIsBracketReset()));
+    }
+
+    // =====================================================
     // PRIVATE — ASSIGN REGISTRATION ID TO A TEAM SLOT
     // Slot mapping: 1 = A  2 = B  3 = C  4 = D
     // =====================================================
@@ -1485,37 +1617,97 @@ public class MatchService {
     // =====================================================
     // PRIVATE — UNWIND OPTIMISTIC ADVANCEMENT
     //
-    // submitMatchResult/completeMatch push the winner into the next round's
-    // slot BEFORE approval (optimistic, so live tournaments don't stall).
-    // rejectMatchResult and cancelMatch previously left that push in place —
-    // called from both, so a rejected/cancelled result doesn't leave a stale
-    // participant wired into the next round.
+    // submitMatchResult/completeMatch push the winner (and, for double
+    // elimination, the loser) into the next round's slot BEFORE approval
+    // (optimistic, so live tournaments don't stall). rejectMatchResult and
+    // cancelMatch call this so a rejected/cancelled result doesn't leave a
+    // stale participant wired into the next round on either side.
     //
-    // Only clears the slot if the next match is still SCHEDULED — if it has
-    // already been played past that point, forcibly clearing a slot would
-    // corrupt a match that already has a real result, so this logs a warning
-    // and leaves it for manual correction instead.
+    // Only clears a slot if the downstream match is still SCHEDULED (or was
+    // itself only auto-completed by the very placement being retracted —
+    // see unwindSlot) — if it has already been played past that point,
+    // forcibly clearing a slot would corrupt a match that already has a
+    // real result, so this logs a warning and leaves it for manual review.
     // =====================================================
 
     private void unwindOptimisticAdvancement(Match match) {
+        unwindWinnerSide(match);
+        unwindLoserSide(match);
+    }
+
+    private void unwindWinnerSide(Match match) {
         if (match.getWinnerRegistrationId() == null) return;
         if (match.getNextMatchId() == null) return;
+        unwindSlot(match.getNextMatchId(), match.getNextMatchSlot(), match.getId());
+    }
 
-        Match nextMatch = matchRepository.findById(match.getNextMatchId()).orElse(null);
-        if (nextMatch == null) return;
+    private void unwindLoserSide(Match match) {
+        if (match.getLoserNextMatchId() == null) return;
+        if (resolveLoser(match) == null) return;
+        unwindSlot(match.getLoserNextMatchId(), match.getLoserNextMatchSlot(), match.getId());
+    }
 
-        if (nextMatch.getStatus() != MatchStatus.SCHEDULED) {
+    /**
+     * Clears a downstream match's slot. If that downstream match had itself
+     * auto-completed purely as a result of receiving this one placement (a
+     * double-elimination bye cascade — see DoubleEliminationBracketGenerator
+     * and cascadeIfBye), its own completion is reverted first and the
+     * unwind continues recursively through whatever IT had already
+     * advanced — otherwise that cascade would leave a dangling, now-invalid
+     * placement further downstream.
+     */
+    private void unwindSlot(UUID targetMatchId, Integer targetSlot, UUID sourceMatchId) {
+        Match target = matchRepository.findById(targetMatchId).orElse(null);
+        if (target == null) return;
+
+        boolean targetWasByeCascaded = Boolean.TRUE.equals(target.getIsBye())
+                && Boolean.TRUE.equals(target.getAutoAdvanced())
+                && target.getStatus() == MatchStatus.COMPLETED
+                && target.getWinnerRegistrationId() != null;
+
+        if (target.getStatus() != MatchStatus.SCHEDULED && !targetWasByeCascaded) {
             log.warn("[MatchService] Not unwinding optimistic advancement of match {} into {} — " +
                     "downstream match is already {} (past SCHEDULED). Leaving as-is for manual review.",
-                    match.getId(), nextMatch.getId(), nextMatch.getStatus());
+                    sourceMatchId, targetMatchId, target.getStatus());
             return;
         }
 
-        assignToSlot(nextMatch, match.getNextMatchSlot(), null);
-        matchRepository.save(nextMatch);
+        if (targetWasByeCascaded) {
+            unwindWinnerSide(target);
+            unwindLoserSide(target); // no-op for a bye (never has a real loser) — kept for symmetry
+            target.setWinnerRegistrationId(null);
+            target.setPositionFirstRegistrationId(null);
+            target.setStatus(MatchStatus.SCHEDULED);
+            target.setAutoAdvanced(false);
+            target.setEndedAt(null);
+        }
 
-        realtimePublisher.pushMatchUpdate(nextMatch.getId(), nextMatch.getEventSportId(),
-                RealtimeEventType.MATCH_UPDATED, mapToResponseDTO(nextMatch));
+        assignToSlot(target, targetSlot, null);
+        Match saved = matchRepository.save(target);
+
+        realtimePublisher.pushMatchUpdate(saved.getId(), saved.getEventSportId(),
+                RealtimeEventType.MATCH_UPDATED, mapToResponseDTO(saved));
+    }
+
+    /**
+     * Retracts a still-unplayed bracket-reset match when the original grand
+     * final that would have spawned it gets rejected/cancelled. Only ever
+     * touches a SCHEDULED reset row — if the reset game has already been
+     * played, leave it for manual review rather than silently discarding a
+     * real result.
+     */
+    private void retractBracketResetIfPresent(Match match) {
+        if (!BracketSide.GRAND_FINAL.equals(match.getBracketSide())) return;
+        if (Boolean.TRUE.equals(match.getIsBracketReset())) return;
+
+        matchRepository.findByEventSportIdAndLeaderboardPositionAndDeletedAtIsNull(match.getEventSportId(), 1)
+                .stream()
+                .filter(m -> Boolean.TRUE.equals(m.getIsBracketReset()))
+                .filter(m -> m.getStatus() == MatchStatus.SCHEDULED)
+                .forEach(m -> {
+                    m.setDeletedAt(LocalDateTime.now());
+                    matchRepository.save(m);
+                });
     }
 
     private void assignToSlot(Match match, Integer slot, UUID registrationId) {
@@ -1590,7 +1782,8 @@ public class MatchService {
         }
     }
 
-    private void autoAdvanceBye(Match match) {
+    /** Returns the next match the winner was advanced into (or null), for cascading. */
+    private Match autoAdvanceBye(Match match) {
 
         List<UUID> present = new ArrayList<>();
         if (match.getTeamARegistrationId() != null) present.add(match.getTeamARegistrationId());
@@ -1598,7 +1791,7 @@ public class MatchService {
         if (match.getTeamCRegistrationId() != null) present.add(match.getTeamCRegistrationId());
         if (match.getTeamDRegistrationId() != null) present.add(match.getTeamDRegistrationId());
 
-        if (present.size() != 1) return;
+        if (present.size() != 1) return null;
 
         UUID winner = present.get(0);
 
@@ -1609,7 +1802,7 @@ public class MatchService {
         match.setEndedAt(LocalDateTime.now());
 
         Match savedMatch = matchRepository.save(match);
-        advanceWinner(savedMatch);
+        Match nextMatch = advanceWinner(savedMatch);
 
         realtimePublisher.pushMatchUpdate(savedMatch.getId(), savedMatch.getEventSportId(),
                 RealtimeEventType.MATCH_COMPLETED, mapToResponseDTO(savedMatch));
@@ -1622,6 +1815,30 @@ public class MatchService {
 
         if (tournamentNotificationService != null) {
             tournamentNotificationService.onMatchCompleted(savedMatch);
+        }
+
+        return nextMatch;
+    }
+
+    // =====================================================
+    // PRIVATE — CASCADE A DOUBLE-ELIMINATION BYE-FLAGGED MATCH
+    //
+    // Double-elimination bracket generation can flag a losers-bracket match
+    // isBye=true when, at generation time, it can never receive more than
+    // one real participant (see DoubleEliminationBracketGenerator's javadoc
+    // on "dead"-match propagation). That single participant often only
+    // actually arrives later, at runtime, once a live match feeds a winner
+    // or loser into its one open slot — this walks forward through any
+    // resulting auto-advance chain (normally at most one hop, but this
+    // loops defensively rather than assuming that bound).
+    // =====================================================
+
+    private void cascadeIfBye(Match match) {
+        Match current = match;
+        while (current != null
+                && Boolean.TRUE.equals(current.getIsBye())
+                && current.getWinnerRegistrationId() == null) {
+            current = autoAdvanceBye(current);
         }
     }
 

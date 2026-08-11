@@ -89,10 +89,7 @@ public class OrganizerAssignmentService {
         List<ResourceRoleAssignment> existingHeads = assignmentRepo.findByEventIdAndScopeTypeAndRoleTypeAndStatus(
                 eventId, ResourceRoleAssignment.SCOPE_EVENT, "EVENT_HEAD", ResourceRoleAssignment.STATUS_APPROVED);
         String oldHeads = existingHeads.isEmpty() ? "NONE" : existingHeads.stream()
-                .map(a -> {
-                    User existingUser = userRepository.findById(a.getUserId()).orElse(null);
-                    return "EVENT_HEAD:" + (existingUser != null ? existingUser.getEmail() : a.getUserId());
-                })
+                .map(a -> "EVENT_HEAD:" + resolveUserLabel(a.getUserId()))
                 .collect(Collectors.joining(", "));
 
         ResourceRoleAssignment assignment = new ResourceRoleAssignment();
@@ -119,7 +116,8 @@ public class OrganizerAssignmentService {
                 NotificationTargetType.USER, userId,
                 "/organizer/events/" + eventId
         );
-        auditLogService.log("ROLE_ASSIGNED", "EVENT", eventId, event.getEventName(), oldHeads, "EVENT_HEAD:" + userId);
+        auditLogService.log("ROLE_ASSIGNED", "EVENT", eventId, event.getEventName(), oldHeads,
+                "EVENT_HEAD:" + resolveUserLabel(userId));
 
         return toResponse(saved, event, null);
     }
@@ -264,7 +262,7 @@ public class OrganizerAssignmentService {
                 "/organizer/my-sports"
         );
         auditLogService.log("ROLE_ASSIGNMENT_APPROVED", "SPORT", saved.getScopeId(),
-                sport != null ? sport.getSport() : null, "PENDING_APPROVAL", "APPROVED:" + saved.getUserId());
+                sport != null ? sport.getSport() : null, "PENDING_APPROVAL", "APPROVED:" + resolveUserLabel(saved.getUserId()));
 
         return toResponse(saved, event, sport);
     }
@@ -298,7 +296,8 @@ public class OrganizerAssignmentService {
                 event != null ? "/organizer/events/" + event.getId() : null
         );
         auditLogService.log("ROLE_ASSIGNMENT_REJECTED", "SPORT", saved.getScopeId(),
-                sport != null ? sport.getSport() : null, "PENDING_APPROVAL", "REJECTED:" + saved.getUserId(), reason);
+                sport != null ? sport.getSport() : null, "PENDING_APPROVAL",
+                "REJECTED:" + resolveUserLabel(saved.getUserId()), reason);
 
         return toResponse(saved, event, sport);
     }
@@ -328,6 +327,12 @@ public class OrganizerAssignmentService {
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /** For audit-log strings — a human-readable label instead of a bare UUID. */
+    private String resolveUserLabel(UUID userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        return user != null ? user.getEmail() : userId.toString();
+    }
 
     private AssignmentResponse toResponse(ResourceRoleAssignment a, Event event, EventSports sport) {
         User user = userRepository.findById(a.getUserId()).orElse(null);
