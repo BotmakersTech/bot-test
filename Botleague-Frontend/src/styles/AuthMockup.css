@@ -262,7 +262,10 @@
 /* ── Register OTP boxes ──
    padding-top/bottom and font-size use clamp() (height-driven) instead of
    a flat 8px + the old separate width-ladder font-size classes — MAX
-   matches the old 1280px+ values. */
+   matches the old 1280px+ values. Vertical padding matches
+   .cna-register-field-input's own clamp() range (was half of it, which
+   made the OTP row look visibly shorter than the text input directly
+   above it on the forgot-password page). */
 .cna-register-otp-box {
   font-family: var(--auth-inter);
   color: #999797;
@@ -274,8 +277,8 @@
   box-sizing: border-box;
   flex: 1 1 0;
   min-width: 0;
-  padding-top: clamp(5px, 1dvh, 10px);
-  padding-bottom: clamp(5px, 1dvh, 10px);
+  padding-top: clamp(6px, 2dvh, 18px);
+  padding-bottom: clamp(6px, 2dvh, 18px);
   padding-left: 4px;
   padding-right: 4px;
   font-size: clamp(13px, 1.8dvh, 20px);
