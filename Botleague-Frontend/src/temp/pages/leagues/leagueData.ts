@@ -10,12 +10,17 @@ export interface LeagueConfig {
   border: string;
   imgGradient: string;
   textGradient: string;
+  /** Hex pair driving the --lg-primary/--lg-secondary CSS custom properties
+   *  on the /leagues/:slug detail page (BRAND_STYLES gradients, accents). */
+  colorPrimary: string;
+  colorSecondary: string;
   tagline: string;
   desc: string;
   cta: string;
   whyHeadline: string;
   whyBody: string;
   whatYouGet: { title: string; body: string }[];
+  rankingScope: string;
   journeyHeadline: string;
   nextSlug: LeagueSlug | null;
   nextLabel: string;
@@ -34,6 +39,8 @@ export const LEAGUES: LeagueConfig[] = [
     border: "#e05fa8",
     imgGradient: "from-[#1a1035] via-[#3b1d6e] to-[#6d28d9]",
     textGradient: "from-[#8b5cf6] to-[#e05fa8]",
+    colorPrimary: "#8c6cff",
+    colorSecondary: "#e05fa8",
     tagline: "Your first step into robotics. Learn the basics, build your first bot, and compete with confidence.",
     desc: "Perfect for beginners. Learn robotics, compete in your first events, and build confidence.",
     cta: "Enter Ignite",
@@ -45,6 +52,7 @@ export const LEAGUES: LeagueConfig[] = [
       { title: "Recognition at your fest", body: "Results and standings are visible to your own techfest's organisers and judges." },
       { title: "Path to Inferno League", body: "Age out of Ignite and your ranking carries forward into Inferno's national circuit." },
     ],
+    rankingScope: "Junior ranking · your techfest",
     journeyHeadline: "From your first bot to your first win.",
     nextSlug: "inferno",
     nextLabel: "Next league",
@@ -58,6 +66,8 @@ export const LEAGUES: LeagueConfig[] = [
     border: "#f2994a",
     imgGradient: "from-[#3a0f0f] via-[#7a1f1f] to-[#f2994a]",
     textGradient: "from-[#f2994a] to-[#ef4444]",
+    colorPrimary: "#ff4c4c",
+    colorSecondary: "#ffdd55",
     tagline: "National ranking. Serious competition. Build something that wins.",
     desc: "For rising builders. Sharper rules, tougher arenas, and matches that count toward your national ranking.",
     cta: "Enter Inferno",
@@ -69,6 +79,7 @@ export const LEAGUES: LeagueConfig[] = [
       { title: "Visible to sponsors", body: "Your ranking badge is visible to sponsors and companies recruiting for robotics roles — a credential, not just a score." },
       { title: "Path to Apex League", body: "Age out of Inferno and your ranking carries forward into Apex's open circuit." },
     ],
+    rankingScope: "National ranking — all India",
     journeyHeadline: "From first event to national rank.",
     nextSlug: "apex",
     nextLabel: "Next league",
@@ -82,6 +93,8 @@ export const LEAGUES: LeagueConfig[] = [
     border: "#22c55e",
     imgGradient: "from-[#07230f] via-[#0f5c33] to-[#22c55e]",
     textGradient: "from-[#22c55e] to-[#16a34a]",
+    colorPrimary: "#00d31c",
+    colorSecondary: "#22c55e",
     tagline: "The top tier. Elite arenas, national spotlight, and a straight line to Battle of Robots, Russia.",
     desc: "The top tier. Elite arenas, national spotlight, and a straight line to Battle of Robots, Russia.",
     cta: "Enter Apex",
@@ -93,6 +106,7 @@ export const LEAGUES: LeagueConfig[] = [
       { title: "Visible to recruiters", body: "Your ranking badge is visible to sponsors, recruiters, and international scouts." },
       { title: "Path to the global stage", body: "The highest-ranked Apex competitors get a straight line to Battle of Robots, Russia." },
     ],
+    rankingScope: "Open ranking · global scouting",
     journeyHeadline: "From national rank to the global stage.",
     nextSlug: null,
     nextLabel: "The global stage",
