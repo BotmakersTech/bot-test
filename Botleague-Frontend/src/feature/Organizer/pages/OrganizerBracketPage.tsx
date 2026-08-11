@@ -30,10 +30,15 @@ const T = {
   surfaceHover: "#f2f6fd",
   border: "rgba(75,134,232,0.22)",
   borderHover: "rgba(75,134,232,0.45)",
+  brand: "#0162d1",
+  brandDim: "rgba(1,98,209,0.08)",
+  brandBorder: "rgba(1,98,209,0.3)",
   accent: "#e04b4b",
   accentDim: "rgba(224,75,75,0.08)",
   accentBorder: "rgba(224,75,75,0.3)",
   gold: "#a16207",
+  goldDim: "rgba(161,98,7,0.1)",
+  goldBorder: "rgba(161,98,7,0.3)",
   green: "#1fa952",
   blue: "#4b86e8",
   purple: "#8c6cff",
@@ -654,7 +659,7 @@ export default function OrganizerBracketPage() {
         x2: to.x,
         y2: to.y + to.h / 2,
         color: m.status === "COMPLETED" && m.winnerRegistrationId
-          ? T.accent
+          ? T.brand
           : "#c3d2ee"
       })
     }
@@ -935,6 +940,7 @@ export default function OrganizerBracketPage() {
           border: `1px solid ${T.border}`,
           borderRadius: 12,
           background: T.surface,
+          boxShadow: "0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)",
         }}
         onWheel={handleCanvasWheel}
         onMouseDown={handleCanvasMouseDown}
@@ -963,7 +969,7 @@ export default function OrganizerBracketPage() {
                 x={(pos0?.x ?? 0) + (pos0?.w ?? BOX_W_1V1) / 2 + 20}
                 y={(pos0?.y ?? 0) + 18}
                 textAnchor="middle"
-                fill={ri === rounds.length - 1 ? T.accent : T.textMuted}
+                fill={ri === rounds.length - 1 ? T.brand : T.textMuted}
                 fontSize={11}
                 fontWeight={700}
                 fontFamily="'Inter', sans-serif"
@@ -980,7 +986,7 @@ export default function OrganizerBracketPage() {
             {/* Connector lines */}
             {lines.map((l, i) => {
               const mx = l.x1 + H_GAP / 2
-              const isHot = l.color === T.accent || l.color === T.blue
+              const isHot = l.color === T.brand || l.color === T.blue
               return (
                 <path
                   key={i}
@@ -1018,8 +1024,8 @@ export default function OrganizerBracketPage() {
                       x={x - 3} y={y - 3}
                       width={w + 6} height={h + 6}
                       rx={16} ry={16}
-                      fill={T.accentDim}
-                      stroke={T.accent}
+                      fill={T.brandDim}
+                      stroke={T.brand}
                       strokeWidth={1}
                       opacity={0.6}
                     />
@@ -1029,7 +1035,7 @@ export default function OrganizerBracketPage() {
                     x={x} y={y} width={w} height={h}
                     rx={13} ry={13}
                     fill={isBye ? "#f6f8fd" : isSelected ? "#eaf1fd" : T.surface}
-                    stroke={isSelected ? T.accent : isLive ? "rgba(224,75,75,0.5)" : "rgba(75,134,232,0.18)"}
+                    stroke={isSelected ? T.brand : isLive ? "rgba(224,75,75,0.5)" : "rgba(75,134,232,0.18)"}
                     strokeWidth={isSelected ? 1.5 : 1}
                   />
 
@@ -1147,7 +1153,7 @@ export default function OrganizerBracketPage() {
               background: selectedMatchId === thirdPlaceMatch.matchId ? "#eaf1fd" : T.surface,
               border: `1px solid ${
                 selectedMatchId === thirdPlaceMatch.matchId
-                  ? T.accent
+                  ? T.brand
                   : "rgba(140,108,255,0.35)"
               }`,
             }}
@@ -1278,7 +1284,7 @@ export default function OrganizerBracketPage() {
                   </span>
                 )}
                 {selectedMatch.isBracketReset && (
-                  <span style={{ ...styles.byeTag, background: T.accentDim, color: T.accent, borderColor: T.accentBorder }}>
+                  <span style={{ ...styles.byeTag, background: T.brandDim, color: T.brand, borderColor: T.brandBorder }}>
                     Bracket Reset
                   </span>
                 )}
@@ -1805,7 +1811,7 @@ const styles: Record<string, React.CSSProperties> = {
   loadingSpinner: {
     width: 32, height: 32, borderRadius: "50%",
     border: "2px solid rgba(75,134,232,0.15)",
-    borderTopColor: T.accent, animation: "spin 0.8s linear infinite",
+    borderTopColor: T.brand, animation: "spin 0.8s linear infinite",
   },
 
   // ── Setup ──
@@ -1825,18 +1831,20 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "12px 14px", borderRadius: 12,
     background: T.surface,
     border: `1px solid ${T.border}`,
+    boxShadow: "0 1px 2px rgba(15,23,42,0.05)",
     color: T.text, cursor: "pointer", fontFamily: "inherit",
     textAlign: "left" as const, transition: "all 0.15s",
   },
   optionBtnActive: {
-    background: T.accentDim,
-    border: `1px solid ${T.accentBorder}`,
+    background: T.brandDim,
+    border: `1px solid ${T.brandBorder}`,
   },
   optionBtnLabel: { fontSize: "0.88rem", fontWeight: 700, color: T.text },
   optionBtnDesc: { fontSize: "0.72rem", color: T.textMuted },
 
   seedCard: {
     background: T.surface, border: `1px solid ${T.border}`,
+    boxShadow: "0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)",
     borderRadius: 16, overflow: "hidden", marginBottom: 18,
   },
   seedCardHeader: {
@@ -1850,8 +1858,8 @@ const styles: Record<string, React.CSSProperties> = {
   shuffleBtn: {
     display: "flex", alignItems: "center", gap: 6,
     padding: "6px 13px", borderRadius: 8,
-    background: T.accentDim, border: `1px solid ${T.accentBorder}`,
-    color: T.accent, fontSize: "0.78rem", fontWeight: 700,
+    background: T.brandDim, border: `1px solid ${T.brandBorder}`,
+    color: T.brand, fontSize: "0.78rem", fontWeight: 700,
     cursor: "pointer", fontFamily: "inherit",
   },
   seedList: { padding: "8px 0" },
@@ -1869,7 +1877,7 @@ const styles: Record<string, React.CSSProperties> = {
   seedBadge: {
     fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.05em",
     padding: "2px 8px", borderRadius: 4,
-    background: T.accentDim, color: T.accent, border: `1px solid ${T.accentBorder}`,
+    background: T.goldDim, color: T.gold, border: `1px solid ${T.goldBorder}`,
   },
 
   bracketPreviewInfo: {
@@ -1919,7 +1927,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   eyebrow: {
     fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em",
-    textTransform: "uppercase" as const, color: T.accent, marginBottom: 4,
+    textTransform: "uppercase" as const, color: T.brand, marginBottom: 4,
   },
   title: { fontSize: "38px", fontWeight: 500, color: "#0162d1", fontFamily: "'Sarpanch', sans-serif", margin: 0, letterSpacing: "-0.02em" },
   legend: { display: "flex", gap: 16, alignItems: "center" },
@@ -1982,6 +1990,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: 260,
     overflow: "hidden" as const,
     position: "relative" as const,
+    boxShadow: "0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)",
     transition: "border-color 0.15s",
   },
   thirdPlaceTypeBadge: {
