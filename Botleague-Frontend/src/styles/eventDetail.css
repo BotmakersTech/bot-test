@@ -398,21 +398,51 @@
     padding: 26px;
     transition: .4s;
     box-shadow: 0 15px 35px rgba(0, 0, 0, .18);
+    cursor: pointer;
 }
-.evd-page .event-card:hover { transform: translateY(-12px); box-shadow: 0 25px 55px rgba(0, 0, 0, .35); }
+.evd-page .event-card:hover,
+.evd-page .event-card:focus-visible { transform: translateY(-12px); box-shadow: 0 25px 55px rgba(0, 0, 0, .35); }
+.evd-page .event-card:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
 
 .evd-page .image-box { height: 230px; background: #242424; border-radius: 14px; overflow: hidden; }
 .evd-page .image-box img { width: 100%; height: 100%; object-fit: cover; transition: .5s; }
 .evd-page .event-card:hover img { transform: scale(1.08); }
 
+.evd-page .image-box-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, .8);
+    background: linear-gradient(135deg, rgba(1, 98, 209, .9), rgba(140, 108, 255, .9));
+}
+
 .evd-page .event-card h3 {
     margin-top: 32px;
+    margin-bottom: 0;
     text-align: center;
     font-family: Sarpanch;
     font-size: 42px;
     font-weight: 600;
     color: white;
     letter-spacing: 2px;
+}
+
+/* Description + Explore button stay collapsed until the card is hovered/focused,
+   matching the reveal-on-hover pattern used on the /events landing page cards. */
+.evd-page .event-card-reveal {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transform: translateY(6px);
+    transition: max-height .3s ease, opacity .25s ease, transform .3s ease;
+}
+.evd-page .event-card:hover .event-card-reveal,
+.evd-page .event-card:focus-visible .event-card-reveal {
+    max-height: 220px;
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .evd-page .divider { width: 65%; height: 1px; background: white; margin: 18px auto 28px; opacity: .6; }
