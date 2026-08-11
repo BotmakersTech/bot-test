@@ -1,4 +1,4 @@
-import { Trophy } from "lucide-react";
+import { ArrowRight, Trophy } from "lucide-react";
 
 interface EventCardProps {
   image?: string | null;
@@ -44,15 +44,16 @@ export default function EventCard({ image, title, description, disabled, onExplo
           </div>
         )}
       </div>
+      <div className="event-card-image-overlay" />
 
-      <h3>{title}</h3>
-
-      <div className="event-card-reveal">
-        <div className="divider" />
-        <p>{description || "Details for this sport will be published soon."}</p>
-        <button type="button" onClick={handleExploreClick} disabled={disabled}>
-          Explore
-        </button>
+      <div className="event-card-body">
+        <h3>{title}</h3>
+        <div className="event-card-reveal">
+          <p>{description || "Details for this sport will be published soon."}</p>
+          <button type="button" className="event-card-view-details" onClick={handleExploreClick} disabled={disabled}>
+            Explore <ArrowRight size={13} />
+          </button>
+        </div>
       </div>
     </div>
   );
