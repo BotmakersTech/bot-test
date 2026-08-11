@@ -18,18 +18,18 @@ import EventDashboard from "../../../shared/components/EventDashboard/EventDashb
 import UserControlPanel from "../../../shared/components/EventDashboard/UserControlPanel"
 import AddSportModal from "../../../shared/components/AddSportModal/AddSportModal"
 import { ORG } from "../../Organizer/theme/organizerTheme"
+import "../../../styles/organizerTheme.css"
 
 // ─────────────────────────────────────────────────────────────
 // DESIGN TOKENS
 // ─────────────────────────────────────────────────────────────
 
-const BG      = "#3a3a3a"
-const BORDER  = "rgba(255,255,255,0.08)"
-const ACCENT  = "#fa4715"
-const TEXT    = "#ffffff"
-const MUTED   = "#9ca3af"
-const SUCCESS = "#4ade80"
-const DANGER  = "#f87171"
+const BORDER  = "rgba(75,134,232,0.2)"
+const ACCENT  = ORG.blue
+const TEXT    = "#111111"
+const MUTED   = "#6b7280"
+const SUCCESS = "#16a34a"
+const DANGER  = "#dc2626"
 
 // ─────────────────────────────────────────────────────────────
 // TYPES
@@ -72,7 +72,7 @@ function toLabel(raw?: string | null): string {
 
 function Spinner({ size = 16, color = ACCENT }: { size?: number; color?: string }) {
   return (
-    <span style={{ display: "inline-block", width: size, height: size, border: `2px solid rgba(255,255,255,0.12)`, borderTop: `2px solid ${color}`, borderRadius: "50%", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
+    <span style={{ display: "inline-block", width: size, height: size, border: `2px solid rgba(75,134,232,0.18)`, borderTop: `2px solid ${color}`, borderRadius: "50%", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
   )
 }
 
@@ -257,11 +257,11 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange, limited
 
 function PageWrapper({ children }: { children: React.ReactNode }) {
   return (
-    <div className="p-8" style={{ minHeight: "100vh", background: BG, color: TEXT, position: "relative", overflow: "hidden" }}>
+    <div className="org-page-bg p-8" style={{ minHeight: "100vh", color: TEXT, position: "relative", overflow: "hidden" }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        select option { background: #2a2a2a; color: #fff; }
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
+        select option { background: #fff; color: #111; }
+        input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
       `}</style>
       <div style={{ position: "relative", zIndex: 1 }}>
         {children}
@@ -412,7 +412,7 @@ export default function AdminEventPage() {
   if (error) {
     return (
       <PageWrapper>
-        <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "10px", padding: "16px 20px", color: DANGER, fontSize: "0.85rem", fontWeight: 600 }}>⚠️ {error}</div>
+        <div style={{ background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.22)", borderRadius: "10px", padding: "16px 20px", color: DANGER, fontSize: "0.85rem", fontWeight: 600 }}>⚠️ {error}</div>
       </PageWrapper>
     )
   }
@@ -431,8 +431,8 @@ export default function AdminEventPage() {
     <>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        select option { background: #2a2a2a; color: #fff; }
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
+        select option { background: #fff; color: #111; }
+        input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
       `}</style>
 
       {showAddSport && eventId && (
@@ -447,16 +447,16 @@ export default function AdminEventPage() {
       {showDeleteConfirm && (
         <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}
              onClick={e => { if (e.target === e.currentTarget) setShowDeleteConfirm(false) }}>
-          <div style={{ background: "#2a2a2a", border: "1px solid rgba(248,113,113,0.3)", borderRadius: "16px", padding: "28px 28px 24px", width: "100%", maxWidth: "420px", boxShadow: "0 24px 60px rgba(0,0,0,0.5)" }}>
+          <div style={{ background: "#ffffff", border: "1px solid rgba(220,38,38,0.3)", borderRadius: "16px", padding: "28px 28px 24px", width: "100%", maxWidth: "420px", boxShadow: "0 24px 60px rgba(15,23,42,0.25)" }}>
             <div style={{ fontSize: "1.6rem", marginBottom: "12px" }}>🗑️</div>
             <h2 style={{ margin: "0 0 8px", fontFamily: "'Sarpanch', sans-serif", fontSize: "1rem", fontWeight: 700, color: DANGER }}>Delete Event?</h2>
             <p style={{ margin: "0 0 20px", color: MUTED, fontSize: "0.82rem", lineHeight: 1.6 }}>
               <strong style={{ color: TEXT }}>{event.eventName}</strong> will be permanently removed. This cannot be undone.
             </p>
-            {actionError && <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "8px", padding: "8px 12px", color: DANGER, fontSize: "0.78rem", fontWeight: 600, marginBottom: "14px" }}>⚠️ {actionError}</div>}
+            {actionError && <div style={{ background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.22)", borderRadius: "8px", padding: "8px 12px", color: DANGER, fontSize: "0.78rem", fontWeight: 600, marginBottom: "14px" }}>⚠️ {actionError}</div>}
             <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
-              <button onClick={() => setShowDeleteConfirm(false)} disabled={actionLoading} style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "8px", padding: "9px 18px", fontSize: "0.82rem", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
-              <button onClick={handleDeleteEvent} disabled={actionLoading} style={{ background: actionLoading ? "rgba(248,113,113,0.3)" : DANGER, border: "none", color: "#fff", borderRadius: "8px", padding: "9px 22px", fontSize: "0.82rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
+              <button onClick={() => setShowDeleteConfirm(false)} disabled={actionLoading} style={{ background: "rgba(75,134,232,0.06)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "8px", padding: "9px 18px", fontSize: "0.82rem", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+              <button onClick={handleDeleteEvent} disabled={actionLoading} style={{ background: actionLoading ? "rgba(220,38,38,0.3)" : DANGER, border: "none", color: "#fff", borderRadius: "8px", padding: "9px 22px", fontSize: "0.82rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
                 {actionLoading ? <><Spinner size={14} color="#fff" />Deleting…</> : <><Trash2 size={14} />Confirm Delete</>}
               </button>
             </div>

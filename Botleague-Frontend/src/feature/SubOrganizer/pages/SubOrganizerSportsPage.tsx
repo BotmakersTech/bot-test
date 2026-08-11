@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getMySports, type OrganizerSport } from "../../Organizer/api/organizer.api";
+import "../../../styles/organizerTheme.css";
 
 export default function SubOrganizerSportsPage() {
   const [sports, setSports] = useState<OrganizerSport[]>([]);
@@ -17,20 +18,20 @@ export default function SubOrganizerSportsPage() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center text-neutral-400">Loading…</div>
+      <div className="flex h-64 items-center justify-center text-gray-400">Loading…</div>
     );
   }
 
   if (error) {
-    return <div className="p-6 text-red-400">{error}</div>;
+    return <div className="p-6 text-red-600">{error}</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 p-8 text-white">
-      <h1 className="font-display mb-6 text-[38px] font-medium text-[#0162d1]">My Sports</h1>
+    <div className="org-page-bg p-8">
+      <h1 className="font-display mb-6 text-[38px] font-medium text-[#0162d1] tracking-wide">My Sports</h1>
 
       {sports.length === 0 ? (
-        <div className="rounded-xl bg-white/3 p-8 text-center text-neutral-500">
+        <div className="rounded-xl bg-white border p-8 text-center text-gray-400" style={{ borderColor: "rgba(75,134,232,0.2)" }}>
           No sports have been assigned to you yet.
         </div>
       ) : (
@@ -38,22 +39,23 @@ export default function SubOrganizerSportsPage() {
           {sports.map((s) => (
             <div
               key={s.id}
-              className="cursor-pointer rounded-xl bg-white/4 p-5 ring-1 ring-white/8 hover:ring-red-500/40 transition-all"
+              className="cursor-pointer rounded-xl bg-white p-5 border shadow-sm hover:shadow-md hover:border-[#4b86e8] transition-all"
+              style={{ borderColor: "rgba(75,134,232,0.2)" }}
               onClick={() => navigate(`/admin/events/${s.eventId}/sports/${s.id}`)}
             >
-              <h2 className="font-semibold text-white">{s.sport}</h2>
+              <h2 className="font-semibold text-[#374151]">{s.sport}</h2>
               {s.ageGroup && (
-                <p className="mt-1 text-xs text-neutral-400">Age group: {s.ageGroup}</p>
+                <p className="mt-1 text-xs text-gray-400">Age group: {s.ageGroup}</p>
               )}
               {s.weightClass && (
-                <p className="mt-0.5 text-xs text-neutral-400">Weight: {s.weightClass}</p>
+                <p className="mt-0.5 text-xs text-gray-400">Weight: {s.weightClass}</p>
               )}
               <div className="mt-3">
                 <span className={[
                   "rounded-full px-2 py-0.5 text-xs font-medium",
-                  s.status === "REGISTRATION_OPEN" ? "bg-green-500/10 text-green-400" :
-                  s.status === "COMPLETED" ? "bg-neutral-500/10 text-neutral-400" :
-                  "bg-blue-500/10 text-blue-400",
+                  s.status === "REGISTRATION_OPEN" ? "bg-green-50 text-green-600" :
+                  s.status === "COMPLETED" ? "bg-gray-100 text-gray-500" :
+                  "bg-blue-50 text-blue-600",
                 ].join(" ")}>
                   {s.status?.replace(/_/g, " ")}
                 </span>

@@ -9,6 +9,8 @@ import {
   type MatchStatus,
 } from "../api/adminMatches.api"
 import { useSportMatchRealtime, mergeMatchUpdate } from "../../../shared/realtime/useMatchRealtime"
+import { ORG } from "../../Organizer/theme/organizerTheme"
+import "../../../styles/organizerTheme.css"
 
 function toLabel(raw?: string | null) {
   if (!raw) return "—"
@@ -17,14 +19,14 @@ function toLabel(raw?: string | null) {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    SCHEDULED:        "bg-blue-500/15 text-blue-400 border-blue-500/30",
-    LIVE:             "bg-green-500/15 text-green-400 border-green-500/30",
-    PENDING_APPROVAL: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
-    COMPLETED:        "bg-gray-500/15 text-gray-400 border-gray-500/30",
-    CANCELLED:        "bg-red-500/15 text-red-400 border-red-500/30",
+    SCHEDULED:        "bg-blue-50 text-blue-600 border-blue-200",
+    LIVE:              "bg-green-50 text-green-600 border-green-200",
+    PENDING_APPROVAL: "bg-yellow-50 text-yellow-700 border-yellow-200",
+    COMPLETED:        "bg-gray-100 text-gray-500 border-gray-200",
+    CANCELLED:        "bg-red-50 text-red-600 border-red-200",
   }
   return (
-    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold border ${map[status] ?? "bg-white/10 text-gray-400 border-white/10"}`}>
+    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold border ${map[status] ?? "bg-gray-50 text-gray-500 border-gray-200"}`}>
       {toLabel(status)}
     </span>
   )
@@ -128,16 +130,17 @@ export default function AdminMatches() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-white p-8">
+    <div className="org-page-bg p-8">
       <div className="mb-6 flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="font-display text-[38px] font-medium text-[#0162d1]">Match Management</h1>
+          <h1 className="font-display text-[38px] font-medium text-[#0162d1] tracking-wide">Match Management</h1>
           <p className="text-gray-400 text-sm mt-1">
             {loading ? "Loading…" : `${filtered.length} match${filtered.length !== 1 ? "es" : ""}`}
           </p>
         </div>
         <button onClick={() => load()} disabled={loading}
-          className="rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm text-white hover:bg-white/10 transition disabled:opacity-50">
+          className="rounded-xl bg-white border px-4 py-2 text-sm text-[#374151] hover:bg-[#f8f9ff] transition disabled:opacity-50"
+          style={{ borderColor: "rgba(75,134,232,0.3)" }}>
           {loading ? "Refreshing…" : "Refresh"}
         </button>
       </div>
@@ -145,13 +148,13 @@ export default function AdminMatches() {
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {[
-          { label: "Scheduled", value: counts.SCHEDULED, color: "text-blue-400" },
-          { label: "Live",      value: counts.LIVE,      color: "text-green-400" },
-          { label: "Completed", value: counts.COMPLETED, color: "text-gray-300" },
-          { label: "Cancelled", value: counts.CANCELLED, color: "text-red-400" },
+          { label: "Scheduled", value: counts.SCHEDULED, color: "text-blue-600" },
+          { label: "Live",      value: counts.LIVE,      color: "text-green-600" },
+          { label: "Completed", value: counts.COMPLETED, color: "text-gray-500" },
+          { label: "Cancelled", value: counts.CANCELLED, color: "text-red-600" },
         ].map(({ label, value, color }) => (
-          <div key={label} className="rounded-xl bg-white/5 border border-white/10 px-4 py-3">
-            <p className="text-xs text-gray-500">{label}</p>
+          <div key={label} className="rounded-xl bg-white border px-4 py-3" style={{ borderColor: "rgba(75,134,232,0.2)" }}>
+            <p className="text-xs text-gray-400">{label}</p>
             <p className={`text-2xl font-bold mt-0.5 ${color}`}>{value}</p>
           </div>
         ))}
@@ -162,7 +165,8 @@ export default function AdminMatches() {
         <select
           value={selectedEventId}
           onChange={(e) => handleEventChange(e.target.value)}
-          className="rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm text-white focus:outline-none focus:border-orange-500/50"
+          className="rounded-xl bg-white border px-4 py-2 text-sm text-[#374151] outline-none"
+          style={{ borderColor: "rgba(75,134,232,0.3)" }}
         >
           <option value="ALL">All Events</option>
           {events.map((ev) => (
@@ -174,7 +178,8 @@ export default function AdminMatches() {
           value={selectedSportId}
           onChange={(e) => setSelectedSportId(e.target.value)}
           disabled={selectedEventId === "ALL"}
-          className="rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm text-white focus:outline-none focus:border-orange-500/50 disabled:opacity-40"
+          className="rounded-xl bg-white border px-4 py-2 text-sm text-[#374151] outline-none disabled:opacity-40"
+          style={{ borderColor: "rgba(75,134,232,0.3)" }}
         >
           <option value="ALL">All Sports</option>
           {sports.map((sp) => (
@@ -188,7 +193,8 @@ export default function AdminMatches() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by team name…"
-          className="flex-1 min-w-48 rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50"
+          className="flex-1 min-w-48 rounded-xl bg-white border px-4 py-2 text-sm text-[#374151] placeholder-gray-400 outline-none"
+          style={{ borderColor: "rgba(75,134,232,0.3)" }}
         />
       </div>
 
@@ -197,11 +203,12 @@ export default function AdminMatches() {
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
-            className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition border ${
+            className="rounded-xl px-3 py-1.5 text-xs font-semibold transition"
+            style={
               statusFilter === s
-                ? "bg-orange-500/20 text-orange-400 border-orange-500/30"
-                : "bg-white/5 text-gray-400 border-white/10 hover:text-white"
-            }`}
+                ? { background: "rgba(250,146,25,0.12)", color: "#c2620a", border: "1px solid rgba(250,146,25,0.35)" }
+                : { background: "#f8f9ff", color: ORG.muted, border: "1px solid rgba(75,134,232,0.2)" }
+            }
           >
             {s === "ALL" ? "All Status" : toLabel(s)}
           </button>
@@ -209,67 +216,67 @@ export default function AdminMatches() {
       </div>
 
       {error ? (
-        <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-6 text-red-400 text-sm text-center">{error}</div>
+        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-600 text-sm text-center">{error}</div>
       ) : loading ? (
         <div className="flex items-center justify-center py-20 text-gray-400">Loading matches…</div>
       ) : filtered.length === 0 ? (
-        <div className="flex items-center justify-center py-20 text-gray-500">No matches found</div>
+        <div className="flex items-center justify-center py-20 text-gray-400">No matches found</div>
       ) : (
-        <div className="rounded-2xl border border-white/10 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-white/5 text-gray-400 text-xs uppercase">
-              <tr>
-                <th className="px-4 py-3 text-left">#</th>
-                <th className="px-4 py-3 text-left">Teams</th>
-                <th className="px-4 py-3 text-left hidden sm:table-cell">Round</th>
-                <th className="px-4 py-3 text-center hidden md:table-cell">Score</th>
-                <th className="px-4 py-3 text-left hidden lg:table-cell">Scheduled</th>
-                <th className="px-4 py-3 text-center">Status</th>
-                <th className="px-4 py-3 text-center">Actions</th>
+        <div className="rounded-2xl border overflow-x-auto" style={{ borderColor: "rgba(75,134,232,0.25)" }}>
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr style={{ background: ORG.gradientPill }}>
+                <th className="px-4 py-3.5 text-left font-semibold text-white">#</th>
+                <th className="px-4 py-3.5 text-left font-semibold text-white">Teams</th>
+                <th className="px-4 py-3.5 text-left font-semibold text-white hidden sm:table-cell">Round</th>
+                <th className="px-4 py-3.5 text-center font-semibold text-white hidden md:table-cell">Score</th>
+                <th className="px-4 py-3.5 text-left font-semibold text-white hidden lg:table-cell">Scheduled</th>
+                <th className="px-4 py-3.5 text-center font-semibold text-white">Status</th>
+                <th className="px-4 py-3.5 text-center font-semibold text-white">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="bg-white">
               {filtered.map((m) => (
-                <tr key={m.matchId} className="hover:bg-white/5 transition-colors">
-                  <td className="px-4 py-3 text-gray-500 font-mono text-xs">
+                <tr key={m.matchId} className="border-t transition-colors hover:bg-[#f8f9ff]" style={{ borderColor: "rgba(75,134,232,0.14)" }}>
+                  <td className="px-4 py-3 text-gray-400 font-mono text-xs">
                     {m.matchNumber ?? "—"}
                   </td>
                   <td className="px-4 py-3">
                     <div className="space-y-0.5">
-                      <p className="font-medium text-white">
+                      <p className="font-medium text-[#374151]">
                         {m.teamAName ?? "TBD"}
                         {m.teamARobotName && (
-                          <span className="ml-1.5 text-xs text-gray-500">({m.teamARobotName})</span>
+                          <span className="ml-1.5 text-xs text-gray-400">({m.teamARobotName})</span>
                         )}
                       </p>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm text-gray-500">
                         vs {m.teamBName ?? "TBD"}
                         {m.teamBRobotName && (
-                          <span className="ml-1.5 text-xs text-gray-500">({m.teamBRobotName})</span>
+                          <span className="ml-1.5 text-xs text-gray-400">({m.teamBRobotName})</span>
                         )}
                       </p>
                       {m.teamCName && (
-                        <p className="text-xs text-gray-500">& {m.teamCName}</p>
+                        <p className="text-xs text-gray-400">& {m.teamCName}</p>
                       )}
                     </div>
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell">
                     {m.roundNumber != null ? (
-                      <span className="text-gray-300">Round {m.roundNumber}</span>
+                      <span className="text-gray-600">Round {m.roundNumber}</span>
                     ) : (
-                      <span className="text-gray-600">—</span>
+                      <span className="text-gray-300">—</span>
                     )}
                     {m.bracketSide && (
-                      <p className="text-xs text-gray-500 mt-0.5">{toLabel(m.bracketSide)}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{toLabel(m.bracketSide)}</p>
                     )}
                   </td>
                   <td className="px-4 py-3 text-center hidden md:table-cell">
                     {m.teamAScore != null && m.teamBScore != null ? (
-                      <span className="font-mono font-bold text-white">
+                      <span className="font-mono font-bold text-[#374151]">
                         {m.teamAScore} – {m.teamBScore}
                       </span>
                     ) : (
-                      <span className="text-gray-600">—</span>
+                      <span className="text-gray-300">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-gray-400 hidden lg:table-cell">
@@ -282,16 +289,16 @@ export default function AdminMatches() {
                     {m.status === "PENDING_APPROVAL" ? (
                       <div className="flex items-center justify-center gap-2">
                         <button onClick={() => handleApprove(m.matchId)} disabled={actingOnId === m.matchId}
-                          className="rounded-lg bg-green-500/10 px-2.5 py-1 text-xs font-semibold text-green-400 hover:bg-green-500/20 disabled:opacity-50">
+                          className="rounded-lg bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-600 hover:bg-green-100 disabled:opacity-50">
                           Approve
                         </button>
                         <button onClick={() => handleReject(m.matchId)} disabled={actingOnId === m.matchId}
-                          className="rounded-lg bg-red-500/10 px-2.5 py-1 text-xs font-semibold text-red-400 hover:bg-red-500/20 disabled:opacity-50">
+                          className="rounded-lg bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-100 disabled:opacity-50">
                           Reject
                         </button>
                       </div>
                     ) : (
-                      <span className="text-gray-600">—</span>
+                      <span className="text-gray-300">—</span>
                     )}
                   </td>
                 </tr>

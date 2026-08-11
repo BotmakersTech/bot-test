@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { getAllEvents, type AdminEventResponse, type AdminEventSportResponse } from "../api/admin.api"
+import { ORG } from "../../Organizer/theme/organizerTheme"
+import "../../../styles/organizerTheme.css"
 
 interface FlatSport extends AdminEventSportResponse {
   eventId: string
@@ -17,14 +19,14 @@ function SportStatusBadge({ status }: { status?: string }) {
   const s = (status ?? "").toUpperCase()
   const cls =
     s === "ACTIVE" || s === "REGISTRATION_OPEN"
-      ? "bg-green-500/15 text-green-400 border-green-500/30"
+      ? "bg-green-50 text-green-600 border-green-200"
       : s === "REGISTRATION_CLOSED"
-      ? "bg-yellow-500/15 text-yellow-400 border-yellow-500/30"
+      ? "bg-yellow-50 text-yellow-700 border-yellow-200"
       : s === "COMPLETED"
-      ? "bg-blue-500/15 text-blue-400 border-blue-500/30"
+      ? "bg-blue-50 text-blue-600 border-blue-200"
       : s === "CANCELLED"
-      ? "bg-red-500/15 text-red-400 border-red-500/30"
-      : "bg-white/10 text-gray-400 border-white/10"
+      ? "bg-red-50 text-red-600 border-red-200"
+      : "bg-gray-50 text-gray-500 border-gray-200"
   return (
     <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold border ${cls}`}>
       {toLabel(status)}
@@ -72,10 +74,10 @@ export default function AdminAllSportsPage() {
   })
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-white p-8">
+    <div className="org-page-bg p-8">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="font-display text-[38px] font-medium text-[#0162d1]">All Sports</h1>
+        <h1 className="font-display text-[38px] font-medium text-[#0162d1] tracking-wide">All Sports</h1>
         <p className="text-gray-400 text-sm mt-1">
           {loading ? "Loading…" : `${filtered.length} sport${filtered.length !== 1 ? "s" : ""} across ${events.length} event${events.length !== 1 ? "s" : ""}`}
         </p>
@@ -84,17 +86,21 @@ export default function AdminAllSportsPage() {
       {/* Controls */}
       <div className="flex flex-wrap gap-3 mb-5">
         {/* Search */}
-        <div className="flex flex-1 min-w-60 gap-2">
+        <div
+          className="flex flex-1 min-w-60 overflow-hidden rounded-xl border shadow-sm"
+          style={{ borderColor: "rgba(75,134,232,0.3)" }}
+        >
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && setActiveSearch(search)}
             placeholder="Search by sport name, event, age group…"
-            className="flex-1 min-w-0 rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50"
+            className="flex-1 min-w-0 px-4 py-2 text-sm text-[#374151] placeholder-gray-400 outline-none"
           />
           <button
             onClick={() => setActiveSearch(search)}
-            className="rounded-xl bg-[#fa4715] hover:bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition"
+            className="px-5 text-sm font-semibold text-white transition"
+            style={{ background: ORG.gradientCta }}
           >
             Search
           </button>
@@ -104,7 +110,8 @@ export default function AdminAllSportsPage() {
         <select
           value={eventFilter}
           onChange={(e) => setEventFilter(e.target.value)}
-          className="rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm text-white focus:outline-none focus:border-orange-500/50"
+          className="rounded-xl bg-white border px-4 py-2 text-sm text-[#374151] outline-none"
+          style={{ borderColor: "rgba(75,134,232,0.3)" }}
         >
           <option value="ALL">All Events</option>
           {events.map((ev) => (
@@ -117,61 +124,62 @@ export default function AdminAllSportsPage() {
 
       {/* Content */}
       {error ? (
-        <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-6 text-red-400 text-sm text-center">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-600 text-sm text-center">
           {error}
         </div>
       ) : loading ? (
         <div className="flex items-center justify-center py-20 text-gray-400">Loading sports…</div>
       ) : filtered.length === 0 ? (
-        <div className="flex items-center justify-center py-20 text-gray-500">No sports found</div>
+        <div className="flex items-center justify-center py-20 text-gray-400">No sports found</div>
       ) : (
-        <div className="rounded-2xl border border-white/10 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-white/5 text-gray-400 text-xs uppercase">
-              <tr>
-                <th className="px-4 py-3 text-left">Sport</th>
-                <th className="px-4 py-3 text-left">Event</th>
-                <th className="px-4 py-3 text-left hidden md:table-cell">Age Group</th>
-                <th className="px-4 py-3 text-left hidden lg:table-cell">Weight Class</th>
-                <th className="px-4 py-3 text-center hidden sm:table-cell">Teams</th>
-                <th className="px-4 py-3 text-center">Status</th>
-                <th className="px-4 py-3 text-right">Action</th>
+        <div className="rounded-2xl border overflow-x-auto" style={{ borderColor: "rgba(75,134,232,0.25)" }}>
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr style={{ background: ORG.gradientPill }}>
+                <th className="px-4 py-3.5 text-left font-semibold text-white">Sport</th>
+                <th className="px-4 py-3.5 text-left font-semibold text-white">Event</th>
+                <th className="px-4 py-3.5 text-left font-semibold text-white hidden md:table-cell">Age Group</th>
+                <th className="px-4 py-3.5 text-left font-semibold text-white hidden lg:table-cell">Weight Class</th>
+                <th className="px-4 py-3.5 text-center font-semibold text-white hidden sm:table-cell">Teams</th>
+                <th className="px-4 py-3.5 text-center font-semibold text-white">Status</th>
+                <th className="px-4 py-3.5 text-right font-semibold text-white">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="bg-white">
               {filtered.map((sp) => (
                 <tr
                   key={`${sp.eventId}-${sp.id}`}
-                  className="hover:bg-white/5 transition-colors"
+                  className="border-t transition-colors hover:bg-[#f8f9ff]"
+                  style={{ borderColor: "rgba(75,134,232,0.14)" }}
                 >
                   {/* Sport */}
                   <td className="px-4 py-3">
-                    <p className="font-medium text-white">{toLabel(sp.sport)}</p>
+                    <p className="font-medium text-[#374151]">{toLabel(sp.sport)}</p>
                     {sp.formatType && (
-                      <p className="text-xs text-gray-500 mt-0.5">{toLabel(sp.formatType)}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{toLabel(sp.formatType)}</p>
                     )}
                   </td>
 
                   {/* Event */}
                   <td className="px-4 py-3">
-                    <p className="text-sm text-gray-200 font-medium">{sp.eventName}</p>
+                    <p className="text-sm text-[#374151] font-medium">{sp.eventName}</p>
                     {sp.eventStatus && (
-                      <p className="text-xs text-gray-500 mt-0.5">{toLabel(sp.eventStatus)}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{toLabel(sp.eventStatus)}</p>
                     )}
                   </td>
 
                   {/* Age Group */}
-                  <td className="px-4 py-3 text-gray-400 hidden md:table-cell">
+                  <td className="px-4 py-3 text-gray-500 hidden md:table-cell">
                     {toLabel(sp.ageGroup)}
                   </td>
 
                   {/* Weight Class */}
-                  <td className="px-4 py-3 text-gray-400 hidden lg:table-cell">
+                  <td className="px-4 py-3 text-gray-500 hidden lg:table-cell">
                     {toLabel(sp.weightClass)}
                   </td>
 
                   {/* Teams */}
-                  <td className="px-4 py-3 text-center text-gray-300 hidden sm:table-cell">
+                  <td className="px-4 py-3 text-center text-gray-600 hidden sm:table-cell">
                     <span className="font-mono text-sm">
                       {sp.registeredTeamsCount ?? 0}
                       {sp.maxTeams ? `/${sp.maxTeams}` : ""}
@@ -189,7 +197,8 @@ export default function AdminAllSportsPage() {
                       onClick={() =>
                         navigate(`/admin/event/${sp.eventId}/sports/${sp.id}`)
                       }
-                      className="rounded-lg bg-white/8 hover:bg-white/15 border border-white/10 px-3 py-1.5 text-xs font-medium text-white transition"
+                      className="rounded-lg bg-[#f8f9ff] hover:bg-[#eef2ff] border px-3 py-1.5 text-xs font-medium text-[#374151] transition"
+                      style={{ borderColor: "rgba(75,134,232,0.25)" }}
                     >
                       View →
                     </button>

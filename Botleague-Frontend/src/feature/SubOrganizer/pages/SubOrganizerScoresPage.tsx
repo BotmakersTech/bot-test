@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react"
 import { getMySports, getMatchesForSport, type OrganizerSport, type OrganizerMatch } from "../../Organizer/api/organizer.api"
 import { updateMatchScore, startMatch, completeMatch } from "../../Admin/api/adminMatches.api"
 import { useSportMatchRealtime, mergeMatchUpdate } from "../../../shared/realtime/useMatchRealtime"
+import "../../../styles/organizerTheme.css"
 
 function toLabel(raw?: string | null) {
   if (!raw) return "—"
@@ -10,13 +11,13 @@ function toLabel(raw?: string | null) {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    SCHEDULED: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-    LIVE:      "bg-green-500/15 text-green-400 border-green-500/30",
-    COMPLETED: "bg-gray-500/15 text-gray-400 border-gray-500/30",
-    CANCELLED: "bg-red-500/15 text-red-400 border-red-500/30",
+    SCHEDULED: "bg-blue-50 text-blue-600 border-blue-200",
+    LIVE:      "bg-green-50 text-green-600 border-green-200",
+    COMPLETED: "bg-gray-100 text-gray-500 border-gray-200",
+    CANCELLED: "bg-red-50 text-red-600 border-red-200",
   }
   return (
-    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold border ${map[status] ?? "bg-white/10 text-gray-400 border-white/10"}`}>
+    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold border ${map[status] ?? "bg-gray-50 text-gray-500 border-gray-200"}`}>
       {toLabel(status)}
     </span>
   )
@@ -132,23 +133,23 @@ export default function SubOrganizerScoresPage() {
   const done      = matches.filter((m) => m.status === "COMPLETED")
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-white p-8">
+    <div className="org-page-bg p-8">
       <div className="mb-6">
-        <h1 className="font-display text-[38px] font-medium text-[#0162d1]">Score Management</h1>
+        <h1 className="font-display text-[38px] font-medium text-[#0162d1] tracking-wide">Score Management</h1>
         <p className="text-gray-400 text-sm mt-1">Update live scores and finalize match results</p>
       </div>
 
       {success && (
-        <div className="mb-4 rounded-xl bg-green-500/10 border border-green-500/20 px-4 py-2.5 text-sm text-green-400">{success}</div>
+        <div className="mb-4 rounded-xl bg-green-50 border border-green-200 px-4 py-2.5 text-sm text-green-600">{success}</div>
       )}
       {error && (
-        <div className="mb-4 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-2.5 text-sm text-red-400">{error}</div>
+        <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-2.5 text-sm text-red-600">{error}</div>
       )}
 
       {loadingSports ? (
         <div className="flex items-center justify-center py-20 text-gray-400">Loading…</div>
       ) : sports.length === 0 ? (
-        <div className="rounded-xl bg-white/5 border border-white/10 p-8 text-center text-gray-500">
+        <div className="rounded-xl bg-white border p-8 text-center text-gray-400" style={{ borderColor: "rgba(75,134,232,0.2)" }}>
           No sports are assigned to you yet.
         </div>
       ) : (
@@ -157,7 +158,8 @@ export default function SubOrganizerScoresPage() {
             <select
               value={selectedSportId}
               onChange={(e) => setSelectedSportId(e.target.value)}
-              className="rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm text-white focus:outline-none focus:border-orange-500/50"
+              className="rounded-xl bg-white border px-4 py-2 text-sm text-[#374151] outline-none"
+              style={{ borderColor: "rgba(75,134,232,0.3)" }}
             >
               {sports.map((sp) => (
                 <option key={sp.id} value={sp.id}>
@@ -168,24 +170,24 @@ export default function SubOrganizerScoresPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-            <div className="rounded-xl bg-green-500/10 border border-green-500/20 px-4 py-3">
-              <p className="text-xs text-gray-500">Live</p>
-              <p className="text-2xl font-bold text-green-400">{live.length}</p>
+            <div className="rounded-xl bg-green-50 border border-green-200 px-4 py-3">
+              <p className="text-xs text-gray-400">Live</p>
+              <p className="text-2xl font-bold text-green-600">{live.length}</p>
             </div>
-            <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 px-4 py-3">
-              <p className="text-xs text-gray-500">Scheduled</p>
-              <p className="text-2xl font-bold text-blue-400">{scheduled.length}</p>
+            <div className="rounded-xl bg-blue-50 border border-blue-200 px-4 py-3">
+              <p className="text-xs text-gray-400">Scheduled</p>
+              <p className="text-2xl font-bold text-blue-600">{scheduled.length}</p>
             </div>
-            <div className="rounded-xl bg-white/5 border border-white/10 px-4 py-3">
-              <p className="text-xs text-gray-500">Completed</p>
-              <p className="text-2xl font-bold text-gray-300">{done.length}</p>
+            <div className="rounded-xl bg-white border px-4 py-3" style={{ borderColor: "rgba(75,134,232,0.2)" }}>
+              <p className="text-xs text-gray-400">Completed</p>
+              <p className="text-2xl font-bold text-gray-500">{done.length}</p>
             </div>
           </div>
 
           {loadingMatches ? (
             <div className="flex items-center justify-center py-16 text-gray-400">Loading matches…</div>
           ) : matches.length === 0 ? (
-            <div className="flex items-center justify-center py-16 text-gray-500">No matches created yet</div>
+            <div className="flex items-center justify-center py-16 text-gray-400">No matches created yet</div>
           ) : (
             <div className="space-y-3">
               {matches.map((m) => {
@@ -194,21 +196,21 @@ export default function SubOrganizerScoresPage() {
                 const isScheduled = m.status === "SCHEDULED"
                 const isSaving = saving === m.matchId
                 return (
-                  <div key={m.matchId} className="rounded-xl bg-white/5 border border-white/10 p-4">
+                  <div key={m.matchId} className="rounded-xl bg-white border p-4" style={{ borderColor: "rgba(75,134,232,0.2)" }}>
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs text-gray-500 font-mono">
+                          <span className="text-xs text-gray-400 font-mono">
                             {m.matchNumber != null ? `#${m.matchNumber}` : ""}
                             {m.roundNumber != null ? ` R${m.roundNumber}` : ""}
                           </span>
                           <StatusBadge status={m.status} />
                         </div>
-                        <p className="font-semibold text-white mt-1">
+                        <p className="font-semibold text-[#374151] mt-1">
                           {m.teamARobotName ?? m.teamAName ?? "TBD"} vs {m.teamBRobotName ?? m.teamBName ?? "TBD"}
                         </p>
                         {m.scheduledAt && (
-                          <p className="text-xs text-gray-500 mt-0.5">
+                          <p className="text-xs text-gray-400 mt-0.5">
                             {new Date(m.scheduledAt).toLocaleString()}
                           </p>
                         )}
@@ -217,8 +219,8 @@ export default function SubOrganizerScoresPage() {
                       {/* Current score display */}
                       {(m.teamAScore != null || m.teamBScore != null) && (
                         <div className="text-right shrink-0">
-                          <p className="text-xs text-gray-500">Score</p>
-                          <p className="font-mono font-bold text-xl text-white">
+                          <p className="text-xs text-gray-400">Score</p>
+                          <p className="font-mono font-bold text-xl text-[#374151]">
                             {m.teamAScore ?? 0} – {m.teamBScore ?? 0}
                           </p>
                         </div>
@@ -227,33 +229,35 @@ export default function SubOrganizerScoresPage() {
 
                     {/* Score inputs for live/scheduled matches */}
                     {(isLive || isScheduled) && (
-                      <div className="border-t border-white/5 pt-3">
+                      <div className="border-t pt-3" style={{ borderColor: "rgba(75,134,232,0.14)" }}>
                         <div className="flex items-center gap-3 flex-wrap">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-400 w-20 truncate">{m.teamAName ?? "Team A"}</span>
+                            <span className="text-xs text-gray-500 w-20 truncate">{m.teamAName ?? "Team A"}</span>
                             <input
                               type="number"
                               min={0}
                               value={sc.a}
                               onChange={(e) => setScores((prev) => ({ ...prev, [m.matchId]: { ...sc, a: e.target.value } }))}
-                              className="w-16 rounded-lg bg-white/5 border border-white/15 px-3 py-1.5 text-sm text-center text-white focus:outline-none focus:border-orange-500/50"
+                              className="w-16 rounded-lg bg-white border px-3 py-1.5 text-sm text-center text-[#374151] outline-none"
+                              style={{ borderColor: "rgba(75,134,232,0.3)" }}
                             />
                           </div>
-                          <span className="text-gray-600">–</span>
+                          <span className="text-gray-300">–</span>
                           <div className="flex items-center gap-2">
                             <input
                               type="number"
                               min={0}
                               value={sc.b}
                               onChange={(e) => setScores((prev) => ({ ...prev, [m.matchId]: { ...sc, b: e.target.value } }))}
-                              className="w-16 rounded-lg bg-white/5 border border-white/15 px-3 py-1.5 text-sm text-center text-white focus:outline-none focus:border-orange-500/50"
+                              className="w-16 rounded-lg bg-white border px-3 py-1.5 text-sm text-center text-[#374151] outline-none"
+                              style={{ borderColor: "rgba(75,134,232,0.3)" }}
                             />
-                            <span className="text-xs text-gray-400 w-20 truncate">{m.teamBName ?? "Team B"}</span>
+                            <span className="text-xs text-gray-500 w-20 truncate">{m.teamBName ?? "Team B"}</span>
                           </div>
                           <button
                             onClick={() => handleScoreUpdate(m.matchId)}
                             disabled={isSaving}
-                            className="rounded-lg bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30 text-orange-400 px-3 py-1.5 text-xs font-semibold disabled:opacity-50 transition"
+                            className="rounded-lg bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-600 px-3 py-1.5 text-xs font-semibold disabled:opacity-50 transition"
                           >
                             {isSaving ? "Saving…" : "Update Score"}
                           </button>
@@ -261,7 +265,7 @@ export default function SubOrganizerScoresPage() {
                             <button
                               onClick={() => handleStart(m.matchId)}
                               disabled={isSaving}
-                              className="rounded-lg bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 text-green-400 px-3 py-1.5 text-xs font-semibold disabled:opacity-50 transition"
+                              className="rounded-lg bg-green-50 hover:bg-green-100 border border-green-200 text-green-600 px-3 py-1.5 text-xs font-semibold disabled:opacity-50 transition"
                             >
                               Start Match
                             </button>
@@ -270,7 +274,7 @@ export default function SubOrganizerScoresPage() {
                             <button
                               onClick={() => handleComplete(m.matchId)}
                               disabled={isSaving}
-                              className="rounded-lg bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 text-blue-400 px-3 py-1.5 text-xs font-semibold disabled:opacity-50 transition"
+                              className="rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-600 px-3 py-1.5 text-xs font-semibold disabled:opacity-50 transition"
                             >
                               Finalize
                             </button>

@@ -2,10 +2,10 @@ import { useParams, useNavigate } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 import useLeaderboard from "../../Leaderboard/hook/useLeaderboard"
 import RankingsTab from "../../Leaderboard/components/Ranking"
+import "../../../styles/organizerTheme.css"
 
-const BG = "#0a0c10"
-const TEXT = "#ffffff"
-const MUTED = "#9ca3af"
+const TEXT = "#111111"
+const MUTED = "#6b7280"
 
 export default function AdminSportRankingPage() {
   const { eventId, sportId } = useParams<{ eventId: string; sportId: string }>()
@@ -14,7 +14,7 @@ export default function AdminSportRankingPage() {
   const { leaderboard, loading, error, refetch } = useLeaderboard(eventId ?? "", sportId ?? "")
 
   return (
-    <div className="p-8" style={{ minHeight: "100vh", background: BG, color: TEXT }}>
+    <div className="org-page-bg p-8" style={{ minHeight: "100vh", color: TEXT }}>
       <button
         onClick={() => navigate(`/admin/events/${eventId}/sports/${sportId}`)}
         className="mb-4 flex items-center gap-1.5 text-sm font-semibold"

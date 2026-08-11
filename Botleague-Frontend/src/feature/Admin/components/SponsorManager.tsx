@@ -21,16 +21,17 @@ import {
   getSportSponsorLogoUploadUrl,
 } from "../../Event/api/sportSponsor.api";
 import SponsorStrip, { type SponsorEntry } from "../../../shared/components/SponsorStrip";
+import { ORG } from "../../Organizer/theme/organizerTheme";
 
 // ─── Design tokens ──────────────────────────────────────────────────────────────
-const ACCENT  = "#fa4715";
-const CARD    = "rgba(0,0,0,0.25)";
-const CARD2   = "rgba(0,0,0,0.35)";
-const BORDER  = "rgba(255,255,255,0.08)";
-const TEXT    = "#ffffff";
-const MUTED   = "#9ca3af";
-const LABEL   = "#e5e7eb";
-const DANGER  = "#f87171";
+const ACCENT  = ORG.blue;
+const CARD    = "#ffffff";
+const CARD2   = "#f8f9ff";
+const BORDER  = "rgba(75,134,232,0.2)";
+const TEXT    = "#111111";
+const MUTED   = "#6b7280";
+const LABEL   = "#374151";
+const DANGER  = "#dc2626";
 
 type Sponsor = EventSponsor | SportSponsor;
 
@@ -86,17 +87,17 @@ function LogoUploader({ mode, entityId, value, onChange }: LogoUploadProps) {
       <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
         {preview ? (
           <div style={{ position: "relative" }}>
-            <img src={preview} alt="logo" style={{ height: "52px", maxWidth: "90px", objectFit: "contain", borderRadius: "8px", border: `1px solid ${BORDER}`, background: "rgba(0,0,0,0.3)", padding: "4px" }} />
+            <img src={preview} alt="logo" style={{ height: "52px", maxWidth: "90px", objectFit: "contain", borderRadius: "8px", border: `1px solid ${BORDER}`, background: "rgba(75,134,232,0.08)", padding: "4px" }} />
             <button
               type="button"
               onClick={() => { setPreview(""); onChange(""); }}
-              style={{ position: "absolute", top: "-6px", right: "-6px", background: "rgba(248,113,113,0.9)", border: "none", color: "#fff", borderRadius: "50%", width: "16px", height: "16px", fontSize: "9px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+              style={{ position: "absolute", top: "-6px", right: "-6px", background: "rgba(220,38,38,0.9)", border: "none", color: "#fff", borderRadius: "50%", width: "16px", height: "16px", fontSize: "9px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
             >✕</button>
           </div>
         ) : (
           <div
             onClick={() => !uploading && inputRef.current?.click()}
-            style={{ width: "90px", height: "52px", border: `1px dashed ${uploading ? ACCENT : BORDER}`, borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", cursor: uploading ? "wait" : "pointer", background: "rgba(0,0,0,0.2)", fontSize: "0.65rem", color: MUTED, flexDirection: "column", gap: "3px" }}
+            style={{ width: "90px", height: "52px", border: `1px dashed ${uploading ? ACCENT : BORDER}`, borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", cursor: uploading ? "wait" : "pointer", background: "rgba(75,134,232,0.06)", fontSize: "0.65rem", color: MUTED, flexDirection: "column", gap: "3px" }}
           >
             {uploading ? <span style={{ fontSize: "0.6rem", color: ACCENT }}>Uploading…</span> : <><span style={{ fontSize: "1rem" }}>📁</span><span>Upload</span></>}
           </div>
@@ -109,7 +110,7 @@ function LogoUploader({ mode, entityId, value, onChange }: LogoUploadProps) {
               placeholder="or paste logo URL…"
               value={value.startsWith("http") && !preview ? value : ""}
               onChange={e => { onChange(e.target.value); setPreview(e.target.value); }}
-              style={{ width: "100%", background: "rgba(0,0,0,0.25)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "8px 12px", color: TEXT, fontSize: "0.78rem", outline: "none", boxSizing: "border-box" }}
+              style={{ width: "100%", background: "rgba(75,134,232,0.06)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "8px 12px", color: TEXT, fontSize: "0.78rem", outline: "none", boxSizing: "border-box" }}
             />
           </div>
         )}
@@ -142,7 +143,7 @@ function SponsorFormModal({ mode, entityId, title, initial, busy, error, onSave,
           value={form[key]}
           onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
           placeholder={placeholder}
-          style={{ width: "100%", background: "rgba(0,0,0,0.25)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "9px 12px", color: TEXT, fontSize: "0.82rem", outline: "none", boxSizing: "border-box" }}
+          style={{ width: "100%", background: "rgba(75,134,232,0.06)", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "9px 12px", color: TEXT, fontSize: "0.82rem", outline: "none", boxSizing: "border-box" }}
         />
       </div>
     );
@@ -150,7 +151,7 @@ function SponsorFormModal({ mode, entityId, title, initial, busy, error, onSave,
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-      <div style={{ background: "#2a2a2a", border: `1px solid rgba(250,71,21,0.2)`, borderRadius: "16px", width: "100%", maxWidth: "460px", maxHeight: "90vh", overflow: "auto", padding: "24px" }}>
+      <div style={{ background: "#ffffff", border: `1px solid rgba(75,134,232,0.3)`, borderRadius: "16px", width: "100%", maxWidth: "460px", maxHeight: "90vh", overflow: "auto", padding: "24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
           <div style={{ fontWeight: 700, fontSize: "1rem", color: TEXT }}>{title}</div>
           <button onClick={onClose} style={{ background: "none", border: "none", color: MUTED, cursor: "pointer", fontSize: "18px" }}>✕</button>
@@ -164,7 +165,7 @@ function SponsorFormModal({ mode, entityId, title, initial, busy, error, onSave,
             <select
               value={form.sponsorType}
               onChange={e => setForm(f => ({ ...f, sponsorType: e.target.value }))}
-              style={{ width: "100%", background: "#2a2a2a", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "9px 12px", color: form.sponsorType ? TEXT : MUTED, fontSize: "0.82rem", outline: "none" }}
+              style={{ width: "100%", background: "#ffffff", border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "9px 12px", color: form.sponsorType ? TEXT : MUTED, fontSize: "0.82rem", outline: "none" }}
             >
               <option value="">Select type…</option>
               {EVENT_SPORT_SPONSOR_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
@@ -184,7 +185,7 @@ function SponsorFormModal({ mode, entityId, title, initial, busy, error, onSave,
         </div>
 
         {error && (
-          <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "8px", padding: "10px 12px", color: DANGER, fontSize: "0.78rem", fontWeight: 600, marginTop: "16px" }}>
+          <div style={{ background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.25)", borderRadius: "8px", padding: "10px 12px", color: DANGER, fontSize: "0.78rem", fontWeight: 600, marginTop: "16px" }}>
             ⚠️ {error}
           </div>
         )}
@@ -192,12 +193,12 @@ function SponsorFormModal({ mode, entityId, title, initial, busy, error, onSave,
         <div style={{ display: "flex", gap: "10px", marginTop: "20px", justifyContent: "flex-end" }}>
           <button
             onClick={onClose}
-            style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "8px", padding: "9px 18px", fontSize: "0.81rem", cursor: "pointer" }}
+            style={{ background: "rgba(75,134,232,0.08)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "8px", padding: "9px 18px", fontSize: "0.81rem", cursor: "pointer" }}
           >Cancel</button>
           <button
             onClick={() => !busy && form.sponsorName.trim() && onSave(form)}
             disabled={busy || !form.sponsorName.trim()}
-            style={{ background: busy || !form.sponsorName.trim() ? "rgba(250,71,21,0.25)" : ACCENT, border: "none", color: "#fff", borderRadius: "8px", padding: "9px 22px", fontSize: "0.81rem", fontWeight: 700, cursor: busy || !form.sponsorName.trim() ? "not-allowed" : "pointer" }}
+            style={{ background: busy || !form.sponsorName.trim() ? "rgba(75,134,232,0.3)" : ACCENT, border: "none", color: "#fff", borderRadius: "8px", padding: "9px 22px", fontSize: "0.81rem", fontWeight: 700, cursor: busy || !form.sponsorName.trim() ? "not-allowed" : "pointer" }}
           >{busy ? "Saving…" : "Save"}</button>
         </div>
       </div>
@@ -221,17 +222,17 @@ function SponsorRow({ sponsor, onEdit, onDelete, deleting }: SponsorRowProps) {
       background: CARD, border: `1px solid ${BORDER}`, borderRadius: "10px", padding: "10px 14px",
     }}>
       {sponsor.logoUrl && !logoErr ? (
-        <img src={sponsor.logoUrl} alt={sponsor.sponsorName} onError={() => setLogoErr(true)} style={{ height: "36px", width: "48px", objectFit: "contain", borderRadius: "6px", background: "rgba(0,0,0,0.2)", flexShrink: 0 }} />
+        <img src={sponsor.logoUrl} alt={sponsor.sponsorName} onError={() => setLogoErr(true)} style={{ height: "36px", width: "48px", objectFit: "contain", borderRadius: "6px", background: "rgba(75,134,232,0.06)", flexShrink: 0 }} />
       ) : (
-        <div style={{ width: "48px", height: "36px", background: "rgba(0,0,0,0.25)", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", color: MUTED, flexShrink: 0 }}>LOGO</div>
+        <div style={{ width: "48px", height: "36px", background: "rgba(75,134,232,0.06)", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", color: MUTED, flexShrink: 0 }}>LOGO</div>
       )}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: 700, fontSize: "0.85rem", color: TEXT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{sponsor.sponsorName}</div>
         {sponsor.sponsorType && <div style={{ fontSize: "0.65rem", color: ACCENT, fontWeight: 600 }}>{sponsor.sponsorType}</div>}
       </div>
       <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
-        <button onClick={() => onEdit(sponsor)} style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${BORDER}`, color: LABEL, borderRadius: "6px", padding: "5px 10px", fontSize: "0.72rem", cursor: "pointer" }}>Edit</button>
-        <button onClick={() => onDelete(sponsor.id)} disabled={deleting} style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", color: DANGER, borderRadius: "6px", padding: "5px 8px", fontSize: "0.72rem", cursor: deleting ? "not-allowed" : "pointer" }}>
+        <button onClick={() => onEdit(sponsor)} style={{ background: "rgba(75,134,232,0.08)", border: `1px solid ${BORDER}`, color: LABEL, borderRadius: "6px", padding: "5px 10px", fontSize: "0.72rem", cursor: "pointer" }}>Edit</button>
+        <button onClick={() => onDelete(sponsor.id)} disabled={deleting} style={{ background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.25)", color: DANGER, borderRadius: "6px", padding: "5px 8px", fontSize: "0.72rem", cursor: deleting ? "not-allowed" : "pointer" }}>
           {deleting ? "…" : "✕"}
         </button>
       </div>
@@ -352,12 +353,12 @@ export default function SponsorManager({ mode, entityId, title }: SponsorManager
   }
 
   return (
-    <div style={{ background: CARD2, border: "1px solid rgba(250,71,21,0.12)", borderRadius: "14px", overflow: "hidden", marginTop: "24px" }}>
-      <div style={{ padding: "12px 18px", borderBottom: `1px solid ${BORDER}`, background: "rgba(250,71,21,0.04)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+    <div style={{ background: CARD2, border: "1px solid rgba(75,134,232,0.15)", borderRadius: "14px", overflow: "hidden", marginTop: "24px" }}>
+      <div style={{ padding: "12px 18px", borderBottom: `1px solid ${BORDER}`, background: "rgba(75,134,232,0.04)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ fontWeight: 700, letterSpacing: "0.06em", fontSize: "0.85rem" }}>🤝 {headingText.toUpperCase()}</div>
         <button
           onClick={() => { setActionErr(null); setAddOpen(true); }}
-          style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(250,71,21,0.1)", border: "1px solid rgba(250,71,21,0.28)", color: ACCENT, borderRadius: "8px", padding: "7px 14px", fontSize: "0.77rem", fontWeight: 700, cursor: "pointer" }}
+          style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(75,134,232,0.1)", border: "1px solid rgba(75,134,232,0.3)", color: ACCENT, borderRadius: "8px", padding: "7px 14px", fontSize: "0.77rem", fontWeight: 700, cursor: "pointer" }}
         >+ Add Sponsor</button>
       </div>
 
@@ -372,7 +373,7 @@ export default function SponsorManager({ mode, entityId, title }: SponsorManager
         )}
 
         {actionErr && (
-          <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "8px", padding: "8px 12px", color: DANGER, fontSize: "0.78rem", marginBottom: "12px" }}>⚠️ {actionErr}</div>
+          <div style={{ background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.25)", borderRadius: "8px", padding: "8px 12px", color: DANGER, fontSize: "0.78rem", marginBottom: "12px" }}>⚠️ {actionErr}</div>
         )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
