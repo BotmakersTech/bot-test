@@ -11,7 +11,6 @@ import {
   SearchIcon,
   LiveIcon,
   AnalyticsIcon,
-  QuickActionsIcon,
 } from "./Icons/Icons"
 import { useAppDispatch } from "../../../app/hooks"
 import { fetchUnreadCount } from "../../Notifications/store/notificationSlice"
@@ -61,9 +60,11 @@ function NotificationButton({ unreadCount, onClick }: { unreadCount: number; onC
 function CompetitorNavActions({
   unreadCount,
   pendingInvites,
+  showSettings = true,
 }: {
   unreadCount: number
   pendingInvites: number
+  showSettings?: boolean
 }) {
   const navigate = useNavigate()
   return (
@@ -91,9 +92,11 @@ function CompetitorNavActions({
           <UserCircleIcon className="h-[22px] w-[22px]" />
         </IconButton>
       </span>
-      <IconButton label="Settings" onClick={() => navigate("/settings")}>
-        <SettingsGearIcon className="h-5 w-5" />
-      </IconButton>
+      {showSettings && (
+        <IconButton label="Settings" onClick={() => navigate("/settings")}>
+          <SettingsGearIcon className="h-5 w-5" />
+        </IconButton>
+      )}
     </div>
   )
 }
@@ -102,45 +105,15 @@ function CompetitorNavActions({
 
 function AdminNavActions({ unreadCount }: { unreadCount: number }) {
   const navigate = useNavigate()
-  const [searchOpen, setSearchOpen] = useState(false)
-  const [query, setQuery] = useState("")
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (query.trim()) {
-      navigate(`/admin/search?q=${encodeURIComponent(query.trim())}`)
-      setQuery("")
-      setSearchOpen(false)
-    }
-  }
 
   return (
     <div className="flex items-center gap-1 sm:gap-2">
-      {searchOpen ? (
-        <form onSubmit={handleSearch} className="flex items-center gap-2">
-          <input
-            autoFocus
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            onBlur={() => { if (!query) setSearchOpen(false) }}
-            placeholder="Search…"
-            className="h-9 rounded-lg border border-white/10 bg-white/[0.08] px-3 text-sm text-white placeholder:text-white/40 outline-none focus:border-[#8C6CFF]/60 focus:bg-white/[0.12] w-52 transition-colors"
-          />
-        </form>
-      ) : (
-        <IconButton label="Global Search" onClick={() => setSearchOpen(true)}>
-          <SearchIcon className="h-5 w-5" />
-        </IconButton>
-      )}
       <NotificationButton unreadCount={unreadCount} onClick={() => navigate("/notifications")} />
-      <IconButton label="Quick Actions" onClick={() => navigate("/admin/user")}>
-        <QuickActionsIcon className="h-5 w-5" />
+      <IconButton label="Messages" onClick={() => navigate("/messages")}>
+        <ChatIcon className="h-5 w-5" />
       </IconButton>
       <IconButton label="Profile" onClick={() => navigate("/profile")}>
         <UserCircleIcon className="h-[22px] w-[22px]" />
-      </IconButton>
-      <IconButton label="Settings" onClick={() => navigate("/settings")}>
-        <SettingsGearIcon className="h-5 w-5" />
       </IconButton>
     </div>
   )
@@ -257,6 +230,7 @@ export default function Navbar() {
         <CompetitorNavActions
           unreadCount={unreadCount}
           pendingInvites={pendingInvites}
+          showSettings={primaryRole !== AppRole.COMPETITOR}
         />
       )}
     </header>

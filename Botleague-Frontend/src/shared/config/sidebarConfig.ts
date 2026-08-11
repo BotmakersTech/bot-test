@@ -38,22 +38,15 @@ export const NAV_CONFIG: NavItem[] = [
   // ══════════════════════════════════════════════════════════════════════════
   // ADMIN  — platform + user + event management + event operations
   // ══════════════════════════════════════════════════════════════════════════
-  { id: "a-dash",     label: "Dashboard",           link: "/admin-dashboard",        iconName: "dashboard",  roles: [ADM] },
+  { id: "a-dash",     label: "Executive Dashboard", link: "/admin-dashboard",        iconName: "dashboard",  roles: [ADM] },
+  { id: "a-users",    label: "All Users",           link: "/admin/users",            iconName: "users",      roles: [ADM] },
   { id: "a-teams",    label: "All Teams",           link: "/admin/teams",            iconName: "teams",      roles: [ADM] },
   { id: "a-robots",   label: "All Robots",          link: "/admin/robots",           iconName: "robot",      roles: [ADM] },
-  { id: "a-judges",   label: "Judge Ecosystem",     link: "/admin/judges",           iconName: "judge",      roles: [ADM] },
-  { id: "a-cert",     label: "Certificates",        link: "/admin/certificates",     iconName: "certificate",roles: [ADM] },
   { id: "a-events",   label: "All Events",          link: "/admin/user",             iconName: "calendar",   roles: [ADM] },
-  { id: "a-create",   label: "Create Event",        link: "/admin/events/create",    iconName: "add",        roles: [ADM] },
-  { id: "a-reg",      label: "Registrations",       link: "/admin/registrations",    iconName: "users",      roles: [ADM] },
-  { id: "a-matches",  label: "Matches",             link: "/admin/matches",          iconName: "matches",    roles: [ADM] },
-  { id: "a-rank",     label: "Rankings",            link: "/rankings",               iconName: "rankings",   roles: [ADM] },
+  { id: "a-judges",   label: "Judges & Volunteers", link: "/admin/judges",           iconName: "judge",      roles: [ADM] },
   { id: "a-sponsors", label: "Sponsors",            link: "/admin/sponsors",         iconName: "star",       roles: [ADM] },
-  { id: "a-analytics",label: "Analytics",           link: "/admin/analytics",        iconName: "analytics",  roles: [ADM] },
-  { id: "a-reports",  label: "Reports",             link: "/admin/reports",          iconName: "reports",    roles: [ADM] },
-  { id: "a-audit",    label: "Audit Logs",          link: "/admin/audit-logs",       iconName: "audit",      roles: [ADM] },
   { id: "a-news",     label: "News",                link: "/admin/news",             iconName: "communication", roles: [ADM] },
-  { id: "a-messages", label: "Messages",            link: "/messages",               iconName: "chat",       roles: [ADM] },
+  { id: "a-audit",    label: "Audit Logs",          link: "/admin/audit-logs",       iconName: "audit",      roles: [ADM] },
 
   // ══════════════════════════════════════════════════════════════════════════
   // ORGANISER — external partner, owns their events
@@ -127,15 +120,13 @@ export const NAV_CONFIG: NavItem[] = [
   // COMPETITOR  — regular platform user / competitor
   // ══════════════════════════════════════════════════════════════════════════
   { id: "c-dash",     label: "Dashboard",    link: "/user-dashboard",  iconName: "dashboard",   roles: [CMP] },
-  { id: "c-events",   label: "Events",       link: "/browse-events",   iconName: "calendar",    roles: [CMP] },
   { id: "c-team",     label: "My Team",      link: "/my-team",         iconName: "teams",       roles: [CMP] },
   { id: "c-robots",   label: "My Robots",    link: "/robots",          iconName: "robot",       roles: [CMP] },
+  { id: "c-events",   label: "Events",       link: "/browse-events",   iconName: "calendar",    roles: [CMP] },
   { id: "c-rank",     label: "Rankings",     link: "/rankings",        iconName: "rankings",    roles: [CMP] },
-  { id: "c-achieve",  label: "Achievements", link: "/achievements",    iconName: "achievement", roles: [CMP] },
   { id: "c-cert",     label: "Certificates", link: "/certificates",    iconName: "certificate", roles: [CMP] },
-  { id: "c-support",  label: "Support",      link: "/support",         iconName: "support",     roles: [CMP] },
-  { id: "c-notif",    label: "Notifications",link: "/notifications",   iconName: "bell",        roles: [CMP] },
   { id: "c-news",     label: "News",         link: "/news",            iconName: "communication", roles: [CMP] },
+  { id: "c-support",  label: "Support",      link: "/support",         iconName: "support",     roles: [CMP] },
 
   // ══════════════════════════════════════════════════════════════════════════
   // JUDGE  — views + scores assigned matches
