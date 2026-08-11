@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react"
 import { useParams } from "react-router-dom"
 import { useMatches } from "../hooks/useMatches"
 import { useAdminEvents } from "../hooks/UseAdminEvent"
+import { ORG } from "../../Organizer/theme/organizerTheme"
 import {
   Trophy, X, Zap, CheckCircle2, Play,
   Clock, Swords, Shuffle, ChevronRight,
@@ -21,21 +22,21 @@ import type {
 // =====================================================
 
 const T = {
-  bg: "#0f0f10",
-  surface: "#181819",
-  surfaceHover: "#1e1e20",
-  border: "rgba(255,255,255,0.07)",
-  borderHover: "rgba(250,71,21,0.4)",
-  accent: "#fa4715",
-  accentDim: "rgba(250,71,21,0.15)",
-  accentBorder: "rgba(250,71,21,0.3)",
-  gold: "#f59e0b",
-  green: "#22c55e",
-  blue: "#60a5fa",
-  purple: "#a78bfa",
-  text: "#f1f5f9",
-  textMuted: "#6b7280",
-  textSub: "#9ca3af",
+  bg: ORG.pageBg,
+  surface: "#ffffff",
+  surfaceHover: "#f2f6fd",
+  border: "rgba(75,134,232,0.22)",
+  borderHover: "rgba(75,134,232,0.45)",
+  accent: "#e04b4b",
+  accentDim: "rgba(224,75,75,0.08)",
+  accentBorder: "rgba(224,75,75,0.3)",
+  gold: "#a16207",
+  green: "#1fa952",
+  blue: "#4b86e8",
+  purple: "#8c6cff",
+  text: "#111111",
+  textMuted: "#7c7c7c",
+  textSub: "#5d5d5d",
 }
 
 // =====================================================
@@ -101,19 +102,20 @@ function getTeams(m: MatchDTO) {
 // BRACKET LAYOUT
 // Excludes leaderboardPosition === 3 (3rd place match)
 // from the main grid — rendered separately in HTML.
+//
+// Double elimination lays out the winners and losers brackets as two
+// independent, vertically-stacked round-column tracks (bracketSide
+// WINNERS / LOSERS have their own round-number sequences, which can
+// overlap or exceed each other — merging them into one column grid by
+// raw roundNumber would collide/interleave the two brackets), with the
+// grand final (and bracket-reset rematch, if present) appended as a
+// trailing column positioned after whichever track is wider.
 // =====================================================
 
-function getBracketLayout(matches: MatchDTO[]) {
-  if (!matches.length) return {
-    rounds: [] as MatchDTO[][],
-    positions: {} as Record<string, { x: number; y: number; w: number; h: number }>,
-    svgW: 0,
-    svgH: 0,
-  }
-
+/** Lays out one bracket track (a flat list of same-bracketSide rounds) as round-columns. */
+function layoutTrack(matches: MatchDTO[], yOffset: number, labelPrefix: string) {
   const roundMap: Record<number, MatchDTO[]> = {}
   matches.forEach(m => {
-    // 3rd place match is rendered outside the SVG grid
     if (m.leaderboardPosition === 3) return
     const r = m.roundNumber ?? 0
     if (!roundMap[r]) roundMap[r] = []
@@ -126,24 +128,10 @@ function getBracketLayout(matches: MatchDTO[]) {
   )
 
   const maxMatchesR1 = rounds[0]?.length || 1
-
-  const roundBoxH = rounds.map(round => {
-    const maxH = round.reduce((acc, m) => {
-      const { h } = getBoxDimensions(m.matchType)
-      return Math.max(acc, h)
-    }, BOX_H_1V1)
-    return maxH
-  })
-  const roundBoxW = rounds.map(round => {
-    const maxW = round.reduce((acc, m) => {
-      const { w } = getBoxDimensions(m.matchType)
-      return Math.max(acc, w)
-    }, BOX_W_1V1)
-    return maxW
-  })
+  const roundBoxH = rounds.map(round => round.reduce((acc, m) => Math.max(acc, getBoxDimensions(m.matchType).h), BOX_H_1V1))
+  const roundBoxW = rounds.map(round => round.reduce((acc, m) => Math.max(acc, getBoxDimensions(m.matchType).w), BOX_W_1V1))
 
   const positions: Record<string, { x: number; y: number; w: number; h: number }> = {}
-
   const xOffsets: number[] = []
   let xCursor = 0
   rounds.forEach((_, ri) => {
@@ -159,16 +147,67 @@ function getBracketLayout(matches: MatchDTO[]) {
     const firstOffset = (spacingFactor - 1) * slotH / 2
 
     round.forEach((match, mi) => {
-      const y = firstOffset + mi * spacingFactor * slotH
+      const y = yOffset + firstOffset + mi * spacingFactor * slotH
       const { w, h } = getBoxDimensions(match.matchType)
       positions[match.matchId] = { x, y, w, h }
     })
   })
 
-  const svgW = xCursor - H_GAP + 40
-  const svgH = maxMatchesR1 * (roundBoxH[0] + V_GAP) + 20
+  const svgW = Math.max(0, xCursor - H_GAP)
+  const svgH = maxMatchesR1 * (roundBoxH[0] || BOX_H_1V1 + V_GAP)
+  const roundLabels = rounds.map((_, ri) =>
+    labelPrefix ? `${labelPrefix} ${roundLabel(ri, rounds.length)}` : roundLabel(ri, rounds.length)
+  )
 
-  return { rounds, positions, svgW, svgH }
+  return { rounds, positions, svgW, svgH, roundLabels }
+}
+
+function getBracketLayout(matches: MatchDTO[]) {
+  if (!matches.length) return {
+    rounds: [] as MatchDTO[][],
+    positions: {} as Record<string, { x: number; y: number; w: number; h: number }>,
+    svgW: 0,
+    svgH: 0,
+    roundLabels: [] as string[],
+  }
+
+  const isDoubleElim = matches.some(m => m.bracketSide === "LOSERS")
+
+  if (!isDoubleElim) {
+    const t = layoutTrack(matches, 0, "")
+    return { rounds: t.rounds, positions: t.positions, svgW: t.svgW + 40, svgH: t.svgH + 20, roundLabels: t.roundLabels }
+  }
+
+  const winners = matches.filter(m => m.bracketSide === "WINNERS")
+  const losers = matches.filter(m => m.bracketSide === "LOSERS")
+  const grandFinals = [...matches.filter(m => m.bracketSide === "GRAND_FINAL")]
+    .sort((a, b) => (a.isBracketReset ? 1 : 0) - (b.isBracketReset ? 1 : 0))
+
+  const w = layoutTrack(winners, 0, "Winners")
+  const gapY = 70
+  const l = layoutTrack(losers, w.svgH + gapY, "Losers")
+
+  const positions = { ...w.positions, ...l.positions }
+  const rounds = [...w.rounds, ...l.rounds]
+  const roundLabels = [...w.roundLabels, ...l.roundLabels]
+
+  const gfX = Math.max(w.svgW, l.svgW) + H_GAP
+  const gfY = (w.svgH + gapY + l.svgH) / 2 - BOX_H_1V1 / 2
+  grandFinals.forEach((m, i) => {
+    const { w: bw, h: bh } = getBoxDimensions(m.matchType)
+    positions[m.matchId] = { x: gfX + i * (bw + H_GAP), y: gfY, w: bw, h: bh }
+  })
+  if (grandFinals.length) {
+    rounds.push(grandFinals)
+    roundLabels.push(
+      grandFinals.length > 1 || grandFinals[0]?.isBracketReset ? "Grand Final · Bracket Reset" : "Grand Final"
+    )
+  }
+
+  const svgW = gfX + grandFinals.length * (BOX_W_1V1 + H_GAP) + 40
+  const svgH = w.svgH + gapY + l.svgH + 20
+
+  return { rounds, positions, svgW, svgH, roundLabels }
 }
 
 function statusColor(status?: string) {
@@ -283,6 +322,42 @@ export default function TournamentBracket() {
   const [judgeWinnerId, setJudgeWinnerId] = useState<string>("")
 
   const svgRef = useRef<SVGSVGElement>(null)
+
+  // ── Pan / zoom canvas (Figma-style: wheel to zoom, drag to pan) ──
+  const [zoom, setZoom] = useState(1)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [isPanning, setIsPanning] = useState(false)
+  const dragStateRef = useRef({ startX: 0, startY: 0, panX: 0, panY: 0 })
+  const hasDraggedRef = useRef(false)
+
+  const handleCanvasWheel = (e: React.WheelEvent) => {
+    e.preventDefault()
+    const delta = e.deltaY > 0 ? -0.1 : 0.1
+    setZoom(z => Math.min(2.5, Math.max(0.25, Math.round((z + delta) * 100) / 100)))
+  }
+
+  const handleCanvasMouseDown = (e: React.MouseEvent) => {
+    setIsPanning(true)
+    hasDraggedRef.current = false
+    dragStateRef.current = { startX: e.clientX, startY: e.clientY, panX: pan.x, panY: pan.y }
+  }
+
+  const handleCanvasMouseMove = (e: React.MouseEvent) => {
+    if (!isPanning) return
+    const dx = e.clientX - dragStateRef.current.startX
+    const dy = e.clientY - dragStateRef.current.startY
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) hasDraggedRef.current = true
+    if (hasDraggedRef.current) {
+      setPan({ x: dragStateRef.current.panX + dx, y: dragStateRef.current.panY + dy })
+    }
+  }
+
+  const handleCanvasMouseUp = () => setIsPanning(false)
+
+  const resetCanvasView = () => { setZoom(1); setPan({ x: 0, y: 0 }) }
+
+  /** Match boxes check this before opening the popup, so a pan-drag that started on a box doesn't also click it. */
+  const guardedClick = (fn: () => void) => () => { if (!hasDraggedRef.current) fn() }
 
   const selectedMatch = selectedMatchId
     ? matches.find(m => m.matchId === selectedMatchId) ?? null
@@ -492,32 +567,53 @@ export default function TournamentBracket() {
   // BRACKET LAYOUT
   // =====================================================
 
-  const { rounds, positions, svgW, svgH } = getBracketLayout(matches)
+  const { rounds, positions, svgW, svgH, roundLabels } = getBracketLayout(matches)
 
-  // Connector lines (only for matches that exist in the SVG layout)
-  const lines: { x1: number; y1: number; x2: number; y2: number; color: string }[] = []
+  // Connector lines (only for matches that exist in the SVG layout).
+  // Winner-advancement (nextMatchId) lines use the accent color when the
+  // source match is decided; loser-routing (loserNextMatchId, double
+  // elimination only) lines are drawn dashed in a cooler tone so the two
+  // kinds of edges stay visually distinct.
+  const lines: { x1: number; y1: number; x2: number; y2: number; color: string; dashed?: boolean }[] = []
   matches.forEach(m => {
-    if (!m.nextMatchId || !positions[m.matchId] || !positions[m.nextMatchId]) return
-    const from = positions[m.matchId]
-    const to = positions[m.nextMatchId]
-    lines.push({
-      x1: from.x + from.w,
-      y1: from.y + from.h / 2,
-      x2: to.x,
-      y2: to.y + to.h / 2,
-      color: m.status === "COMPLETED" && m.winnerRegistrationId
-        ? T.accent
-        : "rgba(255,255,255,0.1)"
-    })
+    if (m.nextMatchId && positions[m.matchId] && positions[m.nextMatchId]) {
+      const from = positions[m.matchId]
+      const to = positions[m.nextMatchId]
+      lines.push({
+        x1: from.x + from.w,
+        y1: from.y + from.h / 2,
+        x2: to.x,
+        y2: to.y + to.h / 2,
+        color: m.status === "COMPLETED" && m.winnerRegistrationId
+          ? T.accent
+          : "#c3d2ee"
+      })
+    }
+    if (m.loserNextMatchId && positions[m.matchId] && positions[m.loserNextMatchId]) {
+      const from = positions[m.matchId]
+      const to = positions[m.loserNextMatchId]
+      lines.push({
+        x1: from.x + from.w,
+        y1: from.y + from.h / 2,
+        x2: to.x,
+        y2: to.y + to.h / 2,
+        color: m.status === "COMPLETED" && m.winnerRegistrationId
+          ? T.blue
+          : "#c3d2ee",
+        dashed: true,
+      })
+    }
   })
 
-  // Champion = grand final completed match (exclude 3rd place)
-  const champion = matches.find(
+  // Champion = the DECISIVE grand final (the bracket-reset rematch if one
+  // was played, otherwise the original grand final; exclude 3rd place).
+  const grandFinalResults = matches.filter(
     m => !m.nextMatchId
       && m.leaderboardPosition !== 3
       && m.status === "COMPLETED"
       && m.winnerRegistrationId
   )
+  const champion = grandFinalResults.find(m => m.isBracketReset) ?? grandFinalResults[0]
 
   // 3rd place match — derived at component level, NOT inside getBracketLayout
   const thirdPlaceMatch = matches.find(m => m.leaderboardPosition === 3) ?? null
@@ -552,7 +648,10 @@ export default function TournamentBracket() {
                     ...styles.optionBtn,
                     ...(tournamentFormat === opt.value ? styles.optionBtnActive : {}),
                   }}
-                  onClick={() => setTournamentFormat(opt.value)}
+                  onClick={() => {
+                    setTournamentFormat(opt.value)
+                    if (opt.value === "DOUBLE_ELIMINATION") setMatchType("ONE_VS_ONE")
+                  }}
                 >
                   <span style={styles.optionBtnLabel}>{opt.label}</span>
                   <span style={styles.optionBtnDesc}>{opt.desc}</span>
@@ -565,7 +664,9 @@ export default function TournamentBracket() {
             <div style={styles.optionSectionLabel}>Match Type</div>
             <div style={styles.optionGrid}>
               {MATCH_TYPE_OPTIONS.map(opt => {
-                const disabled = orderedTeams.length < opt.minTeams
+                const tooFewTeams = orderedTeams.length < opt.minTeams
+                const notOneVsOneInDoubleElim = tournamentFormat === "DOUBLE_ELIMINATION" && opt.value !== "ONE_VS_ONE"
+                const disabled = tooFewTeams || notOneVsOneInDoubleElim
                 return (
                   <button
                     key={opt.value}
@@ -577,7 +678,11 @@ export default function TournamentBracket() {
                     }}
                     onClick={() => !disabled && setMatchType(opt.value)}
                     disabled={disabled}
-                    title={disabled ? `Requires at least ${opt.minTeams} teams` : undefined}
+                    title={
+                      notOneVsOneInDoubleElim ? "Double Elimination only supports 1v1 matches"
+                        : tooFewTeams ? `Requires at least ${opt.minTeams} teams`
+                        : undefined
+                    }
                   >
                     <span style={styles.optionBtnLabel}>{opt.label}</span>
                     <span style={styles.optionBtnDesc}>{opt.desc}</span>
@@ -587,10 +692,10 @@ export default function TournamentBracket() {
             </div>
           </div>
 
-          {tournamentFormat === "DOUBLE_ELIMINATION" && matchType !== "ONE_VS_ONE" && (
-            <div style={{ ...styles.errorBanner, background: "rgba(245,158,11,0.08)", borderColor: "rgba(245,158,11,0.25)", color: "#fbbf24" }}>
+          {tournamentFormat === "DOUBLE_ELIMINATION" && (
+            <div style={{ ...styles.errorBanner, background: "rgba(75,134,232,0.08)", borderColor: "rgba(75,134,232,0.25)", color: T.blue }}>
               <AlertTriangle size={14} />
-              Double Elimination only supports 1v1 matches. Loser routing will be set manually after generation.
+              Double Elimination is 1v1 only. Teams get a second chance in the losers bracket after their first loss — the bracket below will show both.
             </div>
           )}
 
@@ -747,21 +852,39 @@ export default function TournamentBracket() {
         </div>
       )}
 
-      {/* ── BRACKET SVG ── */}
-      <div style={styles.svgScroll}>
+      {/* ── BRACKET SVG (pan/zoom canvas — wheel to zoom, drag to pan) ── */}
+      <div
+        style={{
+          ...styles.svgScroll,
+          position: "relative",
+          height: "65vh",
+          minHeight: 420,
+          overflow: "hidden",
+          cursor: isPanning ? "grabbing" : "grab",
+          touchAction: "none",
+          userSelect: "none",
+          border: `1px solid ${T.border}`,
+          borderRadius: 12,
+          background: T.surface,
+        }}
+        onWheel={handleCanvasWheel}
+        onMouseDown={handleCanvasMouseDown}
+        onMouseMove={handleCanvasMouseMove}
+        onMouseUp={handleCanvasMouseUp}
+        onMouseLeave={handleCanvasMouseUp}
+        data-testid="bracket-canvas"
+      >
         <svg
           ref={svgRef}
           width={svgW + 40}
           height={svgH + 60}
-          style={{ display: "block", overflow: "visible" }}
+          style={{
+            display: "block",
+            overflow: "visible",
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+            transformOrigin: "0 0",
+          }}
         >
-          <defs>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
-          </defs>
-
           {/* Round labels */}
           {rounds.map((round, ri) => {
             const pos0 = positions[round[0]?.matchId]
@@ -769,7 +892,7 @@ export default function TournamentBracket() {
               <text
                 key={ri}
                 x={(pos0?.x ?? 0) + (pos0?.w ?? BOX_W_1V1) / 2 + 20}
-                y={16}
+                y={(pos0?.y ?? 0) + 18}
                 textAnchor="middle"
                 fill={ri === rounds.length - 1 ? T.accent : T.textMuted}
                 fontSize={11}
@@ -778,7 +901,7 @@ export default function TournamentBracket() {
                 letterSpacing={1.5}
                 style={{ textTransform: "uppercase" }}
               >
-                {roundLabel(ri, rounds.length)}
+                {roundLabels[ri] ?? roundLabel(ri, rounds.length)}
               </text>
             )
           })}
@@ -788,15 +911,16 @@ export default function TournamentBracket() {
             {/* Connector lines */}
             {lines.map((l, i) => {
               const mx = l.x1 + H_GAP / 2
+              const isHot = l.color === T.accent || l.color === T.blue
               return (
                 <path
                   key={i}
                   d={`M${l.x1},${l.y1} C${mx},${l.y1} ${mx},${l.y2} ${l.x2},${l.y2}`}
                   fill="none"
                   stroke={l.color}
-                  strokeWidth={l.color === T.accent ? 1.5 : 1}
-                  opacity={l.color === T.accent ? 0.7 : 0.3}
-                  filter={l.color === T.accent ? "url(#glow)" : undefined}
+                  strokeWidth={isHot ? 1.5 : 1}
+                  strokeDasharray={l.dashed ? "4 3" : undefined}
+                  opacity={isHot ? 0.9 : 1}
                 />
               )
             })}
@@ -817,7 +941,7 @@ export default function TournamentBracket() {
               return (
                 <g
                   key={match.matchId}
-                  onClick={() => setSelectedMatchId(match.matchId)}
+                  onClick={guardedClick(() => setSelectedMatchId(match.matchId))}
                   style={{ cursor: "pointer" }}
                 >
                   {isSelected && (
@@ -835,8 +959,8 @@ export default function TournamentBracket() {
                   <rect
                     x={x} y={y} width={w} height={h}
                     rx={13} ry={13}
-                    fill={isBye ? "rgba(255,255,255,0.02)" : isSelected ? "#1e1e22" : T.surface}
-                    stroke={isSelected ? T.accent : isLive ? "rgba(250,71,21,0.4)" : "rgba(255,255,255,0.07)"}
+                    fill={isBye ? "#f6f8fd" : isSelected ? "#eaf1fd" : T.surface}
+                    stroke={isSelected ? T.accent : isLive ? "rgba(224,75,75,0.5)" : "rgba(75,134,232,0.18)"}
                     strokeWidth={isSelected ? 1.5 : 1}
                   />
 
@@ -868,7 +992,7 @@ export default function TournamentBracket() {
                           <line
                             x1={x + 10} y1={rowY}
                             x2={x + w - 10} y2={rowY}
-                            stroke="rgba(255,255,255,0.06)"
+                            stroke="rgba(17,17,17,0.08)"
                             strokeWidth={1}
                           />
                         )}
@@ -914,7 +1038,7 @@ export default function TournamentBracket() {
                     </circle>
                   )}
 
-                  {isCompleted && !match.nextMatchId && match.leaderboardPosition !== 3 && match.winnerRegistrationId && (
+                  {champion?.matchId === match.matchId && (
                     <text x={x + w / 2} y={y - 8} textAnchor="middle" fontSize={14}>🏆</text>
                   )}
                 </g>
@@ -922,6 +1046,24 @@ export default function TournamentBracket() {
             })}
           </g>
         </svg>
+
+        {/* Zoom controls (Figma-style, bottom-right) */}
+        <div style={styles.zoomControls}>
+          <button
+            type="button"
+            style={styles.zoomBtn}
+            onClick={() => setZoom(z => Math.max(0.25, Math.round((z - 0.1) * 100) / 100))}
+          >−</button>
+          <span style={styles.zoomLabel}>{Math.round(zoom * 100)}%</span>
+          <button
+            type="button"
+            style={styles.zoomBtn}
+            onClick={() => setZoom(z => Math.min(2.5, Math.round((z + 0.1) * 100) / 100))}
+          >+</button>
+          <button type="button" style={styles.zoomResetBtn} onClick={resetCanvasView} title="Reset view">
+            <RefreshCw size={12} />
+          </button>
+        </div>
       </div>
 
       {/* ── 3RD PLACE MATCH (below bracket SVG) ── */}
@@ -933,11 +1075,11 @@ export default function TournamentBracket() {
             onClick={() => setSelectedMatchId(thirdPlaceMatch.matchId)}
             style={{
               ...styles.thirdPlaceCard,
-              background: selectedMatchId === thirdPlaceMatch.matchId ? "#1e1e22" : T.surface,
+              background: selectedMatchId === thirdPlaceMatch.matchId ? "#eaf1fd" : T.surface,
               border: `1px solid ${
                 selectedMatchId === thirdPlaceMatch.matchId
                   ? T.accent
-                  : "rgba(167,139,250,0.35)"
+                  : "rgba(140,108,255,0.35)"
               }`,
             }}
           >
@@ -969,7 +1111,7 @@ export default function TournamentBracket() {
                     display: "flex", alignItems: "center", justifyContent: "space-between",
                     padding: "9px 14px 9px 20px",
                     borderBottom: i < arr.length - 1
-                      ? "1px solid rgba(255,255,255,0.05)"
+                      ? "1px solid rgba(17,17,17,0.07)"
                       : "none",
                   }}
                 >
@@ -978,7 +1120,7 @@ export default function TournamentBracket() {
                       width: 22, height: 22, borderRadius: 6, flexShrink: 0,
                       display: "flex", alignItems: "center", justifyContent: "center",
                       fontSize: "0.65rem", fontWeight: 700,
-                      background: isWinner ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.06)",
+                      background: isWinner ? "rgba(31,169,82,0.14)" : "rgba(75,134,232,0.07)",
                       color: isWinner ? T.green : T.textMuted,
                     }}>
                       {isWinner ? "🥉" : String.fromCharCode(64 + team.slot)}
@@ -1048,26 +1190,26 @@ export default function TournamentBracket() {
                   <span style={{
                     ...styles.byeTag,
                     background: selectedMatch.matchType === "FATAL_FOUR"
-                      ? "rgba(167,139,250,0.12)" : "rgba(245,158,11,0.1)",
+                      ? "rgba(140,108,255,0.12)" : "rgba(161,98,7,0.1)",
                     color: selectedMatch.matchType === "FATAL_FOUR" ? T.purple : T.gold,
                     borderColor: selectedMatch.matchType === "FATAL_FOUR"
-                      ? "rgba(167,139,250,0.25)" : "rgba(245,158,11,0.25)",
+                      ? "rgba(140,108,255,0.25)" : "rgba(161,98,7,0.25)",
                   }}>
                     {matchTypeLabel(selectedMatch.matchType)}
                   </span>
                 )}
                 {selectedMatch.leaderboardPosition === 1 && (
-                  <span style={{ ...styles.byeTag, background: "rgba(245,158,11,0.12)", color: T.gold, borderColor: "rgba(245,158,11,0.3)" }}>
+                  <span style={{ ...styles.byeTag, background: "rgba(161,98,7,0.12)", color: T.gold, borderColor: "rgba(161,98,7,0.3)" }}>
                     🏆 Grand Final
                   </span>
                 )}
                 {selectedMatch.leaderboardPosition === 3 && (
-                  <span style={{ ...styles.byeTag, background: "rgba(167,139,250,0.12)", color: T.purple, borderColor: "rgba(167,139,250,0.3)" }}>
+                  <span style={{ ...styles.byeTag, background: "rgba(140,108,255,0.12)", color: T.purple, borderColor: "rgba(140,108,255,0.3)" }}>
                     🥉 3rd Place
                   </span>
                 )}
                 {selectedMatch.isBracketReset && (
-                  <span style={{ ...styles.byeTag, background: "rgba(250,71,21,0.12)", color: T.accent, borderColor: T.accentBorder }}>
+                  <span style={{ ...styles.byeTag, background: T.accentDim, color: T.accent, borderColor: T.accentBorder }}>
                     Bracket Reset
                   </span>
                 )}
@@ -1093,13 +1235,13 @@ export default function TournamentBracket() {
                 return (
                   <div key={i} style={{
                     ...styles.teamRow,
-                    background: isWinner ? "rgba(34,197,94,0.07)" : "rgba(255,255,255,0.03)",
-                    borderColor: isWinner ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.07)",
+                    background: isWinner ? "rgba(31,169,82,0.07)" : "rgba(75,134,232,0.05)",
+                    borderColor: isWinner ? "rgba(31,169,82,0.25)" : "rgba(75,134,232,0.18)",
                   }}>
                     <div style={styles.teamRowLeft}>
                       <div style={{
                         ...styles.teamRowSlot,
-                        background: isWinner ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.06)",
+                        background: isWinner ? "rgba(31,169,82,0.14)" : "rgba(75,134,232,0.07)",
                         color: isWinner ? T.green : T.textMuted,
                       }}>
                         {isWinner
@@ -1157,8 +1299,8 @@ export default function TournamentBracket() {
                 <button
                   style={{
                     ...styles.actionBtn,
-                    background: "rgba(96,165,250,0.12)",
-                    borderColor: "rgba(96,165,250,0.3)",
+                    background: "rgba(75,134,232,0.12)",
+                    borderColor: "rgba(75,134,232,0.3)",
                     color: T.blue,
                     opacity: updateLoading || !scheduleDate || !scheduleTime ? 0.5 : 1,
                   }}
@@ -1228,14 +1370,14 @@ export default function TournamentBracket() {
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
                       <button
-                        style={{ ...styles.actionBtn, flex: 1, background: "rgba(96,165,250,0.12)", borderColor: "rgba(96,165,250,0.3)", color: T.blue, opacity: updateLoading ? 0.5 : 1 }}
+                        style={{ ...styles.actionBtn, flex: 1, background: "rgba(75,134,232,0.12)", borderColor: "rgba(75,134,232,0.3)", color: T.blue, opacity: updateLoading ? 0.5 : 1 }}
                         onClick={handleSaveScore}
                         disabled={updateLoading}
                       >
                         <Swords size={14} /> Save Score
                       </button>
                       <button
-                        style={{ ...styles.actionBtn, flex: 1, background: "rgba(34,197,94,0.12)", borderColor: "rgba(34,197,94,0.3)", color: T.green, opacity: updateLoading ? 0.5 : 1 }}
+                        style={{ ...styles.actionBtn, flex: 1, background: "rgba(31,169,82,0.12)", borderColor: "rgba(31,169,82,0.3)", color: T.green, opacity: updateLoading ? 0.5 : 1 }}
                         onClick={handleSubmitResult}
                         disabled={updateLoading}
                       >
@@ -1265,7 +1407,7 @@ export default function TournamentBracket() {
                       ))}
                     </div>
                     <button
-                      style={{ ...styles.actionBtn, background: "rgba(34,197,94,0.12)", borderColor: "rgba(34,197,94,0.3)", color: T.green, opacity: updateLoading || !judgeWinnerId ? 0.5 : 1 }}
+                      style={{ ...styles.actionBtn, background: "rgba(31,169,82,0.12)", borderColor: "rgba(31,169,82,0.3)", color: T.green, opacity: updateLoading || !judgeWinnerId ? 0.5 : 1 }}
                       onClick={handleSubmitResult}
                       disabled={updateLoading || !judgeWinnerId}
                     >
@@ -1302,7 +1444,7 @@ export default function TournamentBracket() {
                       </div>
                     )}
                     <button
-                      style={{ ...styles.actionBtn, background: "rgba(34,197,94,0.12)", borderColor: "rgba(34,197,94,0.3)", color: T.green, opacity: updateLoading || !losingTeamId ? 0.5 : 1 }}
+                      style={{ ...styles.actionBtn, background: "rgba(31,169,82,0.12)", borderColor: "rgba(31,169,82,0.3)", color: T.green, opacity: updateLoading || !losingTeamId ? 0.5 : 1 }}
                       onClick={handleSubmitResult}
                       disabled={updateLoading || !losingTeamId}
                     >
@@ -1337,7 +1479,7 @@ export default function TournamentBracket() {
                     ))}
                   </div>
                   <button
-                    style={{ ...styles.actionBtn, background: "rgba(96,165,250,0.15)", borderColor: "rgba(96,165,250,0.3)", color: T.blue, opacity: updateLoading ? 0.5 : 1 }}
+                    style={{ ...styles.actionBtn, background: "rgba(75,134,232,0.15)", borderColor: "rgba(75,134,232,0.3)", color: T.blue, opacity: updateLoading ? 0.5 : 1 }}
                     onClick={handleSaveScore}
                     disabled={updateLoading}
                   >
@@ -1346,7 +1488,7 @@ export default function TournamentBracket() {
                 </div>
 
                 {/* Finish positions */}
-                <div style={{ ...styles.scoreSection, marginTop: 10, background: "rgba(167,139,250,0.06)", borderColor: "rgba(167,139,250,0.2)" }}>
+                <div style={{ ...styles.scoreSection, marginTop: 10, background: "rgba(140,108,255,0.06)", borderColor: "rgba(140,108,255,0.2)" }}>
                   <div style={{ ...styles.scoreSectionLabel, color: T.purple }}>Finish Positions</div>
                   <div style={styles.scoreGrid}>
                     {[
@@ -1369,7 +1511,7 @@ export default function TournamentBracket() {
                     ))}
                   </div>
                   <button
-                    style={{ ...styles.actionBtn, background: "rgba(34,197,94,0.12)", borderColor: "rgba(34,197,94,0.3)", color: T.green, marginTop: 6, opacity: updateLoading ? 0.5 : 1 }}
+                    style={{ ...styles.actionBtn, background: "rgba(31,169,82,0.12)", borderColor: "rgba(31,169,82,0.3)", color: T.green, marginTop: 6, opacity: updateLoading ? 0.5 : 1 }}
                     onClick={handleSubmitResult}
                     disabled={updateLoading}
                   >
@@ -1381,7 +1523,7 @@ export default function TournamentBracket() {
 
             {/* ── READ-ONLY SCORES (COMPLETED multi-team) ── */}
             {selectedMatch.status === "COMPLETED" && isMultiTeam && (
-              <div style={{ ...styles.scoreSection, background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.07)", marginBottom: 14 }}>
+              <div style={{ ...styles.scoreSection, background: "rgba(75,134,232,0.05)", borderColor: "rgba(75,134,232,0.18)", marginBottom: 14 }}>
                 <div style={{ ...styles.scoreSectionLabel, color: T.textSub }}>Final Scores</div>
                 <div style={styles.scoreGrid}>
                   {getTeams(selectedMatch).map(team => (
@@ -1401,11 +1543,11 @@ export default function TournamentBracket() {
               <div style={{
                 ...styles.winnerBanner,
                 background: selectedMatch.leaderboardPosition === 3
-                  ? "rgba(167,139,250,0.1)"
-                  : "rgba(245,158,11,0.1)",
+                  ? "rgba(140,108,255,0.1)"
+                  : "rgba(161,98,7,0.1)",
                 borderColor: selectedMatch.leaderboardPosition === 3
-                  ? "rgba(167,139,250,0.25)"
-                  : "rgba(245,158,11,0.25)",
+                  ? "rgba(140,108,255,0.25)"
+                  : "rgba(161,98,7,0.25)",
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   {selectedMatch.leaderboardPosition === 3
@@ -1472,8 +1614,8 @@ export default function TournamentBracket() {
                 <button
                   style={{
                     ...styles.actionBtn,
-                    background: "rgba(255,255,255,0.04)",
-                    borderColor: "rgba(255,255,255,0.1)",
+                    background: "rgba(75,134,232,0.06)",
+                    borderColor: "rgba(75,134,232,0.2)",
                     color: T.textMuted,
                     opacity: updateLoading ? 0.5 : 1,
                   }}
@@ -1551,7 +1693,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   loadingSpinner: {
     width: 32, height: 32, borderRadius: "50%",
-    border: "2px solid rgba(255,255,255,0.1)",
+    border: "2px solid rgba(75,134,232,0.15)",
     borderTopColor: T.accent, animation: "spin 0.8s linear infinite",
   },
 
@@ -1570,8 +1712,8 @@ const styles: Record<string, React.CSSProperties> = {
     flex: 1, minWidth: 130,
     display: "flex", flexDirection: "column" as const, gap: 3,
     padding: "12px 14px", borderRadius: 12,
-    background: "rgba(255,255,255,0.04)",
-    border: "1px solid rgba(255,255,255,0.08)",
+    background: T.surface,
+    border: `1px solid ${T.border}`,
     color: T.text, cursor: "pointer", fontFamily: "inherit",
     textAlign: "left" as const, transition: "all 0.15s",
   },
@@ -1588,7 +1730,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   seedCardHeader: {
     display: "flex", alignItems: "center", justifyContent: "space-between",
-    padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)",
+    padding: "14px 18px", borderBottom: "1px solid rgba(75,134,232,0.15)",
   },
   seedCardTitle: {
     fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.08em",
@@ -1604,11 +1746,11 @@ const styles: Record<string, React.CSSProperties> = {
   seedList: { padding: "8px 0" },
   seedRow: {
     display: "flex", alignItems: "center", gap: 12,
-    padding: "9px 18px", borderBottom: "1px solid rgba(255,255,255,0.04)",
+    padding: "9px 18px", borderBottom: "1px solid rgba(75,134,232,0.1)",
   },
   seedNum: {
     width: 24, height: 24, borderRadius: "50%",
-    background: "rgba(255,255,255,0.06)",
+    background: "rgba(75,134,232,0.08)",
     display: "flex", alignItems: "center", justifyContent: "center",
     fontSize: "0.72rem", fontWeight: 700, color: T.textMuted, flexShrink: 0,
   },
@@ -1622,7 +1764,7 @@ const styles: Record<string, React.CSSProperties> = {
   bracketPreviewInfo: {
     display: "flex", alignItems: "center", gap: 10,
     padding: "14px 18px", borderRadius: 12,
-    background: "rgba(255,255,255,0.03)", border: `1px solid ${T.border}`,
+    background: "rgba(75,134,232,0.05)", border: `1px solid ${T.border}`,
     marginBottom: 18, flexWrap: "wrap" as const,
   },
   previewInfoItem: { display: "flex", flexDirection: "column" as const, gap: 2 },
@@ -1635,15 +1777,15 @@ const styles: Record<string, React.CSSProperties> = {
   errorBanner: {
     display: "flex", alignItems: "center", gap: 8,
     padding: "10px 14px", borderRadius: 10,
-    background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)",
-    color: "#f87171", fontSize: "0.82rem", marginBottom: 14,
+    background: T.accentDim, border: `1px solid ${T.accentBorder}`,
+    color: T.accent, fontSize: "0.82rem", marginBottom: 14,
   },
   generateBtn: {
     width: "100%", padding: "14px 20px", borderRadius: 13,
-    background: `linear-gradient(135deg, #ff4d4d, ${T.accent})`,
+    background: ORG.gradientCta,
     border: "none", color: "#fff",
     fontSize: "0.95rem", fontWeight: 800, cursor: "pointer",
-    fontFamily: "inherit",
+    fontFamily: "inherit", boxShadow: ORG.btnShadow,
     display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
   },
   btnSpinner: {
@@ -1675,14 +1817,14 @@ const styles: Record<string, React.CSSProperties> = {
   regenBtn: {
     display: "flex", alignItems: "center", gap: 6,
     padding: "7px 13px", borderRadius: 8,
-    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+    background: T.surfaceHover, border: `1px solid ${T.border}`,
     color: T.textSub, fontSize: "0.75rem", fontWeight: 700,
     cursor: "pointer", fontFamily: "inherit",
   },
   championBanner: {
     display: "flex", alignItems: "center", gap: 10,
     padding: "12px 18px", borderRadius: 12,
-    background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)",
+    background: "rgba(161,98,7,0.1)", border: "1px solid rgba(161,98,7,0.3)",
     marginBottom: 20,
   },
   championText: { fontSize: "1rem", fontWeight: 800, color: T.gold },
@@ -1690,12 +1832,33 @@ const styles: Record<string, React.CSSProperties> = {
     overflowX: "auto", overflowY: "visible",
     paddingBottom: 16, scrollbarWidth: "thin" as const,
   },
+  zoomControls: {
+    position: "absolute" as const, bottom: 12, right: 12,
+    display: "flex", alignItems: "center", gap: 4,
+    background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8,
+    padding: "5px 6px", boxShadow: "0 2px 10px rgba(15,23,42,0.12)",
+  },
+  zoomBtn: {
+    width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center",
+    background: T.surfaceHover, border: `1px solid ${T.border}`, borderRadius: 5,
+    color: T.text, fontSize: "0.9rem", fontWeight: 700, lineHeight: 1,
+    cursor: "pointer", fontFamily: "inherit", padding: 0,
+  },
+  zoomLabel: {
+    fontSize: "0.7rem", fontWeight: 700, color: T.textSub,
+    minWidth: 34, textAlign: "center" as const, fontVariantNumeric: "tabular-nums" as const,
+  },
+  zoomResetBtn: {
+    width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center",
+    background: T.surfaceHover, border: `1px solid ${T.border}`, borderRadius: 5,
+    color: T.textSub, cursor: "pointer", marginLeft: 2, padding: 0,
+  },
 
   // ── 3rd place match ──
   thirdPlaceWrap: {
     marginTop: 32,
     paddingTop: 24,
-    borderTop: "1px solid rgba(167,139,250,0.15)",
+    borderTop: "1px solid rgba(140,108,255,0.15)",
     display: "flex", flexDirection: "column" as const, gap: 10,
   },
   thirdPlaceLabel: {
@@ -1729,17 +1892,17 @@ const styles: Record<string, React.CSSProperties> = {
     zIndex: 1000, animation: "overlayIn 0.15s ease",
   },
   popup: {
-    background: "#16161a", border: "1px solid rgba(255,255,255,0.1)",
+    background: "#ffffff", border: `1px solid ${T.border}`,
     borderRadius: 20, padding: "28px 28px 22px",
     width: "100%", maxWidth: 480, position: "relative" as const,
     animation: "fadeIn 0.2s ease",
-    boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
+    boxShadow: "0 24px 60px rgba(15,23,42,0.2)",
     maxHeight: "90vh", overflowY: "auto" as const,
   },
   closeBtn: {
     position: "absolute" as const, top: 16, right: 16,
     width: 30, height: 30, borderRadius: "50%",
-    background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+    background: "rgba(75,134,232,0.08)", border: `1px solid ${T.border}`,
     color: T.textSub, cursor: "pointer",
     display: "flex", alignItems: "center", justifyContent: "center",
   },
@@ -1751,9 +1914,9 @@ const styles: Record<string, React.CSSProperties> = {
   },
   statusDot: { width: 7, height: 7, borderRadius: "50%" },
   byeTag: {
-    background: "rgba(255,255,255,0.06)", padding: "1px 7px",
+    background: "rgba(75,134,232,0.08)", padding: "1px 7px",
     borderRadius: 4, fontSize: "0.65rem", color: T.textMuted,
-    letterSpacing: 1, border: "1px solid rgba(255,255,255,0.1)",
+    letterSpacing: 1, border: `1px solid ${T.border}`,
   },
   popupTitle: { fontSize: "1.1rem", fontWeight: 800, color: T.text, letterSpacing: "-0.01em" },
 
@@ -1786,8 +1949,8 @@ const styles: Record<string, React.CSSProperties> = {
   scoreInputLabel: { fontSize: "0.72rem", color: T.textSub, fontWeight: 600 },
   scoreCounter: {
     display: "flex", alignItems: "center",
-    background: "rgba(255,255,255,0.06)", borderRadius: 10,
-    border: "1px solid rgba(255,255,255,0.1)", overflow: "hidden",
+    background: T.surface, borderRadius: 10,
+    border: `1px solid ${T.border}`, overflow: "hidden",
   },
   counterBtn: {
     width: 34, height: 34, border: "none",
@@ -1802,8 +1965,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
   positionSelect: {
     width: "100%", padding: "8px 10px", borderRadius: 8,
-    background: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.12)",
+    background: T.surface,
+    border: `1px solid ${T.border}`,
     color: T.text, fontSize: "0.82rem", fontFamily: "inherit",
     cursor: "pointer",
   },
@@ -1823,7 +1986,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   actionSpinner: {
     width: 13, height: 13, borderRadius: "50%",
-    border: "2px solid rgba(255,255,255,0.2)",
+    border: "2px solid rgba(17,17,17,0.15)",
     borderTopColor: "currentColor", animation: "spin 0.7s linear infinite",
     display: "inline-block",
   },
@@ -1833,8 +1996,8 @@ const styles: Record<string, React.CSSProperties> = {
 
   scheduleSection: {
     marginBottom: 14, padding: "14px 16px",
-    background: "rgba(96,165,250,0.06)",
-    border: "1px solid rgba(96,165,250,0.2)", borderRadius: 14,
+    background: "rgba(75,134,232,0.06)",
+    border: "1px solid rgba(75,134,232,0.2)", borderRadius: 14,
   },
   scheduleSectionLabel: {
     display: "flex", alignItems: "center", gap: 6,
@@ -1849,17 +2012,17 @@ const styles: Record<string, React.CSSProperties> = {
   },
   scheduleInput: {
     width: "100%", padding: "8px 10px", borderRadius: 8,
-    background: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.12)",
+    background: T.surface,
+    border: `1px solid ${T.border}`,
     color: T.text, fontSize: "0.85rem", fontFamily: "inherit",
-    colorScheme: "dark" as const,
+    colorScheme: "light" as const,
     boxSizing: "border-box" as const,
   },
 
   // ── Bye match info card ──
   byeInfoCard: {
     marginBottom: 14, padding: "14px 16px", borderRadius: 12,
-    background: "rgba(107,114,128,0.08)", border: "1px solid rgba(107,114,128,0.2)",
+    background: "rgba(75,134,232,0.05)", border: `1px solid ${T.border}`,
   },
   byeInfoTitle: {
     fontSize: "0.82rem", fontWeight: 700, color: T.textSub, marginBottom: 4,
@@ -1869,13 +2032,13 @@ const styles: Record<string, React.CSSProperties> = {
     display: "inline-block", marginTop: 8,
     fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.05em",
     padding: "2px 8px", borderRadius: 4,
-    background: "rgba(34,197,94,0.12)", color: T.green, border: "1px solid rgba(34,197,94,0.25)",
+    background: "rgba(31,169,82,0.12)", color: T.green, border: "1px solid rgba(31,169,82,0.25)",
   },
 
   // ── 1v1 result section ──
   resultSection: {
     marginBottom: 14, padding: "14px 16px", borderRadius: 14,
-    background: "rgba(250,71,21,0.05)", border: `1px solid ${T.accentBorder}`,
+    background: T.accentDim, border: `1px solid ${T.accentBorder}`,
     display: "flex", flexDirection: "column" as const, gap: 12,
   },
   resultSectionLabel: {
@@ -1888,7 +2051,7 @@ const styles: Record<string, React.CSSProperties> = {
   methodTab: {
     display: "flex", alignItems: "center", gap: 5,
     padding: "6px 12px", borderRadius: 8,
-    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+    background: T.surfaceHover, border: `1px solid ${T.border}`,
     color: T.textSub, fontSize: "0.78rem", fontWeight: 600,
     cursor: "pointer", fontFamily: "inherit", transition: "all 0.12s",
   },
@@ -1905,22 +2068,22 @@ const styles: Record<string, React.CSSProperties> = {
     flex: 1, minWidth: 100,
     display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6,
     padding: "12px 14px", borderRadius: 10,
-    background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
+    background: T.surface, border: `1px solid ${T.border}`,
     color: T.text, fontSize: "0.85rem", fontWeight: 600,
     cursor: "pointer", fontFamily: "inherit", transition: "all 0.12s",
     textAlign: "left" as const,
   },
   teamPickBtnName: { flex: 1 },
   teamPickBtnWinner: {
-    background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", color: T.green,
+    background: "rgba(31,169,82,0.1)", border: "1px solid rgba(31,169,82,0.3)", color: T.green,
   },
   teamPickBtnLoser: {
-    background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#f87171",
+    background: T.accentDim, border: `1px solid ${T.accentBorder}`, color: T.accent,
   },
   winnerPreview: {
     display: "flex", alignItems: "center", gap: 6,
     padding: "8px 12px", borderRadius: 8,
-    background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)",
+    background: "rgba(31,169,82,0.08)", border: "1px solid rgba(31,169,82,0.2)",
     fontSize: "0.82rem", color: T.textSub,
   },
 
@@ -1928,7 +2091,7 @@ const styles: Record<string, React.CSSProperties> = {
   winMethodBadge: {
     display: "flex", alignItems: "center", gap: 4,
     padding: "2px 8px", borderRadius: 4, marginTop: 6,
-    background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)",
+    background: "rgba(75,134,232,0.08)", border: "1px solid rgba(75,134,232,0.2)",
     fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.06em",
     textTransform: "uppercase" as const, color: T.textMuted,
     alignSelf: "flex-start" as const,
