@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowDown, Calendar, MapPin } from "lucide-react";
+import { ArrowDown, ArrowRight, Calendar, MapPin } from "lucide-react";
 
 import { getLiveEvents, getCompletedEvents, type EventResponse } from "../../feature/Event/api/event.api";
 import droneDecor from "../../assets/Auth/drone.svg";
 import PublicNavbar from "../../shared/components/PublicNavbar";
 import "../../styles/eventsLanding.css";
 
-const INITIAL_FEATURED = 6;
-const INITIAL_PREVIOUS = 3;
+const INITIAL_UPCOMING = 6;
+const INITIAL_FEATURED = 3;
 
 function formatDateRange(startDate?: string, endDate?: string): string {
   if (!startDate) return "Date TBA";
@@ -25,14 +25,30 @@ function locationLabel(event: EventResponse): string | null {
   return parts.length ? parts.join(", ") : event.venueName ?? null;
 }
 
-function EventCard({ event, completed, onClick }: { event: EventResponse; completed?: boolean; onClick: () => void }) {
+/** Branded gradient placeholder for events with no uploaded thumbnail/logo — not a plain initial box. */
+function EventThumbnailFallback() {
   return (
-    <button type="button" className="event-card" onClick={onClick}>
+    <div className="event-card-image-fallback">
+      <Calendar size={40} strokeWidth={1.5} />
+    </div>
+  );
+}
+
+function EventCard({ event, completed, onClick }: { event: EventResponse; completed?: boolean; onClick: () => void }) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
+  return (
+    <div className="event-card" role="button" tabIndex={0} onClick={onClick} onKeyDown={handleKeyDown}>
       <div className="event-card-image">
         {event.eventThumbnailUrl || event.eventLogoUrl ? (
           <img src={event.eventThumbnailUrl ?? event.eventLogoUrl} alt={event.eventName} />
         ) : (
-          <div className="event-card-image-fallback">{event.eventName.charAt(0).toUpperCase()}</div>
+          <EventThumbnailFallback />
         )}
         <span className={completed ? "event-card-badge completed" : "event-card-badge"}>
           {completed ? "Completed" : event.status === "LIVE" ? "Live" : "Upcoming"}
@@ -52,20 +68,23 @@ function EventCard({ event, completed, onClick }: { event: EventResponse; comple
             </div>
           )}
         </div>
+        <span className="event-card-view-details">
+          View Details <ArrowRight size={13} />
+        </span>
       </div>
-    </button>
+    </div>
   );
 }
 
 export default function EventsLandingPage() {
   const navigate = useNavigate();
-  const featuredRef = useRef<HTMLDivElement>(null);
+  const upcomingRef = useRef<HTMLDivElement>(null);
 
+  const [upcoming, setUpcoming] = useState<EventResponse[]>([]);
   const [featured, setFeatured] = useState<EventResponse[]>([]);
-  const [previous, setPrevious] = useState<EventResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAllUpcoming, setShowAllUpcoming] = useState(false);
   const [showAllFeatured, setShowAllFeatured] = useState(false);
-  const [showAllPrevious, setShowAllPrevious] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -80,12 +99,12 @@ export default function EventsLandingPage() {
       .then(([liveResult, completedResult]) => {
         if (cancelled) return;
         if (liveResult.status === "fulfilled") {
-          setFeatured(liveResult.value);
+          setUpcoming(liveResult.value);
         } else {
           console.error("Failed to load live/upcoming events:", liveResult.reason);
         }
         if (completedResult.status === "fulfilled") {
-          setPrevious(completedResult.value);
+          setFeatured(completedResult.value);
         } else {
           console.error("Failed to load completed events:", completedResult.reason);
         }
@@ -95,8 +114,8 @@ export default function EventsLandingPage() {
     return () => { cancelled = true; };
   }, []);
 
+  const visibleUpcoming = showAllUpcoming ? upcoming : upcoming.slice(0, INITIAL_UPCOMING);
   const visibleFeatured = showAllFeatured ? featured : featured.slice(0, INITIAL_FEATURED);
-  const visiblePrevious = showAllPrevious ? previous : previous.slice(0, INITIAL_PREVIOUS);
 
   const goToEvent = (eventId: string) => navigate(`/events/${eventId}`);
 
@@ -114,7 +133,7 @@ export default function EventsLandingPage() {
           <button
             type="button"
             className="events-hero-explore"
-            onClick={() => featuredRef.current?.scrollIntoView({ behavior: "smooth" })}
+            onClick={() => upcomingRef.current?.scrollIntoView({ behavior: "smooth" })}
           >
             <span className="events-hero-explore-circle"><ArrowDown size={22} /></span>
             <span>Explore</span>
@@ -123,9 +142,34 @@ export default function EventsLandingPage() {
       </section>
 
       <div className="events-content">
-        <section className="events-section" ref={featuredRef}>
+        <section className="events-section" ref={upcomingRef}>
           <div className="events-section-header">
-            <span className="events-section-eyebrow">Upcoming Events</span>
+            <span className="events-section-eyebrow">Don&apos;t Miss Out</span>
+            <h2 className="events-section-title">Upcoming Events</h2>
+          </div>
+
+          <div className="events-grid">
+            {loading ? (
+              <div className="events-empty">Loading events…</div>
+            ) : visibleUpcoming.length === 0 ? (
+              <div className="events-empty">No upcoming events right now — check back soon.</div>
+            ) : (
+              visibleUpcoming.map((event) => (
+                <EventCard key={event.id} event={event} onClick={() => goToEvent(event.id)} />
+              ))
+            )}
+          </div>
+
+          {!showAllUpcoming && upcoming.length > INITIAL_UPCOMING && (
+            <div className="events-see-more">
+              <button type="button" onClick={() => setShowAllUpcoming(true)}>See More Events →</button>
+            </div>
+          )}
+        </section>
+
+        <section className="events-section">
+          <div className="events-section-header">
+            <span className="events-section-eyebrow">Look Back</span>
             <h2 className="events-section-title">Featured Events</h2>
           </div>
 
@@ -133,41 +177,17 @@ export default function EventsLandingPage() {
             {loading ? (
               <div className="events-empty">Loading events…</div>
             ) : visibleFeatured.length === 0 ? (
-              <div className="events-empty">No upcoming events right now — check back soon.</div>
+              <div className="events-empty">No past events to show yet.</div>
             ) : (
               visibleFeatured.map((event) => (
-                <EventCard key={event.id} event={event} onClick={() => goToEvent(event.id)} />
+                <EventCard key={event.id} event={event} completed onClick={() => goToEvent(event.id)} />
               ))
             )}
           </div>
 
           {!showAllFeatured && featured.length > INITIAL_FEATURED && (
             <div className="events-see-more">
-              <button type="button" onClick={() => setShowAllFeatured(true)}>See More Event →</button>
-            </div>
-          )}
-        </section>
-
-        <section className="events-section">
-          <div className="events-section-header">
-            <h2 className="events-section-title events-section-title--plain">Previous Events</h2>
-          </div>
-
-          <div className="events-grid">
-            {loading ? (
-              <div className="events-empty">Loading events…</div>
-            ) : visiblePrevious.length === 0 ? (
-              <div className="events-empty">No past events to show yet.</div>
-            ) : (
-              visiblePrevious.map((event) => (
-                <EventCard key={event.id} event={event} completed onClick={() => goToEvent(event.id)} />
-              ))
-            )}
-          </div>
-
-          {!showAllPrevious && previous.length > INITIAL_PREVIOUS && (
-            <div className="events-see-more">
-              <button type="button" onClick={() => setShowAllPrevious(true)}>See More Previous →</button>
+              <button type="button" onClick={() => setShowAllFeatured(true)}>See More Featured →</button>
             </div>
           )}
         </section>
