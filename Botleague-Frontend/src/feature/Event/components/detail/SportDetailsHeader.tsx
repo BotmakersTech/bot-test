@@ -1,3 +1,4 @@
+import { Users, Weight, Wallet, Trophy } from "lucide-react";
 import type { EventSportResponse, SupportContact } from "../../api/event.api";
 
 interface SportDetailsHeaderProps {
@@ -8,6 +9,11 @@ interface SportDetailsHeaderProps {
 function waLink(phone: string) {
   const digits = phone.replace(/[^\d]/g, "");
   return `https://api.whatsapp.com/send/?phone=${digits}`;
+}
+
+function formatCurrency(val?: number | null): string {
+  if (val == null) return "—";
+  return `₹${val.toLocaleString("en-IN")}`;
 }
 
 export default function SportDetailsHeader({ sport, contacts }: SportDetailsHeaderProps) {
@@ -36,6 +42,41 @@ export default function SportDetailsHeader({ sport, contacts }: SportDetailsHead
       <div className="event-info">
         <h2>{sport.sport?.replace(/_/g, " ") ?? "Sport"}</h2>
         <p>{sport.sportsDescription || "Details for this competition will be published soon."}</p>
+
+        <div className="sport-stats">
+          <div className="sport-stat">
+            <Users size={22} />
+            <div>
+              <div className="sport-stat-label">Teams</div>
+              <div className="sport-stat-value">
+                {sport.registeredTeamsCount ?? 0}{sport.maxTeams ? `/${sport.maxTeams}` : ""}
+              </div>
+            </div>
+          </div>
+          <div className="sport-stat">
+            <Weight size={22} />
+            <div>
+              <div className="sport-stat-label">Weight</div>
+              <div className="sport-stat-value">
+                {sport.weightLimitKg != null ? `${sport.weightLimitKg} Kg` : sport.weightClass || "—"}
+              </div>
+            </div>
+          </div>
+          <div className="sport-stat">
+            <Wallet size={22} />
+            <div>
+              <div className="sport-stat-label">Entry Fee</div>
+              <div className="sport-stat-value">{formatCurrency(sport.entryFee)}</div>
+            </div>
+          </div>
+          <div className="sport-stat">
+            <Trophy size={22} />
+            <div>
+              <div className="sport-stat-label">Prize Pool</div>
+              <div className="sport-stat-value">{formatCurrency(sport.prizeMoney)}</div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
