@@ -1,5 +1,4 @@
 import api from "../../../shared/api/Base";
-import type { MatchDTO } from "./adminMatches.api";
 
 export interface JudgeEventAssignment {
   eventJudgeId: string;
@@ -7,13 +6,14 @@ export interface JudgeEventAssignment {
   eventName: string;
   scoringRights: boolean;
   createdAt: string;
-  assignedMatchIds: string[];
+  assignedSportId: string | null;
+  assignedSportName: string | null;
 }
 
-export interface SportMatches {
+export interface EventSportOption {
   eventSportId: string;
   sportName: string;
-  matches: MatchDTO[];
+  matchCount: number;
 }
 
 export const getJudgeAssignments = async (userId: string): Promise<JudgeEventAssignment[]> => {
@@ -30,15 +30,21 @@ export const removeJudgeFromEvent = async (userId: string, eventJudgeId: string)
   await api.delete(`/admin/judges/${userId}/assignments/${eventJudgeId}`);
 };
 
-export const getEventMatchesForAssignment = async (eventId: string): Promise<SportMatches[]> => {
-  const res = await api.get(`/admin/judges/events/${eventId}/matches`);
+export const getEventSportsForAssignment = async (eventId: string): Promise<EventSportOption[]> => {
+  const res = await api.get(`/admin/judges/events/${eventId}/sports`);
   return res.data;
 };
 
-export const assignMatchToJudge = async (userId: string, eventJudgeId: string, matchId: string): Promise<void> => {
-  await api.post(`/admin/judges/${userId}/assignments/${eventJudgeId}/matches/${matchId}`);
+export const assignSportToJudge = async (
+  userId: string,
+  eventJudgeId: string,
+  eventSportId: string
+): Promise<JudgeEventAssignment> => {
+  const res = await api.put(`/admin/judges/${userId}/assignments/${eventJudgeId}/sport`, { eventSportId });
+  return res.data;
 };
 
-export const unassignMatchFromJudge = async (userId: string, eventJudgeId: string, matchId: string): Promise<void> => {
-  await api.delete(`/admin/judges/${userId}/assignments/${eventJudgeId}/matches/${matchId}`);
+export const unassignSportFromJudge = async (userId: string, eventJudgeId: string): Promise<JudgeEventAssignment> => {
+  const res = await api.delete(`/admin/judges/${userId}/assignments/${eventJudgeId}/sport`);
+  return res.data;
 };

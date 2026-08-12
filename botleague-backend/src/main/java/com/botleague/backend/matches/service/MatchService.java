@@ -78,7 +78,7 @@ public class MatchService {
     private final ResourceRoleAssignmentRepository resourceRoleAssignmentRepository;
     private final NotificationService notificationService;
     private final AuditLogService auditLogService;
-    private final com.botleague.backend.matches.repository.MatchJudgeAssignmentRepository matchJudgeAssignmentRepository;
+    private final com.botleague.backend.organizer.repository.EventJudgeRepository eventJudgeRepository;
     private TournamentNotificationService tournamentNotificationService;
     private com.botleague.backend.ranking.service.RankingEngineService rankingEngineService;
 
@@ -100,7 +100,7 @@ public class MatchService {
             ResourceRoleAssignmentRepository resourceRoleAssignmentRepository,
             NotificationService notificationService,
             AuditLogService auditLogService,
-            com.botleague.backend.matches.repository.MatchJudgeAssignmentRepository matchJudgeAssignmentRepository
+            com.botleague.backend.organizer.repository.EventJudgeRepository eventJudgeRepository
     ) {
         this.matchRepository = matchRepository;
         this.eventSportsRepository = eventSportsRepository;
@@ -115,7 +115,7 @@ public class MatchService {
         this.resourceRoleAssignmentRepository = resourceRoleAssignmentRepository;
         this.notificationService = notificationService;
         this.auditLogService = auditLogService;
-        this.matchJudgeAssignmentRepository = matchJudgeAssignmentRepository;
+        this.eventJudgeRepository = eventJudgeRepository;
     }
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
@@ -794,6 +794,7 @@ public class MatchService {
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
 
         validateCanScoreMatchForSport(authentication, match.getEventSportId(), match.getId());
+        assertScoreNotLocked(match);
 
         if (match.getStatus() != MatchStatus.LIVE) {
             throw ApiException.conflict(
@@ -853,6 +854,7 @@ public class MatchService {
         authorizationService.assertEventActiveForSport(match.getEventSportId());
 
         validateCanScoreMatchForSport(authentication, match.getEventSportId(), match.getId());
+        assertScoreNotLocked(match);
 
         if (match.getStatus() != MatchStatus.LIVE) {
             throw ApiException.conflict(
@@ -983,6 +985,7 @@ public class MatchService {
         authorizationService.assertEventActiveForSport(match.getEventSportId());
 
         validateCanScoreMatchForSport(authentication, match.getEventSportId(), match.getId());
+        assertScoreNotLocked(match);
 
         if (match.getStatus() != MatchStatus.LIVE) {
             throw ApiException.conflict(
@@ -1187,6 +1190,56 @@ public class MatchService {
         realtimePublisher.pushMatchUpdate(savedMatch.getId(), savedMatch.getEventSportId(),
                 RealtimeEventType.MATCH_RESULT_REJECTED, rejected);
         return rejected;
+    }
+
+    // =====================================================
+    // LOCK / UNLOCK SCORE
+    // PATCH /v1/matches/:matchId/lock-score, /unlock-score
+    //
+    // An explicit admin freeze independent of the match's status — stops a
+    // judge (or anyone) from editing a LIVE match's score, e.g. mid-dispute,
+    // without forcing a premature submit/approve/reject. Gated the same way
+    // as approve/reject: EVENT_HEAD/ORGANISER(owner)/ADMIN/SUPER_ADMIN only.
+    // =====================================================
+
+    @Transactional
+    public MatchResponseDTO lockScore(UUID matchId, Authentication authentication) {
+        Match match = matchRepository
+                .findById(matchId)
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+
+        UUID currentUserId = extractUserId(authentication);
+        authorizationService.assertCanApproveMatchResult(currentUserId, match.getEventSportId());
+
+        match.setScoreLocked(true);
+        match.setLockedBy(currentUserId);
+        match.setLockedAt(LocalDateTime.now());
+
+        Match savedMatch = matchRepository.save(match);
+        MatchResponseDTO locked = mapToResponseDTO(savedMatch);
+        realtimePublisher.pushMatchUpdate(savedMatch.getId(), savedMatch.getEventSportId(),
+                RealtimeEventType.MATCH_UPDATED, locked);
+        return locked;
+    }
+
+    @Transactional
+    public MatchResponseDTO unlockScore(UUID matchId, Authentication authentication) {
+        Match match = matchRepository
+                .findById(matchId)
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+
+        UUID currentUserId = extractUserId(authentication);
+        authorizationService.assertCanApproveMatchResult(currentUserId, match.getEventSportId());
+
+        match.setScoreLocked(false);
+        match.setLockedBy(null);
+        match.setLockedAt(null);
+
+        Match savedMatch = matchRepository.save(match);
+        MatchResponseDTO unlocked = mapToResponseDTO(savedMatch);
+        realtimePublisher.pushMatchUpdate(savedMatch.getId(), savedMatch.getEventSportId(),
+                RealtimeEventType.MATCH_UPDATED, unlocked);
+        return unlocked;
     }
 
     // =====================================================
@@ -1860,13 +1913,21 @@ public class MatchService {
     // =====================================================
 
     /**
-     * Score submission: JUDGE (any match, unscoped) or anyone who can manage
-     * the sport (platform admin, organiser owner, or an approved EVENT_HEAD/
-     * SPORT_HEAD assignment). Delegates to the centralized AuthorizationService.
+     * Score submission: a JUDGE assigned to this match's sport, or anyone
+     * who can manage the sport outright (platform admin, organiser owner,
+     * or an approved EVENT_HEAD/SPORT_HEAD assignment). Delegates to the
+     * centralized AuthorizationService.
      */
     private void validateCanScoreMatchForSport(Authentication authentication, UUID eventSportId, UUID matchId) {
         UUID currentUserId = extractUserId(authentication);
         authorizationService.assertCanScoreMatch(currentUserId, eventSportId, matchId);
+    }
+
+    /** Blocks score mutation on a match an admin has explicitly locked, regardless of who's calling. */
+    private void assertScoreNotLocked(Match match) {
+        if (Boolean.TRUE.equals(match.getScoreLocked())) {
+            throw ApiException.conflict("This match's score has been locked by an admin and cannot be edited.");
+        }
     }
 
     /**
@@ -2000,6 +2061,11 @@ public class MatchService {
         // ── Status ─────────────────────────────────────────────────
         dto.setStatus(match.getStatus());
 
+        // ── Score lock ─────────────────────────────────────────────
+        dto.setScoreLocked(match.getScoreLocked());
+        dto.setLockedBy(match.getLockedBy());
+        dto.setLockedAt(match.getLockedAt());
+
         // ── Timings ────────────────────────────────────────────────
         dto.setScheduledAt(match.getScheduledAt());
         dto.setStartedAt(match.getStartedAt());
@@ -2082,18 +2148,20 @@ public class MatchService {
     //
     // Distinct from getMyMatches() above, which resolves matches via team
     // membership (the competitor view) and always returns [] for a judge,
-    // who has no team. This resolves via match_judge_assignments instead —
-    // the explicit per-match grants an admin hands out on the Judge
-    // Ecosystem page.
+    // who has no team. This resolves via event_judges' sport-wide grant
+    // instead — every match in a sport the judge is assigned to, including
+    // matches generated after the assignment was made.
     // =====================================================
 
     public List<MatchResponseDTO> getMyMatchesAsJudge(UUID userId) {
-        List<UUID> matchIds = matchJudgeAssignmentRepository.findByJudgeUserId(userId).stream()
-                .map(com.botleague.backend.matches.entity.MatchJudgeAssignment::getMatchId)
+        List<UUID> assignedSportIds = eventJudgeRepository.findByUserId(userId).stream()
+                .filter(ej -> ej.getAssignedSportId() != null && Boolean.TRUE.equals(ej.getScoringRights()))
+                .map(com.botleague.backend.organizer.entity.EventJudge::getAssignedSportId)
+                .distinct()
                 .collect(java.util.stream.Collectors.toList());
-        if (matchIds.isEmpty()) return List.of();
+        if (assignedSportIds.isEmpty()) return List.of();
 
-        List<Match> matches = matchRepository.findAllById(matchIds);
+        List<Match> matches = matchRepository.findByEventSportIdInAndDeletedAtIsNull(assignedSportIds);
         matches.sort(java.util.Comparator.comparing(
                 m -> m.getScheduledAt() != null ? m.getScheduledAt() : LocalDateTime.MIN));
 

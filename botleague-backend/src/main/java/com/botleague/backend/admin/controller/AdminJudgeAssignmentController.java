@@ -1,12 +1,12 @@
 package com.botleague.backend.admin.controller;
 
 import com.botleague.backend.admin.dto.AdminJudgeAssignmentDTOs.AssignJudgeToEventRequest;
+import com.botleague.backend.admin.dto.AdminJudgeAssignmentDTOs.AssignSportRequest;
+import com.botleague.backend.admin.dto.AdminJudgeAssignmentDTOs.EventSportOptionResponse;
 import com.botleague.backend.admin.dto.AdminJudgeAssignmentDTOs.JudgeEventAssignmentResponse;
-import com.botleague.backend.admin.dto.AdminJudgeAssignmentDTOs.SportMatchesResponse;
 import com.botleague.backend.admin.service.AdminJudgeAssignmentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -40,27 +40,20 @@ public class AdminJudgeAssignmentController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/events/{eventId}/matches")
-    public ResponseEntity<List<SportMatchesResponse>> getEventMatches(@PathVariable UUID eventId) {
-        return ResponseEntity.ok(service.getEventMatches(eventId));
+    @GetMapping("/events/{eventId}/sports")
+    public ResponseEntity<List<EventSportOptionResponse>> getEventSports(@PathVariable UUID eventId) {
+        return ResponseEntity.ok(service.getEventSports(eventId));
     }
 
-    @PostMapping("/{userId}/assignments/{eventJudgeId}/matches/{matchId}")
-    public ResponseEntity<Void> assignMatch(
-            @PathVariable UUID userId, @PathVariable UUID eventJudgeId, @PathVariable UUID matchId,
-            Authentication auth) {
-        service.assignMatch(userId, eventJudgeId, matchId, extractUserId(auth));
-        return ResponseEntity.noContent().build();
+    @PutMapping("/{userId}/assignments/{eventJudgeId}/sport")
+    public ResponseEntity<JudgeEventAssignmentResponse> assignSport(
+            @PathVariable UUID userId, @PathVariable UUID eventJudgeId, @RequestBody AssignSportRequest req) {
+        return ResponseEntity.ok(service.assignSport(userId, eventJudgeId, req.eventSportId));
     }
 
-    @DeleteMapping("/{userId}/assignments/{eventJudgeId}/matches/{matchId}")
-    public ResponseEntity<Void> unassignMatch(
-            @PathVariable UUID userId, @PathVariable UUID eventJudgeId, @PathVariable UUID matchId) {
-        service.unassignMatch(userId, matchId);
-        return ResponseEntity.noContent().build();
-    }
-
-    private UUID extractUserId(Authentication auth) {
-        return UUID.fromString((String) auth.getPrincipal());
+    @DeleteMapping("/{userId}/assignments/{eventJudgeId}/sport")
+    public ResponseEntity<JudgeEventAssignmentResponse> unassignSport(
+            @PathVariable UUID userId, @PathVariable UUID eventJudgeId) {
+        return ResponseEntity.ok(service.unassignSport(userId, eventJudgeId));
     }
 }

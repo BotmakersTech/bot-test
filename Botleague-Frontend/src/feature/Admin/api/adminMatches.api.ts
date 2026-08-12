@@ -151,6 +151,12 @@ export interface MatchDTO {
     // ── Status ─────────────────────────────────────
     status?: MatchStatus
 
+    // ── Score lock ──────────────────────────────────
+    /** Admin freeze independent of status — blocks score edits even while LIVE. */
+    scoreLocked?: boolean
+    lockedBy?: string
+    lockedAt?: string
+
     // ── Timings ────────────────────────────────────
     scheduledAt?: string
     startedAt?: string
@@ -723,6 +729,40 @@ export const rejectMatchResult =
             await api.patch<MatchDTO>(
                 `/v1/matches/${matchId}/reject`,
                 { reason }
+            )
+
+        return response.data
+    }
+
+// =====================================================
+// LOCK / UNLOCK SCORE
+// PATCH /v1/matches/:matchId/lock-score, /unlock-score
+//
+// Admin-only freeze independent of match status — blocks score edits
+// even on a LIVE match, e.g. to stop a judge mid-dispute.
+// =====================================================
+
+export const lockMatchScore =
+    async (
+        matchId: string
+    ): Promise<MatchDTO> => {
+
+        const response =
+            await api.patch<MatchDTO>(
+                `/v1/matches/${matchId}/lock-score`
+            )
+
+        return response.data
+    }
+
+export const unlockMatchScore =
+    async (
+        matchId: string
+    ): Promise<MatchDTO> => {
+
+        const response =
+            await api.patch<MatchDTO>(
+                `/v1/matches/${matchId}/unlock-score`
             )
 
         return response.data

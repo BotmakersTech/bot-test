@@ -1,110 +1,125 @@
 import { useCallback, useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Trash2, ChevronDown, ChevronUp } from "lucide-react"
+import { ArrowLeft, Trash2, Gavel } from "lucide-react"
 import { getUserDetail, type UserSummary } from "../../SuperAdmin/api/userManagement.api"
 import { getAllEvents, type AdminEventResponse } from "../api/admin.api"
 import {
   getJudgeAssignments,
   assignJudgeToEvent,
   removeJudgeFromEvent,
-  getEventMatchesForAssignment,
-  assignMatchToJudge,
-  unassignMatchFromJudge,
+  getEventSportsForAssignment,
+  assignSportToJudge,
+  unassignSportFromJudge,
   type JudgeEventAssignment,
-  type SportMatches,
+  type EventSportOption,
 } from "../api/adminJudgeAssignments.api"
 import { ORG } from "../../Organizer/theme/organizerTheme"
 import "../../../styles/organizerTheme.css"
-
-function StatusBadge({ status }: { status?: string }) {
-  const s = (status ?? "").toUpperCase()
-  const bg =
-    s === "PENDING_APPROVAL" ? "#a16207" :
-    s === "LIVE"             ? "#1fa952" :
-    s === "COMPLETED"        ? ORG.blue :
-    s === "CANCELLED"        ? ORG.danger :
-    "#9ca3af"
-  return (
-    <span className="inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold text-white" style={{ background: bg }}>
-      {s.replace(/_/g, " ") || "SCHEDULED"}
-    </span>
-  )
-}
 
 function avatarInitials(firstName?: string, lastName?: string, fallback?: string) {
   const initials = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase()
   return initials || fallback?.charAt(0).toUpperCase() || "?"
 }
 
-function MatchPickerPanel({
+/**
+ * Sport-wide grant: pick one sport in this event and the judge can score
+ * every match in it (including matches generated later) — no per-match
+ * picking. Assigning a different sport replaces the previous grant.
+ */
+function SportAssignmentPanel({
   userId, assignment, onChanged,
 }: { userId: string; assignment: JudgeEventAssignment; onChanged: () => void }) {
-  const [sports, setSports] = useState<SportMatches[]>([])
+  const [sports, setSports] = useState<EventSportOption[]>([])
   const [loading, setLoading] = useState(true)
-  const [busyMatchId, setBusyMatchId] = useState<string | null>(null)
+  const [selectedSportId, setSelectedSportId] = useState("")
+  const [busy, setBusy] = useState(false)
 
   useEffect(() => {
     setLoading(true)
-    getEventMatchesForAssignment(assignment.eventId)
+    getEventSportsForAssignment(assignment.eventId)
       .then(setSports)
       .catch(() => setSports([]))
       .finally(() => setLoading(false))
   }, [assignment.eventId])
 
-  const toggle = async (matchId: string, currentlyAssigned: boolean) => {
-    setBusyMatchId(matchId)
+  const handleAssign = async () => {
+    if (!selectedSportId) return
+    setBusy(true)
     try {
-      if (currentlyAssigned) {
-        await unassignMatchFromJudge(userId, assignment.eventJudgeId, matchId)
-      } else {
-        await assignMatchToJudge(userId, assignment.eventJudgeId, matchId)
-      }
+      await assignSportToJudge(userId, assignment.eventJudgeId, selectedSportId)
+      setSelectedSportId("")
       onChanged()
     } finally {
-      setBusyMatchId(null)
+      setBusy(false)
+    }
+  }
+
+  const handleUnassign = async () => {
+    setBusy(true)
+    try {
+      await unassignSportFromJudge(userId, assignment.eventJudgeId)
+      onChanged()
+    } finally {
+      setBusy(false)
     }
   }
 
   if (loading) {
-    return <p className="px-6 py-4 text-sm text-gray-400">Loading matches…</p>
+    return <p className="px-6 py-4 text-sm text-gray-400">Loading sports…</p>
   }
 
-  const totalMatches = sports.reduce((n, s) => n + s.matches.length, 0)
-  if (totalMatches === 0) {
-    return <p className="px-6 py-4 text-sm text-gray-400">No matches generated for this event yet.</p>
+  if (sports.length === 0) {
+    return <p className="px-6 py-4 text-sm text-gray-400">No sports set up for this event yet.</p>
   }
 
   return (
-    <div className="space-y-4 border-t px-6 py-4" style={{ borderColor: "rgba(75,134,232,0.14)" }}>
-      {sports.filter(s => s.matches.length > 0).map(sport => (
-        <div key={sport.eventSportId}>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide" style={{ color: ORG.muted }}>{sport.sportName}</p>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {sport.matches.map(m => {
-              const isAssigned = assignment.assignedMatchIds.includes(m.matchId)
-              return (
-                <label
-                  key={m.matchId}
-                  className="flex cursor-pointer items-center justify-between gap-2 rounded-lg border px-3 py-2 text-xs"
-                  style={{ borderColor: isAssigned ? ORG.blue : "rgba(75,134,232,0.2)", background: isAssigned ? "rgba(75,134,232,0.06)" : "#fff" }}
-                >
-                  <span className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={isAssigned}
-                      disabled={busyMatchId === m.matchId}
-                      onChange={() => toggle(m.matchId, isAssigned)}
-                      style={{ accentColor: ORG.violet }}
-                    />
-                    <span className="font-medium" style={{ color: ORG.text }}>R{m.roundNumber} · M{m.matchNumber}</span>
-                  </span>
-                  <StatusBadge status={m.status} />
-                </label>
-              )
-            })}
-          </div>
+    <div className="space-y-3 border-t px-6 py-4" style={{ borderColor: "rgba(75,134,232,0.14)" }}>
+      {assignment.assignedSportId ? (
+        <div
+          className="flex items-center justify-between gap-3 rounded-lg border px-4 py-3"
+          style={{ borderColor: ORG.blue, background: "rgba(75,134,232,0.06)" }}
+        >
+          <span className="flex items-center gap-2 text-sm font-medium" style={{ color: ORG.text }}>
+            <Gavel size={14} style={{ color: ORG.blueHeading }} />
+            Scoring every match in <strong>{assignment.assignedSportName ?? "this sport"}</strong>
+          </span>
+          <button
+            onClick={handleUnassign}
+            disabled={busy}
+            className="rounded-lg px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+          >
+            Unassign
+          </button>
         </div>
-      ))}
+      ) : (
+        <p className="text-sm" style={{ color: ORG.muted }}>Not assigned to a sport yet — no scoring rights for this event.</p>
+      )}
+
+      <div className="flex flex-wrap items-center gap-3">
+        <select
+          value={selectedSportId}
+          onChange={e => setSelectedSportId(e.target.value)}
+          className="min-w-[240px] flex-1 rounded-lg px-3 py-2 text-sm outline-none"
+          style={{ border: `1px solid rgba(75,134,232,0.3)`, color: ORG.text }}
+        >
+          <option value="">
+            {assignment.assignedSportId ? "Change sport…" : "Select a sport…"}
+          </option>
+          {sports.map(s => (
+            <option key={s.eventSportId} value={s.eventSportId} disabled={s.eventSportId === assignment.assignedSportId}>
+              {s.sportName} ({s.matchCount} match{s.matchCount !== 1 ? "es" : ""})
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={handleAssign}
+          disabled={!selectedSportId || busy}
+          className="rounded-lg px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
+          style={{ background: ORG.gradientCta }}
+        >
+          {busy ? "Saving…" : assignment.assignedSportId ? "Change" : "Assign"}
+        </button>
+      </div>
     </div>
   )
 }
@@ -116,7 +131,7 @@ function EventAssignmentRow({
   const [removing, setRemoving] = useState(false)
 
   const handleRemove = async () => {
-    if (!window.confirm(`Remove this judge from "${assignment.eventName}"? This also unassigns all their matches for this event.`)) return
+    if (!window.confirm(`Remove this judge from "${assignment.eventName}"? This also revokes their sport scoring rights for this event.`)) return
     setRemoving(true)
     try {
       await removeJudgeFromEvent(userId, assignment.eventJudgeId)
@@ -132,7 +147,7 @@ function EventAssignmentRow({
         <div>
           <p className="font-medium" style={{ color: ORG.text }}>{assignment.eventName}</p>
           <p className="text-xs" style={{ color: ORG.muted }}>
-            {assignment.assignedMatchIds.length} match{assignment.assignedMatchIds.length !== 1 ? "es" : ""} assigned
+            {assignment.assignedSportName ? `Assigned to ${assignment.assignedSportName}` : "No sport assigned"}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -141,7 +156,7 @@ function EventAssignmentRow({
             className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold"
             style={{ color: ORG.blueHeading, background: "rgba(75,134,232,0.1)" }}
           >
-            Manage matches {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            Manage sport
           </button>
           <button
             onClick={handleRemove}
@@ -153,7 +168,7 @@ function EventAssignmentRow({
           </button>
         </div>
       </div>
-      {expanded && <MatchPickerPanel userId={userId} assignment={assignment} onChanged={onChanged} />}
+      {expanded && <SportAssignmentPanel userId={userId} assignment={assignment} onChanged={onChanged} />}
     </div>
   )
 }
@@ -277,6 +292,9 @@ export default function AdminJudgeAssignmentPage() {
         <h2 className="mb-4 text-lg font-semibold" style={{ color: ORG.blueHeading, fontFamily: ORG.fontHeading }}>
           Event Assignments
         </h2>
+        <p className="mb-4 -mt-2 text-xs" style={{ color: ORG.muted }}>
+          Assigning a judge to a sport grants scoring rights on every match in that sport, including matches generated later.
+        </p>
 
         {assignments.length === 0 ? (
           <div className="rounded-xl border border-dashed py-12 text-center text-sm" style={{ borderColor: "rgba(75,134,232,0.3)", color: ORG.muted }}>

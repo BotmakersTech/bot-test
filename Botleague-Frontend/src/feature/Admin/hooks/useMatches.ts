@@ -10,6 +10,8 @@ import { useSportMatchRealtime, mergeMatchUpdate } from "../../../shared/realtim
 import {
     approveMatchResult,
     rejectMatchResult,
+    lockMatchScore,
+    unlockMatchScore,
     cancelMatch,
     completeMatch,
     createMatch,
@@ -733,6 +735,65 @@ export const useMatches = (
         }, [])
 
     // =====================================================
+    // LOCK / UNLOCK SCORE
+    // PATCH /v1/matches/:matchId/lock-score, /unlock-score
+    // =====================================================
+
+    const handleLockScore =
+        useCallback(async (
+            matchId: string
+        ) => {
+
+            try {
+
+                setUpdateLoading(true)
+                setError(null)
+
+                return await lockMatchScore(matchId)
+
+            } catch (err: any) {
+
+                const message =
+                    extractError(err, "Failed to lock match score")
+
+                setError(message)
+                throw err
+
+            } finally {
+
+                setUpdateLoading(false)
+            }
+
+        }, [])
+
+    const handleUnlockScore =
+        useCallback(async (
+            matchId: string
+        ) => {
+
+            try {
+
+                setUpdateLoading(true)
+                setError(null)
+
+                return await unlockMatchScore(matchId)
+
+            } catch (err: any) {
+
+                const message =
+                    extractError(err, "Failed to unlock match score")
+
+                setError(message)
+                throw err
+
+            } finally {
+
+                setUpdateLoading(false)
+            }
+
+        }, [])
+
+    // =====================================================
     // CANCEL MATCH
     // PATCH /v1/matches/:matchId/cancel
     // Not allowed on COMPLETED matches.
@@ -859,6 +920,8 @@ export const useMatches = (
         completeMatch:            handleCompleteMatch,
         approveMatchResult:       handleApproveMatchResult,
         rejectMatchResult:        handleRejectMatchResult,
+        lockMatchScore:           handleLockScore,
+        unlockMatchScore:         handleUnlockScore,
         cancelMatch:              handleCancelMatch,
         deleteMatch:              handleDeleteMatch,
     }

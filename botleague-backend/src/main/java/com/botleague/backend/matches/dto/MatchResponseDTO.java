@@ -199,6 +199,16 @@ public class MatchResponseDTO {
     private MatchStatus status;
 
     // =====================================================
+    // SCORE LOCK
+    // =====================================================
+
+    private Boolean scoreLocked;
+
+    private UUID lockedBy;
+
+    private LocalDateTime lockedAt;
+
+    // =====================================================
     // TIMINGS
     // =====================================================
 
@@ -536,6 +546,30 @@ public class MatchResponseDTO {
 
     public void setStatus(MatchStatus status) {
         this.status = status;
+    }
+
+    public Boolean getScoreLocked() {
+        return scoreLocked;
+    }
+
+    public void setScoreLocked(Boolean scoreLocked) {
+        this.scoreLocked = scoreLocked;
+    }
+
+    public UUID getLockedBy() {
+        return lockedBy;
+    }
+
+    public void setLockedBy(UUID lockedBy) {
+        this.lockedBy = lockedBy;
+    }
+
+    public LocalDateTime getLockedAt() {
+        return lockedAt;
+    }
+
+    public void setLockedAt(LocalDateTime lockedAt) {
+        this.lockedAt = lockedAt;
     }
 
     public LocalDateTime getScheduledAt() {

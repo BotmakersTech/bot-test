@@ -14,4 +14,7 @@ public interface EventJudgeRepository extends JpaRepository<EventJudge, UUID> {
     List<EventJudge> findByUserId(UUID userId);
     java.util.Optional<EventJudge> findByEventIdAndUserId(UUID eventId, UUID userId);
     long countByEventId(UUID eventId);
+
+    /** The real scoring-rights check: is this user granted this sport, with scoring switched on? */
+    boolean existsByAssignedSportIdAndUserIdAndScoringRightsTrue(UUID assignedSportId, UUID userId);
 }

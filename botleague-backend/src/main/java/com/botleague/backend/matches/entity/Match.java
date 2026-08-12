@@ -411,6 +411,25 @@ public class Match {
     private String rejectionReason;
 
     // =====================================================
+    // SCORE LOCK
+    // -------------------------------------------------------
+    // An explicit admin/organiser/event-head freeze that blocks
+    // updateMatchScore/submitMatchResult/completeMatch regardless of the
+    // match's status — independent of (and stricter than) the LIVE/
+    // PENDING_APPROVAL/COMPLETED lifecycle, e.g. to stop edits mid-dispute
+    // without prematurely approving or rejecting the result.
+    // =====================================================
+
+    @Column(name = "score_locked", nullable = false)
+    private Boolean scoreLocked = false;
+
+    @Column(name = "locked_by")
+    private UUID lockedBy;
+
+    @Column(name = "locked_at")
+    private LocalDateTime lockedAt;
+
+    // =====================================================
     // TIMINGS
     // =====================================================
 
@@ -845,6 +864,30 @@ public class Match {
 
     public void setRejectionReason(String rejectionReason) {
         this.rejectionReason = rejectionReason;
+    }
+
+    public Boolean getScoreLocked() {
+        return scoreLocked;
+    }
+
+    public void setScoreLocked(Boolean scoreLocked) {
+        this.scoreLocked = scoreLocked;
+    }
+
+    public UUID getLockedBy() {
+        return lockedBy;
+    }
+
+    public void setLockedBy(UUID lockedBy) {
+        this.lockedBy = lockedBy;
+    }
+
+    public LocalDateTime getLockedAt() {
+        return lockedAt;
+    }
+
+    public void setLockedAt(LocalDateTime lockedAt) {
+        this.lockedAt = lockedAt;
     }
 
     public LocalDateTime getScheduledAt() {

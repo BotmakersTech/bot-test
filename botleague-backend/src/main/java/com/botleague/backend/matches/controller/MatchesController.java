@@ -276,6 +276,28 @@ public class MatchesController {
     }
 
     // =====================================================
+    // STATUS — LOCK / UNLOCK SCORE
+    // PATCH /api/v1/matches/{matchId}/lock-score
+    // PATCH /api/v1/matches/{matchId}/unlock-score
+    // =====================================================
+
+    @PatchMapping("/{matchId}/lock-score")
+    public ResponseEntity<MatchResponseDTO> lockScore(
+            @PathVariable UUID matchId,
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(matchService.lockScore(matchId, authentication));
+    }
+
+    @PatchMapping("/{matchId}/unlock-score")
+    public ResponseEntity<MatchResponseDTO> unlockScore(
+            @PathVariable UUID matchId,
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(matchService.unlockScore(matchId, authentication));
+    }
+
+    // =====================================================
     // STATUS — CANCEL
     // PATCH /api/v1/matches/{matchId}/cancel
     // =====================================================

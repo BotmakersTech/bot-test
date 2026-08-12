@@ -10,7 +10,8 @@ import {
   Trophy, X, Zap, CheckCircle2, Play,
   Clock, Swords, Shuffle, ChevronRight,
   AlertTriangle, RefreshCw, Calendar,
-  BarChart2, Hand, Scale, Flag, Ban
+  BarChart2, Hand, Scale, Flag, Ban,
+  Lock, Unlock
 } from "lucide-react"
 import type {
   MatchDTO,
@@ -299,6 +300,8 @@ export default function OrganizerBracketPage() {
     completeMatch,
     approveMatchResult,
     rejectMatchResult,
+    lockMatchScore,
+    unlockMatchScore,
     cancelMatch,
     fetchMatches,
     generateBracket,
@@ -602,6 +605,32 @@ export default function OrganizerBracketPage() {
       await refreshMatches()
     } catch (err: any) {
       setActionError(describeActionError(err, "Failed to reject match result"))
+    }
+  }
+
+  // =====================================================
+  // LOCK / UNLOCK SCORE
+  // =====================================================
+
+  const handleLockScore = async () => {
+    if (!selectedMatchId) return
+    setActionError(null)
+    try {
+      await lockMatchScore(selectedMatchId)
+      await refreshMatches()
+    } catch (err: any) {
+      setActionError(describeActionError(err, "Failed to lock match score"))
+    }
+  }
+
+  const handleUnlockScore = async () => {
+    if (!selectedMatchId) return
+    setActionError(null)
+    try {
+      await unlockMatchScore(selectedMatchId)
+      await refreshMatches()
+    } catch (err: any) {
+      setActionError(describeActionError(err, "Failed to unlock match score"))
     }
   }
 
@@ -1288,13 +1317,39 @@ export default function OrganizerBracketPage() {
                     Bracket Reset
                   </span>
                 )}
-              </div>
-              <div style={styles.popupTitle}>
-                Round {selectedMatch.roundNumber} — Match {selectedMatch.matchNumber}
-                {selectedMatch.bracketSide && (
-                  <span style={{ fontSize: "0.72rem", color: T.textMuted, fontWeight: 400, marginLeft: 8 }}>
-                    [{selectedMatch.bracketSide.replace("_", " ")}]
+                {selectedMatch.scoreLocked && (
+                  <span style={{ ...styles.byeTag, background: T.accentDim, color: T.accent, borderColor: T.accentBorder, display: "flex", alignItems: "center", gap: 4 }}>
+                    <Lock size={10} /> Score Locked
                   </span>
+                )}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                <div style={styles.popupTitle}>
+                  Round {selectedMatch.roundNumber} — Match {selectedMatch.matchNumber}
+                  {selectedMatch.bracketSide && (
+                    <span style={{ fontSize: "0.72rem", color: T.textMuted, fontWeight: 400, marginLeft: 8 }}>
+                      [{selectedMatch.bracketSide.replace("_", " ")}]
+                    </span>
+                  )}
+                </div>
+                {canApprove && selectedMatch.status !== "COMPLETED" && selectedMatch.status !== "CANCELLED" && (
+                  selectedMatch.scoreLocked ? (
+                    <button
+                      style={{ ...styles.actionBtn, background: "rgba(31,169,82,0.12)", borderColor: "rgba(31,169,82,0.3)", color: T.green, opacity: updateLoading ? 0.5 : 1 }}
+                      onClick={handleUnlockScore}
+                      disabled={updateLoading}
+                    >
+                      <Unlock size={13} /> Unlock Score
+                    </button>
+                  ) : (
+                    <button
+                      style={{ ...styles.actionBtn, background: T.accentDim, borderColor: T.accentBorder, color: T.accent, opacity: updateLoading ? 0.5 : 1 }}
+                      onClick={handleLockScore}
+                      disabled={updateLoading}
+                    >
+                      <Lock size={13} /> Lock Score
+                    </button>
+                  )
                 )}
               </div>
             </div>

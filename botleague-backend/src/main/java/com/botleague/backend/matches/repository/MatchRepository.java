@@ -20,6 +20,13 @@ public interface MatchRepository
             UUID eventSportId
     );
 
+    // Sport-wide judge scoring grant resolution (getMyMatchesAsJudge) — a
+    // judge assigned to a sport can see every match across that sport.
+    List<Match>
+    findByEventSportIdInAndDeletedAtIsNull(
+            List<UUID> eventSportIds
+    );
+
     // Used only to detect "this bracket was soft-deleted and is being
     // regenerated" for the audit trail — the duplicate-generation guard
     // itself only ever looks at non-deleted matches.
