@@ -138,69 +138,6 @@
 }
 .onb-btn-secondary:hover { background: #E9EBF7; }
 
-/* ── Spotlight tour — anchored to the real nav element, not a centered
-   modal. The highlight box tracks the target's live position (sidebar
-   width changes on hover, so this can't be a static layout). ─────────── */
-
-.onb-spotlight-highlight {
-  position: fixed;
-  z-index: 9998;
-  border-radius: 12px;
-  box-shadow: 0 0 0 9999px rgba(15, 17, 30, 0.6);
-  pointer-events: none;
-}
-.onb-spotlight-highlight::after {
-  content: "";
-  position: absolute;
-  inset: -4px;
-  border-radius: 16px;
-  border: 2px solid #8C6CFF;
-  box-shadow: 0 0 0 4px rgba(140, 108, 255, 0.25);
-  animation: onb-spotlight-pulse 1.8s ease-in-out infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .onb-spotlight-highlight::after { animation: none; }
-}
-@keyframes onb-spotlight-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%      { opacity: 0.55; transform: scale(1.05); }
-}
-
-.onb-spotlight-popover {
-  position: fixed;
-  z-index: 9999;
-  width: 320px;
-  max-width: calc(100vw - 24px);
-  background: #ffffff;
-  border: 1.5px solid #C9CEFB;
-  border-radius: 18px;
-  box-shadow: 0 24px 60px rgba(20, 30, 80, 0.32);
-  padding: 20px 22px 18px;
-  font-family: "Poppins", sans-serif;
-}
-
-.onb-spotlight-arrow {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  background: #ffffff;
-  transform: rotate(45deg);
-}
-.onb-spotlight-arrow--left {
-  left: -8px;
-  top: 22px;
-  border-left: 1.5px solid #C9CEFB;
-  border-bottom: 1.5px solid #C9CEFB;
-  border-radius: 0 0 0 3px;
-}
-.onb-spotlight-arrow--top {
-  top: -8px;
-  right: 26px;
-  border-top: 1.5px solid #C9CEFB;
-  border-left: 1.5px solid #C9CEFB;
-  border-radius: 3px 0 0 0;
-}
-
 /* ── Tour ─────────────────────────────────────────────── */
 
 .onb-tour-progress {
@@ -261,6 +198,150 @@
   box-shadow: 0 10px 25px -8px rgba(124, 92, 246, 0.55);
 }
 .onb-tour-nav-btn--next:active { transform: scale(0.97); }
+
+/* ── Step card — the tour's new centered-modal look, replacing the
+   spotlight/anchored-popover style above. Reuses onb-overlay/onb-btn-primary/
+   onb-tour-skip/onb-tour-progress/onb-tour-dot/onb-close-btn as-is; only the
+   card shell, decorative dots/stars/plane, badge, heading and mascot are new. ── */
+
+.onb-stepcard {
+  position: relative;
+  width: 100%;
+  max-width: 620px;
+  background: #ffffff;
+  border: 2px solid #0162D1;
+  border-radius: 24px;
+  box-shadow: 0 24px 60px rgba(20, 30, 80, 0.3);
+  padding: 36px 40px;
+  overflow: hidden;
+  font-family: "Poppins", sans-serif;
+}
+
+.onb-stepcard-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #0162D1;
+  background: #fff;
+  z-index: 2;
+}
+.onb-stepcard-dot--tl { top: -6px; left: -6px; }
+.onb-stepcard-dot--tr { top: -6px; right: -6px; }
+.onb-stepcard-dot--bl { bottom: -6px; left: -6px; }
+.onb-stepcard-dot--br { bottom: -6px; right: -6px; }
+
+.onb-stepcard-star {
+  position: absolute;
+  fill: none;
+  stroke: #bcd4ff;
+  stroke-width: 3;
+  opacity: 0.6;
+  pointer-events: none;
+}
+.onb-stepcard-star--1 { width: 42px; height: 42px; top: 14px; left: 10px; }
+.onb-stepcard-star--2 { width: 30px; height: 30px; top: 16%; right: 20%; }
+.onb-stepcard-star--3 { width: 36px; height: 36px; bottom: 18%; right: 6%; }
+
+.onb-stepcard-plane {
+  position: absolute;
+  width: 100px;
+  bottom: 8px;
+  left: 14%;
+  stroke: #cfe0ff;
+  fill: #cfe0ff;
+  stroke-width: 2;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.onb-stepcard-row {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.onb-stepcard-left { flex: 1 1 auto; min-width: 0; }
+
+.onb-stepcard-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0162D1;
+  background: rgba(1, 98, 209, 0.08);
+  border: 1px solid rgba(1, 98, 209, 0.25);
+  border-radius: 999px;
+  padding: 4px 14px;
+  margin-bottom: 14px;
+}
+
+.onb-stepcard-heading {
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-size: 1.7rem;
+  line-height: 1.2;
+  color: #1a1a2e;
+  margin: 0 0 14px;
+}
+.onb-stepcard-heading-accent { color: #8C6CFF; }
+
+.onb-stepcard-body {
+  font-size: 0.9rem;
+  color: #6b7280;
+  line-height: 1.55;
+  margin: 0 0 22px;
+  max-width: 30rem;
+}
+
+.onb-stepcard-cta-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+
+.onb-stepcard-arrow { display: inline-block; margin-left: 6px; }
+
+.onb-stepcard-right {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.onb-stepcard-mascot {
+  width: 130px;
+  height: auto;
+  filter: drop-shadow(0 18px 20px rgba(140, 108, 255, 0.25));
+}
+
+.onb-stepcard-next-btn {
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #8C6CFF;
+  background: #fff;
+  border: 2px solid #8C6CFF;
+  border-radius: 12px;
+  padding: 8px 22px;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, transform 150ms ease;
+}
+.onb-stepcard-next-btn:hover { background: #8C6CFF; color: #fff; transform: translateY(-2px); }
+.onb-stepcard-next-btn:active { transform: translateY(0); }
+
+.onb-stepcard-progress { margin-top: 26px; }
+
+@media (max-width: 700px) {
+  .onb-stepcard { padding: 28px 22px 24px; border-radius: 18px; }
+  .onb-stepcard-row { flex-direction: column-reverse; text-align: center; }
+  .onb-stepcard-left { text-align: center; }
+  .onb-stepcard-body { max-width: none; }
+  .onb-stepcard-cta-row { justify-content: center; }
+  .onb-stepcard-mascot { width: 96px; }
+  .onb-stepcard-star--2 { display: none; }
+  .onb-stepcard-plane { display: none; }
+}
 
 .onb-tour-relaunch {
   position: fixed;
