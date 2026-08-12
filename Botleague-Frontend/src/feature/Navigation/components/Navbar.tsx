@@ -18,7 +18,25 @@ import { myInvitations } from "../../UserDashboard/api/userMembership.api"
 import type { RootState } from "../../../app/store"
 import { getPrimaryRole } from "../../../shared/config/sidebarConfig"
 import { AppRole } from "../../../shared/constants/roles"
-import LOGO_URL from "../../../assets/logo-white.png"
+
+// ── Wordmark — "BOT" / "LEAGUE" stacked with a colored bar on the outer
+// edge of each word. Sarpanch, not the mockup's Racing Sans One — this app
+// standardizes on Sarpanch/Poppins/Inter (see EventsLandingPage's own note
+// on the same substitution).
+function Wordmark() {
+  return (
+    <div className="flex items-center gap-4 font-display text-[28px] leading-none font-medium tracking-wide text-white select-none sm:text-[32px]">
+      <span className="flex flex-col items-stretch">
+        <span className="mb-1 h-[3px] rounded-full bg-[#0d3fff]" />
+        <span>BOT</span>
+      </span>
+      <span className="flex flex-col items-stretch">
+        <span>LEAGUE</span>
+        <span className="mt-1 h-[3px] rounded-full bg-[#ff3b30]" />
+      </span>
+    </div>
+  )
+}
 
 function IconButton({
   children,
@@ -35,7 +53,7 @@ function IconButton({
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-white/60 transition-colors hover:bg-white/[0.08] hover:text-white"
+      className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25"
     >
       {children}
     </button>
@@ -47,7 +65,7 @@ function NotificationButton({ unreadCount, onClick }: { unreadCount: number; onC
     <IconButton label={`Notifications (${unreadCount} unread)`} onClick={onClick}>
       <BellIcon className="h-5 w-5" />
       {unreadCount > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 min-w-[1rem] items-center justify-center rounded-full bg-[#8C6CFF] text-[10px] font-bold text-white ring-2 ring-[#111111] px-0.5">
+        <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 min-w-[1rem] items-center justify-center rounded-full bg-[#ff3b30] text-[10px] font-bold text-white ring-2 ring-[#4b86e8] px-0.5">
           {unreadCount > 99 ? "99+" : unreadCount}
         </span>
       )}
@@ -78,7 +96,7 @@ function CompetitorNavActions({
             <rect x="2" y="4" width="20" height="16" rx="2" />
             <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
           </svg>
-          <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 min-w-[1rem] items-center justify-center rounded-full bg-[#8C6CFF] text-[10px] font-bold text-white ring-2 ring-[#111111] px-0.5">
+          <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 min-w-[1rem] items-center justify-center rounded-full bg-[#ff3b30] text-[10px] font-bold text-white ring-2 ring-[#4b86e8] px-0.5">
             {pendingInvites > 9 ? "9+" : pendingInvites}
           </span>
         </IconButton>
@@ -87,11 +105,9 @@ function CompetitorNavActions({
         <ChatIcon className="h-5 w-5" />
       </IconButton>
       <NotificationButton unreadCount={unreadCount} onClick={() => navigate("/notifications")} />
-      <span data-tour="navbar-profile">
-        <IconButton label="Profile" onClick={() => navigate("/profile")}>
-          <UserCircleIcon className="h-[22px] w-[22px]" />
-        </IconButton>
-      </span>
+      <IconButton label="Profile" onClick={() => navigate("/profile")}>
+        <UserCircleIcon className="h-[22px] w-[22px]" />
+      </IconButton>
       {showSettings && (
         <IconButton label="Settings" onClick={() => navigate("/settings")}>
           <SettingsGearIcon className="h-5 w-5" />
@@ -205,8 +221,8 @@ export default function Navbar() {
 
   return (
     <header
-      style={{ background: "#111111" }}
-      className="flex h-18 shrink-0 items-center justify-between border-b border-white/[0.08] px-4 sm:px-6"
+      style={{ background: "linear-gradient(180deg, rgba(1,98,209,0.9) 0%, rgba(140,108,255,0.9) 100%)" }}
+      className="flex h-18 shrink-0 items-center justify-between px-4 sm:px-6"
     >
       <button
         type="button"
@@ -214,12 +230,7 @@ export default function Navbar() {
         aria-label="BotLeague home"
         className="flex items-center"
       >
-        <img
-          src={LOGO_URL}
-          alt="BotLeague"
-          className="h-11.5 w-auto select-none"
-          draggable={false}
-        />
+        <Wordmark />
       </button>
 
       {primaryRole === AppRole.SUPER_ADMIN ? (

@@ -89,16 +89,12 @@ function SidebarItem({
       title={item.label}
       aria-label={item.label}
       aria-current={active ? "page" : undefined}
-      // Stable anchor the site tour (OnboardingTour) spotlights onto — not
-      // used for styling, just a query target so the tour can point at the
-      // real nav button instead of a generic centered popup.
-      data-tour={`sidebar-${item.id}`}
       className={[
         "flex h-11 shrink-0 items-center gap-3 rounded-lg transition-[background-color,color,width] duration-200",
         expanded ? "w-full px-3" : "w-11 justify-center",
         active
-          ? "bg-[#3269d0] text-white shadow-[0_0_15px_rgba(72,113,219,0.38)]"
-          : "text-[#5e6065] hover:bg-[#e8ecff] hover:text-[#3269d0]",
+          ? "bg-[#0162d1] text-white shadow-[0_0_15px_rgba(1,98,209,0.38)]"
+          : "text-[#0162d1] hover:bg-[rgba(1,98,209,0.1)]",
       ].join(" ")}
     >
       <span className="flex h-7 w-7 shrink-0 items-center justify-center [&_svg]:h-[24px] [&_svg]:w-[24px]">
@@ -146,13 +142,16 @@ export default function Sidebar() {
   return (
     // The sidebar itself is the flex item that changes width on hover —
     // its sibling `<main>` in Layout.tsx is `min-w-0 flex-1`, so it shrinks
-    // to make room instead of the sidebar overlaying on top of it.
+    // to make room instead of the sidebar overlaying on top of it. Floating:
+    // margin on every side instead of flush against the navbar/page edges,
+    // with its own rounded corners + shadow rather than a hard edge.
     <aside
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
+      style={{ background: "linear-gradient(180deg, rgba(1,98,209,0.12) 0%, rgba(140,108,255,0.12) 100%)" }}
       className={[
-        "sticky top-0 z-40 flex h-[calc(100vh-4.5rem)] shrink-0 flex-col items-center overflow-hidden bg-[#eef1ff] py-8 transition-[width] duration-200 ease-out",
-        expanded ? "w-[248px] items-stretch px-4 shadow-[6px_0_24px_rgba(17,17,17,0.12)]" : "w-[112px]",
+        "sticky top-4 z-40 mb-4 ml-4 flex h-[calc(100vh-4.5rem-2rem)] shrink-0 flex-col items-center overflow-hidden rounded-2xl py-8 shadow-[0_4px_16px_rgba(17,17,17,0.15)] transition-[width] duration-200 ease-out",
+        expanded ? "w-[248px] items-stretch px-4" : "w-[112px]",
       ].join(" ")}
     >
       <nav className="flex min-h-0 flex-1 w-full flex-col items-center gap-6 overflow-y-auto overflow-x-hidden px-4">
@@ -174,7 +173,7 @@ export default function Sidebar() {
         title="Log out"
         aria-label="Log out"
         className={[
-          "mt-8 flex h-11 shrink-0 items-center gap-3 rounded-lg text-[#3269d0] transition-[background-color,width] duration-200 hover:bg-[#e8ecff] disabled:opacity-60",
+          "mt-8 flex h-11 shrink-0 items-center gap-3 rounded-lg text-[#0162d1] transition-[background-color,width] duration-200 hover:bg-[rgba(1,98,209,0.1)] disabled:opacity-60",
           expanded ? "w-full px-3" : "w-11 justify-center",
         ].join(" ")}
       >
