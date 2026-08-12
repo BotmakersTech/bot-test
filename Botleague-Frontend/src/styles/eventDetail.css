@@ -551,13 +551,16 @@
     border: none;
 }
 
-/* Sport stat badges — Teams / Weight / Entry Fee / Prize Pool. Only on the
+/* Sport stat badges — 6 fixed specs (Age Group / Teams / Weight / Format /
+   Entry Fee / Prize Pool), always rendered in the same order with a "—"
+   placeholder for missing data, on a uniform grid so the row never reflows
+   unevenly depending on which values happen to be set. Only on the
    sport-level header (SportDetailsHeader), not the event-level one. */
 
 .evd-page .sport-stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 18px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
     margin-top: 6px;
 }
 
@@ -567,9 +570,12 @@
     gap: 14px;
     border: 2px solid #0162D1;
     border-radius: 14px;
-    padding: 14px 22px;
+    padding: 14px 18px;
     color: #0162D1;
+    min-width: 0;
 }
+
+.evd-page .sport-stat > div { min-width: 0; }
 
 .evd-page .sport-stat svg { flex-shrink: 0; }
 
@@ -587,6 +593,9 @@
     font-size: 19px;
     font-weight: 700;
     color: #111111;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 @media (max-width: 992px) {
@@ -596,7 +605,7 @@
     .evd-page .event-info p { font-size: 22px; line-height: 38px; margin-bottom: 30px; }
     .evd-page .contact-buttons { margin-left: 0; flex-direction: row; flex-wrap: wrap; justify-content: center; }
     .evd-page .contact-buttons button { flex: 1 1 200px; font-size: 20px; }
-    .evd-page .sport-stats { justify-content: center; }
+    .evd-page .sport-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); text-align: left; }
 }
 @media (max-width: 640px) {
     .evd-page .event-details { padding: 50px 20px; gap: 25px; }
@@ -606,8 +615,12 @@
     .evd-page .event-info p { font-size: 17px; line-height: 28px; }
     .evd-page .contact-buttons { gap: 12px; }
     .evd-page .contact-buttons button { flex: 1 1 45%; height: 58px; font-size: 16px; padding: 0 10px; }
-    .evd-page .sport-stat { padding: 10px 16px; gap: 10px; }
-    .evd-page .sport-stat-value { font-size: 16px; }
+    .evd-page .sport-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .evd-page .sport-stat { padding: 10px 14px; gap: 10px; }
+    .evd-page .sport-stat-value { font-size: 15px; }
+}
+@media (max-width: 420px) {
+    .evd-page .sport-stats { grid-template-columns: 1fr; }
 }
 @media (max-width: 360px) { .evd-page .contact-buttons button { flex: 1 1 100%; } }
 

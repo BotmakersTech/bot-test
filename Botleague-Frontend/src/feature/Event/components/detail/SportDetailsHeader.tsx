@@ -1,4 +1,5 @@
-import { Users, Weight, Wallet, Trophy } from "lucide-react";
+import { Users, Weight, Wallet, Trophy, GraduationCap, Layers } from "lucide-react";
+import type { ComponentType } from "react";
 import type { EventSportResponse, SupportContact } from "../../api/event.api";
 
 interface SportDetailsHeaderProps {
@@ -16,7 +17,40 @@ function formatCurrency(val?: number | null): string {
   return `₹${val.toLocaleString("en-IN")}`;
 }
 
+function titleCase(val?: string | null): string {
+  if (!val) return "—";
+  return val.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+interface SpecItem {
+  icon: ComponentType<{ size?: number }>;
+  label: string;
+  value: string;
+}
+
 export default function SportDetailsHeader({ sport, contacts }: SportDetailsHeaderProps) {
+  // Always exactly 6 specs, same order, every time — a badge that silently
+  // disappears (or renders blank) when data is missing reads as broken; a
+  // "—" placeholder reads as "not set yet" and keeps the row's layout stable.
+  const specs: SpecItem[] = [
+    { icon: GraduationCap, label: "Age Group", value: titleCase(sport.ageGroup) },
+    {
+      icon: Users,
+      label: "Teams",
+      value: sport.maxTeams
+        ? `${sport.registeredTeamsCount ?? 0}/${sport.maxTeams}`
+        : sport.registeredTeamsCount != null ? String(sport.registeredTeamsCount) : "—",
+    },
+    {
+      icon: Weight,
+      label: "Weight",
+      value: sport.weightLimitKg != null ? `${sport.weightLimitKg} Kg` : titleCase(sport.weightClass),
+    },
+    { icon: Layers, label: "Format", value: titleCase(sport.formatType) },
+    { icon: Wallet, label: "Entry Fee", value: formatCurrency(sport.entryFee) },
+    { icon: Trophy, label: "Prize Pool", value: formatCurrency(sport.prizeMoney) },
+  ];
+
   return (
     <section className="event-details">
       <div className="contact-buttons">
@@ -44,38 +78,15 @@ export default function SportDetailsHeader({ sport, contacts }: SportDetailsHead
         <p>{sport.sportsDescription || "Details for this competition will be published soon."}</p>
 
         <div className="sport-stats">
-          <div className="sport-stat">
-            <Users size={22} />
-            <div>
-              <div className="sport-stat-label">Teams</div>
-              <div className="sport-stat-value">
-                {sport.registeredTeamsCount ?? 0}{sport.maxTeams ? `/${sport.maxTeams}` : ""}
+          {specs.map((spec) => (
+            <div className="sport-stat" key={spec.label}>
+              <spec.icon size={22} />
+              <div>
+                <div className="sport-stat-label">{spec.label}</div>
+                <div className="sport-stat-value">{spec.value}</div>
               </div>
             </div>
-          </div>
-          <div className="sport-stat">
-            <Weight size={22} />
-            <div>
-              <div className="sport-stat-label">Weight</div>
-              <div className="sport-stat-value">
-                {sport.weightLimitKg != null ? `${sport.weightLimitKg} Kg` : sport.weightClass || "—"}
-              </div>
-            </div>
-          </div>
-          <div className="sport-stat">
-            <Wallet size={22} />
-            <div>
-              <div className="sport-stat-label">Entry Fee</div>
-              <div className="sport-stat-value">{formatCurrency(sport.entryFee)}</div>
-            </div>
-          </div>
-          <div className="sport-stat">
-            <Trophy size={22} />
-            <div>
-              <div className="sport-stat-label">Prize Pool</div>
-              <div className="sport-stat-value">{formatCurrency(sport.prizeMoney)}</div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </section>
