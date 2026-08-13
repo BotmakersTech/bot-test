@@ -20,6 +20,7 @@ import flight from "../../../assets/Auth/flight.svg";
 import mascot from "../../../assets/mascote.png";
 import bLogo from "../../../assets/Dashboard/B_LOGO.png";
 import TeamLogo from "../../../shared/components/TeamLogo";
+import MobileDashboard from "../components/MobileDashboard";
 import "../../../styles/dashboard.css";
 
 /* ─── tiny helpers ─────────────────────────────────────────────────────── */
@@ -164,9 +165,13 @@ export default function UserDashboard() {
     );
   }
 
-  /* ── render ── */
+  /* ── render ──
+     Two layouts, one dataset: .dash-desktop-only / .dash-mobile-only toggle
+     via a CSS media query at 950px (dashboard.css) so there's no resize-driven
+     remount or flash-of-wrong-layout on load. */
   return (
-    <main className="dash-page">
+    <>
+    <main className="dash-page dash-desktop-only">
       <img src={flight} alt="" aria-hidden="true" className="dash-plane dash-plane-left" />
       <img src={flight} alt="" aria-hidden="true" className="dash-plane dash-plane-right" />
       <OutlineStar className="dash-star-left" />
@@ -272,5 +277,36 @@ export default function UserDashboard() {
         </section>
       </section>
     </main>
+
+    <div className="dash-mobile-only">
+      <MobileDashboard
+        displayUsername={displayUsername}
+        profileName={profileName}
+        botLeagueId={botLeagueId}
+        hasAvatar={hasAvatar}
+        avatarSrc={hasAvatar ? avatarSrc : mascot}
+        onAvatarError={() => setAvatarErr(true)}
+        rankLabel={stats.rankNum || "Pending"}
+        eventsParticipated={stats.eventsParticipated}
+        matchesTotal={stats.matchesTotal}
+        winRate={winRate}
+        teamName={team?.teamName ?? null}
+        teamLogo={team?.teamLogo}
+        teamMemberLabel={
+          team
+            ? displaySquadSize != null
+              ? `${displaySquadSize} member${displaySquadSize === 1 ? "" : "s"}`
+              : "Loading members..."
+            : "Join or create a team"
+        }
+        hasTeam={!!team}
+        achievements={achievements}
+        onShare={shareDashboard}
+        onEditProfile={() => navigate("/profile")}
+        onOpenChats={() => navigate("/messages")}
+        onTeamAction={() => navigate(team ? "/my-team" : "/create-team")}
+      />
+    </div>
+    </>
   );
 }

@@ -541,6 +541,33 @@
   }
 }
 
+/* ── Desktop / mobile dashboard switch ───────────────────────────────────
+   Both layouts render at once (share the same data via userDashboard.tsx);
+   only one is ever visible, so there's no resize-driven remount or a flash
+   of the wrong layout on first paint. */
+
+.dash-mobile-only { display: none; }
+
+@media (max-width: 950px) {
+  .dash-desktop-only { display: none; }
+  .dash-mobile-only { display: block; }
+}
+
+/* ── Mobile dashboard interactions (MobileDashboard.tsx) ─────────────────
+   The static Figma frame has no hover states — these are additions to make
+   the pixel-perfect port feel alive, matching the desktop cards' own
+   db-hover-* treatment above. */
+
+.dash-m-hover-lift { cursor: pointer; transition: filter 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease; }
+.dash-m-hover-lift:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(1, 98, 209, 0.3); }
+.dash-m-hover-lift:active { transform: translateY(0); filter: brightness(0.97); }
+
+.dash-m-hover-card { transition: box-shadow 0.2s ease, transform 0.2s ease; }
+.dash-m-hover-card:hover { box-shadow: 0 8px 20px rgba(1, 98, 209, 0.18); transform: translateY(-2px); }
+
+.dash-m-achievement { transition: transform 0.15s ease; cursor: pointer; }
+.dash-m-achievement:hover { transform: translateY(-3px); }
+
 @media (max-width: 720px) {
   .dash-top-row {
     align-items: flex-start;
