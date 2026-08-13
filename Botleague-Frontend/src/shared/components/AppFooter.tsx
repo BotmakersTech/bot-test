@@ -7,7 +7,7 @@ import {
 import { ChevronUp } from "lucide-react";
 
 import "../../styles/app-footer.css";
-import LOGO_URL from "../../assets/logo-white.png";
+import LOGO_URL from "../../assets/BrandLogo/BotLeaguewhite.png";
 
 const footerColumns = [
   {

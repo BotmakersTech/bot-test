@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import useRegister, { APPROVAL_REQUIRED_ROLES } from "../hooks/useRegister";
 import "../../../styles/createAccount.css";
 import paperPlane from "../../../assets/Auth/plane.svg";
-import LOGO_URL from "../../../assets/logo.png";
+import LOGO_URL from "../../../assets/BrandLogo/BotLeagu-black.png";
 
 const ROLES = [
   {

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Phone } from "lucide-react";
 import type { RootState } from "../../app/store";
-import logo from "../../assets/home/Img/BOT-LEAGUE-white.png";
+import logo from "../../assets/BrandLogo/BotLeaguewhite.png";
 import { LEAGUES } from "../../temp/pages/leagues/leagueData";
 
 const LINKS_BEFORE_LEAGUES = [{ label: "Home", to: "/" }];

@@ -6,7 +6,7 @@ import star2 from "../assets/Auth/Star-19.svg";
 import starTwo from "../assets/Auth/Star-two.svg";
 import plane from "../assets/Auth/plane.svg";
 import droneV2 from "../assets/Auth/drone-v2.svg";
-import LOGO_URL from "../assets/logo.png";
+import LOGO_URL from "../assets/BrandLogo/BotLeagu-black.png";
 import "../styles/AuthLayout.css";
 import "../styles/AuthMockup.css";
 

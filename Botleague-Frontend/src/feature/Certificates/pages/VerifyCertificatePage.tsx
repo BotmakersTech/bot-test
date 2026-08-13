@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { verifyCertificate, type PublicVerificationResponse } from "../api/certificate.api";
-import logo from "../../../assets/logo-white.png";
+import logo from "../../../assets/BrandLogo/BotLeaguewhite.png";
 
 function formatDate(iso?: string) {
   if (!iso) return "—";

@@ -18,25 +18,7 @@ import { myInvitations } from "../../UserDashboard/api/userMembership.api"
 import type { RootState } from "../../../app/store"
 import { getPrimaryRole } from "../../../shared/config/sidebarConfig"
 import { AppRole } from "../../../shared/constants/roles"
-
-// ── Wordmark — "BOT" / "LEAGUE" stacked with a colored bar on the outer
-// edge of each word. Sarpanch, not the mockup's Racing Sans One — this app
-// standardizes on Sarpanch/Poppins/Inter (see EventsLandingPage's own note
-// on the same substitution).
-function Wordmark() {
-  return (
-    <div className="flex items-center gap-4 font-display text-[28px] leading-none font-medium tracking-wide text-white select-none sm:text-[32px]">
-      <span className="flex flex-col items-stretch">
-        <span className="mb-1 h-[3px] rounded-full bg-[#0d3fff]" />
-        <span>BOT</span>
-      </span>
-      <span className="flex flex-col items-stretch">
-        <span>LEAGUE</span>
-        <span className="mt-1 h-[3px] rounded-full bg-[#ff3b30]" />
-      </span>
-    </div>
-  )
-}
+import LOGO_URL from "../../../assets/BrandLogo/BotLeaguewhite.png"
 
 function IconButton({
   children,
@@ -230,7 +212,7 @@ export default function Navbar() {
         aria-label="BotLeague home"
         className="flex items-center"
       >
-        <Wordmark />
+        <img src={LOGO_URL} alt="BotLeague" className="h-11 w-auto select-none" draggable={false} />
       </button>
 
       {primaryRole === AppRole.SUPER_ADMIN ? (
