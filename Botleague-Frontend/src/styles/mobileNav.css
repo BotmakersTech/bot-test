@@ -1,0 +1,141 @@
+/* =========================================================================
+   Mobile navigation shell — swaps the desktop hover-expand Sidebar for a
+   floating bottom nav bar at widths <= 950px (Layout.tsx mounts both; only
+   one is ever visible, so there's no resize-driven remount).
+   ========================================================================= */
+
+@media (max-width: 950px) {
+  .app-sidebar-slot { display: none; }
+
+  /* Reserve room so page content never sits under the fixed bottom bar. */
+  .app-scroll-area { padding-bottom: 92px; }
+}
+
+.mnav-bar {
+  display: none;
+}
+
+@media (max-width: 950px) {
+  .mnav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    position: fixed;
+    left: 50%;
+    bottom: 16px;
+    transform: translateX(-50%);
+    z-index: 60;
+    width: calc(100% - 32px);
+    max-width: 460px;
+    height: 64px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: #eef1ff;
+    box-shadow: 0 8px 24px rgba(17, 17, 17, 0.18);
+  }
+}
+
+.mnav-side {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.mnav-side--left { justify-content: flex-end; }
+.mnav-side--right { justify-content: flex-start; }
+
+.mnav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+.mnav-icon {
+  display: flex;
+  color: #7c85a3;
+  transition: color 0.15s ease;
+}
+
+.mnav-icon svg { width: 22px; height: 22px; }
+
+.mnav-icon--active { color: #0162d1; }
+
+.mnav-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: #7c85a3;
+  white-space: nowrap;
+  font-family: "Poppins", "Inter", sans-serif;
+}
+
+.mnav-item:hover .mnav-icon,
+.mnav-item:hover .mnav-label { color: #0162d1; }
+
+.mnav-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  color: #ffffff;
+  background: linear-gradient(180deg, #0162d1 0%, #8c6cff 100%);
+  box-shadow: 0 6px 16px rgba(1, 98, 209, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mnav-primary svg { width: 24px; height: 24px; }
+.mnav-primary:hover { transform: scale(1.06); box-shadow: 0 8px 20px rgba(1, 98, 209, 0.5); }
+.mnav-primary:active { transform: scale(0.98); }
+
+.mnav-logout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  margin-left: 2px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: #0162d1;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.mnav-logout:hover { background: rgba(1, 98, 209, 0.1); }
+.mnav-logout:disabled { opacity: 0.6; cursor: not-allowed; }
+.mnav-logout svg { width: 18px; height: 18px; }
+
+/* Up to ~756px: 2 items per side + center = 5 total, matching the design
+   reference. Wider phones/small tablets progressively reveal the rest of
+   the role's real nav list, reaching full parity with the Sidebar by 950px. */
+.mnav-side button:nth-child(n + 3) { display: none; }
+
+@media (min-width: 620px) {
+  .mnav-bar { max-width: 560px; gap: 14px; }
+  .mnav-side { gap: 18px; }
+  .mnav-side button:nth-child(n + 3) { display: flex; }
+}
+
+@media (min-width: 780px) {
+  .mnav-bar { max-width: 680px; gap: 18px; }
+  .mnav-side button:nth-child(n + 4) { display: flex; }
+}
+
+@media (min-width: 880px) {
+  .mnav-bar { max-width: 780px; }
+  .mnav-side button:nth-child(n + 5) { display: flex; }
+}

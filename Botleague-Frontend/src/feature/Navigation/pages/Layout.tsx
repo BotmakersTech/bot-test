@@ -4,6 +4,7 @@ import { Compass } from "lucide-react";
 
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import MobileBottomNav from "../components/MobileBottomNav";
 import AppFooter from "../../../shared/components/AppFooter";
 import WelcomeModal from "../../../shared/components/WelcomeModal";
 import MandatoryRoleModal from "../../../shared/components/MandatoryRoleModal";
@@ -11,6 +12,7 @@ import MandatoryPhoneVerifyModal from "../../../shared/components/MandatoryPhone
 import OnboardingTour, { TOUR_DONE_FLAG } from "../../../shared/components/OnboardingTour";
 import pageBackground from "../../../assets/background.png";
 import "../../../styles/onboarding.css";
+import "../../../styles/mobileNav.css";
 
 interface LayoutProps {
   /** Normally omitted — nested protected routes render via <Outlet/>. Pass
@@ -32,12 +34,14 @@ export default function Layout({ children }: LayoutProps) {
       <Navbar />
 
       <div
-        className="min-h-0 flex-1 overflow-y-auto bg-white bg-cover bg-top bg-no-repeat"
+        className="app-scroll-area min-h-0 flex-1 overflow-y-auto bg-white bg-cover bg-top bg-no-repeat"
         style={{ backgroundImage: `url(${pageBackground})` }}
       >
         {/* Sidebar + page content */}
         <div className="flex min-h-[calc(100vh-4.5rem)]">
-          <Sidebar />
+          <div className="app-sidebar-slot contents">
+            <Sidebar />
+          </div>
 
           <main className="min-w-0 flex-1">
             {children ?? <Outlet />}
@@ -46,6 +50,9 @@ export default function Layout({ children }: LayoutProps) {
 
         <AppFooter />
       </div>
+
+      {/* <= 950px only — replaces Sidebar (see .app-sidebar-slot in mobileNav.css) */}
+      <MobileBottomNav />
 
       {/* Sequential mandatory gates for a fresh Google signup — role first,
           then phone+OTP. Each is a no-op (renders null) once its condition

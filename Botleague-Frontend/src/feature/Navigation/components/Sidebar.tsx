@@ -39,7 +39,7 @@ import {
   ParticipantsIcon,
 } from "./Icons/Icons";
 
-function getIcon(iconName: string) {
+export function getIcon(iconName: string) {
   switch (iconName) {
     case "dashboard":     return <DashboardIcon />;
     case "calendar":      return <CalendarIcon />;
