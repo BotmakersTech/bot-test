@@ -103,88 +103,195 @@
 .mnav-item--active .mnav-icon svg { width: 23px; height: 23px; }
 .mnav-item--active:hover .mnav-icon { background: linear-gradient(180deg, #0162d1 0%, #8c6cff 100%); color: #ffffff; }
 
-/* ── Overflow menu — shared look for the top navbar's "More" dropdown
-   (MobileMoreMenu): the rest of the role's nav list + Logout. ──────────── */
+/* ── Full-screen menu sheet — the top navbar's toggle opens this. Holds
+   every account action (chat/notifications/profile/settings), whatever
+   didn't fit in the bottom bar's fixed 5 slots, a search filter, and a
+   user/logout footer. ─────────────────────────────────────────────────── */
 
-.mnav-more-wrap { position: relative; display: flex; }
-
-.mnav-more-backdrop {
+.mnav-sheet {
   position: fixed;
   inset: 0;
-  z-index: 69;
-  background: transparent;
-}
-
-.mnav-more-panel {
-  position: absolute;
-  z-index: 70;
+  z-index: 80;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  width: 220px;
-  max-height: min(60vh, 420px);
-  overflow-y: auto;
-  padding: 8px;
-  border-radius: 16px;
-  background: #ffffff;
-  box-shadow: 0 16px 40px rgba(17, 17, 17, 0.22);
+  background: linear-gradient(180deg, #0162d1 0%, #8c6cff 100%);
+  padding: 20px 22px calc(20px + env(safe-area-inset-bottom, 0px));
+  animation: mnav-sheet-in 0.2s ease;
 }
 
-/* Opens downward, right-aligned — anchored under the top navbar's button. */
-.mnav-more-panel--down {
-  top: calc(100% + 12px);
-  right: 0;
+@keyframes mnav-sheet-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mnav-sheet { animation: none; }
 }
 
-.mnav-more-row {
+.mnav-sheet-close {
+  align-self: flex-end;
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 8px;
   border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.mnav-sheet-close:hover { background: rgba(255, 255, 255, 0.25); }
+
+.mnav-sheet-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 46px;
+  margin-bottom: 18px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #9096a8;
+  flex-shrink: 0;
+}
+
+.mnav-sheet-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: none;
+  color: #111111;
+  font-family: "Poppins", "Inter", sans-serif;
+  font-size: 14px;
+}
+.mnav-sheet-search input::placeholder { color: #9096a8; }
+
+.mnav-sheet-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.mnav-sheet-empty {
+  margin: 24px 4px;
+  color: rgba(255, 255, 255, 0.75);
+  font-family: "Poppins", "Inter", sans-serif;
+  font-size: 14px;
+}
+
+.mnav-sheet-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
   background: none;
   cursor: pointer;
-  padding: 10px 12px;
-  border-radius: 10px;
-  font-family: "Poppins", "Inter", sans-serif;
-  font-size: 13.5px;
-  font-weight: 500;
-  color: #2b2f3a;
+  padding: 15px 4px;
+  color: #ffffff;
   text-align: left;
 }
 
-.mnav-more-row .mnav-icon { padding: 0; background: none; color: #7c85a3; flex-shrink: 0; }
-.mnav-more-row .mnav-icon svg { width: 19px; height: 19px; }
-
-.mnav-more-row-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-.mnav-more-badge {
+.mnav-sheet-row-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 999px;
-  background: #ff3b30;
+  width: 22px;
+  height: 22px;
   color: #ffffff;
-  font-size: 10px;
+}
+.mnav-sheet-row-icon svg { width: 21px; height: 21px; }
+
+.mnav-sheet-row-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: "Poppins", "Inter", sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.mnav-sheet-row--active .mnav-sheet-row-label,
+.mnav-sheet-row--active .mnav-sheet-row-icon { color: #ffe27a; }
+
+.mnav-sheet-badge {
+  flex-shrink: 0;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #0162d1;
+  font-size: 12px;
   font-weight: 700;
-  line-height: 18px;
+  line-height: 22px;
   text-align: center;
 }
 
-.mnav-more-row:hover { background: rgba(1, 98, 209, 0.08); }
-.mnav-more-row--active { background: rgba(1, 98, 209, 0.1); color: #0162d1; }
-.mnav-more-row--active .mnav-icon { color: #0162d1; }
-
-.mnav-more-divider { height: 1px; margin: 6px 4px; background: rgba(17, 17, 17, 0.08); }
-
-.mnav-more-row--danger { color: #dc2626; }
-.mnav-more-row--danger .mnav-icon { color: #dc2626; }
-.mnav-more-row--danger:hover { background: rgba(220, 38, 38, 0.08); }
-.mnav-more-row--danger:disabled { opacity: 0.6; cursor: not-allowed; }
-
-@media (max-width: 420px) {
-  .mnav-more-panel--down { right: -12px; width: 200px; }
+.mnav-sheet-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  padding-top: 16px;
+  margin-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
 }
+
+.mnav-sheet-avatar {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.mnav-sheet-avatar--initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+  font-family: "Poppins", "Inter", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.mnav-sheet-user-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: #ffffff;
+  font-family: "Poppins", "Inter", sans-serif;
+}
+.mnav-sheet-user-info strong { font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mnav-sheet-user-info span { font-size: 12.5px; color: rgba(255, 255, 255, 0.75); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.mnav-sheet-logout {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.mnav-sheet-logout:hover { background: rgba(255, 255, 255, 0.25); }
+.mnav-sheet-logout:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* The top navbar's More button only makes sense where the bottom bar has
    replaced the Sidebar — hidden above that same breakpoint. */
