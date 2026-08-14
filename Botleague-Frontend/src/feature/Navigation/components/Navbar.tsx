@@ -19,6 +19,7 @@ import type { RootState } from "../../../app/store"
 import { getPrimaryRole } from "../../../shared/config/sidebarConfig"
 import { AppRole } from "../../../shared/constants/roles"
 import LOGO_URL from "../../../assets/BrandLogo/BotLeaguewhite.png"
+import MobileMoreMenu from "./MobileMoreMenu"
 
 function IconButton({
   children,
@@ -215,17 +216,26 @@ export default function Navbar() {
         <img src={LOGO_URL} alt="BotLeague" className="h-11 w-auto select-none" draggable={false} />
       </button>
 
-      {primaryRole === AppRole.SUPER_ADMIN ? (
-        <SuperAdminNavActions unreadCount={unreadCount} />
-      ) : primaryRole === AppRole.ADMIN ? (
-        <AdminNavActions unreadCount={unreadCount} />
-      ) : (
-        <CompetitorNavActions
-          unreadCount={unreadCount}
-          pendingInvites={pendingInvites}
-          showSettings={primaryRole !== AppRole.COMPETITOR}
-        />
-      )}
+      {/* > 950px only — the full per-role icon row (MobileMoreMenu covers
+          this same ground, plus nav overflow + logout, at mobile widths). */}
+      <div className="hidden items-center gap-1 sm:gap-2 min-[951px]:flex">
+        {primaryRole === AppRole.SUPER_ADMIN ? (
+          <SuperAdminNavActions unreadCount={unreadCount} />
+        ) : primaryRole === AppRole.ADMIN ? (
+          <AdminNavActions unreadCount={unreadCount} />
+        ) : (
+          <CompetitorNavActions
+            unreadCount={unreadCount}
+            pendingInvites={pendingInvites}
+            showSettings={primaryRole !== AppRole.COMPETITOR}
+          />
+        )}
+      </div>
+
+      {/* <= 950px only — logo + this is the ENTIRE mobile top bar; every
+          account action (chat/notifications/profile/settings) plus the
+          rest of the role's nav items and logout all live in here. */}
+      <MobileMoreMenu primaryRole={primaryRole} unreadCount={unreadCount} pendingInvites={pendingInvites} />
     </header>
   )
 }

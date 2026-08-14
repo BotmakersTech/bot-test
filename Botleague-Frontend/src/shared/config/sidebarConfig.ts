@@ -23,7 +23,7 @@ export const NAV_CONFIG: NavItem[] = [
   // ══════════════════════════════════════════════════════════════════════════
   // SUPER_ADMIN  — full platform visibility
   // ══════════════════════════════════════════════════════════════════════════
-  { id: "s-dash",     label: "Executive Dashboard", link: "/super-admin-dashboard", iconName: "dashboard",  roles: [SA] },
+  { id: "s-dash",     label: "Dashboard", link: "/super-admin-dashboard", iconName: "dashboard",  roles: [SA] },
   { id: "s-users",    label: "All Users",            link: "/admin/users",           iconName: "users",      roles: [SA] },
   { id: "s-teams",    label: "All Teams",            link: "/admin/teams",           iconName: "teams",      roles: [SA] },
   { id: "s-robots",   label: "All Robots",           link: "/admin/robots",          iconName: "robot",      roles: [SA] },
@@ -38,7 +38,7 @@ export const NAV_CONFIG: NavItem[] = [
   // ══════════════════════════════════════════════════════════════════════════
   // ADMIN  — platform + user + event management + event operations
   // ══════════════════════════════════════════════════════════════════════════
-  { id: "a-dash",     label: "Executive Dashboard", link: "/admin-dashboard",        iconName: "dashboard",  roles: [ADM] },
+  { id: "a-dash",     label: "Dashboard", link: "/admin-dashboard",        iconName: "dashboard",  roles: [ADM] },
   { id: "a-users",    label: "All Users",           link: "/admin/users",            iconName: "users",      roles: [ADM] },
   { id: "a-teams",    label: "All Teams",           link: "/admin/teams",            iconName: "teams",      roles: [ADM] },
   { id: "a-robots",   label: "All Robots",          link: "/admin/robots",           iconName: "robot",      roles: [ADM] },
@@ -159,3 +159,9 @@ export function getNavItemsForRoles(userRoles: string[]): NavItem[] {
   const primary = getPrimaryRole(userRoles);
   return NAV_CONFIG.filter(item => item.roles.includes(primary));
 }
+
+/** How many of a role's nav items ride directly in the mobile bottom bar
+ * (MobileBottomNav) before the rest move into the top navbar's overflow
+ * menu (MobileMoreMenu) — each role's list is already ordered by
+ * frequency/importance, so this is just "the first N". */
+export const MOBILE_NAV_VISIBLE_COUNT = 5;

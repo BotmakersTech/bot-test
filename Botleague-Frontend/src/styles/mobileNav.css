@@ -2,6 +2,13 @@
    Mobile navigation shell — swaps the desktop hover-expand Sidebar for a
    floating bottom nav bar at widths <= 950px (Layout.tsx mounts both; only
    one is ever visible, so there's no resize-driven remount).
+
+   MobileBottomNav shows a role's MOBILE_NAV_VISIBLE_COUNT (5) most frequent
+   items — fixed, never scales with viewport width, so it can't overflow
+   regardless of role or screen size. The active route's item renders big,
+   with a highlighted circular background (the old fixed "center" item's
+   look, now following whichever item is actually active). Everything past
+   the visible 5, plus Logout, lives in the top navbar's MobileMoreMenu.
    ========================================================================= */
 
 @media (max-width: 950px) {
@@ -19,123 +26,170 @@
   .mnav-bar {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 10px;
+    justify-content: space-evenly;
+    gap: 4px;
     position: fixed;
     left: 50%;
     bottom: 16px;
     transform: translateX(-50%);
     z-index: 60;
     width: calc(100% - 32px);
-    max-width: 460px;
-    height: 64px;
-    padding: 0 14px;
+    max-width: 420px;
+    height: 68px;
+    padding: 0 10px;
     border-radius: 999px;
     background: #eef1ff;
     box-shadow: 0 8px 24px rgba(17, 17, 17, 0.18);
   }
 }
 
-.mnav-side {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-width: 0;
-}
-
-.mnav-side--left { justify-content: flex-end; }
-.mnav-side--right { justify-content: flex-start; }
-
 .mnav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  justify-content: center;
+  gap: 3px;
   border: none;
   background: none;
   cursor: pointer;
-  padding: 4px;
-  flex-shrink: 0;
+  padding: 6px 4px;
+  min-width: 0;
+  flex: 0 1 auto;
 }
 
 .mnav-icon {
   display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border-radius: 999px;
   color: #7c85a3;
-  transition: color 0.15s ease;
+  background: transparent;
+  transition: color 0.15s ease, background-color 0.15s ease;
 }
 
-.mnav-icon svg { width: 22px; height: 22px; }
-
-.mnav-icon--active { color: #0162d1; }
+.mnav-icon svg { width: 21px; height: 21px; }
 
 .mnav-label {
+  max-width: 64px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 10px;
   font-weight: 500;
   color: #7c85a3;
-  white-space: nowrap;
   font-family: "Poppins", "Inter", sans-serif;
 }
 
-.mnav-item:hover .mnav-icon,
+.mnav-item:hover .mnav-icon { color: #0162d1; background: rgba(1, 98, 209, 0.08); }
 .mnav-item:hover .mnav-label { color: #0162d1; }
 
-.mnav-primary {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 52px;
-  height: 52px;
+/* The active route's item — big circular gradient button, no label,
+   same look the old fixed "center" slot used to have. */
+.mnav-item--active { padding: 6px; }
+
+.mnav-item--active .mnav-icon,
+.mnav-icon--active {
+  width: 50px;
+  height: 50px;
+  padding: 0;
   border-radius: 50%;
-  border: none;
-  cursor: pointer;
   color: #ffffff;
   background: linear-gradient(180deg, #0162d1 0%, #8c6cff 100%);
   box-shadow: 0 6px 16px rgba(1, 98, 209, 0.4);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.mnav-primary svg { width: 24px; height: 24px; }
-.mnav-primary:hover { transform: scale(1.06); box-shadow: 0 8px 20px rgba(1, 98, 209, 0.5); }
-.mnav-primary:active { transform: scale(0.98); }
+.mnav-item--active .mnav-icon svg { width: 23px; height: 23px; }
+.mnav-item--active:hover .mnav-icon { background: linear-gradient(180deg, #0162d1 0%, #8c6cff 100%); color: #ffffff; }
 
-.mnav-logout {
+/* ── Overflow menu — shared look for the top navbar's "More" dropdown
+   (MobileMoreMenu): the rest of the role's nav list + Logout. ──────────── */
+
+.mnav-more-wrap { position: relative; display: flex; }
+
+.mnav-more-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 69;
+  background: transparent;
+}
+
+.mnav-more-panel {
+  position: absolute;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 220px;
+  max-height: min(60vh, 420px);
+  overflow-y: auto;
+  padding: 8px;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 16px 40px rgba(17, 17, 17, 0.22);
+}
+
+/* Opens downward, right-aligned — anchored under the top navbar's button. */
+.mnav-more-panel--down {
+  top: calc(100% + 12px);
+  right: 0;
+}
+
+.mnav-more-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 34px;
-  height: 34px;
-  margin-left: 2px;
+  gap: 12px;
   border: none;
-  border-radius: 50%;
   background: none;
-  color: #0162d1;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-family: "Poppins", "Inter", sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #2b2f3a;
+  text-align: left;
 }
 
-.mnav-logout:hover { background: rgba(1, 98, 209, 0.1); }
-.mnav-logout:disabled { opacity: 0.6; cursor: not-allowed; }
-.mnav-logout svg { width: 18px; height: 18px; }
+.mnav-more-row .mnav-icon { padding: 0; background: none; color: #7c85a3; flex-shrink: 0; }
+.mnav-more-row .mnav-icon svg { width: 19px; height: 19px; }
 
-/* Up to ~756px: 2 items per side + center = 5 total, matching the design
-   reference. Wider phones/small tablets progressively reveal the rest of
-   the role's real nav list, reaching full parity with the Sidebar by 950px. */
-.mnav-side button:nth-child(n + 3) { display: none; }
+.mnav-more-row-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-@media (min-width: 620px) {
-  .mnav-bar { max-width: 560px; gap: 14px; }
-  .mnav-side { gap: 18px; }
-  .mnav-side button:nth-child(n + 3) { display: flex; }
+.mnav-more-badge {
+  flex-shrink: 0;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ff3b30;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
 }
 
-@media (min-width: 780px) {
-  .mnav-bar { max-width: 680px; gap: 18px; }
-  .mnav-side button:nth-child(n + 4) { display: flex; }
+.mnav-more-row:hover { background: rgba(1, 98, 209, 0.08); }
+.mnav-more-row--active { background: rgba(1, 98, 209, 0.1); color: #0162d1; }
+.mnav-more-row--active .mnav-icon { color: #0162d1; }
+
+.mnav-more-divider { height: 1px; margin: 6px 4px; background: rgba(17, 17, 17, 0.08); }
+
+.mnav-more-row--danger { color: #dc2626; }
+.mnav-more-row--danger .mnav-icon { color: #dc2626; }
+.mnav-more-row--danger:hover { background: rgba(220, 38, 38, 0.08); }
+.mnav-more-row--danger:disabled { opacity: 0.6; cursor: not-allowed; }
+
+@media (max-width: 420px) {
+  .mnav-more-panel--down { right: -12px; width: 200px; }
 }
 
-@media (min-width: 880px) {
-  .mnav-bar { max-width: 780px; }
-  .mnav-side button:nth-child(n + 5) { display: flex; }
+/* The top navbar's More button only makes sense where the bottom bar has
+   replaced the Sidebar — hidden above that same breakpoint. */
+.mnav-topmenu-slot { display: none; }
+
+@media (max-width: 950px) {
+  .mnav-topmenu-slot { display: flex; }
 }
