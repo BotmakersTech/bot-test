@@ -6,6 +6,8 @@ import {
 } from "lucide-react"
 import { useAdminEvents } from "../hooks/UseAdminEvent"
 import { type CreateEventSportRequest } from "../api/admin.api"
+import { getPublicLeagueSports, toWeightClasses, type LeagueSport } from "../../../shared/api/catalog.api"
+import { useLeagues, formatAgeRange, type PresentedLeague } from "../../../temp/pages/leagues/useLeagues"
 import { ensureTeamChatRoom, updateRegistrationStatus } from "../../Organizer/api/organizer.api"
 import SportMediaField from "../../Organizer/components/SportMediaField"
 import { pushToGlobalRankings } from "../../Rankings/api/rankings.api"
@@ -362,57 +364,11 @@ function TeamCard({
 // EDIT SPORT MODAL
 // ─────────────────────────────────────────────────────────────
 
-// ── Exact enums matching the backend + create-sport form ──────
-
-const AGE_GROUP_CATALOGUE = [
-  {
-    value: "JUNIOR_INNOVATORS", label: "Junior Innovators", subLabel: "8–12 yrs",
-    sports: [
-      { value: "PROJECT_BASED",           label: "Project Based Competition"  },
-      { value: "PLUG_N_PLAY_RACE_SOCCER", label: "Plug N Play — Race / Soccer" },
-      { value: "LINE_FOLLOWER",           label: "Line Follower"               },
-      { value: "MANUAL_TASK",             label: "Manual Task"                 },
-      { value: "ROBO_SUMO",              label: "Robo Sumo"                   },
-    ],
-    weightClasses: [{ value: "1KG", label: "1 kg" }],
-  },
-  {
-    value: "YOUNG_ENGINEERS", label: "Young Engineers", subLabel: "12–18 yrs",
-    sports: [
-      { value: "ROBO_SOCCER",         label: "Robo Soccer"                },
-      { value: "LINE_FOLLOWER_AUTO",  label: "Line Follower (Auto)"        },
-      { value: "THEME_BASED_TASKING", label: "Theme-Based Tasking"         },
-      { value: "ROBO_WAR",            label: "RoboWar"                     },
-      { value: "DRONE_RACING_SOCCER", label: "Drone Racing / Drone Soccer" },
-      { value: "RC_ROBO_RACING",      label: "RC Racing / Robo Racing"     },
-    ],
-    weightClasses: [
-      { value: "1_5KG", label: "1.5 kg" },
-      { value: "3KG",   label: "3 kg"   },
-      { value: "OPEN",  label: "Open"   },
-    ],
-  },
-  {
-    value: "ROBO_MINDS", label: "Robo Minds", subLabel: "18+ yrs",
-    sports: [
-      { value: "ROBO_SOCCER_OPEN",         label: "Robo Soccer"                        },
-      { value: "THEME_BASED_TASKING_OPEN", label: "Theme-Based Tasking"                 },
-      { value: "ROBO_WAR_OPEN",            label: "RoboWar"                             },
-      { value: "DRONE_RACING_FPV",         label: "Drone Racing (FPV) / Drone Soccer"   },
-      { value: "RC_RACING_NITRO",          label: "RC Racing (Nitro + Electric)"         },
-      { value: "AEROMODELLING",            label: "Aeromodelling"                        },
-    ],
-    weightClasses: [
-      { value: "1_5KG", label: "1.5 kg" },
-      { value: "5KG",   label: "5 kg"   },
-      { value: "8KG",   label: "8 kg"   },
-      { value: "15KG",  label: "15 kg"  },
-      { value: "30KG",  label: "30 kg"  },
-      { value: "60KG",  label: "60 kg"  },
-      { value: "OPEN",  label: "Open"   },
-    ],
-  },
-]
+// ── Age groups + sports now come from the backend League/Sport catalog
+// (useLeagues() + getPublicLeagueSports()) instead of this hardcoded list —
+// see catalogSpecHelpers below. Only FORMAT_TYPE_OPTIONS/CONTROL_TYPES stay
+// local (unrelated to the catalog: format is a bracket-generation concept,
+// control type mirrors the backend's own fixed ControlMode enum).
 
 const FORMAT_TYPE_OPTIONS = [
   { value: "KNOCKOUT",           label: "Knockout"           },
@@ -431,11 +387,11 @@ const CONTROL_TYPES = [
   { value: "ANY",      label: "Any (Wired or Wireless)" },
 ]
 
-// ── Official spec catalogue — keyed "ageGroup::sport" ──────────────────────
-// Mirrors the physical-limit table organizers must follow. Values come
-// straight from the published rulebook (see SportRegistrationService javadoc
-// on the backend for the same table). RoboWar's weight varies by the chosen
-// weight class, so it's resolved separately in getPresetSpec().
+// ── Official spec preview — now sourced live from the League/Sport catalog
+// (LeagueSport rows, one per league+sport pairing) instead of a hardcoded
+// rulebook table. A sport with several weight classes (e.g. Apex's Robo War,
+// 1.5kg + 60kg) has no single weightLimitKg — the caller passes the chosen
+// class's kg value explicitly once the admin picks one.
 interface SportSpecPreset {
   weightLimitKg?: number
   maxLengthCm?: number
@@ -444,45 +400,20 @@ interface SportSpecPreset {
   controlType?: string   // WIRED | WIRELESS | ANY
   maxBotsPerTeam?: number
   note?: string
+  extraSpecs?: Record<string, string>
 }
 
-const SPORT_SPEC_PRESETS: Record<string, SportSpecPreset> = {
-  // ── Junior Innovators (8–12 yrs) — Wired or Wireless ──
-  "JUNIOR_INNOVATORS::PROJECT_BASED":           { controlType: "ANY", note: "No physical limits" },
-  "JUNIOR_INNOVATORS::PLUG_N_PLAY_RACE_SOCCER": { weightLimitKg: 1, maxLengthCm: 20, maxWidthCm: 20, maxHeightCm: 20, controlType: "ANY", maxBotsPerTeam: 1, note: "Single bot for both Race & Soccer" },
-  "JUNIOR_INNOVATORS::LINE_FOLLOWER":           { weightLimitKg: 1, maxLengthCm: 20, maxWidthCm: 20, maxHeightCm: 20, controlType: "ANY" },
-  "JUNIOR_INNOVATORS::MANUAL_TASK":             { weightLimitKg: 1, maxLengthCm: 20, maxWidthCm: 20, maxHeightCm: 20, controlType: "ANY" },
-  "JUNIOR_INNOVATORS::ROBO_SUMO":               { weightLimitKg: 1, maxLengthCm: 20, maxWidthCm: 20, maxHeightCm: 20, controlType: "ANY" },
-
-  // ── Young Engineers (12–18 yrs) — Wireless only ──
-  "YOUNG_ENGINEERS::ROBO_SOCCER":         { weightLimitKg: 3,   maxLengthCm: 30, maxWidthCm: 30, maxHeightCm: 30, controlType: "WIRELESS" },
-  "YOUNG_ENGINEERS::LINE_FOLLOWER_AUTO":  { weightLimitKg: 1.5, controlType: "WIRELESS" },
-  "YOUNG_ENGINEERS::THEME_BASED_TASKING": { weightLimitKg: 3,   controlType: "WIRELESS" },
-  "YOUNG_ENGINEERS::ROBO_WAR":            { weightLimitKg: 1.5, controlType: "WIRELESS", note: "Only 1.5kg weight class" },
-  "YOUNG_ENGINEERS::DRONE_RACING_SOCCER": { maxLengthCm: 30, maxWidthCm: 30, maxHeightCm: 30, controlType: "WIRELESS", note: "20cm diagonal" },
-  "YOUNG_ENGINEERS::RC_ROBO_RACING":      { controlType: "WIRELESS" },
-
-  // ── Robo Minds (18+ yrs) — Wireless only ──
-  "ROBO_MINDS::ROBO_SOCCER_OPEN":         { weightLimitKg: 5, maxLengthCm: 45, maxWidthCm: 45, maxHeightCm: 45, controlType: "WIRELESS" },
-  "ROBO_MINDS::THEME_BASED_TASKING_OPEN": { weightLimitKg: 5, maxLengthCm: 45, maxWidthCm: 45, maxHeightCm: 45, controlType: "WIRELESS" },
-  "ROBO_MINDS::ROBO_WAR_OPEN":            { controlType: "WIRELESS", note: "Weight derives from selected weight class (1.5/8/15/30/60kg)" },
-  "ROBO_MINDS::DRONE_RACING_FPV":         { controlType: "WIRELESS", note: "FPV" },
-  "ROBO_MINDS::RC_RACING_NITRO":          { controlType: "WIRELESS", note: "Nitro + Electric, 1:8 / 1:12 scale" },
-  "ROBO_MINDS::AEROMODELLING":            { controlType: "WIRELESS" },
-}
-
-// RoboWar's weight limit comes from the selected weight-class chip, not a fixed preset.
-const WEIGHT_CLASS_TO_KG: Record<string, number> = {
-  "1KG": 1, "1_5KG": 1.5, "3KG": 3, "5KG": 5, "8KG": 8, "15KG": 15, "30KG": 30, "60KG": 60,
-}
-
-function getPresetSpec(ageGroup: string, sport: string, weightClass?: string): SportSpecPreset | null {
-  const base = SPORT_SPEC_PRESETS[`${ageGroup}::${sport}`]
-  if (!base) return null
-  if (sport === "ROBO_WAR_OPEN" && weightClass && WEIGHT_CLASS_TO_KG[weightClass] != null) {
-    return { ...base, weightLimitKg: WEIGHT_CLASS_TO_KG[weightClass] }
+function getPresetSpec(ls: LeagueSport, chosenWeightKg?: number): SportSpecPreset {
+  return {
+    weightLimitKg: ls.weightClasses.length > 0 ? chosenWeightKg : ls.weightLimitKg ?? undefined,
+    maxLengthCm: ls.maxLengthCm ?? undefined,
+    maxWidthCm: ls.maxWidthCm ?? undefined,
+    maxHeightCm: ls.maxHeightCm ?? undefined,
+    controlType: ls.controlType ?? undefined,
+    maxBotsPerTeam: ls.maxBotsPerTeam ?? undefined,
+    note: ls.entryNote ?? undefined,
+    extraSpecs: ls.extraSpecs,
   }
-  return base
 }
 
 type EditForm = CreateEventSportRequest & { extraRulesList: { key: string; value: string }[] }
@@ -549,6 +480,14 @@ function EditSportModal({
 
   const [form, setForm] = React.useState<EditForm>(initialForm)
   const [saveError, setSaveError] = React.useState<string | null>(null)
+  const { leagues } = useLeagues()
+  const [leagueSports, setLeagueSports] = React.useState<LeagueSport[]>([])
+  const selectedLeague = leagues.find(l => l.ageGroupValue === form.ageGroup) ?? null
+
+  React.useEffect(() => {
+    if (!selectedLeague) { setLeagueSports([]); return }
+    getPublicLeagueSports(selectedLeague.slug).then(setLeagueSports).catch(() => setLeagueSports([]))
+  }, [selectedLeague])
 
   const set = (field: keyof EditForm, value: unknown) =>
     setForm(prev => ({ ...prev, [field]: value }))
@@ -684,17 +623,15 @@ function EditSportModal({
               required
             >
               <option value="">Select age group…</option>
-              {AGE_GROUP_CATALOGUE.map(ag => (
-                <option key={ag.value} value={ag.value}>{ag.label} — {ag.subLabel}</option>
+              {leagues.map((l: PresentedLeague) => (
+                <option key={l.ageGroupValue} value={l.ageGroupValue}>{l.shortName} — {formatAgeRange(l.minAge, l.maxAge)} yrs</option>
               ))}
             </select>
           </div>
 
           {/* Row 2: Sport */}
           {(() => {
-            const ag = AGE_GROUP_CATALOGUE.find(a => a.value === form.ageGroup)
-            const sportsInGroup = ag?.sports ?? []
-            const currentInList = sportsInGroup.some(s => s.value === form.sport)
+            const currentInList = leagueSports.some(s => s.sportName === form.sport)
             return (
               <div style={groupStyle}>
                 <label style={labelStyle}>Sport *</label>
@@ -709,14 +646,9 @@ function EditSportModal({
                   {!currentInList && form.sport && (
                     <option value={form.sport}>{toLabel(form.sport)}</option>
                   )}
-                  {sportsInGroup.length > 0
-                    ? sportsInGroup.map(s => <option key={s.value} value={s.value}>{s.label}</option>)
-                    : AGE_GROUP_CATALOGUE.flatMap(a => a.sports).map(s => (
-                        <option key={s.value} value={s.value}>{s.label}</option>
-                      ))
-                  }
+                  {leagueSports.map(s => <option key={s.id} value={s.sportName}>{s.sportName}</option>)}
                 </select>
-                {!ag && form.ageGroup && (
+                {!selectedLeague && form.ageGroup && (
                   <span style={{ fontSize: "0.68rem", color: WARNING, marginTop: "4px" }}>
                     Select an age group to filter sports
                   </span>
@@ -727,19 +659,72 @@ function EditSportModal({
 
           {/* Official spec preview + one-click apply ────────────────────── */}
           {(() => {
-            const preset = form.ageGroup && form.sport
-              ? getPresetSpec(form.ageGroup, form.sport, form.weightClass)
-              : null
-            if (!preset) return null
+            const matched = leagueSports.find(s => s.sportName === form.sport)
+            if (!matched) return null
 
-            const parts: string[] = []
-            if (preset.weightLimitKg != null) parts.push(`${preset.weightLimitKg}kg`)
-            if (preset.maxLengthCm != null && preset.maxWidthCm != null && preset.maxHeightCm != null) {
-              parts.push(`${preset.maxLengthCm}×${preset.maxWidthCm}×${preset.maxHeightCm}cm`)
+            const formatParts = (p: SportSpecPreset) => {
+              const parts: string[] = []
+              if (p.weightLimitKg != null) parts.push(`${p.weightLimitKg}kg`)
+              if (p.maxLengthCm != null && p.maxWidthCm != null && p.maxHeightCm != null) {
+                parts.push(`${p.maxLengthCm}×${p.maxWidthCm}×${p.maxHeightCm}cm`)
+              }
+              if (p.controlType) parts.push(p.controlType === "ANY" ? "Wired or Wireless" : p.controlType)
+              if (p.maxBotsPerTeam != null) parts.push(`max ${p.maxBotsPerTeam} bot/team`)
+              Object.entries(p.extraSpecs ?? {}).forEach(([k, v]) => parts.push(`${k}: ${v}`))
+              return parts
             }
-            if (preset.controlType) parts.push(preset.controlType === "ANY" ? "Wired or Wireless" : preset.controlType)
-            if (preset.maxBotsPerTeam != null) parts.push(`max ${preset.maxBotsPerTeam} bot/team`)
 
+            const applyPreset = (p: SportSpecPreset, weightClassLabel?: string) => {
+              setForm(prev => ({
+                ...prev,
+                weightLimitKg: p.weightLimitKg,
+                maxLengthCm:   p.maxLengthCm,
+                maxWidthCm:    p.maxWidthCm,
+                maxHeightCm:   p.maxHeightCm,
+                controlType:   p.controlType ?? prev.controlType,
+                maxBotsPerTeam: p.maxBotsPerTeam ?? prev.maxBotsPerTeam,
+                weightClass:   weightClassLabel ?? prev.weightClass,
+                extraRulesList: p.extraSpecs && Object.keys(p.extraSpecs).length > 0
+                  ? Object.entries(p.extraSpecs).map(([key, value]) => ({ key, value }))
+                  : prev.extraRulesList,
+              }))
+            }
+
+            // Multiple weight classes (e.g. Apex's Robo War: 1.5kg + 60kg) —
+            // no single spec to apply, offer one button per class instead.
+            if (matched.weightClasses.length > 0) {
+              return (
+                <div style={{
+                  display: "flex", flexDirection: "column", gap: "8px",
+                  background: "rgba(75,134,232,0.06)", border: "1px solid rgba(75,134,232,0.25)",
+                  borderRadius: "8px", padding: "10px 14px",
+                }}>
+                  <div style={{ fontSize: "0.74rem", color: TEXT }}>
+                    <strong style={{ color: ACCENT }}>Official spec:</strong> multiple weight classes — pick one to apply
+                    {matched.entryNote && <span style={{ color: MUTED }}> — {matched.entryNote}</span>}
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                    {matched.weightClasses.map(wc => (
+                      <button
+                        key={wc.label}
+                        type="button"
+                        onClick={() => applyPreset(getPresetSpec(matched, wc.weightKg), wc.label)}
+                        style={{
+                          background: ORG.gradientCta, border: "none", color: "#fff",
+                          borderRadius: "6px", padding: "6px 12px", fontSize: "0.72rem", fontWeight: 700,
+                          cursor: "pointer", whiteSpace: "nowrap",
+                        }}
+                      >
+                        Apply {wc.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            }
+
+            const preset = getPresetSpec(matched)
+            const parts = formatParts(preset)
             return (
               <div style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
@@ -753,15 +738,7 @@ function EditSportModal({
                 </div>
                 <button
                   type="button"
-                  onClick={() => setForm(prev => ({
-                    ...prev,
-                    weightLimitKg: preset.weightLimitKg,
-                    maxLengthCm:   preset.maxLengthCm,
-                    maxWidthCm:    preset.maxWidthCm,
-                    maxHeightCm:   preset.maxHeightCm,
-                    controlType:   preset.controlType ?? prev.controlType,
-                    maxBotsPerTeam: preset.maxBotsPerTeam ?? prev.maxBotsPerTeam,
-                  }))}
+                  onClick={() => applyPreset(preset)}
                   style={{
                     flexShrink: 0, background: ORG.gradientCta, border: "none", color: "#fff",
                     borderRadius: "6px", padding: "6px 12px", fontSize: "0.72rem", fontWeight: 700,
@@ -786,8 +763,9 @@ function EditSportModal({
             <div style={groupStyle}>
               <label style={labelStyle}>Weight Class</label>
               {(() => {
-                const ag = AGE_GROUP_CATALOGUE.find(a => a.value === form.ageGroup)
-                const wcs = ag?.weightClasses ?? AGE_GROUP_CATALOGUE.flatMap(a => a.weightClasses)
+                const wcs = Array.from(
+                  new Map(leagueSports.flatMap(s => toWeightClasses(s)).map(w => [w.value, w])).values()
+                )
                 const currentInWc = wcs.some(w => w.value === form.weightClass)
                 return (
                   <select style={inputStyle} value={form.weightClass ?? ""} onChange={e => set("weightClass", e.target.value || undefined)}>

@@ -114,7 +114,7 @@ public class RankingEngineService {
         // created before these columns existed.
         String ageGroup     = match.getAgeGroupSnapshot() != null
                 ? match.getAgeGroupSnapshot()
-                : (sport.getAgeGroup() != null ? sport.getAgeGroup().name() : "UNKNOWN");
+                : (sport.getAgeGroup() != null ? sport.getAgeGroup() : "UNKNOWN");
         String weightClass  = match.getWeightClassSnapshot() != null
                 ? match.getWeightClassSnapshot()
                 : sport.getWeightClass();
@@ -322,7 +322,7 @@ public class RankingEngineService {
 
     public void updateGlobalRankings(EventSports sport, List<EventLeaderboardEntry> finalEntries) {
         String sportName   = sport.getSport();
-        String ageGroup    = sport.getAgeGroup() != null ? sport.getAgeGroup().name() : "UNKNOWN";
+        String ageGroup    = sport.getAgeGroup() != null ? sport.getAgeGroup() : "UNKNOWN";
         String weightClass = sport.getWeightClass();
 
         for (EventLeaderboardEntry entry : finalEntries) {

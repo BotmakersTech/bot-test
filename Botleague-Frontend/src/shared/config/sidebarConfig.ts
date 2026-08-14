@@ -32,6 +32,7 @@ export const NAV_CONFIG: NavItem[] = [
   { id: "s-partners", label: "Sponsors & Partners",  link: "/admin/sponsors",        iconName: "partners",   roles: [SA] },
   { id: "s-reports",  label: "Reports",              link: "/admin/reports",         iconName: "reports",    roles: [SA] },
   { id: "s-audit",    label: "Audit Logs",           link: "/admin/audit-logs",      iconName: "audit",      roles: [SA] },
+  { id: "s-catalog",  label: "League Catalog",       link: "/admin/catalog",         iconName: "sports",     roles: [SA] },
   { id: "s-news",     label: "News",                 link: "/admin/news",            iconName: "communication", roles: [SA] },
   { id: "s-messages", label: "Messages",             link: "/messages",              iconName: "chat",       roles: [SA] },
 
@@ -47,6 +48,7 @@ export const NAV_CONFIG: NavItem[] = [
   { id: "a-sponsors", label: "Sponsors",            link: "/admin/sponsors",         iconName: "star",       roles: [ADM] },
   { id: "a-news",     label: "News",                link: "/admin/news",             iconName: "communication", roles: [ADM] },
   { id: "a-audit",    label: "Audit Logs",          link: "/admin/audit-logs",       iconName: "audit",      roles: [ADM] },
+  { id: "a-catalog",  label: "League Catalog",      link: "/admin/catalog",          iconName: "sports",     roles: [ADM] },
 
   // ══════════════════════════════════════════════════════════════════════════
   // ORGANISER — external partner, owns their events

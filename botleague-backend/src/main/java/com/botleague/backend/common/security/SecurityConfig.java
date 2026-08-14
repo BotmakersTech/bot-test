@@ -81,6 +81,10 @@ public class SecurityConfig {
                 // anyone holding the link or scanning the code can check authenticity
                 // without an account.
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/certificates/verify/**").permitAll()
+                // League/Sport catalog reads — public marketing pages (league detail,
+                // rankings filters) and the organizer sport picker all need this
+                // before login; only ever exposes ACTIVE/LIVE rows (see PublicCatalogController).
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/catalog/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

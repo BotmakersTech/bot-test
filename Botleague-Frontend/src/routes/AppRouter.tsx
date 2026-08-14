@@ -63,6 +63,7 @@ import AdminEventPage from "../feature/Admin/pages/AdminEventDetail";
 import AdminSport from "../feature/Admin/pages/AdminSport";
 import AdminSportRankingPage from "../feature/Admin/pages/AdminSportRankingPage";
 import AdminAllSportsPage from "../feature/Admin/pages/AdminAllSportsPage";
+import AdminCatalogPage from "../feature/Admin/pages/AdminCatalogPage";
 import AdminMatches from "../feature/Admin/pages/AdminMatches";
 import AdminRegistrations from "../feature/Admin/pages/AdminRegistrations";
 import AdminReportsPage from "../feature/Admin/pages/AdminReportsPage";
@@ -270,6 +271,7 @@ function AppRoutes() {
 
         {/* ── Admin routes (ADMIN+) ── */}
         <Route path="/admin/sports"         element={<RoleRoute roles={ADMIN_AND_UP}><AdminAllSportsPage /></RoleRoute>} />
+        <Route path="/admin/catalog"        element={<RoleRoute roles={ADMIN_AND_UP}><AdminCatalogPage /></RoleRoute>} />
         <Route path="/admin/matches"        element={<RoleRoute roles={ADMIN_AND_UP}><AdminMatches /></RoleRoute>} />
         <Route path="/admin/registrations"  element={<RoleRoute roles={ADMIN_AND_UP}><AdminRegistrations /></RoleRoute>} />
         <Route path="/admin/reports"        element={<RoleRoute roles={ADMIN_AND_UP}><AdminReportsPage /></RoleRoute>} />

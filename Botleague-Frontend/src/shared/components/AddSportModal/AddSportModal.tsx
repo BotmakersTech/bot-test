@@ -1,6 +1,7 @@
-import { useState, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { X, ChevronDown, Info, Calendar, Plus, ArrowLeft, Check, Sparkles, Cpu, Brain } from "lucide-react"
-import { AGE_GROUP_CATALOGUE, type SportConfig } from "../../constants/sportCatalogue"
+import { getPublicLeagueSports, toWeightClasses, type LeagueSport } from "../../api/catalog.api"
+import { useLeagues, formatAgeRange } from "../../../temp/pages/leagues/useLeagues"
 import type { CreateEventSportRequest } from "../../../feature/Admin/api/admin.api"
 import "../EventDashboard/EventDashboard.css"
 import "./AddSportModal.css"
@@ -42,7 +43,18 @@ const INITIAL_CONFIG: ConfigState = {
   registrationEndDate: "",
 }
 
-type SubmitResult = { sport: SportConfig; ok: boolean; message?: string }
+type SubmitResult = { sport: LeagueSport; ok: boolean; message?: string }
+
+function formatSpecHint(ls: LeagueSport): string | undefined {
+  const parts: string[] = []
+  if (ls.weightClasses.length === 0 && ls.weightLimitKg != null) parts.push(`${ls.weightLimitKg} kg`)
+  if (ls.maxLengthCm != null && ls.maxWidthCm != null) {
+    parts.push(ls.maxHeightCm != null ? `${ls.maxLengthCm}×${ls.maxWidthCm}×${ls.maxHeightCm} cm` : `${ls.maxLengthCm}×${ls.maxWidthCm} cm`)
+  }
+  Object.entries(ls.extraSpecs).forEach(([k, v]) => parts.push(`${k}: ${v}`))
+  if (ls.entryNote) parts.push(ls.entryNote)
+  return parts.length > 0 ? parts.join(" · ") : undefined
+}
 
 // ─────────────────────────────────────────────────────────────
 // SMALL PIECES
@@ -86,20 +98,32 @@ function FormField({ label, required, children }: { label: string; required?: bo
 // ─────────────────────────────────────────────────────────────
 
 export default function AddSportModal({ onAddSport, submitting, onClose }: AddSportModalProps) {
+  const { leagues } = useLeagues()
   const [ageGroup, setAgeGroup] = useState("")
-  const [selectedSports, setSelectedSports] = useState<SportConfig[]>([])
+  const [leagueSports, setLeagueSports] = useState<LeagueSport[]>([])
+  const [sportsLoading, setSportsLoading] = useState(false)
+  const [selectedSports, setSelectedSports] = useState<LeagueSport[]>([])
   const [weightClassBySport, setWeightClassBySport] = useState<Record<string, string>>({})
   const [confirmedSports, setConfirmedSports] = useState(false)
   const [config, setConfig] = useState<ConfigState>(INITIAL_CONFIG)
   const [error, setError] = useState<string | null>(null)
   const [bulkProgress, setBulkProgress] = useState<{ index: number; total: number } | null>(null)
 
-  const selectedAg = AGE_GROUP_CATALOGUE.find(a => a.value === ageGroup) || null
+  const selectedAg = leagues.find(l => l.ageGroupValue === ageGroup) || null
   const step = !ageGroup ? 1 : !confirmedSports ? 2 : 3
   const busy = submitting || bulkProgress !== null
-  const sportsNeedingWeightClass = selectedSports.filter(s => s.weightClasses.length > 1)
+  const sportsNeedingWeightClass = selectedSports.filter(s => toWeightClasses(s).length > 1)
 
   const setCfg = (key: keyof ConfigState, value: string | number) => setConfig(c => ({ ...c, [key]: value }))
+
+  useEffect(() => {
+    if (!selectedAg) { setLeagueSports([]); return }
+    setSportsLoading(true)
+    getPublicLeagueSports(selectedAg.slug)
+      .then(setLeagueSports)
+      .catch(() => setLeagueSports([]))
+      .finally(() => setSportsLoading(false))
+  }, [selectedAg])
 
   const handleAgeGroupSelect = (value: string) => {
     setAgeGroup(value)
@@ -109,19 +133,20 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
     setError(null)
   }
 
-  const toggleSport = (sport: SportConfig) => {
+  const toggleSport = (sport: LeagueSport) => {
     setSelectedSports(prev => {
-      const exists = prev.some(s => s.value === sport.value)
-      if (exists) return prev.filter(s => s.value !== sport.value)
-      if (sport.weightClasses.length === 1) {
-        setWeightClassBySport(w => ({ ...w, [sport.value]: sport.weightClasses[0].value }))
+      const exists = prev.some(s => s.id === sport.id)
+      if (exists) return prev.filter(s => s.id !== sport.id)
+      const classes = toWeightClasses(sport)
+      if (classes.length === 1) {
+        setWeightClassBySport(w => ({ ...w, [sport.id]: classes[0].value }))
       }
       return [...prev, sport]
     })
     setError(null)
   }
 
-  const removeSport = (sportValue: string) => setSelectedSports(prev => prev.filter(s => s.value !== sportValue))
+  const removeSport = (sportId: string) => setSelectedSports(prev => prev.filter(s => s.id !== sportId))
 
   const handleContinue = () => {
     if (selectedSports.length === 0) { setError("Please select at least one sport."); return }
@@ -129,11 +154,11 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
     setConfirmedSports(true)
   }
 
-  const buildRequest = (sport: SportConfig): CreateEventSportRequest => ({
-    sport: sport.value,
+  const buildRequest = (sport: LeagueSport): CreateEventSportRequest => ({
+    sport: sport.sportName,
     ageGroup,
     sportData: config.sportData,
-    weightClass: weightClassBySport[sport.value] || sport.weightClasses[0]?.value || "OPEN",
+    weightClass: weightClassBySport[sport.id] || toWeightClasses(sport)[0]?.value || "Open",
     formatType: config.formatType,
     minTeamSize: config.minTeamSize,
     maxTeamSize: config.maxTeamSize,
@@ -146,8 +171,8 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
 
   const handleSubmit = async () => {
     if (selectedSports.length === 0) { setError("Please select at least one sport."); return }
-    const missingWeightClass = sportsNeedingWeightClass.filter(s => !weightClassBySport[s.value])
-    if (missingWeightClass.length > 0) { setError(`Please select a weight class for: ${missingWeightClass.map(s => s.label).join(", ")}.`); return }
+    const missingWeightClass = sportsNeedingWeightClass.filter(s => !weightClassBySport[s.id])
+    if (missingWeightClass.length > 0) { setError(`Please select a weight class for: ${missingWeightClass.map(s => s.sportName).join(", ")}.`); return }
     if (!config.formatType) { setError("Please select a format type."); return }
     if (!config.registrationStartDate) { setError("Please set a registration start date."); return }
     if (!config.registrationEndDate) { setError("Please set a registration end date."); return }
@@ -176,7 +201,7 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
     }
     setSelectedSports(failed.map(f => f.sport))
     const succeededCount = results.length - failed.length
-    const failLines = failed.map(f => `${f.sport.label}: ${f.message}`).join("\n")
+    const failLines = failed.map(f => `${f.sport.sportName}: ${f.message}`).join("\n")
     setError(`${succeededCount} of ${results.length} sport${results.length > 1 ? "s" : ""} added. Failed:\n${failLines}`)
   }
 
@@ -202,14 +227,13 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
           <div>
             <SectionHead step={1} currentStep={step} label="Age Category" />
             <div className="asm-age-grid">
-              {AGE_GROUP_CATALOGUE.map(ag => {
-                const active = ageGroup === ag.value
+              {leagues.map(l => {
+                const active = ageGroup === l.ageGroupValue
                 return (
-                  <button key={ag.value} type="button" className={`asm-age-card${active ? " asm-age-card--active" : ""}`} onClick={() => handleAgeGroupSelect(ag.value)}>
-                    <span className="asm-age-icon"><AgeIcon value={ag.value} /></span>
-                    <span className="asm-age-label">{ag.label}</span>
-                    <span className="asm-age-sub">{ag.subLabel}</span>
-                    <span className="asm-age-pill">{ag.connectivity}</span>
+                  <button key={l.ageGroupValue} type="button" className={`asm-age-card${active ? " asm-age-card--active" : ""}`} onClick={() => handleAgeGroupSelect(l.ageGroupValue)}>
+                    <span className="asm-age-icon"><AgeIcon value={l.ageGroupValue} /></span>
+                    <span className="asm-age-label">{l.shortName}</span>
+                    <span className="asm-age-sub">{formatAgeRange(l.minAge, l.maxAge)} yrs</span>
                   </button>
                 )
               })}
@@ -218,34 +242,42 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
 
           {selectedAg && (
             <div>
-              <SectionHead step={2} currentStep={step} label="Select Sport(s)" subLabel={`${selectedAg.label} · ${selectedAg.subLabel}`} />
+              <SectionHead step={2} currentStep={step} label="Select Sport(s)" subLabel={`${selectedAg.shortName} · ${formatAgeRange(selectedAg.minAge, selectedAg.maxAge)} yrs`} />
 
               {!confirmedSports && (
                 <>
-                  <div className="asm-sport-grid">
-                    {selectedAg.sports.map(sp => {
-                      const active = selectedSports.some(s => s.value === sp.value)
-                      return (
-                        <button key={sp.value} type="button" className={`asm-sport-card${active ? " asm-sport-card--active" : ""}`} onClick={() => toggleSport(sp)}>
-                          <span className={`asm-sport-checkbox${active ? " asm-sport-checkbox--active" : ""}`}>{active && <Check size={11} />}</span>
-                          <span className="asm-sport-label">{sp.label}</span>
-                          {sp.hint && <span className="asm-sport-hint"><Info size={10} style={{ flexShrink: 0, marginTop: "2px" }} />{sp.hint}</span>}
-                          {sp.weightClasses.length > 0 && (
-                            <span className="asm-sport-pills">
-                              {sp.weightClasses.map(wc => <span key={wc.value} className="asm-sport-pill">{wc.label}</span>)}
-                            </span>
-                          )}
-                        </button>
-                      )
-                    })}
-                  </div>
+                  {sportsLoading ? (
+                    <div className="asm-head-meta">Loading sports…</div>
+                  ) : leagueSports.length === 0 ? (
+                    <div className="asm-head-meta">No sports are live under this league yet.</div>
+                  ) : (
+                    <div className="asm-sport-grid">
+                      {leagueSports.map(sp => {
+                        const active = selectedSports.some(s => s.id === sp.id)
+                        const hint = formatSpecHint(sp)
+                        const classes = toWeightClasses(sp)
+                        return (
+                          <button key={sp.id} type="button" className={`asm-sport-card${active ? " asm-sport-card--active" : ""}`} onClick={() => toggleSport(sp)}>
+                            <span className={`asm-sport-checkbox${active ? " asm-sport-checkbox--active" : ""}`}>{active && <Check size={11} />}</span>
+                            <span className="asm-sport-label">{sp.sportName}</span>
+                            {hint && <span className="asm-sport-hint"><Info size={10} style={{ flexShrink: 0, marginTop: "2px" }} />{hint}</span>}
+                            {classes.length > 0 && (
+                              <span className="asm-sport-pills">
+                                {classes.map(wc => <span key={wc.value} className="asm-sport-pill">{wc.label}</span>)}
+                              </span>
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
 
                   {selectedSports.length > 0 && (
                     <div className="asm-chip-row">
                       {selectedSports.map(s => (
-                        <span key={s.value} className="asm-chip">
-                          {s.label}
-                          <button type="button" className="asm-chip-remove" onClick={() => removeSport(s.value)}><X size={11} /></button>
+                        <span key={s.id} className="asm-chip">
+                          {s.sportName}
+                          <button type="button" className="asm-chip-remove" onClick={() => removeSport(s.id)}><X size={11} /></button>
                         </span>
                       ))}
                     </div>
@@ -271,13 +303,13 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
               {sportsNeedingWeightClass.length > 0 && (
                 <div className="asm-weight-section">
                   {sportsNeedingWeightClass.map(sp => (
-                    <div key={sp.value}>
-                      <div className="asm-weight-row-label">{sp.label} — Weight Class <span className="asm-required">*</span></div>
+                    <div key={sp.id}>
+                      <div className="asm-weight-row-label">{sp.sportName} — Weight Class <span className="asm-required">*</span></div>
                       <div className="asm-weight-pills">
-                        {sp.weightClasses.map(wc => {
-                          const active = weightClassBySport[sp.value] === wc.value
+                        {toWeightClasses(sp).map(wc => {
+                          const active = weightClassBySport[sp.id] === wc.value
                           return (
-                            <button key={wc.value} type="button" className={`asm-weight-pill${active ? " asm-weight-pill--active" : ""}`} onClick={() => setWeightClassBySport(w => ({ ...w, [sp.value]: wc.value }))}>
+                            <button key={wc.value} type="button" className={`asm-weight-pill${active ? " asm-weight-pill--active" : ""}`} onClick={() => setWeightClassBySport(w => ({ ...w, [sp.id]: wc.value }))}>
                               {wc.label}
                             </button>
                           )

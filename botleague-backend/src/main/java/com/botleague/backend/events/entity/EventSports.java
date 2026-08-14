@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.botleague.backend.events.converter.StringMapJsonConverter;
-import com.botleague.backend.events.enums.AgeCategory;
 import com.botleague.backend.events.enums.CompetitionType;
 
 
@@ -77,9 +76,11 @@ public class EventSports {
     @Column(name = "sport_teaser_video_url")
     private String sportTeaserVideoUrl;
 
-    @Enumerated(EnumType.STRING)
+    // Was a fixed AgeCategory enum; now a plain admin-editable code
+    // (e.g. "JUNIOR_INNOVATORS") backed by the League catalog — same column,
+    // same values, so zero data migration was needed for this change.
     @Column(name = "age_group", nullable = false, length = 50)
-    private AgeCategory ageGroup;
+    private String ageGroup;
 
     // =========================
     // PHYSICAL CONSTRAINTS (all optional - a sport fills only what it needs)
@@ -281,8 +282,8 @@ public class EventSports {
     public String getSportTeaserVideoUrl() { return sportTeaserVideoUrl; }
     public void setSportTeaserVideoUrl(String sportTeaserVideoUrl) { this.sportTeaserVideoUrl = sportTeaserVideoUrl; }
 
-    public AgeCategory getAgeGroup() { return ageGroup; }
-    public void setAgeGroup(AgeCategory ageGroup) { this.ageGroup = ageGroup; }
+    public String getAgeGroup() { return ageGroup; }
+    public void setAgeGroup(String ageGroup) { this.ageGroup = ageGroup; }
 
     public String getWeightClass() { return weightClass; }
     public void setWeightClass(String weightClass) { this.weightClass = weightClass; }

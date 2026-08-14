@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import PublicNavbar from "../../../shared/components/PublicNavbar";
-import { getLeagueConfig, getAgeGroupCatalogue } from "./leagueData";
+import { useLeagues, getLeagueBySlug } from "./useLeagues";
+import { GLOBAL_STAGE_GOLD } from "./leaguePresentation";
+import { getPublicLeagueSports, type LeagueSport } from "../../../shared/api/catalog.api";
 
 const BRAND_STYLES = `
 .lg-page {
@@ -384,20 +386,29 @@ function SportCard({ title, image, delay }: { title: string; image: string; dela
   );
 }
 
-/** Gold — used for Apex's terminal "next" banner, which has no destination league to borrow a color from. */
-const GLOBAL_STAGE_GOLD = "#d4a72c";
-
 export default function LeagueDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const league = getLeagueConfig(slug);
+  const { leagues, loading } = useLeagues();
+  const league = getLeagueBySlug(leagues, slug);
+  const [sports, setSports] = useState<LeagueSport[]>([]);
 
-  if (!league) return <Navigate to="/" replace />;
+  useEffect(() => {
+    if (!slug) return;
+    getPublicLeagueSports(slug)
+      .then(setSports)
+      .catch(() => setSports([]));
+  }, [slug]);
 
-  const ageGroup = getAgeGroupCatalogue(league.ageGroupValue);
-  const sports = ageGroup?.sports ?? [];
-  const nextLeague = league.nextSlug ? getLeagueConfig(league.nextSlug) : undefined;
+  if (!loading && !league) return <Navigate to="/" replace />;
+  if (!league) return null;
+
+  const ageRangeLabel = league.startingAge !== "—" ? `${league.startingAge} yrs` : "";
+  const nextLeague = league.nextSlug ? getLeagueBySlug(leagues, league.nextSlug) : undefined;
   const nextColor = nextLeague?.colorPrimary ?? GLOBAL_STAGE_GOLD;
+  const nextBody = nextLeague
+    ? `${nextLeague.name} — Ages ${nextLeague.startingAge} · ${nextLeague.rankingScope}`
+    : "Battle of Robots, Russia — where this league's top competitors go next.";
 
   const stats = [
     { value: String(sports.length), label: "Sports in this league" },
@@ -420,7 +431,7 @@ export default function LeagueDetailPage() {
         <div className="lg-hero-overlay" />
         <div className="lg-hero-content">
           <span className="lg-pill inline-block mb-3">
-            {ageGroup?.subLabel ?? league.startingAge} &nbsp;·&nbsp; Free to register
+            {ageRangeLabel || league.startingAge} &nbsp;·&nbsp; Free to register
           </span>
           <h1 className="lg-hero-title mb-3">{league.name}</h1>
           <p className="lg-hero-subtitle mx-auto mb-4">{league.tagline}</p>
@@ -459,7 +470,7 @@ export default function LeagueDetailPage() {
       {/* ===== Win locally card ===== */}
       <section className="mx-auto max-w-[1180px] px-4 py-8">
         <div className="lg-card-accent p-6 md:p-10 rounded-2xl relative">
-          <h3 className="lg-card-gradient-text mb-3">{league.whatYouGet[2]?.title ?? league.whyHeadline}</h3>
+          <h3 className="lg-card-gradient-text mb-3">{league.whatYouGet[0] ?? league.whyHeadline}</h3>
           <p className="lg-card-body mb-0">{league.whyBody}</p>
         </div>
       </section>
@@ -472,7 +483,7 @@ export default function LeagueDetailPage() {
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {sports.map((s, i) => (
-            <SportCard key={s.value} title={s.label} image={`https://picsum.photos/seed/${s.value.toLowerCase()}/361/446`} delay={i * 90} />
+            <SportCard key={s.sportId} title={s.sportName} image={`https://picsum.photos/seed/${s.sportSlug}/361/446`} delay={i * 90} />
           ))}
         </div>
       </section>
@@ -510,7 +521,7 @@ export default function LeagueDetailPage() {
         >
           <div>
             <div className="lg-next-label">{league.nextLabel}</div>
-            <div className="lg-next-name">{league.nextBody}</div>
+            <div className="lg-next-name">{nextBody}</div>
           </div>
           {nextLeague ? (
             <button onClick={() => navigate(`/leagues/${nextLeague.slug}`)} className="lg-next-link flex items-center gap-2">

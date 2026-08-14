@@ -671,7 +671,7 @@ public class AdminService {
         dto.setSportTeaserVideoUrl(sport.getSportTeaserVideoUrl());
         dto.setStatus(sport.getStatus() != null ? sport.getStatus().name() : null);
         dto.setFormatType(sport.getFormatType());
-        if (sport.getAgeGroup() != null) dto.setAgeGroup(sport.getAgeGroup().name());
+        dto.setAgeGroup(sport.getAgeGroup());
         dto.setWeightClass(sport.getWeightClass());
         dto.setEntryFee(sport.getEntryFee());
         dto.setMaxTeams(sport.getMaxTeams());

@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import { Phone } from "lucide-react";
 import type { RootState } from "../../app/store";
 import logo from "../../assets/BrandLogo/BotLeaguewhite.png";
-import { LEAGUES } from "../../temp/pages/leagues/leagueData";
+import { useLeagues } from "../../temp/pages/leagues/useLeagues";
 
 const LINKS_BEFORE_LEAGUES = [{ label: "Home", to: "/" }];
 const LINKS_AFTER_LEAGUES = [
@@ -25,6 +25,7 @@ interface PublicNavbarProps {
 
 export default function PublicNavbar({ overlapHero = false, showLeagues = false }: PublicNavbarProps) {
   const navigate = useNavigate();
+  const { leagues: LEAGUES } = useLeagues();
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const headerRef = useRef<HTMLElement>(null);
   const leaguesRef = useRef<HTMLDivElement>(null);

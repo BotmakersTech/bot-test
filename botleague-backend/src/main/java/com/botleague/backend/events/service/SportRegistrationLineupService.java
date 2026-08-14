@@ -9,13 +9,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.botleague.backend.auth.entity.User;
 import com.botleague.backend.auth.repository.UserRepository;
+import com.botleague.backend.catalog.service.LeagueEligibilityService;
 import com.botleague.backend.chat.service.ChatService;
 import com.botleague.backend.common.utils.EligibilityUtils;
 import com.botleague.backend.events.entity.Event;
 import com.botleague.backend.events.entity.EventRegistrationLineup;
 import com.botleague.backend.events.entity.EventSports;
 import com.botleague.backend.events.entity.SportRegistration;
-import com.botleague.backend.events.enums.AgeCategory;
 import com.botleague.backend.events.enums.LineupRole;
 import com.botleague.backend.events.enums.RegistrationStatus;
 import com.botleague.backend.events.repository.EventRegistrationLineupRepository;
@@ -70,6 +70,7 @@ public class SportRegistrationLineupService {
     private final EventRepository                   eventRepository;
     private final UserRepository                    userRepository;
     private final GuardianRepository                guardianRepository;
+    private final LeagueEligibilityService           leagueEligibilityService;
 
     // =====================================================
     // CONSTRUCTOR
@@ -84,7 +85,8 @@ public class SportRegistrationLineupService {
             ChatService                       chatService,
             EventRepository                   eventRepository,
             UserRepository                    userRepository,
-            GuardianRepository                guardianRepository
+            GuardianRepository                guardianRepository,
+            LeagueEligibilityService          leagueEligibilityService
     ) {
         this.lineupRepository            = lineupRepository;
         this.sportRegistrationRepository = sportRegistrationRepository;
@@ -95,6 +97,7 @@ public class SportRegistrationLineupService {
         this.eventRepository             = eventRepository;
         this.userRepository              = userRepository;
         this.guardianRepository          = guardianRepository;
+        this.leagueEligibilityService    = leagueEligibilityService;
     }
 
     // =====================================================
@@ -223,23 +226,23 @@ public class SportRegistrationLineupService {
         }
 
         int memberAge = EligibilityUtils.calculateAge(member.getDateOfBirth());
-        AgeCategory memberCategory = EligibilityUtils.getCategoryForAge(memberAge);
+        String memberAgeGroupCode = leagueEligibilityService.findAgeGroupCodeForAge(memberAge);
 
-        if (memberCategory == null) {
+        if (memberAgeGroupCode == null) {
             throw new IllegalStateException(
                     "This member is not eligible for competition. " +
-                    "Minimum age is " + EligibilityUtils.JUNIOR_MIN + " years " +
+                    "Minimum age is " + leagueEligibilityService.minEligibleAge() + " years " +
                     "(current age: " + memberAge + ").");
         }
 
         if (eventSport.getAgeGroup() != null
-                && !eventSport.getAgeGroup().equals(memberCategory)) {
+                && !eventSport.getAgeGroup().equalsIgnoreCase(memberAgeGroupCode)) {
             throw new IllegalStateException(
                     "Age category mismatch: this sport is for "
-                    + EligibilityUtils.toCategoryLabel(eventSport.getAgeGroup())
-                    + " (" + EligibilityUtils.toCategoryAgeRange(eventSport.getAgeGroup()) + "), "
+                    + leagueEligibilityService.toLabel(eventSport.getAgeGroup())
+                    + " (" + leagueEligibilityService.toAgeRangeLabel(eventSport.getAgeGroup()) + "), "
                     + "but this member's category is "
-                    + EligibilityUtils.toCategoryLabel(memberCategory)
+                    + leagueEligibilityService.toLabel(memberAgeGroupCode)
                     + " (age " + memberAge + ").");
         }
 

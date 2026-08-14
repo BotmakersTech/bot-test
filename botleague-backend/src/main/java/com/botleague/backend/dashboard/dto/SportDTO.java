@@ -4,14 +4,13 @@ package com.botleague.backend.dashboard.dto;
 import java.util.List;
 import java.util.UUID;
 
-import com.botleague.backend.events.enums.AgeCategory;
 import com.botleague.backend.events.enums.RegistrationStatus;
 
 public class SportDTO {
 
     private UUID eventSportId;
     private String sport;
-    private AgeCategory ageGroup;
+    private String ageGroup;
     private String weightClass;
     private String formatType;
     private RegistrationStatus registrationStatus; // this team's registration status
@@ -28,10 +27,10 @@ public class SportDTO {
 	public void setSport(String sport) {
 		this.sport = sport;
 	}
-	public AgeCategory getAgeGroup() {
+	public String getAgeGroup() {
 		return ageGroup;
 	}
-	public void setAgeGroup(AgeCategory ageGroup) {
+	public void setAgeGroup(String ageGroup) {
 		this.ageGroup = ageGroup;
 	}
 	public String getWeightClass() {

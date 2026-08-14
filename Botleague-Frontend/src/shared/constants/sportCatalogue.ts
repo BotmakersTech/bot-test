@@ -27,7 +27,7 @@ export interface AgeGroupConfig {
 export const AGE_GROUP_CATALOGUE: AgeGroupConfig[] = [
   {
     value: "JUNIOR_INNOVATORS",
-    label: "Junior Innovators",
+    label: "Ignite",
     subLabel: "8–12 yrs",
     connectivity: "Wired / Wireless",
     sports: [
@@ -40,7 +40,7 @@ export const AGE_GROUP_CATALOGUE: AgeGroupConfig[] = [
   },
   {
     value: "YOUNG_ENGINEERS",
-    label: "Young Engineers",
+    label: "Inferno",
     subLabel: "12–18 yrs",
     connectivity: "Wireless",
     sports: [
@@ -54,7 +54,7 @@ export const AGE_GROUP_CATALOGUE: AgeGroupConfig[] = [
   },
   {
     value: "ROBO_MINDS",
-    label: "Robo Minds",
+    label: "Apex",
     subLabel: "18+ yrs",
     connectivity: "Wireless",
     sports: [

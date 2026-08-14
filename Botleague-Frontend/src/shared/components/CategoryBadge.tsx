@@ -12,21 +12,21 @@ interface CategoryConfig {
 
 const CATEGORY_CONFIG: Record<AgeCategory, CategoryConfig> = {
   JUNIOR_INNOVATORS: {
-    label: "Junior Innovators",
+    label: "Ignite",
     ageRange: "8–11 yrs",
     icon: "🤖",
     color: "#4ade80",
     glow: "rgba(74,222,128,0.25)",
   },
   YOUNG_ENGINEERS: {
-    label: "Young Engineers",
+    label: "Inferno",
     ageRange: "12–17 yrs",
     icon: "⚡",
     color: "#60a5fa",
     glow: "rgba(96,165,250,0.25)",
   },
   ROBO_MINDS: {
-    label: "Robo Minds",
+    label: "Apex",
     ageRange: "18+ yrs",
     icon: "🏆",
     color: "#a78bfa",

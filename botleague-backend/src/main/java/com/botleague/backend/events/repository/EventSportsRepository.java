@@ -7,7 +7,6 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.botleague.backend.events.entity.EventSports;
-import com.botleague.backend.events.enums.AgeCategory;
 
 public interface EventSportsRepository extends JpaRepository<EventSports, UUID> {
 
@@ -20,12 +19,12 @@ public interface EventSportsRepository extends JpaRepository<EventSports, UUID> 
     // catalogue-value strings the sport-creation form already writes.
     List<EventSports> findBySportIn(java.util.Collection<String> sports);
 
-    boolean existsByEventIdAndSportAndAgeGroup(UUID eventId, String sport, AgeCategory ageCategory);
+    boolean existsByEventIdAndSportAndAgeGroup(UUID eventId, String sport, String ageGroup);
 
 
 	 Optional<EventSports> findByIdAndEventId(UUID id, UUID eventId);
 
-	 boolean existsByEventIdAndSportAndAgeGroupAndWeightClass(UUID eventId, String sport, AgeCategory ageGroup,
+	 boolean existsByEventIdAndSportAndAgeGroupAndWeightClass(UUID eventId, String sport, String ageGroup,
 			String weightClass);
-	
+
 }

@@ -290,7 +290,7 @@ public class MatchService {
         if (sportId != null) {
             eventSportsRepository.findById(sportId).ifPresent(sport -> {
                 String weightClassSnapshot = sport.getWeightClass();
-                String ageGroupSnapshot = sport.getAgeGroup() != null ? sport.getAgeGroup().name() : null;
+                String ageGroupSnapshot = sport.getAgeGroup();
                 for (Match m : matches) {
                     m.setWeightClassSnapshot(weightClassSnapshot);
                     m.setAgeGroupSnapshot(ageGroupSnapshot);
@@ -355,7 +355,7 @@ public class MatchService {
                         // Captured now, at generation time, so a later sport-spec edit
                         // can't retroactively move an already-played match's points.
                         String weightClassSnapshot = sport.getWeightClass();
-                        String ageGroupSnapshot = sport.getAgeGroup() != null ? sport.getAgeGroup().name() : null;
+                        String ageGroupSnapshot = sport.getAgeGroup();
                         for (Match m : matches) {
                             m.setWeightClassSnapshot(weightClassSnapshot);
                             m.setAgeGroupSnapshot(ageGroupSnapshot);
@@ -460,7 +460,7 @@ public class MatchService {
 
         // Ranking-pool snapshot — see Match.weightClassSnapshot javadoc.
         String weightClassSnapshot = eventSports.getWeightClass();
-        String ageGroupSnapshot = eventSports.getAgeGroup() != null ? eventSports.getAgeGroup().name() : null;
+        String ageGroupSnapshot = eventSports.getAgeGroup();
 
         List<Match> matches = new ArrayList<>();
         for (CreateMatchRequestDTO request : requests) {

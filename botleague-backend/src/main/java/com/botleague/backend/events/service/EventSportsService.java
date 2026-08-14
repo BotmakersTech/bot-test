@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.botleague.backend.catalog.service.LeagueService;
 import com.botleague.backend.chat.service.ChatService;
 import com.botleague.backend.common.exception.ApiException;
 import com.botleague.backend.common.security.AuthorizationService;
@@ -23,7 +24,6 @@ import com.botleague.backend.events.dto.GetEventSportsDTO;
 import com.botleague.backend.events.dto.UpdateSportsDTO;
 import com.botleague.backend.events.entity.Event;
 import com.botleague.backend.events.entity.EventSports;
-import com.botleague.backend.events.enums.AgeCategory;
 import com.botleague.backend.events.enums.CompetitionType;
 import com.botleague.backend.events.enums.SportEventStatus;
 import com.botleague.backend.events.enums.SportMediaSlot;
@@ -41,6 +41,7 @@ public class EventSportsService {
     private final RealtimePublisher realtimePublisher;
     private final NotificationService notificationService;
     private final AuthorizationService authorizationService;
+    private final LeagueService leagueService;
 
     public EventSportsService(EventSportsRepository eventSportsRepository,
                               EventRepository eventRepository,
@@ -48,7 +49,8 @@ public class EventSportsService {
                               ChatService chatService,
                               RealtimePublisher realtimePublisher,
                               NotificationService notificationService,
-                              AuthorizationService authorizationService) {
+                              AuthorizationService authorizationService,
+                              LeagueService leagueService) {
         this.eventSportsRepository = eventSportsRepository;
         this.eventRepository = eventRepository;
         this.matchRepository = matchRepository;
@@ -56,6 +58,7 @@ public class EventSportsService {
         this.realtimePublisher = realtimePublisher;
         this.notificationService = notificationService;
         this.authorizationService = authorizationService;
+        this.leagueService = leagueService;
     }
 
     /**
@@ -362,7 +365,7 @@ public class EventSportsService {
             entity.setCompetitionType(CompetitionType.valueOf(dto.getCompetitionType().toUpperCase()));
         }
         if (dto.getAgeGroup() != null && !dto.getAgeGroup().isBlank()) {
-            entity.setAgeGroup(AgeCategory.valueOf(dto.getAgeGroup().toUpperCase()));
+            entity.setAgeGroup(leagueService.validateAgeGroupCode(dto.getAgeGroup()));
         }
 
         entity.setSportsDescription(dto.getSportData());
@@ -410,7 +413,7 @@ public class EventSportsService {
             sport.setSportsDescription(request.getSportsDescripction());
         }
         if (request.getAgeGroup() != null && !request.getAgeGroup().isBlank()) {
-            sport.setAgeGroup(AgeCategory.valueOf(request.getAgeGroup().toUpperCase()));
+            sport.setAgeGroup(leagueService.validateAgeGroupCode(request.getAgeGroup()));
         }
 
         if (request.getWeightClass() != null) {
@@ -482,7 +485,7 @@ public class EventSportsService {
             response.setCompetitionType(sport.getCompetitionType().name());
         }
 
-        if (sport.getAgeGroup() != null) response.setAgeGroup(sport.getAgeGroup().name());
+        response.setAgeGroup(sport.getAgeGroup());
 
         // physical constraints
         response.setWeightClass(sport.getWeightClass());
@@ -552,13 +555,13 @@ public class EventSportsService {
     // (e.g. RoboWar 1.5 / 8 / 15 / 30 / 60 kg) without the duplicate check
     // blocking the 2nd, 3rd, ... class.
     private void validateDuplicate(EventSportsRequestDTO dto) {
-        AgeCategory ageCategory = (dto.getAgeGroup() != null && !dto.getAgeGroup().isBlank())
-                ? AgeCategory.valueOf(dto.getAgeGroup().toUpperCase())
+        String ageGroupCode = (dto.getAgeGroup() != null && !dto.getAgeGroup().isBlank())
+                ? dto.getAgeGroup().trim().toUpperCase()
                 : null;
         boolean exists = eventSportsRepository.existsByEventIdAndSportAndAgeGroupAndWeightClass(
                 dto.getEventId(),
                 dto.getSport(),
-                ageCategory,
+                ageGroupCode,
                 dto.getWeightClass()
         );
 

@@ -6,23 +6,21 @@ import {
 } from "../api/rankings.api";
 import { weightClassLabel } from "../../Robots/constants/weightClasses";
 import RankingRow from "../components/RankingRow";
+import { useLeagues, formatAgeRange } from "../../../temp/pages/leagues/useLeagues";
 import "../../../styles/rankings.css";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-// All sports that can possibly exist (superset — user can always browse any combination)
+// All sports that can possibly exist (superset — user can always browse any combination).
+// Deliberately NOT sourced from the League/Sport catalog: EventSports.sport is free
+// text an organiser types at event-sport creation time, not constrained to the
+// catalog's admin-managed sport list, so this stays its own superset.
 const ALL_SPORTS = [
   "ROBO_WAR", "ROBO_WAR_OPEN", "ROBO_SOCCER", "ROBO_SOCCER_OPEN",
   "LINE_FOLLOWER", "LINE_FOLLOWER_AUTO", "ROBO_SUMO",
   "DRONE_RACING_SOCCER", "DRONE_RACING_FPV", "RC_ROBO_RACING", "RC_RACING_NITRO",
   "MANUAL_TASK", "THEME_BASED_TASKING", "THEME_BASED_TASKING_OPEN",
   "PLUG_N_PLAY_RACE_SOCCER", "PROJECT_BASED", "AEROMODELLING",
-];
-
-const AGE_GROUPS = [
-  { label: "Junior Innovators (8–11 yrs)", value: "JUNIOR_INNOVATORS" },
-  { label: "Young Engineers (12–17 yrs)",  value: "YOUNG_ENGINEERS" },
-  { label: "Robo Minds (18+ yrs)",          value: "ROBO_MINDS" },
 ];
 
 function toLabel(raw: string) {
@@ -72,6 +70,7 @@ function FilterSelect({
 
 export default function GlobalRankingsPage() {
   const navigate = useNavigate();
+  const { leagues } = useLeagues();
 
   // Draft filter state — what the selects show, only committed to a fetch on
   // "Apply Filter" (matching the mockup's explicit apply-to-commit UX).
@@ -193,7 +192,10 @@ export default function GlobalRankingsPage() {
               placeholder="Select Category"
               value={draftAgeGroup}
               onChange={setDraftAgeGroup}
-              options={AGE_GROUPS.map((a) => ({ value: a.value, label: a.label }))}
+              options={leagues.map((l) => ({
+                value: l.ageGroupValue,
+                label: `${l.shortName} (${formatAgeRange(l.minAge, l.maxAge)} yrs)`,
+              }))}
             />
 
             <FilterSelect

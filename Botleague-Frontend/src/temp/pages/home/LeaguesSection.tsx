@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import igniteImg from "../../../assets/home/Img/ignite.png";
-import { LEAGUES } from "../leagues/leagueData";
+import { useLeagues } from "../leagues/useLeagues";
 
 type CardState = "hidden" | "collapsed" | "expanded";
 
 /** Cards stack and reveal one at a time as the tall wrapper scrolls past, matching OneSection's pinned-scroll pattern. */
 export default function LeaguesSection() {
   const navigate = useNavigate();
+  const { leagues: LEAGUES } = useLeagues();
   const wrapRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState(0);
 

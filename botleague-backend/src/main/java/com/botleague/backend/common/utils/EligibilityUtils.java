@@ -50,12 +50,15 @@ public final class EligibilityUtils {
         return age >= 0 && age < 18;
     }
 
+    // Display names only — these now match the branded League names
+    // (Ignite/Inferno/Apex) an admin sees in the catalog, not the raw
+    // AgeCategory key, which stays JUNIOR_INNOVATORS/etc. underneath.
     public static String toCategoryLabel(AgeCategory cat) {
         if (cat == null) return "Unknown";
         return switch (cat) {
-            case JUNIOR_INNOVATORS -> "Junior Innovators";
-            case YOUNG_ENGINEERS   -> "Young Engineers";
-            case ROBO_MINDS        -> "Robo Minds";
+            case JUNIOR_INNOVATORS -> "Ignite";
+            case YOUNG_ENGINEERS   -> "Inferno";
+            case ROBO_MINDS        -> "Apex";
         };
     }
 

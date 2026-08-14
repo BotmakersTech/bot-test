@@ -8,11 +8,14 @@ import org.springframework.web.bind.annotation.*;
 
 import com.botleague.backend.auth.entity.User;
 import com.botleague.backend.auth.repository.UserRepository;
+import com.botleague.backend.catalog.entity.League;
+import com.botleague.backend.catalog.service.LeagueEligibilityService;
 import com.botleague.backend.common.security.SecurityUtils;
 import com.botleague.backend.common.utils.EligibilityUtils;
 import com.botleague.backend.eligibility.dto.EligibilityResponse;
-import com.botleague.backend.events.enums.AgeCategory;
 import com.botleague.backend.guardian.repository.GuardianRepository;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/eligibility")
@@ -20,13 +23,16 @@ public class EligibilityController {
 
     private final UserRepository    userRepository;
     private final GuardianRepository guardianRepository;
+    private final LeagueEligibilityService leagueEligibilityService;
 
     public EligibilityController(
             UserRepository userRepository,
-            GuardianRepository guardianRepository
+            GuardianRepository guardianRepository,
+            LeagueEligibilityService leagueEligibilityService
     ) {
         this.userRepository    = userRepository;
         this.guardianRepository = guardianRepository;
+        this.leagueEligibilityService = leagueEligibilityService;
     }
 
     /**
@@ -47,17 +53,18 @@ public class EligibilityController {
         }
 
         int age              = EligibilityUtils.calculateAge(user.getDateOfBirth());
-        AgeCategory category = EligibilityUtils.getCategoryForAge(age);
+        Optional<League> league = leagueEligibilityService.findLeagueForAge(age);
         boolean reqGuardian  = EligibilityUtils.requiresGuardian(user.getDateOfBirth());
         boolean hasGuardian  = guardianRepository.existsByUserId(userId);
 
         EligibilityResponse r = new EligibilityResponse();
         r.setAge(age);
 
-        if (category != null) {
-            r.setCategory(category.name());
-            r.setCategoryLabel(EligibilityUtils.toCategoryLabel(category));
-            r.setAgeRange(EligibilityUtils.toCategoryAgeRange(category));
+        if (league.isPresent()) {
+            League l = league.get();
+            r.setCategory(l.getAgeGroupCode());
+            r.setCategoryLabel(l.getName());
+            r.setAgeRange(leagueEligibilityService.toAgeRangeLabel(l.getAgeGroupCode()));
             r.setEligible(true);
         } else {
             r.setEligible(false);
@@ -70,8 +77,9 @@ public class EligibilityController {
         r.setCanRegister(canRegister);
 
         if (!r.isEligible()) {
-            r.setBlockReason(age < EligibilityUtils.JUNIOR_MIN
-                    ? "Minimum age for competition is " + EligibilityUtils.JUNIOR_MIN + " years."
+            int minEligibleAge = leagueEligibilityService.minEligibleAge();
+            r.setBlockReason(age < minEligibleAge
+                    ? "Minimum age for competition is " + minEligibleAge + " years."
                     : "Age not within a valid competition category.");
         } else if (reqGuardian && !hasGuardian) {
             r.setBlockReason("Participants under 18 must add a guardian profile before registering.");

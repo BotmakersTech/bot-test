@@ -127,15 +127,15 @@ const ROBOT_TYPES: RobotTypeConfig[] = [
 ];
 
 const AGE_OPTIONS: { key: AgeCategory; label: string; range: string }[] = [
-  { key: "JUNIOR_INNOVATORS", label: "Junior Innovators", range: "8-12 years" },
-  { key: "ROBO_MINDS", label: "Robo Minds", range: "12-16 years" },
-  { key: "YOUNG_ENGINEERS", label: "Young Engineers", range: "16-18 years" },
+  { key: "JUNIOR_INNOVATORS", label: "Ignite", range: "8-11 years" },
+  { key: "YOUNG_ENGINEERS", label: "Inferno", range: "12-17 years" },
+  { key: "ROBO_MINDS", label: "Apex", range: "18+ years" },
 ];
 
 const AGE_LABELS: Record<AgeCategory, string> = {
-  JUNIOR_INNOVATORS: "Junior Innovators",
-  ROBO_MINDS: "Robo Minds",
-  YOUNG_ENGINEERS: "Young Engineers",
+  JUNIOR_INNOVATORS: "Ignite",
+  YOUNG_ENGINEERS: "Inferno",
+  ROBO_MINDS: "Apex",
 };
 
 function competitionOptionsForAge(age: AgeCategory) {

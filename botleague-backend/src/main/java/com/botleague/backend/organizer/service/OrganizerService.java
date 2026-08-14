@@ -231,7 +231,7 @@ public class OrganizerService {
         dto.setSport(es.getSport());
         dto.setSportThumbnailUrl(es.getSportThumbnailUrl());
         dto.setSportTeaserVideoUrl(es.getSportTeaserVideoUrl());
-        dto.setAgeGroup(es.getAgeGroup() != null ? es.getAgeGroup().name() : null);
+        dto.setAgeGroup(es.getAgeGroup());
         dto.setWeightClass(es.getWeightClass());
         dto.setStatus(es.getStatus() != null ? es.getStatus().name() : null);
         dto.setBracketGenerated(es.isBracketGenerated());
