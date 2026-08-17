@@ -91,17 +91,15 @@ export default function RankingRow({ entry, onOpen }: RankingRowProps) {
           <span style={{ color: textColor, fontWeight: 600, fontSize: 16 }}>{displayName}</span>
         </div>
 
-        <div className="flex items-center gap-4 pl-1 pt-1">
-          <div className="flex flex-col items-center gap-0.5">
+        <div className="grid grid-cols-3 w-full pt-1">
+          <div className="flex flex-col items-center gap-0.5" style={{ borderRight: `1px solid ${dividerColor}` }}>
             <span style={{ color: textColor, fontSize: 11, opacity: 0.75 }}>Points</span>
             <span style={{ color: textColor, fontWeight: weight, fontSize: 15 }}>{entry.totalPoints}</span>
           </div>
-          <div style={{ width: 1, height: 28, background: dividerColor }} />
-          <div className="flex flex-col items-center gap-0.5">
+          <div className="flex flex-col items-center gap-0.5" style={{ borderRight: `1px solid ${dividerColor}` }}>
             <span style={{ color: textColor, fontSize: 11, opacity: 0.75 }}>Events</span>
             <span style={{ color: textColor, fontWeight: weight, fontSize: 15 }}>{entry.eventsPlayed}</span>
           </div>
-          <div style={{ width: 1, height: 28, background: dividerColor }} />
           <div className="flex flex-col items-center gap-0.5">
             <span style={{ color: textColor, fontSize: 11, opacity: 0.75 }}>Matches</span>
             <span style={{ color: textColor, fontWeight: weight, fontSize: 15 }}>{entry.matchesPlayed}</span>

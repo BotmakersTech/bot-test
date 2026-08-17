@@ -181,6 +181,10 @@ import MobileUserManagement from "../feature/SuperAdmin/components/MobileUserMan
 import { EventCard } from "../feature/Event/pages/UserEventPage";
 import "../styles/eventsUser.css";
 
+// TEMP — visual QA harness, see DevPreviewRANK below.
+import RankingRow from "../feature/Rankings/components/RankingRow";
+import "../styles/rankings.css";
+
 // TEMP — visual QA harness, see DevPreviewMJG below.
 import MobileJudgeEcosystem from "../feature/Admin/components/MobileJudgeEcosystem";
 
@@ -425,6 +429,28 @@ function DevPreviewEVT() {
   );
 }
 
+// TEMP — visual QA harness for the Rankings mobile card, no auth/backend
+// needed. Remove once the styling review is done.
+function DevPreviewRANK() {
+  const entries = [
+    { rank: 1, previousRank: 2, rankDelta: 1, robotId: "r1", robotName: "Thunderstrike Mk-II", teamId: "t1", teamName: "Circuit Breakers", avatarUrl: undefined, state: "MH", city: "Mumbai", sport: "ROBO_WAR", ageGroup: "JUNIOR", ageGroupLabel: "Junior", weightClass: "8kg", totalPoints: 980, eventsPlayed: 6, matchesPlayed: 14 },
+    { rank: 2, previousRank: 1, rankDelta: -1, robotId: "r2", robotName: "Iron Fury", teamId: "t2", teamName: "Steel Titans", avatarUrl: undefined, state: "TN", city: "Chennai", sport: "ROBO_WAR", ageGroup: "JUNIOR", ageGroupLabel: "Junior", weightClass: "8kg", totalPoints: 910, eventsPlayed: 5, matchesPlayed: 12 },
+    { rank: 4, previousRank: 4, rankDelta: 0, robotId: "r4", robotName: "Widowmaker", teamId: "t4", teamName: "Apex Builders", avatarUrl: undefined, state: "RJ", city: "Jaipur", sport: "ROBO_WAR", ageGroup: "JUNIOR", ageGroupLabel: "Junior", weightClass: "8kg", totalPoints: 640, eventsPlayed: 3, matchesPlayed: 7 },
+  ] as import("../feature/Rankings/api/rankings.api").GlobalRankingEntry[];
+
+  return (
+    <Layout>
+      <div className="rank-page min-h-screen p-4">
+        <div className="flex flex-col gap-[10px]">
+          {entries.map((e) => (
+            <RankingRow key={e.robotId ?? e.teamId} entry={e} onOpen={() => {}} />
+          ))}
+        </div>
+      </div>
+    </Layout>
+  );
+}
+
 // ======================================================
 // APP ROUTES
 // ======================================================
@@ -442,6 +468,7 @@ function AppRoutes() {
       <Route path="/dev-preview/mum" element={<DevPreviewMUM />} />
       <Route path="/dev-preview/mjg" element={<DevPreviewMJG />} />
       <Route path="/dev-preview/evt" element={<DevPreviewEVT />} />
+      <Route path="/dev-preview/rank" element={<DevPreviewRANK />} />
       {/* Public profiles — accepts both UUID and BL-code (BLT.../BLR.../BLU...) */}
       <Route path="/team/:teamId"    element={<FooterShell><TeamPublicPage /></FooterShell>} />
       <Route path="/robot/:robotId"  element={<FooterShell><RobotPublicPage /></FooterShell>} />
