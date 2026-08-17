@@ -78,17 +78,25 @@ export default function RankingRow({ entry, onOpen }: RankingRowProps) {
       >
         <div className="flex items-center gap-3">
           {medal ? (
-            <div className="rank-wreath-badge">
+            <div className="rank-wreath-badge self-center">
               <LaurelWreath color={medal.wreath} />
               <span style={{ color: isTop1 ? "#fff" : medal.border }}>{entry.rank}</span>
             </div>
           ) : (
-            <span style={{ color: textColor, fontWeight: weight, fontSize: 18, minWidth: 28, textAlign: "center" }}>
+            <span className="self-center" style={{ color: textColor, fontWeight: weight, fontSize: 18, minWidth: 28, textAlign: "center" }}>
               {entry.rank}
             </span>
           )}
-          <TeamLogo src={entry.avatarUrl} className="w-[36px] h-[36px] rounded-lg bg-[#D9D9D9] object-cover" />
-          <span style={{ color: textColor, fontWeight: 600, fontSize: 16 }}>{displayName}</span>
+          <TeamLogo src={entry.avatarUrl} className="w-[36px] h-[36px] rounded-lg bg-[#D9D9D9] object-cover self-center flex-shrink-0" />
+          {/* Robot name stays primary; team name fills the space that used
+              to sit empty to the right of a short robot name, as a second,
+              smaller line instead of being dropped. */}
+          <div className="flex flex-col min-w-0 flex-1 justify-center">
+            <span style={{ color: textColor, fontWeight: 600, fontSize: 16 }} className="truncate">{displayName}</span>
+            {entry.robotName && entry.teamName && entry.robotName !== entry.teamName && (
+              <span style={{ color: textColor, fontSize: 12, opacity: 0.7 }} className="truncate">{entry.teamName}</span>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-3 w-full pt-1">
