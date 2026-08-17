@@ -439,3 +439,159 @@
     font-size: 18px;
   }
 }
+
+/* Phone-width pass — the 760px tier above still reads as a shrunk-down
+   tablet layout (28px section headings, 64px avatars, 130px-min buttons).
+   This tightens everything further for genuinely narrow screens instead
+   of reusing the same tablet sizes all the way down to ~340px. */
+@media (max-width: 600px) {
+  .notif-page {
+    padding: 12px;
+  }
+
+  /* Back to a single row (the 760px tier above stacks them) — title and
+     button share the top line instead of the button sitting on its own
+     line below. */
+  .notif-heading-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .notif-heading-row h1 {
+    font-size: 20px;
+    letter-spacing: 0.3px;
+  }
+
+  .notif-mark-read {
+    align-self: center;
+    flex-shrink: 0;
+    padding: 7px 14px;
+    font-size: 12.5px;
+    border-radius: 7px;
+  }
+
+  /* Carousel instead of wrapping to a second/third row — one scrollable
+     line, edges faded with a mask so the cut-off is obviously "more to
+     scroll" rather than a hard clip. */
+  .notif-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 8px;
+    margin: 0 0 24px;
+    padding-bottom: 2px;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, black 14px, black calc(100% - 20px), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, black 14px, black calc(100% - 20px), transparent 100%);
+  }
+  .notif-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .notif-tab {
+    flex-shrink: 0;
+    min-height: 32px;
+    border-width: 1.5px;
+    border-radius: 9px;
+    padding: 0 10px;
+    gap: 6px;
+    font-size: 12.5px;
+  }
+
+  .notif-tab span {
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+  }
+
+  .notif-section h2 {
+    margin: 0 0 16px;
+    font-size: 16px;
+  }
+
+  .notif-list {
+    gap: 16px;
+  }
+
+  .notif-row {
+    min-height: 0;
+    gap: 8px;
+  }
+
+  .notif-row-main {
+    gap: 10px;
+  }
+
+  .notif-avatar {
+    width: 42px;
+    height: 42px;
+    font-size: 14px;
+  }
+
+  .notif-row-text {
+    font-size: 13.5px;
+  }
+
+  .notif-message {
+    font-size: 12.5px;
+  }
+
+  .notif-row-text time {
+    margin-left: 8px;
+    font-size: 11.5px;
+  }
+
+  .notif-show-more {
+    font-size: 11px;
+  }
+
+  .notif-actions,
+  .notif-actions-pair {
+    padding-left: 0;
+    gap: 10px;
+  }
+
+  .notif-btn {
+    height: 36px;
+    min-width: 0;
+    flex: 1 1 0;
+    padding: 0 14px;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+
+  .notif-invite-actions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .notif-divider {
+    margin: 22px 0 18px;
+  }
+
+  .notif-state {
+    margin: 48px 0 0;
+    font-size: 15px;
+    text-align: center;
+  }
+
+  .notif-load-wrap {
+    margin-top: 24px;
+  }
+
+  .notif-load-wrap .notif-btn {
+    flex: 0 1 auto;
+    min-width: 140px;
+  }
+
+  /* Decorative art fights for space on a phone-sized card list — same
+     "hide below the breakpoint" treatment other pages use for their
+     outline stars/planes. */
+  .notif-plane,
+  .notif-outline-star {
+    display: none;
+  }
+}

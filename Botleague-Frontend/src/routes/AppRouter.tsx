@@ -185,6 +185,7 @@ import "../styles/eventsUser.css";
 import RankingRow from "../feature/Rankings/components/RankingRow";
 import "../styles/rankings.css";
 
+
 // TEMP — visual QA harness, see DevPreviewMJG below.
 import MobileJudgeEcosystem from "../feature/Admin/components/MobileJudgeEcosystem";
 
@@ -451,6 +452,17 @@ function DevPreviewRANK() {
   );
 }
 
+// TEMP — visual QA harness for the Notifications page, renders the real
+// component (uses its demoNotifications fallback when the store is empty).
+// Remove once the styling review is done.
+function DevPreviewNOTIF() {
+  return (
+    <Layout>
+      <NotificationsPage />
+    </Layout>
+  );
+}
+
 // ======================================================
 // APP ROUTES
 // ======================================================
@@ -469,6 +481,7 @@ function AppRoutes() {
       <Route path="/dev-preview/mjg" element={<DevPreviewMJG />} />
       <Route path="/dev-preview/evt" element={<DevPreviewEVT />} />
       <Route path="/dev-preview/rank" element={<DevPreviewRANK />} />
+      <Route path="/dev-preview/notif" element={<DevPreviewNOTIF />} />
       {/* Public profiles — accepts both UUID and BL-code (BLT.../BLR.../BLU...) */}
       <Route path="/team/:teamId"    element={<FooterShell><TeamPublicPage /></FooterShell>} />
       <Route path="/robot/:robotId"  element={<FooterShell><RobotPublicPage /></FooterShell>} />
