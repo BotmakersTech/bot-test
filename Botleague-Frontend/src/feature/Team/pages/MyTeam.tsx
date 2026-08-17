@@ -16,6 +16,7 @@ import useTeamMembership from "../TeamMembership/hooks/useTeamMembership";
 import { resolveAvatarSrc } from "../../Profile/constants/avatars";
 import TeamLogo from "../../../shared/components/TeamLogo";
 import MyTeamEmptyState from "../components/MyTeamEmptyState";
+import MobileMyTeam from "../components/MobileMyTeam";
 import "../../../styles/teamDashboard.css";
 
 function useCountdown(targetDate?: string | null) {
@@ -338,7 +339,8 @@ export default function MyTeam() {
   }
 
   return (
-    <main className="teamdash-page">
+    <>
+    <main className="teamdash-page teamdash-desktop-only">
       <div className="teamdash-content">
         <div className="teamdash-top-row">
           <h1>Welcome back, {currentTeamName}!</h1>
@@ -541,5 +543,76 @@ export default function MyTeam() {
         </section>
       </div>
     </main>
+
+    <div className="teamdash-mobile-only">
+      <MobileMyTeam
+        currentTeamName={currentTeamName}
+        currentTeamCode={currentTeamCode}
+        teamLogo={teamLogo}
+        isActive={isActive}
+        statusLabel={toLabel(resolvedTeam?.status)}
+        rankLabel={stats.rankNum || "Pending"}
+        winRatePct={stats.winRateNum || 0}
+        sinceYear={yearFrom(resolvedTeam?.createdAt)}
+        sinceLine={
+          primarySponsor
+            ? `Sponsored By ${primarySponsor.sponsorName}`
+            : resolvedTeam?.institutionName || location || (resolvedTeam as { memberRole?: string } | null)?.memberRole || "Team profile details pending"
+        }
+        sinceLineHref={(primarySponsor && primarySponsor.website) || "#team-info"}
+        canEditTeam={canEditTeam}
+        onEditTeam={() => navigate("/my-team/edit")}
+        error={error}
+        onRetry={handleRefresh}
+        onOpenChats={() => navigate("/messages")}
+        featuredImage={featuredImage}
+        hasEvent={!!nextEvent}
+        eventName={nextEvent?.eventName || currentTeamName}
+        eventLocationLabel={
+          nextEvent
+            ? [nextEvent.venueName, nextEvent.city, nextEvent.state].filter(Boolean).join(", ")
+            : location || "Location not added"
+        }
+        eventDateLabel={
+          nextEvent ? formatDateRange(nextEvent.startDate, nextEvent.endDate) : `In league since ${yearFrom(team?.createdAt)}`
+        }
+        eventCtaLabel={nextEvent ? "View Details" : "Browse Events"}
+        onViewEvent={() => navigate(nextEvent ? `/events/${nextEvent.eventId}` : "/browse-events")}
+        countdown={countdown}
+        activeSquadCount={members.filter(isMemberActive).length}
+        squadPreview={squadPreview.map((member) => {
+          const name = memberName(member);
+          return {
+            key: memberKey(member),
+            name,
+            roleLabel: toLabel(member.teamRole || member.role),
+            photoSrc: resolveAvatarSrc(member.profilePhotoUrl),
+            initials: memberInitials(name),
+            isActive: isMemberActive(member),
+          };
+        })}
+        onManageMembers={() => navigate("/my-team/members")}
+        primaryRobot={
+          primaryRobot
+            ? {
+                image: primaryRobot.robotIMG || fallbackRobot,
+                name: primaryRobot.robotName,
+                category: toLabel(primaryRobot.category),
+                statusLabel: toLabel(primaryRobot.status),
+                weightClassLabel: toLabel(primaryRobot.weightClass),
+              }
+            : null
+        }
+        sideRobots={sideRobots.map((robot) => ({
+          id: robot.id,
+          image: robot.robotIMG || fallbackRobot,
+          statusLabel: toLabel(robot.status),
+        }))}
+        wins={stats.wins}
+        onViewAllRobots={() => navigate("/robots")}
+        onAddRobot={() => navigate("/robots")}
+      />
+    </div>
+    </>
   );
 }

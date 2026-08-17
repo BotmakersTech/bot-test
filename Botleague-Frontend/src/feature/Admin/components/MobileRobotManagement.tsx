@@ -137,28 +137,20 @@ export default function MobileRobotManagement({
               ) : (
                 <span className="mrm-avatar mrm-avatar-fallback">{robot.robotName.charAt(0)}</span>
               )}
-              <div className="mrm-row-body">
-                <div className="mrm-row-top">
-                  <span className="mrm-name">{robot.robotName}</span>
-                  <span
-                    className="mrm-status-badge"
-                    style={{ background: STATUS_COLORS[robot.status] ?? "#9ca3af" }}
-                  >
-                    {robot.status}
-                  </span>
-                </div>
-                <div className="mrm-code">{robot.robotCode}</div>
-                <div className="mrm-meta-row">
-                  <span>{robot.robotType?.replace(/_/g, " ") ?? "—"}</span>
-                  <span>·</span>
-                  <span>{robot.sport?.replace(/_/g, " ") ?? "—"}</span>
-                </div>
-                <div className="mrm-meta-row">
-                  <span>{robot.teamName ?? "—"}</span>
-                  <span>·</span>
-                  <span>{robot.weightClass ?? (robot.weightKg ? `${robot.weightKg} kg` : "—")}</span>
-                </div>
-              </div>
+              <span className="mrm-name">{robot.robotName}</span>
+              <span className="mrm-field mrm-field-code">{robot.robotCode}</span>
+              <span className="mrm-field mrm-field-dot mrm-field-type">·</span>
+              <span className="mrm-field mrm-field-type">{robot.robotType?.replace(/_/g, " ") ?? "—"}</span>
+              <span className="mrm-field mrm-field-dot mrm-field-weight">·</span>
+              <span className="mrm-field mrm-field-weight">
+                {robot.weightClass ?? (robot.weightKg ? `${robot.weightKg} kg` : "—")}
+              </span>
+              <span
+                className="mrm-status-badge"
+                style={{ background: STATUS_COLORS[robot.status] ?? "#9ca3af" }}
+              >
+                {robot.status}
+              </span>
             </button>
           ))}
         </div>

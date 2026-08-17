@@ -19,6 +19,14 @@
   font-family: "Inter", sans-serif;
 }
 
+/* Robot Management's card list looks sparse stretched edge-to-edge on the
+   900-950px tablet end of the mobile breakpoint — cap and center it, same
+   as the reference mock's 900px canvas. Audit/Team aren't touched. */
+.mrm-root {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
 /* ── headers ─────────────────────────────────────────────────────────── */
 
 .mal-header h1,
@@ -153,6 +161,8 @@
   padding-bottom: 4px;
   margin-bottom: 14px;
   scrollbar-width: thin;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 14px, black calc(100% - 20px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, black 14px, black calc(100% - 20px), transparent 100%);
 }
 
 .mal-pill,
@@ -390,6 +400,50 @@
   color: #fff;
   font-weight: 700;
   font-size: 15px;
+}
+
+/* Robot row — everything on ONE line, like the reference mock's table row,
+   instead of Team's fuller 2-meta-row card. Code/Type/Weight progressively
+   show up as the row has more room instead of wrapping to a 2nd line —
+   mirrors how the desktop table hides columns below its sm/md/lg
+   breakpoints rather than shrinking text. Scoped to .mrm- only. */
+.mrm-row-card {
+  align-items: center;
+  padding: 8px 12px;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+.mrm-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+.mrm-name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.mrm-field {
+  flex: 0 0 auto;
+  font-size: 10.5px;
+  color: #9ca3af;
+  white-space: nowrap;
+  display: none;
+}
+.mrm-field-code {
+  font-family: monospace;
+}
+.mrm-status-badge {
+  flex-shrink: 0;
+}
+@media (min-width: 460px) {
+  .mrm-field-code { display: inline; }
+}
+@media (min-width: 600px) {
+  .mrm-field-type { display: inline; }
+}
+@media (min-width: 760px) {
+  .mrm-field-weight { display: inline; }
 }
 
 .mtm-row-body,

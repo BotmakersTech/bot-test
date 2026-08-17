@@ -161,12 +161,126 @@ import PublicRoute from "./PublicRoute";
 import RoleRoute from "./RoleRoute";
 import { AppRole, ADMIN_AND_UP, EVENT_HEAD_AND_UP, SPORT_HEAD_AND_UP } from "../shared/constants/roles";
 
+// TEMP — visual QA harness, see DevPreviewMRM below.
+import MobileRobotManagement from "../feature/Admin/components/MobileRobotManagement";
+import "../styles/organizerTheme.css";
+import "../styles/responsiveView.css";
+import "../styles/adminMobileList.css";
+
+// TEMP — visual QA harness, see DevPreviewMMT below.
+import MobileMyTeam from "../feature/Team/components/MobileMyTeam";
+import eventBgPreview from "../assets/Auth/drone.svg";
+import fallbackRobotPreview from "../assets/robot.png";
+import "../styles/teamDashboard.css";
+
 function FooterShell({ children }: { children: ReactNode }) {
   return (
     <>
       {children}
       <AppFooter />
     </>
+  );
+}
+
+// TEMP — visual QA harness for MobileRobotManagement, no auth/backend needed.
+// Remove once the styling review is done.
+function DevPreviewMRM() {
+  const robots = [
+    { id: "1", robotCode: "BLU0356648", robotName: "Thunderstrike Mk-II", robotIMG: undefined, robotType: "SOCCER_ROBOT", sport: "ROBO_SOCCER", weightClass: undefined, weightKg: 1.5, controlType: "MANUAL", status: "ACTIVE", teamId: "t1", teamName: "Circuit Breakers", teamCode: "BLT001" },
+    { id: "2", robotCode: "BLU0221190", robotName: "Iron Fury", robotIMG: undefined, robotType: "COMBAT_ROBOT", sport: "ROBOWAR_8KG", weightClass: undefined, weightKg: 8, controlType: "MANUAL", status: "ACTIVE", teamId: "t2", teamName: "Steel Titans", teamCode: "BLT002" },
+    { id: "3", robotCode: "BLU0987654", robotName: "Falcon", robotIMG: undefined, robotType: "SOCCER_ROBOT", sport: "ROBO_SOCCER", weightClass: undefined, weightKg: 1.5, controlType: "AUTONOMOUS", status: "MAINTENANCE", teamId: "t3", teamName: "Nova Robotics", teamCode: "BLT003" },
+    { id: "4", robotCode: "BLU0112233", robotName: "Widowmaker", robotIMG: undefined, robotType: "COMBAT_ROBOT", sport: "ROBOWAR_1_5KG", weightClass: undefined, weightKg: 1.5, controlType: "MANUAL", status: "INACTIVE", teamId: "t4", teamName: "Apex Builders", teamCode: "BLT004" },
+  ] as import("../feature/SuperAdmin/api/robotManagement.api").AdminRobotSummary[];
+
+  return (
+    <Layout>
+      <div className="org-page-bg p-8 view-desktop-only">
+        <div style={{ position: "relative", zIndex: 1 }}>DESKTOP TABLE PLACEHOLDER</div>
+      </div>
+      <div className="view-mobile-only">
+        <MobileRobotManagement
+          robots={robots}
+          loading={false}
+          error={null}
+          totalElements={robots.length}
+          search=""
+          onSearchChange={() => {}}
+          onSearchSubmit={() => {}}
+          statusFilter="ALL"
+          onStatusFilterChange={() => {}}
+          typeFilter="ALL"
+          onTypeFilterChange={() => {}}
+          page={0}
+          totalPages={3}
+          pageNumbers={[0, 1, 2]}
+          onPrevPage={() => {}}
+          onNextPage={() => {}}
+          onPageSelect={() => {}}
+          onRowClick={() => {}}
+          onCreateRobot={() => {}}
+        />
+      </div>
+    </Layout>
+  );
+}
+
+// TEMP — visual QA harness for MobileMyTeam, no auth/backend needed.
+// Remove once the styling review is done.
+function DevPreviewMMT() {
+  return (
+    <Layout>
+      <div className="teamdash-page teamdash-desktop-only">
+        <div style={{ position: "relative", zIndex: 1, padding: 24 }}>DESKTOP PLACEHOLDER (unchanged)</div>
+      </div>
+      <div className="teamdash-mobile-only">
+        <MobileMyTeam
+          currentTeamName="Circuit Breakers"
+          currentTeamCode="BLT001"
+          teamLogo={undefined}
+          isActive={true}
+          statusLabel="Active"
+          rankLabel={4}
+          winRatePct={68}
+          sinceYear="2024"
+          sinceLine="Sponsored By Nova Robotics"
+          sinceLineHref="#team-info"
+          canEditTeam={true}
+          onEditTeam={() => {}}
+          error={null}
+          onRetry={() => {}}
+          onOpenChats={() => {}}
+          featuredImage={eventBgPreview}
+          hasEvent={true}
+          eventName="Robowars Nationals 2026"
+          eventLocationLabel="Pragati Maidan, New Delhi"
+          eventDateLabel="12 March 2026"
+          eventCtaLabel="View Details"
+          onViewEvent={() => {}}
+          countdown={{ days: 12, hours: 5, mins: 30 }}
+          activeSquadCount={3}
+          squadPreview={[
+            { key: "1", name: "Aditi Sharma", roleLabel: "Captain", photoSrc: undefined, initials: "AS", isActive: true },
+            { key: "2", name: "Rohan Mehta", roleLabel: "Vice Captain", photoSrc: undefined, initials: "RM", isActive: true },
+            { key: "3", name: "Jai Ho", roleLabel: "Member", photoSrc: undefined, initials: "JH", isActive: false },
+          ]}
+          onManageMembers={() => {}}
+          primaryRobot={{
+            image: fallbackRobotPreview,
+            name: "Thunderstrike Mk-II",
+            category: "Combat Robot",
+            statusLabel: "Active",
+            weightClassLabel: "8kg",
+          }}
+          sideRobots={[
+            { id: "r2", image: fallbackRobotPreview, statusLabel: "Active" },
+            { id: "r3", image: fallbackRobotPreview, statusLabel: "Maintenance" },
+          ]}
+          wins={14}
+          onViewAllRobots={() => {}}
+          onAddRobot={() => {}}
+        />
+      </div>
+    </Layout>
   );
 }
 
@@ -181,6 +295,8 @@ function AppRoutes() {
       {/* PUBLIC ROUTES */}
       {/* ========================================= */}
       <Route path="/" element={<FooterShell><Home /></FooterShell>} />
+      <Route path="/dev-preview/mrm" element={<DevPreviewMRM />} />
+      <Route path="/dev-preview/mmt" element={<DevPreviewMMT />} />
       {/* Public profiles — accepts both UUID and BL-code (BLT.../BLR.../BLU...) */}
       <Route path="/team/:teamId"    element={<FooterShell><TeamPublicPage /></FooterShell>} />
       <Route path="/robot/:robotId"  element={<FooterShell><RobotPublicPage /></FooterShell>} />
