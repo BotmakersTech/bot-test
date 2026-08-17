@@ -173,6 +173,13 @@ import eventBgPreview from "../assets/Auth/drone.svg";
 import fallbackRobotPreview from "../assets/robot.png";
 import "../styles/teamDashboard.css";
 
+// TEMP — visual QA harness, see DevPreviewMTM / DevPreviewMUM below.
+import MobileTeamManagement from "../feature/SuperAdmin/components/MobileTeamManagement";
+import MobileUserManagement from "../feature/SuperAdmin/components/MobileUserManagement";
+
+// TEMP — visual QA harness, see DevPreviewMJG below.
+import MobileJudgeEcosystem from "../feature/Admin/components/MobileJudgeEcosystem";
+
 function FooterShell({ children }: { children: ReactNode }) {
   return (
     <>
@@ -284,6 +291,114 @@ function DevPreviewMMT() {
   );
 }
 
+// TEMP — visual QA harness for MobileTeamManagement, no auth/backend needed.
+// Remove once the styling review is done.
+function DevPreviewMTM() {
+  const teams = [
+    { id: "1", teamCode: "BLT001", teamName: "Circuit Breakers", logoUrl: undefined, institutionName: "IIT Bombay", city: "Mumbai", state: "MH", country: "India", status: "ACTIVE", memberCount: 5, createdAt: "2024-03-01" },
+    { id: "2", teamCode: "BLT002", teamName: "Steel Titans", logoUrl: undefined, institutionName: "NIT Trichy", city: "Trichy", state: "TN", country: "India", status: "PENDING", memberCount: 3, createdAt: "2024-06-14" },
+    { id: "3", teamCode: "BLT003", teamName: "Nova Robotics", logoUrl: undefined, institutionName: "BITS Pilani", city: "Pilani", state: "RJ", country: "India", status: "ACTIVE", memberCount: 6, createdAt: "2025-01-20" },
+    { id: "4", teamCode: "BLT004", teamName: "Apex Builders", logoUrl: undefined, institutionName: "VJTI", city: "Mumbai", state: "MH", country: "India", status: "REJECTED", memberCount: 2, createdAt: "2025-05-11" },
+  ] as import("../feature/SuperAdmin/api/teamManagement.api").AdminTeamSummary[];
+
+  return (
+    <Layout>
+      <div className="org-page-bg p-8 view-desktop-only">
+        <div style={{ position: "relative", zIndex: 1 }}>DESKTOP TABLE PLACEHOLDER</div>
+      </div>
+      <div className="view-mobile-only">
+        <MobileTeamManagement
+          teams={teams}
+          loading={false}
+          error={null}
+          totalElements={teams.length}
+          search=""
+          onSearchChange={() => {}}
+          onSearchSubmit={() => {}}
+          statusFilter="ALL"
+          onStatusFilterChange={() => {}}
+          page={0}
+          totalPages={3}
+          pageNumbers={[0, 1, 2]}
+          onPrevPage={() => {}}
+          onNextPage={() => {}}
+          onPageSelect={() => {}}
+          onRowClick={() => {}}
+          onCreateTeam={() => {}}
+        />
+      </div>
+    </Layout>
+  );
+}
+
+// TEMP — visual QA harness for MobileUserManagement, no auth/backend needed.
+// Remove once the styling review is done.
+function DevPreviewMUM() {
+  const users = [
+    { id: "1", botleagueId: "BLU2612345", username: "aditi.s", firstName: "Aditi", lastName: "Sharma", email: "aditi@example.com", phone: "9812345670", accountStatus: "ACTIVE", primaryRole: "COMPETITOR", allRoles: ["COMPETITOR"], createdAt: "2024-03-01", lastLoginAt: null },
+    { id: "2", botleagueId: "BLU2600004", username: "rohan.m", firstName: "Rohan", lastName: "Mehta", email: "rohan@example.com", phone: "9812345671", accountStatus: "PENDING", primaryRole: "SPORT_HEAD", allRoles: ["SPORT_HEAD"], createdAt: "2024-06-14", lastLoginAt: null },
+    { id: "3", botleagueId: "BLU2600123", username: "jai.ho", firstName: "Jai", lastName: "Ho", email: "jai@example.com", phone: "9812345672", accountStatus: "ACTIVE", primaryRole: "ADMIN", allRoles: ["ADMIN"], createdAt: "2025-01-20", lastLoginAt: null },
+    { id: "4", botleagueId: "BLU2600999", username: "nova.r", firstName: "Nova", lastName: "Robotics", email: "nova@example.com", phone: "9812345673", accountStatus: "INACTIVE", primaryRole: "COMPETITOR", allRoles: ["COMPETITOR"], createdAt: "2025-05-11", lastLoginAt: null },
+  ] as import("../feature/SuperAdmin/api/userManagement.api").UserSummary[];
+
+  return (
+    <Layout>
+      <div className="org-page-bg p-8 view-desktop-only">
+        <div style={{ position: "relative", zIndex: 1 }}>DESKTOP TABLE PLACEHOLDER</div>
+      </div>
+      <div className="view-mobile-only">
+        <MobileUserManagement
+          users={users}
+          loading={false}
+          error={null}
+          totalElements={users.length}
+          search=""
+          onSearchChange={() => {}}
+          onSearchSubmit={() => {}}
+          page={0}
+          totalPages={3}
+          pageNumbers={[0, 1, 2]}
+          onPrevPage={() => {}}
+          onNextPage={() => {}}
+          onPageSelect={() => {}}
+          onRowClick={() => {}}
+          onCreateUser={() => {}}
+        />
+      </div>
+    </Layout>
+  );
+}
+
+// TEMP — visual QA harness for MobileJudgeEcosystem, no auth/backend needed.
+// Remove once the styling review is done.
+function DevPreviewMJG() {
+  const judges = [
+    { id: "1", botleagueId: "BLU2612345", username: "aditi.s", firstName: "Aditi", lastName: "Sharma", email: "aditi@example.com", phone: "9812345670", accountStatus: "ACTIVE", primaryRole: "JUDGE", allRoles: ["JUDGE"], createdAt: "2024-03-01", lastLoginAt: null },
+    { id: "2", botleagueId: "BLU2600004", username: "rohan.m", firstName: "Rohan", lastName: "Mehta", email: "rohan@example.com", phone: "9812345671", accountStatus: "PENDING", primaryRole: "JUDGE", allRoles: ["JUDGE"], createdAt: "2024-06-14", lastLoginAt: null },
+    { id: "3", botleagueId: "BLU2600123", username: "jai.ho", firstName: "Jai", lastName: "Ho", email: "jai@example.com", phone: "9812345672", accountStatus: "ACTIVE", primaryRole: "JUDGE", allRoles: ["JUDGE"], createdAt: "2025-01-20", lastLoginAt: null },
+  ] as import("../feature/SuperAdmin/api/userManagement.api").UserSummary[];
+
+  return (
+    <Layout>
+      <div className="org-page-bg p-8 view-desktop-only">
+        <div style={{ position: "relative", zIndex: 1 }}>DESKTOP TABLE PLACEHOLDER</div>
+      </div>
+      <div className="view-mobile-only">
+        <MobileJudgeEcosystem
+          judges={judges}
+          loading={false}
+          error={null}
+          search=""
+          onSearchChange={() => {}}
+          onSearchSubmit={() => {}}
+          onRowClick={() => {}}
+          onManageRoles={() => {}}
+        />
+      </div>
+    </Layout>
+  );
+}
+
 // ======================================================
 // APP ROUTES
 // ======================================================
@@ -297,6 +412,9 @@ function AppRoutes() {
       <Route path="/" element={<FooterShell><Home /></FooterShell>} />
       <Route path="/dev-preview/mrm" element={<DevPreviewMRM />} />
       <Route path="/dev-preview/mmt" element={<DevPreviewMMT />} />
+      <Route path="/dev-preview/mtm" element={<DevPreviewMTM />} />
+      <Route path="/dev-preview/mum" element={<DevPreviewMUM />} />
+      <Route path="/dev-preview/mjg" element={<DevPreviewMJG />} />
       {/* Public profiles — accepts both UUID and BL-code (BLT.../BLR.../BLU...) */}
       <Route path="/team/:teamId"    element={<FooterShell><TeamPublicPage /></FooterShell>} />
       <Route path="/robot/:robotId"  element={<FooterShell><RobotPublicPage /></FooterShell>} />

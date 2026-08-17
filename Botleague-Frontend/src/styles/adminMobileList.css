@@ -14,15 +14,19 @@
 
 .mal-root,
 .mtm-root,
-.mrm-root {
+.mrm-root,
+.mum-root,
+.mjg-root {
   padding: 20px 16px 32px;
   font-family: "Inter", sans-serif;
 }
 
-/* Robot Management's card list looks sparse stretched edge-to-edge on the
-   900-950px tablet end of the mobile breakpoint — cap and center it, same
-   as the reference mock's 900px canvas. Audit/Team aren't touched. */
-.mrm-root {
+/* Robot/User/Judge lists look sparse stretched edge-to-edge on the
+   900-950px tablet end of the mobile breakpoint — cap and center them,
+   same as the reference mock's 900px canvas. Audit/Team aren't touched. */
+.mrm-root,
+.mum-root,
+.mjg-root {
   max-width: 900px;
   margin: 0 auto;
 }
@@ -31,7 +35,8 @@
 
 .mal-header h1,
 .mtm-header h1,
-.mrm-header h1 {
+.mrm-header h1,
+.mum-header h1 {
   margin: 0;
   font-family: "Sarpanch", sans-serif;
   font-weight: 600;
@@ -44,14 +49,16 @@
 
 .mal-header p,
 .mtm-header p,
-.mrm-header p {
+.mrm-header p,
+.mum-header p {
   margin: 2px 0 0;
   font-size: 12.5px;
   color: #6b7280;
 }
 
 .mtm-header,
-.mrm-header {
+.mrm-header,
+.mum-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -63,10 +70,11 @@
   margin-bottom: 14px;
 }
 
-/* ── create button (Team / Robot) ───────────────────────────────────── */
+/* ── create button (Team / Robot / User) ────────────────────────────── */
 
 .mtm-create-btn,
-.mrm-create-btn {
+.mrm-create-btn,
+.mum-create-btn {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -84,7 +92,8 @@
   transition: transform 0.15s ease, filter 0.15s ease;
 }
 .mtm-create-btn:hover,
-.mrm-create-btn:hover {
+.mrm-create-btn:hover,
+.mum-create-btn:hover {
   filter: brightness(1.06);
   transform: translateY(-1px);
 }
@@ -92,7 +101,9 @@
 /* ── search bar ──────────────────────────────────────────────────────── */
 
 .mtm-search,
-.mrm-search {
+.mrm-search,
+.mum-search,
+.mjg-search {
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -103,7 +114,9 @@
 }
 
 .mtm-search input,
-.mrm-search input {
+.mrm-search input,
+.mum-search input,
+.mjg-search input {
   flex: 1;
   min-width: 0;
   border: none;
@@ -115,12 +128,16 @@
   font-family: inherit;
 }
 .mtm-search input::placeholder,
-.mrm-search input::placeholder {
+.mrm-search input::placeholder,
+.mum-search input::placeholder,
+.mjg-search input::placeholder {
   color: #9ca3af;
 }
 
 .mtm-search-btn,
-.mrm-search-btn {
+.mrm-search-btn,
+.mum-search-btn,
+.mjg-search-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -211,7 +228,9 @@
 
 .mal-empty,
 .mtm-empty,
-.mrm-empty {
+.mrm-empty,
+.mum-empty,
+.mjg-empty {
   padding: 40px 12px;
   text-align: center;
   color: #9ca3af;
@@ -221,7 +240,9 @@
 }
 .mal-error,
 .mtm-error,
-.mrm-error {
+.mrm-error,
+.mum-error,
+.mjg-error {
   color: #e04b4b;
   border: 1px solid rgba(224, 75, 75, 0.25);
   background: rgba(224, 75, 75, 0.06);
@@ -229,14 +250,18 @@
 
 .mal-skeleton-list,
 .mtm-skeleton-list,
-.mrm-skeleton-list {
+.mrm-skeleton-list,
+.mum-skeleton-list,
+.mjg-skeleton-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 .mal-skeleton,
 .mtm-skeleton,
-.mrm-skeleton {
+.mrm-skeleton,
+.mum-skeleton,
+.mjg-skeleton {
   height: 76px;
   border-radius: 12px;
   background: rgba(75, 134, 232, 0.08);
@@ -350,49 +375,70 @@
   letter-spacing: 0.03em;
 }
 
-/* ── Team / Robot row cards ──────────────────────────────────────────── */
+/* ── Team / Robot / User / Judge row cards ───────────────────────────── */
 
 .mtm-list,
-.mrm-list {
+.mrm-list,
+.mum-list,
+.mjg-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
+/* Row cards — everything on ONE line, like the reference mock's table row.
+   Shared by Team/Robot/User/Judge's mobile list (.mtm-/.mrm-/.mum-/.mjg-
+   prefixes): avatar, name (flex, ellipsis), then a handful of secondary
+   fields that progressively reveal as the row has more room instead of
+   wrapping to a 2nd line — mirrors how each desktop table hides columns
+   below its own sm/md/lg breakpoints rather than shrinking text — then a
+   status badge pinned to the end. */
 .mtm-row-card,
-.mrm-row-card {
+.mrm-row-card,
+.mum-row-card,
+.mjg-row-card {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
+  gap: 8px;
   width: 100%;
   border: 1px solid rgba(75, 134, 232, 0.2);
   border-radius: 12px;
   background: #fff;
-  padding: 12px 14px;
+  padding: 8px 12px;
   cursor: pointer;
   text-align: left;
+  flex-wrap: nowrap;
+  overflow: hidden;
   transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
 }
 .mtm-row-card:active,
-.mrm-row-card:active {
+.mrm-row-card:active,
+.mum-row-card:active,
+.mjg-row-card:active {
   transform: scale(0.99);
 }
 .mtm-row-card:hover,
-.mrm-row-card:hover {
+.mrm-row-card:hover,
+.mum-row-card:hover,
+.mjg-row-card:hover {
   border-color: rgba(140, 108, 255, 0.4);
   box-shadow: 0 4px 14px rgba(75, 134, 232, 0.12);
 }
 
 .mtm-avatar,
-.mrm-avatar {
+.mrm-avatar,
+.mum-avatar,
+.mjg-avatar {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   object-fit: cover;
   border: 1px solid rgba(75, 134, 232, 0.25);
 }
-.mrm-avatar-fallback {
+.mrm-avatar-fallback,
+.mum-avatar-fallback,
+.mjg-avatar-fallback {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -402,67 +448,13 @@
   font-size: 15px;
 }
 
-/* Robot row — everything on ONE line, like the reference mock's table row,
-   instead of Team's fuller 2-meta-row card. Code/Type/Weight progressively
-   show up as the row has more room instead of wrapping to a 2nd line —
-   mirrors how the desktop table hides columns below its sm/md/lg
-   breakpoints rather than shrinking text. Scoped to .mrm- only. */
-.mrm-row-card {
-  align-items: center;
-  padding: 8px 12px;
-  gap: 8px;
-  flex-wrap: nowrap;
-  overflow: hidden;
-}
-.mrm-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-}
-.mrm-name {
+.mtm-name,
+.mrm-name,
+.mum-name,
+.mjg-name {
   flex: 1 1 auto;
   min-width: 0;
-}
-.mrm-field {
-  flex: 0 0 auto;
-  font-size: 10.5px;
-  color: #9ca3af;
-  white-space: nowrap;
-  display: none;
-}
-.mrm-field-code {
-  font-family: monospace;
-}
-.mrm-status-badge {
-  flex-shrink: 0;
-}
-@media (min-width: 460px) {
-  .mrm-field-code { display: inline; }
-}
-@media (min-width: 600px) {
-  .mrm-field-type { display: inline; }
-}
-@media (min-width: 760px) {
-  .mrm-field-weight { display: inline; }
-}
-
-.mtm-row-body,
-.mrm-row-body {
-  flex: 1;
-  min-width: 0;
-}
-
-.mtm-row-top,
-.mrm-row-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.mtm-name,
-.mrm-name {
-  font-weight: 600;
+  font-weight: 400;
   font-size: 14px;
   color: #111;
   overflow: hidden;
@@ -471,48 +463,58 @@
 }
 
 .mtm-status-badge,
-.mrm-status-badge {
+.mrm-status-badge,
+.mum-status-badge,
+.mjg-status-badge {
   flex-shrink: 0;
   border-radius: 999px;
   padding: 2px 9px;
   font-size: 9.5px;
-  font-weight: 700;
+  font-weight: 400;
   color: #fff;
   white-space: nowrap;
 }
 
-.mtm-code,
-.mrm-code {
-  margin-top: 1px;
-  font-family: monospace;
+/* Row fields — code/id, plus User/Judge's role, are the guaranteed-visible
+   minimum (name + id + status + role) and always show, fitting on the one
+   row regardless of width. Everything else (type, weight, institution,
+   member count, phone) is a bonus that only shows up once the row has
+   more room, instead of wrapping to a 2nd line. */
+.mtm-field,
+.mrm-field,
+.mum-field,
+.mjg-field {
+  flex: 0 0 auto;
   font-size: 10.5px;
+  font-weight: 400;
   color: #9ca3af;
-}
-
-.mtm-meta-row,
-.mrm-meta-row {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 4px;
-  font-size: 11px;
-  color: #6b7280;
-  overflow: hidden;
-}
-.mtm-meta-row span:first-child,
-.mrm-meta-row span:first-child {
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
+  display: none;
+}
+.mtm-field-code,
+.mrm-field-code,
+.mum-field-code,
+.mjg-field-code {
+  font-family: monospace;
+}
+.mtm-field-code,
+.mrm-field-code,
+.mum-field-code,
+.mjg-field-code,
+.mum-field-role,
+.mjg-field-role {
+  display: inline;
+}
+@media (min-width: 600px) {
+  .mtm-field-institution, .mrm-field-type, .mum-field-phone, .mjg-field-phone { display: inline; }
+}
+@media (min-width: 760px) {
+  .mtm-field-members, .mrm-field-weight { display: inline; }
 }
 
-.mtm-members-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-
-.mrm-total {
+.mrm-total,
+.mum-total,
+.mjg-total {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -548,7 +550,8 @@
 }
 
 .mtm-pagination,
-.mrm-pagination {
+.mrm-pagination,
+.mum-pagination {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -557,7 +560,8 @@
   margin-top: 18px;
 }
 .mtm-page-arrow,
-.mrm-page-arrow {
+.mrm-page-arrow,
+.mum-page-arrow {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -570,17 +574,20 @@
   cursor: pointer;
 }
 .mtm-page-arrow:disabled,
-.mrm-page-arrow:disabled {
+.mrm-page-arrow:disabled,
+.mum-page-arrow:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 .mtm-page-num-wrap,
-.mrm-page-num-wrap {
+.mrm-page-num-wrap,
+.mum-page-num-wrap {
   display: flex;
   align-items: center;
 }
 .mtm-page-num,
-.mrm-page-num {
+.mrm-page-num,
+.mum-page-num {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -595,13 +602,42 @@
   cursor: pointer;
 }
 .mtm-page-num-active,
-.mrm-page-num-active {
+.mrm-page-num-active,
+.mum-page-num-active {
   background: #3567cf;
   color: #fff;
 }
 .mtm-page-dots,
-.mrm-page-dots {
+.mrm-page-dots,
+.mum-page-dots {
   padding: 0 2px;
   color: #9ca3af;
   font-size: 12px;
+}
+
+/* ── Judge Ecosystem's info banner ───────────────────────────────────── */
+
+.mjg-notice {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(75, 134, 232, 0.25);
+  background: rgba(75, 134, 232, 0.08);
+  color: #3567cf;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.mjg-notice strong {
+  font-weight: 700;
+}
+.mjg-notice button,
+.mjg-empty-link {
+  border: none;
+  background: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
 }

@@ -1,4 +1,4 @@
-import { Search, Plus, ChevronLeft, ChevronRight, Users as UsersIcon } from "lucide-react";
+import { Search, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import type { AdminTeamSummary } from "../api/teamManagement.api";
 import TeamLogo from "../../../shared/components/TeamLogo";
 
@@ -10,13 +10,17 @@ import TeamLogo from "../../../shared/components/TeamLogo";
    - That mock's 5-column table ("Profile Details / Team / No. / Status /
      Joining") appears to describe team *members*, not the admin's real Team
      Management data (AdminTeamSummary: teamName/teamCode/institutionName/
-     city/country/memberCount/status/createdAt — one row per TEAM). Ported as
-     a stacked card per team instead, using the real fields, rather than
-     inventing member-level data this page doesn't have.
+     city/country/memberCount/status/createdAt — one row per TEAM). Ported
+     using the real fields instead, rather than inventing member-level data
+     this page doesn't have.
    - The mock's second "Types..." dropdown has no real backing filter on this
      page (only a status filter exists) — dropped rather than wired to
      nothing, same reasoning MobileDashboard used to skip non-functional
      mock elements.
+   - Row layout matches MobileRobotManagement's single-line, progressively-
+     revealing-fields technique (code, then institution, then member count
+     show up as the row has more room) instead of an earlier stacked
+     2-meta-row card, for consistency across the admin list pages.
    - Numbered pagination reuses the desktop page's own windowed
      first/last/current +/-1 algorithm (passed down as `pageNumbers`) instead
      of the mock's hardcoded "1 2 3 4 ... 10".
@@ -119,28 +123,18 @@ export default function MobileTeamManagement({
           {teams.map((team) => (
             <button type="button" key={team.id} className="mtm-row-card" onClick={() => onRowClick(team.id)}>
               <TeamLogo src={team.logoUrl} alt={team.teamName} className="mtm-avatar" />
-              <div className="mtm-row-body">
-                <div className="mtm-row-top">
-                  <span className="mtm-name">{team.teamName}</span>
-                  <span
-                    className="mtm-status-badge"
-                    style={{ background: STATUS_COLORS[team.status] ?? "#9ca3af" }}
-                  >
-                    {team.status}
-                  </span>
-                </div>
-                <div className="mtm-code">{team.teamCode}</div>
-                <div className="mtm-meta-row">
-                  <span>{team.institutionName || "—"}</span>
-                  <span>·</span>
-                  <span>{[team.city, team.country].filter(Boolean).join(", ") || "—"}</span>
-                </div>
-                <div className="mtm-meta-row">
-                  <span className="mtm-members-badge"><UsersIcon size={11} /> {team.memberCount}</span>
-                  <span>·</span>
-                  <span>{team.createdAt ? new Date(team.createdAt).toLocaleDateString() : "—"}</span>
-                </div>
-              </div>
+              <span className="mtm-name">{team.teamName}</span>
+              <span className="mtm-field mtm-field-code">{team.teamCode}</span>
+              <span className="mtm-field mtm-field-dot mtm-field-institution">·</span>
+              <span className="mtm-field mtm-field-institution">{team.institutionName || "—"}</span>
+              <span className="mtm-field mtm-field-dot mtm-field-members">·</span>
+              <span className="mtm-field mtm-field-members">{team.memberCount} members</span>
+              <span
+                className="mtm-status-badge"
+                style={{ background: STATUS_COLORS[team.status] ?? "#9ca3af" }}
+              >
+                {team.status}
+              </span>
             </button>
           ))}
         </div>

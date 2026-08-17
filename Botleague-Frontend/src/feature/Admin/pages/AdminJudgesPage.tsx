@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom"
 import { Search, Users as UsersIcon } from "lucide-react"
 import { listUsers, type UserSummary } from "../../SuperAdmin/api/userManagement.api"
 import { ORG } from "../../Organizer/theme/organizerTheme"
+import MobileJudgeEcosystem from "../components/MobileJudgeEcosystem"
 import "../../../styles/organizerTheme.css"
+import "../../../styles/responsiveView.css"
+import "../../../styles/adminMobileList.css"
 
 function RoleBadge({ role }: { role: string }) {
   return (
@@ -52,13 +55,16 @@ export default function AdminJudgesPage() {
       .finally(() => setLoading(false))
   }, [activeSearch])
 
+  const submitSearch = () => setActiveSearch(search)
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    setActiveSearch(search)
+    submitSearch()
   }
 
   return (
-    <div className="org-page-bg p-8">
+    <>
+    <div className="org-page-bg p-8 view-desktop-only">
       <div style={{ position: "relative", zIndex: 1 }}>
         <h1 className="font-display mb-2 text-[38px] font-medium text-[#0162d1] tracking-wide">
           Judge Ecosystem
@@ -185,5 +191,19 @@ export default function AdminJudgesPage() {
         )}
       </div>
     </div>
+
+    <div className="view-mobile-only">
+      <MobileJudgeEcosystem
+        judges={judges}
+        loading={loading}
+        error={error}
+        search={search}
+        onSearchChange={setSearch}
+        onSearchSubmit={submitSearch}
+        onRowClick={(id) => navigate(`/admin/judges/${id}`)}
+        onManageRoles={() => navigate("/admin/users")}
+      />
+    </div>
+    </>
   )
 }

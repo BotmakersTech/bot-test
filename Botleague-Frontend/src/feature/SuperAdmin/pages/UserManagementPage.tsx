@@ -15,7 +15,10 @@ import {
 import { createAdminUser } from "../api/userManagement.api";
 import { ORG } from "../../Organizer/theme/organizerTheme";
 import PrimaryButton from "../../Organizer/components/PrimaryButton";
+import MobileUserManagement from "../components/MobileUserManagement";
 import "../../../styles/organizerTheme.css";
+import "../../../styles/responsiveView.css";
+import "../../../styles/adminMobileList.css";
 
 const ALL_ROLES = ["COMPETITOR","SPORT_HEAD","EVENT_HEAD","ORGANISER","ADMIN","SUPER_ADMIN","JUDGE","VOLUNTEER"];
 const PAGE_SIZES = [10, 25, 50];
@@ -181,9 +184,11 @@ export default function UserManagementPage() {
 
   useEffect(() => { doSearch(activeSearch, 0, pageSize); }, [doSearch, activeSearch, pageSize]);
 
+  const submitSearch = () => setActiveSearch(search);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setActiveSearch(search);
+    submitSearch();
   };
 
   // Numbered page buttons with an ellipsis once there are more pages than fit —
@@ -195,15 +200,16 @@ export default function UserManagementPage() {
   })();
 
   return (
-    <div className="org-page-bg p-8">
-      <div style={{ position: "relative", zIndex: 1 }}>
+    <>
+    {showCreate && (
+      <CreateUserModal
+        onClose={() => setShowCreate(false)}
+        onCreated={id => { setShowCreate(false); navigate(`/admin/users/${id}`); }}
+      />
+    )}
 
-        {showCreate && (
-          <CreateUserModal
-            onClose={() => setShowCreate(false)}
-            onCreated={id => { setShowCreate(false); navigate(`/admin/users/${id}`); }}
-          />
-        )}
+    <div className="org-page-bg p-8 view-desktop-only">
+      <div style={{ position: "relative", zIndex: 1 }}>
 
         <h1 className="font-display mb-8 text-[38px] font-medium text-[#0162d1] tracking-wide">
           User Management
@@ -375,5 +381,26 @@ export default function UserManagementPage() {
 
       </div>
     </div>
+
+    <div className="view-mobile-only">
+      <MobileUserManagement
+        users={users}
+        loading={loading}
+        error={error}
+        totalElements={totalElements}
+        search={search}
+        onSearchChange={setSearch}
+        onSearchSubmit={submitSearch}
+        page={currentPage}
+        totalPages={totalPages}
+        pageNumbers={pageNumbers}
+        onPrevPage={() => doSearch(activeSearch, currentPage - 1, pageSize)}
+        onNextPage={() => doSearch(activeSearch, currentPage + 1, pageSize)}
+        onPageSelect={(p) => doSearch(activeSearch, p, pageSize)}
+        onRowClick={(id) => navigate(`/admin/users/${id}`)}
+        onCreateUser={() => setShowCreate(true)}
+      />
+    </div>
+    </>
   );
 }

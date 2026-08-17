@@ -1730,14 +1730,14 @@
   margin: 0;
   color: #0162d1;
   font-family: "Poppins", sans-serif;
-  font-size: 20px;
+  font-size: clamp(17px, 5vw, 20px);
   font-weight: 600;
 }
 
 .mmt-machines-head button {
   color: #0162d1;
   font-family: "Inter", sans-serif;
-  font-size: 13px;
+  font-size: clamp(11px, 3.2vw, 13px);
   font-weight: 500;
   border: 0;
   background: transparent;
@@ -1747,12 +1747,14 @@
 
 .mmt-machines-head button:hover { text-decoration: underline; }
 
+/* Scales with the viewport instead of a fixed 180px — this section only
+   ever renders below the 950px mobile breakpoint, so vw is safely bounded. */
 .mmt-build-primary {
   position: relative;
   border: 2px solid #0162d1;
   border-radius: 10px;
   overflow: hidden;
-  height: 180px;
+  aspect-ratio: 2 / 1;
   margin-bottom: 10px;
 }
 
@@ -1779,27 +1781,27 @@
   background: rgba(0, 0, 0, 0.68);
   backdrop-filter: blur(6px);
   border-radius: 4px;
-  padding: 3px 8px;
+  padding: clamp(2px, 0.8vw, 3px) clamp(6px, 2.2vw, 8px);
   font-family: "Inter", sans-serif;
-  font-size: 10px;
+  font-size: clamp(8.5px, 2.5vw, 10px);
   font-weight: 700;
   color: #00d31c;
   line-height: 14px;
 }
 
-.mmt-build-status-sm { font-size: 9px; padding: 2px 6px; }
+.mmt-build-status-sm { font-size: clamp(7.5px, 2.2vw, 9px); padding: clamp(1.5px, 0.6vw, 2px) clamp(4px, 1.8vw, 6px); }
 
 .mmt-build-banner {
   background: #8c6cff;
   border-radius: 10px;
-  padding: 14px 16px;
+  padding: clamp(10px, 3.5vw, 14px) clamp(12px, 4vw, 16px);
   color: #ffffff;
   margin-bottom: 10px;
 }
 
 .mmt-bb-name {
   font-family: "Inter", sans-serif;
-  font-size: 19px;
+  font-size: clamp(15px, 4.8vw, 19px);
   font-weight: 600;
   letter-spacing: 0.3px;
   line-height: 1.1;
@@ -1807,7 +1809,7 @@
 
 .mmt-bb-tag {
   font-family: "Inter", sans-serif;
-  font-size: 11px;
+  font-size: clamp(9px, 2.8vw, 11px);
   font-weight: 400;
   text-transform: uppercase;
   opacity: 0.95;
@@ -1816,20 +1818,20 @@
 
 .mmt-bb-stats {
   display: flex;
-  gap: 28px;
+  gap: clamp(16px, 7vw, 28px);
   margin-top: 12px;
 }
 
 .mmt-bb-num {
   font-family: "Inter", sans-serif;
-  font-size: 20px;
+  font-size: clamp(16px, 5vw, 20px);
   font-weight: 500;
   line-height: 1;
 }
 
 .mmt-bb-sub {
   font-family: "Inter", sans-serif;
-  font-size: 11px;
+  font-size: clamp(9px, 2.8vw, 11px);
   font-weight: 400;
   text-transform: uppercase;
   margin-top: 4px;
@@ -1842,11 +1844,13 @@
   padding-bottom: 2px;
 }
 
+/* Same 104:88 proportions as before, just fluid instead of pinned to
+   104px so the row shrinks along with everything else on narrow screens. */
 .mmt-build-side-card {
   position: relative;
   flex: 0 0 auto;
-  width: 104px;
-  height: 88px;
+  width: clamp(78px, 24vw, 104px);
+  aspect-ratio: 104 / 88;
   border-radius: 8px;
   overflow: hidden;
 }
