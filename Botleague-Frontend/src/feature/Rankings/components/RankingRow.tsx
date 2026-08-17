@@ -88,13 +88,13 @@ export default function RankingRow({ entry, onOpen }: RankingRowProps) {
             </span>
           )}
           <TeamLogo src={entry.avatarUrl} className="w-[36px] h-[36px] rounded-lg bg-[#D9D9D9] object-cover self-center flex-shrink-0" />
-          {/* Robot name stays primary; team name fills the space that used
-              to sit empty to the right of a short robot name, as a second,
-              smaller line instead of being dropped. */}
-          <div className="flex flex-col min-w-0 flex-1 justify-center">
-            <span style={{ color: textColor, fontWeight: 600, fontSize: 16 }} className="truncate">{displayName}</span>
+          {/* Robot name stays primary; team name sits on the same row
+              instead of being dropped, filling the space that used to sit
+              empty to the right of a short robot name. */}
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <span style={{ color: textColor, fontWeight: 600, fontSize: 16 }} className="truncate flex-1 min-w-0">{displayName}</span>
             {entry.robotName && entry.teamName && entry.robotName !== entry.teamName && (
-              <span style={{ color: textColor, fontSize: 12, opacity: 0.7 }} className="truncate">{entry.teamName}</span>
+              <span style={{ color: textColor, fontSize: 12, opacity: 0.7 }} className="truncate shrink-0 max-w-[35%]">{entry.teamName}</span>
             )}
           </div>
         </div>
