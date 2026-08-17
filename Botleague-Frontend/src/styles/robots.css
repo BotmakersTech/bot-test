@@ -941,21 +941,51 @@
   opacity: 0.5;
 }
 
-@media (max-width: 900px) {
-  .robot-create-form {
-    padding: 26px 22px 30px;
+@media (max-width: 950px) {
+  .robot-create-shell {
+    width: 100%;
   }
 
+  .robot-create-form {
+    padding: 22px 16px 26px;
+    gap: 24px;
+    border-radius: 12px;
+  }
+
+  .robot-create-head h1 {
+    font-size: 22px;
+  }
+
+  /* Horizontal-scrolling row instead of a wrapping grid — matches the
+     Figma "Add Robot- MOBILE" frame and keeps each card's icon+label+range
+     legible at narrow widths instead of shrinking 3-up into a cramped grid. */
   .robot-age-grid {
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    grid-template-columns: unset;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+  }
+  .robot-age-card {
+    flex: 0 0 auto;
+    width: 132px;
+    min-height: 96px;
   }
 
   .robot-competition-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .robot-competition-card {
+    min-height: 74px;
+    font-size: 12px;
+    padding: 10px 8px;
   }
 
   .robot-create-fields {
     grid-template-columns: 1fr;
+    gap: 14px;
   }
 }
 
@@ -964,7 +994,7 @@
     flex-direction: column;
   }
 
-  .robot-age-grid {
+  .robot-competition-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }

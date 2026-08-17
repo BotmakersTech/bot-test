@@ -11,7 +11,10 @@ import {
 import { getWeightClassOptions, weightClassLabel } from "../../Robots/constants/weightClasses"
 import { ORG } from "../../Organizer/theme/organizerTheme"
 import PrimaryButton from "../../Organizer/components/PrimaryButton"
+import MobileRobotManagement from "../components/MobileRobotManagement"
 import "../../../styles/organizerTheme.css"
+import "../../../styles/responsiveView.css"
+import "../../../styles/adminMobileList.css"
 
 const ROBOT_TYPES_CREATE = ["COMBAT_ROBOT","SOCCER_ROBOT","SUMO_ROBOT","LINE_FOLLOWER_ROBOT","TASK_ROBOT","RC_VEHICLE","DRONE","AIRCRAFT","INNOVATION_PROJECT"]
 const SPORTS_CREATE = ["ROBOWAR_1_5KG","ROBOWAR_8KG","ROBOWAR_15KG","ROBOWAR_30KG","ROBOWAR_60KG","ROBO_SOCCER","ROBO_SUMO","LINE_FOLLOWER","LINE_FOLLOWER_AUTO","MANUAL_TASK","THEME_BASED_TASKING","DRONE_RACING","DRONE_SOCCER","RC_RACING","AEROMODELLING","PROJECT_BASED"]
@@ -186,15 +189,16 @@ export default function AdminRobotsPage() {
   })()
 
   return (
-    <div className="org-page-bg p-8">
-      <div style={{ position: "relative", zIndex: 1 }}>
+    <>
+    {showCreate && (
+      <CreateRobotModal
+        onClose={() => setShowCreate(false)}
+        onCreated={id => { setShowCreate(false); navigate(`/admin/robots/${id}`); }}
+      />
+    )}
 
-        {showCreate && (
-          <CreateRobotModal
-            onClose={() => setShowCreate(false)}
-            onCreated={id => { setShowCreate(false); navigate(`/admin/robots/${id}`); }}
-          />
-        )}
+    <div className="org-page-bg p-8 view-desktop-only">
+      <div style={{ position: "relative", zIndex: 1 }}>
 
         {/* Header */}
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
@@ -405,5 +409,30 @@ export default function AdminRobotsPage() {
 
       </div>
     </div>
+
+    <div className="view-mobile-only">
+      <MobileRobotManagement
+        robots={robots}
+        loading={loading}
+        error={error}
+        totalElements={totalElements}
+        search={search}
+        onSearchChange={setSearch}
+        onSearchSubmit={handleSearch}
+        statusFilter={statusFilter}
+        onStatusFilterChange={handleStatusChange}
+        typeFilter={typeFilter}
+        onTypeFilterChange={handleTypeChange}
+        page={page}
+        totalPages={totalPages}
+        pageNumbers={pageNumbers}
+        onPrevPage={() => setPage((p) => p - 1)}
+        onNextPage={() => setPage((p) => p + 1)}
+        onPageSelect={setPage}
+        onRowClick={(id) => navigate(`/admin/robots/${id}`)}
+        onCreateRobot={() => setShowCreate(true)}
+      />
+    </div>
+    </>
   )
 }

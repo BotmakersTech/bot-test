@@ -6,7 +6,10 @@ import { getUsersWithoutTeam, type UserSummary } from "../api/userManagement.api
 import TeamLogo from "../../../shared/components/TeamLogo"
 import { ORG } from "../../Organizer/theme/organizerTheme"
 import PrimaryButton from "../../Organizer/components/PrimaryButton"
+import MobileTeamManagement from "../components/MobileTeamManagement"
 import "../../../styles/organizerTheme.css"
+import "../../../styles/responsiveView.css"
+import "../../../styles/adminMobileList.css"
 
 const STATUS_FILTERS = ["ALL", "PENDING", "ACTIVE", "REJECTED"]
 const PAGE_SIZE = 20
@@ -143,15 +146,16 @@ export default function TeamManagementPage() {
   })()
 
   return (
-    <div className="org-page-bg p-8">
-      <div style={{ position: "relative", zIndex: 1 }}>
+    <>
+    {showCreate && (
+      <CreateTeamModal
+        onClose={() => setShowCreate(false)}
+        onCreated={id => { setShowCreate(false); navigate(`/admin/teams/${id}`); }}
+      />
+    )}
 
-        {showCreate && (
-          <CreateTeamModal
-            onClose={() => setShowCreate(false)}
-            onCreated={id => { setShowCreate(false); navigate(`/admin/teams/${id}`); }}
-          />
-        )}
+    <div className="org-page-bg p-8 view-desktop-only">
+      <div style={{ position: "relative", zIndex: 1 }}>
 
         {/* Header */}
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
@@ -319,5 +323,28 @@ export default function TeamManagementPage() {
 
       </div>
     </div>
+
+    <div className="view-mobile-only">
+      <MobileTeamManagement
+        teams={filtered}
+        loading={loading}
+        error={error}
+        totalElements={totalElements}
+        search={search}
+        onSearchChange={setSearch}
+        onSearchSubmit={handleSearch}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        page={page}
+        totalPages={totalPages}
+        pageNumbers={pageNumbers}
+        onPrevPage={() => setPage((p) => p - 1)}
+        onNextPage={() => setPage((p) => p + 1)}
+        onPageSelect={setPage}
+        onRowClick={(id) => navigate(`/admin/teams/${id}`)}
+        onCreateTeam={() => setShowCreate(true)}
+      />
+    </div>
+    </>
   )
 }

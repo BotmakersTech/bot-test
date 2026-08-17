@@ -1,0 +1,17 @@
+/* Generic desktop/mobile content toggle for pages that render two parallel
+   layouts (same technique as dashboard.css's .dash-desktop-only /
+   .dash-mobile-only), shared here since several admin pages need the exact
+   same <=950px breakpoint without redeclaring the media query per page. */
+
+.view-mobile-only {
+  display: none;
+}
+
+@media (max-width: 950px) {
+  .view-desktop-only {
+    display: none;
+  }
+  .view-mobile-only {
+    display: block;
+  }
+}

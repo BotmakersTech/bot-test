@@ -1,5 +1,8 @@
 import { useEffect, useState, useCallback } from "react"
 import { getAuditLogs, type AuditLogEntry } from "../api/auditLog.api"
+import MobileAuditLogs from "../components/MobileAuditLogs"
+import "../../../styles/responsiveView.css"
+import "../../../styles/adminMobileList.css"
 
 const ENTITY_TYPES = ["ALL", "USER", "TEAM", "ROBOT", "EVENT", "MATCH", "REGISTRATION", "SPONSOR"]
 const ENTITY_LABELS: Record<string, string> = {
@@ -114,7 +117,8 @@ export default function AdminAuditLogsPage() {
   }
 
   return (
-    <div className="min-h-full p-8 space-y-6">
+    <>
+    <div className="min-h-full p-8 space-y-6 view-desktop-only">
       <div>
         <h1 className="font-display text-[38px] font-medium bg-linear-to-b from-[#0162d1] to-[#8c6cff] bg-clip-text text-transparent w-fit">
           Audit Logs
@@ -184,5 +188,21 @@ export default function AdminAuditLogsPage() {
         </div>
       )}
     </div>
+
+    <div className="view-mobile-only">
+      <MobileAuditLogs
+        logs={logs}
+        loading={loading}
+        error={error}
+        entityType={entityType}
+        onEntityTypeChange={handleTypeChange}
+        page={page}
+        totalPages={totalPages}
+        totalElements={totalElements}
+        onPrevPage={() => setPage((p) => p - 1)}
+        onNextPage={() => setPage((p) => p + 1)}
+      />
+    </div>
+    </>
   )
 }
