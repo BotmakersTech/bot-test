@@ -280,16 +280,10 @@ function DevPreviewMMT() {
             { key: "3", name: "Jai Ho", roleLabel: "Member", photoSrc: undefined, initials: "JH", isActive: false },
           ]}
           onManageMembers={() => {}}
-          primaryRobot={{
-            image: fallbackRobotPreview,
-            name: "Thunderstrike Mk-II",
-            category: "Combat Robot",
-            statusLabel: "Active",
-            weightClassLabel: "8kg",
-          }}
-          sideRobots={[
-            { id: "r2", image: fallbackRobotPreview, statusLabel: "Active" },
-            { id: "r3", image: fallbackRobotPreview, statusLabel: "Maintenance" },
+          robots={[
+            { id: "r1", image: fallbackRobotPreview, name: "Thunderstrike Mk-II", category: "Combat Robot", statusLabel: "Active", weightClassLabel: "8kg" },
+            { id: "r2", image: fallbackRobotPreview, name: "Iron Fury", category: "Combat Robot", statusLabel: "Active", weightClassLabel: "8kg" },
+            { id: "r3", image: fallbackRobotPreview, name: "Falcon", category: "Soccer Robot", statusLabel: "Maintenance", weightClassLabel: "1.5kg" },
           ]}
           wins={14}
           onViewAllRobots={() => {}}

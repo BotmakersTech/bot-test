@@ -16,13 +16,17 @@ import TeamLogo from "../../../shared/components/TeamLogo";
    badge/button/star treatment onto MyTeam's actual sections instead of
    pasting in content this page doesn't have.
 
-   Team panel and Team Build otherwise mirror the desktop shapes directly:
-   the team image is a full-height column pinned to the right (like
-   .teamdash-team-image), the primary/side robot cards are square (like
-   .teamdash-build-left/-panel), and the purple stat banner keeps the same
-   diagonal clip-path cut as .teamdash-build-banner — its text content is
-   capped at 62% width so it never runs into the cut, the way desktop's
-   naturally-short robot names do.
+   Team panel mirrors the desktop shape directly: the team image is a
+   full-height column pinned to the right (like .teamdash-team-image).
+
+   Team Build departs from desktop on purpose: desktop's fixed "1 big card +
+   up to 3 small side panels" layout doesn't fit a phone. Every robot
+   (formerly "primary" + tiny side thumbnails) now gets the same full
+   image+stat-banner treatment, as equal slides in one swipeable carousel —
+   the image and its banner sit flush against each other (no gap, no border
+   between them) so each slide reads as one joined card. The purple banner
+   keeps the same diagonal clip-path cut as .teamdash-build-banner — its
+   text stays capped at 62% width so it never runs into the cut.
    ============================================================================ */
 
 function MobileStar({ className, style }: { className?: string; style?: React.CSSProperties }) {
@@ -45,10 +49,13 @@ export interface MobileMyTeamSquadMember {
   isActive: boolean;
 }
 
-export interface MobileMyTeamSideRobot {
+export interface MobileMyTeamRobotCard {
   id: string;
   image: string;
+  name: string;
+  category: string;
   statusLabel: string;
+  weightClassLabel: string;
 }
 
 export interface MobileMyTeamProps {
@@ -81,14 +88,7 @@ export interface MobileMyTeamProps {
   squadPreview: MobileMyTeamSquadMember[];
   onManageMembers: () => void;
 
-  primaryRobot: {
-    image: string;
-    name: string;
-    category: string;
-    statusLabel: string;
-    weightClassLabel: string;
-  } | null;
-  sideRobots: MobileMyTeamSideRobot[];
+  robots: MobileMyTeamRobotCard[];
   wins: number;
   onViewAllRobots: () => void;
   onAddRobot: () => void;
@@ -125,8 +125,7 @@ export default function MobileMyTeam({
   activeSquadCount,
   squadPreview,
   onManageMembers,
-  primaryRobot,
-  sideRobots,
+  robots,
   wins,
   onViewAllRobots,
   onAddRobot,
@@ -270,44 +269,34 @@ export default function MobileMyTeam({
           <button type="button" onClick={onViewAllRobots}>View All</button>
         </div>
 
-        {primaryRobot ? (
-          <div className="mmt-build-stage">
-            <div className="mmt-build-top-row">
-              <div className="mmt-build-primary">
-                <img src={primaryRobot.image} alt={primaryRobot.name} />
-                <div className="mmt-build-primary-overlay" />
-                <span className="mmt-build-status">{primaryRobot.statusLabel}</span>
-              </div>
+        {robots.length > 0 ? (
+          <div className="mmt-build-carousel">
+            {robots.map((robot) => (
+              <div className="mmt-build-slide" key={robot.id}>
+                <div className="mmt-build-primary">
+                  <img src={robot.image} alt={robot.name} />
+                  <div className="mmt-build-primary-overlay" />
+                  <span className="mmt-build-status">{robot.statusLabel}</span>
+                </div>
 
-              <div className="mmt-build-banner">
-                <div className="mmt-build-banner-inner">
-                  <div className="mmt-bb-name">{primaryRobot.name}</div>
-                  <div className="mmt-bb-tag">{primaryRobot.category}</div>
-                  <div className="mmt-bb-stats">
-                    <div className="mmt-bb-col">
-                      <div className="mmt-bb-num">{wins}</div>
-                      <div className="mmt-bb-sub">Victories</div>
-                    </div>
-                    <div className="mmt-bb-col">
-                      <div className="mmt-bb-num">{primaryRobot.weightClassLabel}</div>
-                      <div className="mmt-bb-sub">Class</div>
+                <div className="mmt-build-banner">
+                  <div className="mmt-build-banner-inner">
+                    <div className="mmt-bb-name">{robot.name}</div>
+                    <div className="mmt-bb-tag">{robot.category}</div>
+                    <div className="mmt-bb-stats">
+                      <div className="mmt-bb-col">
+                        <div className="mmt-bb-num">{wins}</div>
+                        <div className="mmt-bb-sub">Victories</div>
+                      </div>
+                      <div className="mmt-bb-col">
+                        <div className="mmt-bb-num">{robot.weightClassLabel}</div>
+                        <div className="mmt-bb-sub">Class</div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-
-            {sideRobots.length > 0 && (
-              <div className="mmt-build-side-row">
-                {sideRobots.map((robot) => (
-                  <div className="mmt-build-side-card" key={robot.id}>
-                    <img src={robot.image} alt="" />
-                    <div className="mmt-build-side-overlay" />
-                    <span className="mmt-build-status mmt-build-status-sm">{robot.statusLabel}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+            ))}
           </div>
         ) : (
           <div className="mmt-empty-machines">

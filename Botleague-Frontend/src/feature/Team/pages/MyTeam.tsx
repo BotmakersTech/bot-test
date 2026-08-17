@@ -592,21 +592,13 @@ export default function MyTeam() {
           };
         })}
         onManageMembers={() => navigate("/my-team/members")}
-        primaryRobot={
-          primaryRobot
-            ? {
-                image: primaryRobot.robotIMG || fallbackRobot,
-                name: primaryRobot.robotName,
-                category: toLabel(primaryRobot.category),
-                statusLabel: toLabel(primaryRobot.status),
-                weightClassLabel: toLabel(primaryRobot.weightClass),
-              }
-            : null
-        }
-        sideRobots={sideRobots.map((robot) => ({
+        robots={teamRobots.map((robot) => ({
           id: robot.id,
           image: robot.robotIMG || fallbackRobot,
+          name: robot.robotName,
+          category: toLabel(robot.category),
           statusLabel: toLabel(robot.status),
+          weightClassLabel: toLabel(robot.weightClass),
         }))}
         wins={stats.wins}
         onViewAllRobots={() => navigate("/robots")}

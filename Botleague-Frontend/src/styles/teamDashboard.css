@@ -1754,26 +1754,48 @@
 
 .mmt-machines-head button:hover { text-decoration: underline; }
 
-/* Image + purple banner side by side (like desktop's build-left card with
-   the banner overlapping to its right) instead of stacked, so the whole
-   Team Build section is short enough to mostly fit on one screen. */
-.mmt-build-top-row {
+/* Every robot (formerly one big "primary" card + tiny side thumbnails) is
+   now an equal slide in one swipeable carousel — snap-scrolled, each slide
+   sized just under full width so the next one peeks in as a scroll
+   affordance instead of needing dot indicators. */
+.mmt-build-carousel {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+  margin: 0 -2px;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+.mmt-build-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+/* Image + purple banner joined into one card — flush against each other
+   (no gap, no border between them) instead of the two sitting apart. */
+.mmt-build-slide {
   display: flex;
   align-items: stretch;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 0;
+  flex: 0 0 92%;
+  scroll-snap-align: start;
 }
 
 /* Square-ish, matching desktop's near-square .teamdash-build-left card —
    123x127 minimum, growing with the viewport (this section only ever
-   renders below the 950px mobile breakpoint, so vw is safely bounded). */
+   renders below the 950px mobile breakpoint, so vw is safely bounded).
+   Right edge is flat (no border, no radius) where it meets the banner. */
 .mmt-build-primary {
   position: relative;
   flex: 0 0 auto;
   width: clamp(123px, 22vw, 160px);
   aspect-ratio: 123 / 127;
   border: 2px solid #0162d1;
-  border-radius: 10px;
+  border-right: none;
+  border-radius: 10px 0 0 10px;
   overflow: hidden;
 }
 
@@ -1807,8 +1829,6 @@
   color: #00d31c;
   line-height: 14px;
 }
-
-.mmt-build-status-sm { font-size: clamp(7.5px, 2.2vw, 9px); padding: clamp(1.5px, 0.6vw, 2px) clamp(4px, 1.8vw, 6px); }
 
 /* Same diagonal cut as desktop's .teamdash-build-banner instead of a plain
    rounded card — clip-path overrides border-radius on the clipped edges,
@@ -1869,39 +1889,6 @@
   font-weight: 400;
   text-transform: uppercase;
   margin-top: 4px;
-}
-
-.mmt-build-side-row {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 2px;
-}
-
-/* Same 104:88 proportions as before, just fluid instead of pinned to
-   104px so the row shrinks along with everything else on narrow screens. */
-.mmt-build-side-card {
-  position: relative;
-  flex: 0 0 auto;
-  width: clamp(78px, 24vw, 104px);
-  aspect-ratio: 104 / 88;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.mmt-build-side-card img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.63;
-}
-
-.mmt-build-side-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.8);
 }
 
 .mmt-empty-machines {
