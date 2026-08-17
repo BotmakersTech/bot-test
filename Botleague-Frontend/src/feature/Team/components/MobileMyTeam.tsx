@@ -16,9 +16,13 @@ import TeamLogo from "../../../shared/components/TeamLogo";
    badge/button/star treatment onto MyTeam's actual sections instead of
    pasting in content this page doesn't have.
 
-   The desktop build stage's angled purple clip-path banner doesn't read at
-   375px wide, so the stat banner here is a plain rounded card instead —
-   same colors/copy, straight edges.
+   Team panel and Team Build otherwise mirror the desktop shapes directly:
+   the team image is a full-height column pinned to the right (like
+   .teamdash-team-image), the primary/side robot cards are square (like
+   .teamdash-build-left/-panel), and the purple stat banner keeps the same
+   diagonal clip-path cut as .teamdash-build-banner — its text content is
+   capped at 62% width so it never runs into the cut, the way desktop's
+   naturally-short robot names do.
    ============================================================================ */
 
 function MobileStar({ className, style }: { className?: string; style?: React.CSSProperties }) {
@@ -187,37 +191,40 @@ export default function MobileMyTeam({
 
       <section className="mmt-team-panel">
         <MobileStar className="mmt-panel-star" style={{ left: "-4%", top: "58%", width: 34, height: 34, transform: "rotate(-14deg)" }} />
-        <div className="mmt-team-panel-top">
-          <div className="mmt-rank-pill">
-            <Star size={13} fill="currentColor" />
-            Rank - {rankLabel}
+        <div className="mmt-team-panel-body">
+          <div className="mmt-team-copy">
+            <div className="mmt-rank-pill">
+              <Star size={13} fill="currentColor" />
+              Rank - {rankLabel}
+            </div>
+
+            <span className="mmt-active-pill">
+              <span /> {isActive ? "Active" : statusLabel}
+            </span>
+            <h2 className="mmt-team-name">{currentTeamName}</h2>
+            <p className="mmt-team-code">Team ID - {currentTeamCode}</p>
+            <p className="mmt-win-rate">
+              <strong>{winRatePct}%</strong> Win Rate
+            </p>
+
+            <div className="mmt-since">
+              <span>In The League Since {sinceYear}</span>
+              <a href={sinceLineHref} target={sinceLineHref.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer">
+                {sinceLine}
+              </a>
+            </div>
+
+            {canEditTeam && (
+              <button type="button" className="mmt-edit-btn" onClick={onEditTeam}>
+                Edit Team
+              </button>
+            )}
           </div>
+
           <div className="mmt-team-image">
             <TeamLogo src={teamLogo} alt={currentTeamName} />
           </div>
         </div>
-
-        <span className="mmt-active-pill">
-          <span /> {isActive ? "Active" : statusLabel}
-        </span>
-        <h2 className="mmt-team-name">{currentTeamName}</h2>
-        <p className="mmt-team-code">Team ID - {currentTeamCode}</p>
-        <p className="mmt-win-rate">
-          <strong>{winRatePct}%</strong> Win Rate
-        </p>
-
-        <div className="mmt-since">
-          <span>In The League Since {sinceYear}</span>
-          <a href={sinceLineHref} target={sinceLineHref.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer">
-            {sinceLine}
-          </a>
-        </div>
-
-        {canEditTeam && (
-          <button type="button" className="mmt-edit-btn" onClick={onEditTeam}>
-            Edit Team
-          </button>
-        )}
       </section>
 
       <section className="mmt-squad-panel">
@@ -272,16 +279,18 @@ export default function MobileMyTeam({
             </div>
 
             <div className="mmt-build-banner">
-              <div className="mmt-bb-name">{primaryRobot.name}</div>
-              <div className="mmt-bb-tag">{primaryRobot.category}</div>
-              <div className="mmt-bb-stats">
-                <div className="mmt-bb-col">
-                  <div className="mmt-bb-num">{wins}</div>
-                  <div className="mmt-bb-sub">Victories</div>
-                </div>
-                <div className="mmt-bb-col">
-                  <div className="mmt-bb-num">{primaryRobot.weightClassLabel}</div>
-                  <div className="mmt-bb-sub">Class</div>
+              <div className="mmt-build-banner-inner">
+                <div className="mmt-bb-name">{primaryRobot.name}</div>
+                <div className="mmt-bb-tag">{primaryRobot.category}</div>
+                <div className="mmt-bb-stats">
+                  <div className="mmt-bb-col">
+                    <div className="mmt-bb-num">{wins}</div>
+                    <div className="mmt-bb-sub">Victories</div>
+                  </div>
+                  <div className="mmt-bb-col">
+                    <div className="mmt-bb-num">{primaryRobot.weightClassLabel}</div>
+                    <div className="mmt-bb-sub">Class</div>
+                  </div>
                 </div>
               </div>
             </div>
