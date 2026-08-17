@@ -19,16 +19,23 @@ import type { RootState } from "../../../app/store"
 import { getPrimaryRole } from "../../../shared/config/sidebarConfig"
 import { AppRole } from "../../../shared/constants/roles"
 import LOGO_URL from "../../../assets/BrandLogo/BotLeaguewhite.png"
+import LOGO_BLACK_URL from "../../../assets/BrandLogo/BotLeagu-black.png"
 import MobileMoreMenu from "./MobileMoreMenu"
+import "../../../styles/mobileNav.css"
 
 function IconButton({
   children,
   label,
   onClick,
+  light,
 }: {
   children: ReactNode
   label: string
   onClick?: () => void
+  /** Dark icon on a light circle — for the mobile bar's #F3F3F3 background,
+      instead of the default white-on-transparent meant for the desktop
+      gradient bar. */
+  light?: boolean
 }) {
   return (
     <button
@@ -36,19 +43,23 @@ function IconButton({
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25"
+      className={
+        light
+          ? "relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/[0.06] text-[#1a1a2e] transition-colors hover:bg-black/[0.1]"
+          : "relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25"
+      }
     >
       {children}
     </button>
   )
 }
 
-function NotificationButton({ unreadCount, onClick }: { unreadCount: number; onClick: () => void }) {
+function NotificationButton({ unreadCount, onClick, light }: { unreadCount: number; onClick: () => void; light?: boolean }) {
   return (
-    <IconButton label={`Notifications (${unreadCount} unread)`} onClick={onClick}>
+    <IconButton label={`Notifications (${unreadCount} unread)`} onClick={onClick} light={light}>
       <BellIcon className="h-5 w-5" />
       {unreadCount > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 min-w-[1rem] items-center justify-center rounded-full bg-[#ff3b30] text-[10px] font-bold text-white ring-2 ring-[#4b86e8] px-0.5">
+        <span className={`absolute -top-0.5 -right-0.5 flex h-4 w-4 min-w-[1rem] items-center justify-center rounded-full bg-[#ff3b30] text-[10px] font-bold text-white px-0.5 ${light ? "ring-2 ring-[#F3F3F3]" : "ring-2 ring-[#4b86e8]"}`}>
           {unreadCount > 99 ? "99+" : unreadCount}
         </span>
       )}
@@ -204,8 +215,7 @@ export default function Navbar() {
 
   return (
     <header
-      style={{ background: "linear-gradient(180deg, rgba(1,98,209,0.9) 0%, rgba(140,108,255,0.9) 100%)" }}
-      className="flex h-18 shrink-0 items-center justify-between px-4 sm:px-6"
+      className="app-navbar flex h-18 shrink-0 items-center justify-between px-4 sm:px-6"
     >
       <button
         type="button"
@@ -213,7 +223,12 @@ export default function Navbar() {
         aria-label="BotLeague home"
         className="flex items-center"
       >
-        <img src={LOGO_URL} alt="BotLeague" className="h-11 w-auto select-none" draggable={false} />
+        {/* Black logo on the mobile bar's light background, white logo once
+            the desktop gradient bar takes over at 951px+. Smaller on mobile
+            — h-11 read oversized against the 72px bar and the 40px menu
+            button next to it. */}
+        <img src={LOGO_BLACK_URL} alt="BotLeague" className="h-7 w-auto select-none min-[951px]:hidden" draggable={false} />
+        <img src={LOGO_URL} alt="BotLeague" className="hidden h-11 w-auto select-none min-[951px]:inline" draggable={false} />
       </button>
 
       {/* > 950px only — the full per-role icon row (MobileMoreMenu covers
@@ -232,10 +247,14 @@ export default function Navbar() {
         )}
       </div>
 
-      {/* <= 950px only — logo + this is the ENTIRE mobile top bar; every
-          account action (chat/notifications/profile/settings) plus the
-          rest of the role's nav items and logout all live in here. */}
-      <MobileMoreMenu primaryRole={primaryRole} unreadCount={unreadCount} pendingInvites={pendingInvites} />
+      {/* <= 950px only — logo, Notifications (pulled out of the More menu
+          so it's reachable in one tap), then the More menu toggle, which
+          still covers every other account action (chat/profile/settings)
+          plus the rest of the role's nav items and logout. */}
+      <div className="flex items-center gap-2 min-[951px]:hidden">
+        <NotificationButton unreadCount={unreadCount} onClick={() => navigate("/notifications")} light />
+        <MobileMoreMenu primaryRole={primaryRole} pendingInvites={pendingInvites} />
+      </div>
     </header>
   )
 }

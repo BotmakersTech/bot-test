@@ -300,3 +300,18 @@
 @media (max-width: 950px) {
   .mnav-topmenu-slot { display: flex; }
 }
+
+/* ── Top navbar background — light + flat on mobile instead of desktop's
+   blue-violet gradient. The MobileMoreMenu sheet still carries the brand
+   gradient look when opened, so the bar itself reads cleaner as a plain
+   light strip with the black logo (swapped in Navbar.tsx alongside this
+   same breakpoint). ───────────────────────────────────────────────────── */
+.app-navbar {
+  background: #F3F3F3;
+}
+
+@media (min-width: 951px) {
+  .app-navbar {
+    background: linear-gradient(180deg, rgba(1, 98, 209, 0.9) 0%, rgba(140, 108, 255, 0.9) 100%);
+  }
+}

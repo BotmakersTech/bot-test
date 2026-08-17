@@ -12,7 +12,7 @@ import { clearTeam } from "../../../feature/Team/store/TeamSlice";
 import { getNavItemsForRoles, MOBILE_NAV_VISIBLE_COUNT } from "../../../shared/config/sidebarConfig";
 import { AppRole, type AppRoleType } from "../../../shared/constants/roles";
 import { getIcon } from "./Sidebar";
-import { BellIcon, ChatIcon, UserCircleIcon, SettingsGearIcon, SearchIcon, LiveIcon, AnalyticsIcon } from "./Icons/Icons";
+import { ChatIcon, UserCircleIcon, SettingsGearIcon, SearchIcon, LiveIcon, AnalyticsIcon } from "./Icons/Icons";
 import "../../../styles/mobileNav.css";
 
 interface MenuRow {
@@ -40,11 +40,10 @@ function initials(firstName?: string | null, lastName?: string | null, fallback?
  */
 interface Props {
   primaryRole: AppRoleType;
-  unreadCount: number;
   pendingInvites: number;
 }
 
-export default function MobileMoreMenu({ primaryRole, unreadCount, pendingInvites }: Props) {
+export default function MobileMoreMenu({ primaryRole, pendingInvites }: Props) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const dispatch = useAppDispatch();
@@ -93,25 +92,24 @@ export default function MobileMoreMenu({ primaryRole, unreadCount, pendingInvite
       });
     }
 
+    // Notifications now has its own dedicated button in the top bar
+    // (left of this toggle) instead of a row in here.
     if (primaryRole === AppRole.SUPER_ADMIN) {
       accountRows.push(
         { key: "search", label: "Global Search", icon: <SearchIcon />, onClick: () => go("/admin/search") },
         { key: "live", label: "Live Events", icon: <LiveIcon />, onClick: () => go("/admin/user") },
-        { key: "notif", label: "Notifications", icon: <BellIcon />, badge: unreadCount, onClick: () => go("/notifications") },
         { key: "analytics", label: "Analytics Snapshot", icon: <AnalyticsIcon />, onClick: () => go("/admin/analytics") },
         { key: "profile", label: "Profile", icon: <UserCircleIcon />, onClick: () => go("/profile") },
         { key: "settings", label: "System Settings", icon: <SettingsGearIcon />, onClick: () => go("/settings") },
       );
     } else if (primaryRole === AppRole.ADMIN) {
       accountRows.push(
-        { key: "notif", label: "Notifications", icon: <BellIcon />, badge: unreadCount, onClick: () => go("/notifications") },
         { key: "messages", label: "Messages", icon: <ChatIcon />, onClick: () => go("/messages") },
         { key: "profile", label: "Profile", icon: <UserCircleIcon />, onClick: () => go("/profile") },
       );
     } else {
       accountRows.push(
         { key: "messages", label: "Chats", icon: <ChatIcon />, onClick: () => go("/messages") },
-        { key: "notif", label: "Notifications", icon: <BellIcon />, badge: unreadCount, onClick: () => go("/notifications") },
         { key: "profile", label: "Profile", icon: <UserCircleIcon />, onClick: () => go("/profile") },
       );
       if (primaryRole !== AppRole.COMPETITOR) {
@@ -129,27 +127,30 @@ export default function MobileMoreMenu({ primaryRole, unreadCount, pendingInvite
 
     return [...accountRows, ...navRows];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [primaryRole, unreadCount, pendingInvites, overflowItems, pathname]);
+  }, [primaryRole, pendingInvites, overflowItems, pathname]);
 
   const filteredRows = query.trim()
     ? rows.filter((r) => r.label.toLowerCase().includes(query.trim().toLowerCase()))
     : rows;
 
-  const hasAlert = unreadCount > 0 || pendingInvites > 0;
+  // Unread notifications already show their own count on the bar's
+  // dedicated bell button — this dot is just for the invites row, which
+  // still only lives inside the sheet.
+  const hasAlert = pendingInvites > 0;
   const profileName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "BotLeague Member";
 
   return (
     <div className="mnav-topmenu-slot">
       <button
         type="button"
-        className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25"
+        className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/[0.06] text-[#1a1a2e] transition-colors hover:bg-black/[0.1]"
         aria-label="More menu"
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen(true)}
       >
         <Menu size={20} />
-        {hasAlert && <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#ff3b30] ring-2 ring-[#0162d1]" />}
+        {hasAlert && <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#ff3b30] ring-2 ring-[#F3F3F3]" />}
       </button>
 
       {open && (
