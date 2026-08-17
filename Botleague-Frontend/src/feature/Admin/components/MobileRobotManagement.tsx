@@ -20,7 +20,7 @@ import type { AdminRobotSummary } from "../../SuperAdmin/api/robotManagement.api
 
 const STATUSES = ["ALL", "ACTIVE", "INACTIVE", "MAINTENANCE"];
 const ROBOT_TYPES = ["ALL", "COMBAT_ROBOT", "SOCCER_ROBOT", "SUMO_ROBOT", "LINE_FOLLOWER_ROBOT",
-  "TASK_ROBOT", "RC_VEHICLE", "DRONE", "AIRCRAFT", "INNOVATION_PROJECT"];
+  "RC_VEHICLE", "DRONE"];
 
 const STATUS_COLORS: Record<string, string> = {
   ACTIVE: "#1fa952",

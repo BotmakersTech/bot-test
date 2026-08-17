@@ -3,11 +3,8 @@ export type RobotType =
   | "SOCCER_ROBOT"
   | "SUMO_ROBOT"
   | "LINE_FOLLOWER_ROBOT"
-  | "TASK_ROBOT"
   | "RC_VEHICLE"
-  | "DRONE"
-  | "AIRCRAFT"
-  | "INNOVATION_PROJECT";
+  | "DRONE";
 
 export type RobotSport =
   | "ROBOWAR_1_5KG"
@@ -16,17 +13,12 @@ export type RobotSport =
   | "ROBOWAR_30KG"
   | "ROBOWAR_60KG"
   | "ROBO_SOCCER"
-  | "PLUG_N_PLAY_SOCCER"
   | "ROBO_SUMO"
   | "LINE_FOLLOWER"
   | "LINE_FOLLOWER_AUTO"
-  | "MANUAL_TASK"
-  | "THEME_BASED_TASKING"
   | "DRONE_RACING"
   | "DRONE_SOCCER"
-  | "RC_RACING"
-  | "AEROMODELLING"
-  | "PROJECT_BASED";
+  | "RC_RACING";
 
 export type AgeCategory =
   | "JUNIOR_INNOVATORS"

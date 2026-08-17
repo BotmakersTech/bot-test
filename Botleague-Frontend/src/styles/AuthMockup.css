@@ -19,6 +19,22 @@
   max-width: 100%;
   height: auto;
 }
+/* The compound selector above beats AuthLayout.css's own .cna-logo
+   step-down at every breakpoint (that's the whole point of it per the
+   comment above), so without its own mobile sizing the logo just rides
+   max-width:100% down to the full screen width — oversized next to the
+   login card, which is itself capped much narrower at these widths
+   (260-360px, see .cna-gradient-card--login below). Desktop (>767px) is
+   untouched. */
+@media (max-width: 767px) {
+  .cna-logo.cna-logo--auth { width: 260px; }
+}
+@media (max-width: 480px) {
+  .cna-logo.cna-logo--auth { width: 220px; }
+}
+@media (max-width: 360px) {
+  .cna-logo.cna-logo--auth { width: 180px; }
+}
 
 @font-face {
   font-family: "AuthInter";

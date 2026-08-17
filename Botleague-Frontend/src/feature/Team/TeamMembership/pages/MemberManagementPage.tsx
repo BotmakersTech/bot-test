@@ -6,6 +6,7 @@ import useTeam from "../../hooks/useTeam";
 import useTeamMembership from "../hooks/useTeamMembership";
 import { resolveAvatarSrc } from "../../../Profile/constants/avatars";
 import type { TeamMember, TeamRole } from "../api/teamMembership.api";
+import MobileMemberManagement, { type MobileMemberManagementRow } from "../components/MobileMemberManagement";
 import "../../../../styles/teamDashboard.css";
 import "../../../../styles/memberManagement.css";
 
@@ -56,6 +57,8 @@ export default function MemberManagementPage() {
   const [inviteMessage, setInviteMessage] = useState<string | null>(null);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
   const [confirmCaptainId, setConfirmCaptainId] = useState<string | null>(null);
+  // Mobile-only — desktop's roster has no search of its own.
+  const [mobileSearch, setMobileSearch] = useState("");
 
   const handleInvite = async () => {
     const id = botleagueId.trim();
@@ -99,8 +102,56 @@ export default function MemberManagementPage() {
     );
   }
 
+  const mobileQuery = mobileSearch.trim().toLowerCase();
+  const mobileMembers = mobileQuery
+    ? members.filter((member) => {
+        const name = memberName(member).toLowerCase();
+        const role = roleLabel(member.teamRole).toLowerCase();
+        return name.includes(mobileQuery) || role.includes(mobileQuery) || (member.botleagueId ?? "").toLowerCase().includes(mobileQuery);
+      })
+    : members;
+
+  const mobileRows: MobileMemberManagementRow[] = mobileMembers.map((member) => {
+    const name = memberName(member);
+    const isSelf = member.userId === authUser?.id;
+    const isTargetCaptain = member.teamRole === "CAPTAIN";
+    const showActions = isAdmin && !isSelf && !isTargetCaptain;
+
+    return {
+      userId: member.userId,
+      name,
+      initials: memberInitials(name),
+      photoSrc: resolveAvatarSrc(member.profilePhotoUrl),
+      roleLabel: roleLabel(member.teamRole),
+      roleClass: (member.teamRole || "").toLowerCase(),
+      featured: isTargetCaptain,
+
+      showActions,
+      roleOptions: roleOptionsFor(member).map((r) => ({ value: r, label: roleLabel(r) })),
+      onChangeRole: (role) => { assignRole(member.userId, role as TeamRole).catch(() => {}); },
+      actionLoading,
+
+      canMakeCaptain: isCaptain,
+      confirmingCaptain: confirmCaptainId === member.userId,
+      onStartMakeCaptain: () => setConfirmCaptainId(member.userId),
+      onConfirmMakeCaptain: () => {
+        transferCaptain(member.userId).catch(() => {}).finally(() => setConfirmCaptainId(null));
+      },
+      onCancelMakeCaptain: () => setConfirmCaptainId(null),
+
+      isRemoving: removingMemberId === member.userId,
+      confirmingRemove: confirmRemoveId === member.userId,
+      onStartRemove: () => setConfirmRemoveId(member.userId),
+      onConfirmRemove: () => {
+        removeMember(member.userId).catch(() => {}).finally(() => setConfirmRemoveId(null));
+      },
+      onCancelRemove: () => setConfirmRemoveId(null),
+    };
+  });
+
   return (
-    <main className="teamdash-page">
+    <>
+    <main className="teamdash-page teamdash-desktop-only">
       <div className="teamdash-content">
         <div className="teamdash-top-row">
           <h1>Member Management</h1>
@@ -293,5 +344,28 @@ export default function MemberManagementPage() {
         </section>
       </div>
     </main>
+
+    <div className="teamdash-mobile-only">
+      <MobileMemberManagement
+        onBack={() => navigate("/my-team")}
+        error={error}
+        onRetry={() => window.location.reload()}
+        loading={loading}
+        isAdmin={isAdmin}
+        botleagueId={botleagueId}
+        onBotleagueIdChange={setBotleagueId}
+        inviteRole={inviteRole}
+        onInviteRoleChange={(role) => setInviteRole(role as TeamRole)}
+        inviteRoleOptions={INVITE_ROLE_OPTIONS.map((r) => ({ value: r, label: roleLabel(r) }))}
+        inviteLoading={inviteLoading}
+        inviteMessage={inviteMessage}
+        onInvite={handleInvite}
+        searchQuery={mobileSearch}
+        onSearchQueryChange={setMobileSearch}
+        totalMemberCount={members.length}
+        rows={mobileRows}
+      />
+    </div>
+    </>
   );
 }

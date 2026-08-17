@@ -14,6 +14,7 @@ import {
   type EventSportOption,
 } from "../api/adminJudgeAssignments.api"
 import { ORG } from "../../Organizer/theme/organizerTheme"
+import { resolveAvatarSrc } from "../../Profile/constants/avatars"
 import "../../../styles/organizerTheme.css"
 
 function avatarInitials(firstName?: string, lastName?: string, fallback?: string) {
@@ -242,8 +243,8 @@ export default function AdminJudgeAssignmentPage() {
         </button>
 
         <div className="mb-8 flex items-center gap-4">
-          {judge.profilePhotoUrl ? (
-            <img src={judge.profilePhotoUrl} alt="" className="h-16 w-16 rounded-full object-cover" />
+          {resolveAvatarSrc(judge.profilePhotoUrl) ? (
+            <img src={resolveAvatarSrc(judge.profilePhotoUrl)!} alt="" className="h-16 w-16 rounded-full object-cover" />
           ) : (
             <span
               className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-xl font-bold text-white"

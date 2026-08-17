@@ -14,8 +14,9 @@
 @media (max-width: 950px) {
   .app-sidebar-slot { display: none; }
 
-  /* Reserve room so page content never sits under the fixed bottom bar. */
-  .app-scroll-area { padding-bottom: 92px; }
+  /* Reserve room so page content never sits under the fixed bottom bar
+     (80px bar + 16px floating offset + a small buffer). */
+  .app-scroll-area { padding-bottom: 104px; }
 }
 
 .mnav-bar {
@@ -35,10 +36,12 @@
     z-index: 60;
     width: calc(100% - 32px);
     max-width: 420px;
-    height: 68px;
+    height: 80px;
     padding: 0 10px;
     border-radius: 999px;
-    background: #eef1ff;
+    /* Same light bar as the top navbar (.app-navbar) instead of the old
+       light-blue tint, so the two bars read as one consistent shell. */
+    background: #F3F3F3;
     box-shadow: 0 8px 24px rgba(17, 17, 17, 0.18);
   }
 }
@@ -64,7 +67,9 @@
   flex-shrink: 0;
   padding: 5px 12px;
   border-radius: 999px;
-  color: #7c85a3;
+  /* Dark-on-light, matching the top navbar's icon treatment on the same
+     #F3F3F3 background, instead of the old blue-tinted gray. */
+  color: #1a1a2e;
   background: transparent;
   transition: color 0.15s ease, background-color 0.15s ease;
 }
@@ -78,7 +83,7 @@
   white-space: nowrap;
   font-size: 10px;
   font-weight: 500;
-  color: #7c85a3;
+  color: #1a1a2e;
   font-family: "Poppins", "Inter", sans-serif;
 }
 

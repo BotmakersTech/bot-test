@@ -13,6 +13,7 @@ import { getNavItemsForRoles, MOBILE_NAV_VISIBLE_COUNT } from "../../../shared/c
 import { AppRole, type AppRoleType } from "../../../shared/constants/roles";
 import { getIcon } from "./Sidebar";
 import { ChatIcon, UserCircleIcon, SettingsGearIcon, SearchIcon, LiveIcon, AnalyticsIcon } from "./Icons/Icons";
+import { resolveAvatarSrc } from "../../Profile/constants/avatars";
 import "../../../styles/mobileNav.css";
 
 interface MenuRow {
@@ -193,8 +194,8 @@ export default function MobileMoreMenu({ primaryRole, pendingInvites }: Props) {
           </div>
 
           <div className="mnav-sheet-footer">
-            {user?.profilePhotoUrl ? (
-              <img src={user.profilePhotoUrl} alt="" className="mnav-sheet-avatar" />
+            {resolveAvatarSrc(user?.profilePhotoUrl) ? (
+              <img src={resolveAvatarSrc(user?.profilePhotoUrl)!} alt="" className="mnav-sheet-avatar" />
             ) : (
               <span className="mnav-sheet-avatar mnav-sheet-avatar--initials">
                 {initials(user?.firstName, user?.lastName, user?.email)}

@@ -10,6 +10,7 @@ import {
   type AdminTeamMember,
 } from "../api/teamManagement.api"
 import TeamLogo from "../../../shared/components/TeamLogo"
+import { resolveAvatarSrc } from "../../Profile/constants/avatars"
 import "../../../shared/styles/adminDetailPage.css"
 
 function statusClass(status: string) {
@@ -327,8 +328,8 @@ function MemberRow({
     <div className={"adp-row" + (isLeft ? " adp-row-muted" : "")}>
       <div className="adp-row-left">
         <div className="adp-row-avatar">
-          {member.profilePhotoUrl ? (
-            <img src={member.profilePhotoUrl} alt={displayName} />
+          {resolveAvatarSrc(member.profilePhotoUrl) ? (
+            <img src={resolveAvatarSrc(member.profilePhotoUrl)!} alt={displayName} />
           ) : (
             displayName.charAt(0).toUpperCase()
           )}

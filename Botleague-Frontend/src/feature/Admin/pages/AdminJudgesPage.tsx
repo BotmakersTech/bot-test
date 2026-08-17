@@ -4,6 +4,7 @@ import { Search, Users as UsersIcon } from "lucide-react"
 import { listUsers, type UserSummary } from "../../SuperAdmin/api/userManagement.api"
 import { ORG } from "../../Organizer/theme/organizerTheme"
 import MobileJudgeEcosystem from "../components/MobileJudgeEcosystem"
+import { resolveAvatarSrc } from "../../Profile/constants/avatars"
 import "../../../styles/organizerTheme.css"
 import "../../../styles/responsiveView.css"
 import "../../../styles/adminMobileList.css"
@@ -147,8 +148,8 @@ export default function AdminJudgesPage() {
                 <tr key={u.id} className="border-t transition-colors hover:bg-[#f8f9ff]" style={{ borderColor: "rgba(75,134,232,0.14)" }}>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      {u.profilePhotoUrl ? (
-                        <img src={u.profilePhotoUrl} alt="" className="h-10 w-10 rounded-full object-cover" />
+                      {resolveAvatarSrc(u.profilePhotoUrl) ? (
+                        <img src={resolveAvatarSrc(u.profilePhotoUrl)!} alt="" className="h-10 w-10 rounded-full object-cover" />
                       ) : (
                         <span
                           className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"

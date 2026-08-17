@@ -4,6 +4,7 @@ import { useSelector } from "react-redux"
 import api from "../../../shared/api/Base"
 import type { RootState } from "../../../app/store"
 import RoleHeroDashboard from "../../../shared/components/RoleHeroDashboard"
+import { resolveAvatarSrc } from "../../Profile/constants/avatars"
 
 interface AssignedMatch {
   matchId: string
@@ -64,7 +65,7 @@ export default function JudgeDashboard() {
       <RoleHeroDashboard
         welcomeName="Judge"
         name={fullName}
-        photoUrl={user?.profilePhotoUrl}
+        photoUrl={resolveAvatarSrc(user?.profilePhotoUrl)}
         idLabel="Judge ID"
         idValue={user?.botleagueId || "—"}
         roleLabel="Match Judge"

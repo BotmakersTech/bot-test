@@ -14,13 +14,11 @@ export const WEIGHT_CLASS_LABELS: Record<string, string> = {
   "60KG":  "60 kg",
 };
 
-// Empty array = this sport has no weight-class concept (e.g. drones, RC, project-based).
+// Empty array = this sport has no weight-class concept (e.g. drones, RC).
 export const WEIGHT_CLASS_OPTIONS_BY_SPORT: Record<string, string[]> = {
   // Junior Innovators — single fixed class, 1kg / 20x20x20cm box
-  PLUG_N_PLAY_SOCCER:  ["1KG"],
   ROBO_SUMO:            ["1KG"],
   LINE_FOLLOWER:        ["1KG"],
-  MANUAL_TASK:          ["1KG"],
 
   // Young Engineers
   LINE_FOLLOWER_AUTO:   ["1_5KG"],
@@ -29,7 +27,6 @@ export const WEIGHT_CLASS_OPTIONS_BY_SPORT: Record<string, string[]> = {
   // Spans both Young Engineers (3kg) and Robo Minds (5kg) — let the team pick
   // whichever matches their robot's actual build weight.
   ROBO_SOCCER:           ["3KG", "5KG"],
-  THEME_BASED_TASKING:   ["3KG", "5KG"],
 
   // Robo Minds — RoboWar weight classes (one EventSports row per class)
   ROBOWAR_8KG:   ["8KG"],
@@ -41,8 +38,6 @@ export const WEIGHT_CLASS_OPTIONS_BY_SPORT: Record<string, string[]> = {
   DRONE_RACING:   [],
   DRONE_SOCCER:   [],
   RC_RACING:      [],
-  AEROMODELLING:  [],
-  PROJECT_BASED:  [],
 };
 
 export function getWeightClassOptions(sport?: string | null): string[] {

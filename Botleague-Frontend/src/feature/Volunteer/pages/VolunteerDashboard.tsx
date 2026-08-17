@@ -4,6 +4,7 @@ import { useSelector } from "react-redux"
 import type { RootState } from "../../../app/store"
 import RoleHeroDashboard from "../../../shared/components/RoleHeroDashboard"
 import { getMyVolunteerAssignments, type VolunteerAssignment } from "../../Event/api/volunteerApplication.api"
+import { resolveAvatarSrc } from "../../Profile/constants/avatars"
 
 function fmtDate(d?: string | null) {
   if (!d) return "—"
@@ -41,7 +42,7 @@ export default function VolunteerDashboard() {
       <RoleHeroDashboard
         welcomeName="Volunteer"
         name={fullName}
-        photoUrl={user?.profilePhotoUrl}
+        photoUrl={resolveAvatarSrc(user?.profilePhotoUrl)}
         idLabel="Volunteer ID"
         idValue={user?.botleagueId || "—"}
         roleLabel="Event Volunteer"

@@ -52,7 +52,6 @@ const ROBOT_TYPES: RobotTypeConfig[] = [
     label: "Soccer Robot",
     sports: [
       { key: "ROBO_SOCCER", label: "Robo Soccer", maxWeightKg: 5, dims: [45, 45, 45], controlType: "MANUAL", controlMode: "WIRELESS", eligibleCategories: ["YOUNG_ENGINEERS", "ROBO_MINDS"] },
-      { key: "PLUG_N_PLAY_SOCCER", label: "Plug N Play Soccer", maxWeightKg: 1, dims: [20, 20, 20], controlType: "MANUAL", controlMode: null, eligibleCategories: ["JUNIOR_INNOVATORS"] },
     ],
   },
   {
@@ -68,17 +67,6 @@ const ROBOT_TYPES: RobotTypeConfig[] = [
     sports: [
       { key: "LINE_FOLLOWER", label: "Line Follower", maxWeightKg: 1, dims: [20, 20, 20], controlType: "MANUAL", controlMode: null, eligibleCategories: ["JUNIOR_INNOVATORS"] },
       { key: "LINE_FOLLOWER_AUTO", label: "Line Follower Auto", maxWeightKg: 1.5, dims: null, controlType: "AUTONOMOUS", controlMode: "WIRELESS", eligibleCategories: ["YOUNG_ENGINEERS"] },
-    ],
-  },
-  {
-    key: "TASK_ROBOT",
-    label: "Task Robot",
-    extraFields: [
-      { key: "taskCategory", label: "Task Category", options: ["PICK_AND_PLACE", "OBSTACLE_COURSE", "SORTING", "CONSTRUCTION", "OTHER"] },
-    ],
-    sports: [
-      { key: "MANUAL_TASK", label: "Manual Task", maxWeightKg: 1, dims: [20, 20, 20], controlType: "MANUAL", controlMode: null, eligibleCategories: ["JUNIOR_INNOVATORS"] },
-      { key: "THEME_BASED_TASKING", label: "Theme Based Tasking", maxWeightKg: 5, dims: [45, 45, 45], controlType: "MANUAL", controlMode: "WIRELESS", eligibleCategories: ["YOUNG_ENGINEERS", "ROBO_MINDS"] },
     ],
   },
   {
@@ -102,26 +90,6 @@ const ROBOT_TYPES: RobotTypeConfig[] = [
     sports: [
       { key: "DRONE_RACING", label: "Drone Racing", maxWeightKg: null, dims: null, controlType: "MANUAL", controlMode: "WIRELESS", eligibleCategories: ["YOUNG_ENGINEERS", "ROBO_MINDS"] },
       { key: "DRONE_SOCCER", label: "Drone Soccer", maxWeightKg: null, dims: [30, 30, 30], controlType: "MANUAL", controlMode: "WIRELESS", eligibleCategories: ["YOUNG_ENGINEERS", "ROBO_MINDS"] },
-    ],
-  },
-  {
-    key: "AIRCRAFT",
-    label: "Aircraft",
-    extraFields: [
-      { key: "aircraftType", label: "Aircraft Type", options: ["FIXED_WING", "RC_PLANE", "GLIDER", "JET", "OTHER"] },
-    ],
-    sports: [
-      { key: "AEROMODELLING", label: "Aeromodelling", maxWeightKg: null, dims: null, controlType: "MANUAL", controlMode: "WIRELESS", eligibleCategories: ["ROBO_MINDS"] },
-    ],
-  },
-  {
-    key: "INNOVATION_PROJECT",
-    label: "Innovation Project",
-    extraFields: [
-      { key: "projectCategory", label: "Project Category", options: ["AUTOMATION", "IOT", "AI_ML", "RENEWABLE_ENERGY", "HEALTHCARE", "AGRICULTURE", "OTHER"] },
-    ],
-    sports: [
-      { key: "PROJECT_BASED", label: "Project Based Competition", maxWeightKg: null, dims: null, controlType: "MANUAL", controlMode: null, eligibleCategories: ["JUNIOR_INNOVATORS"] },
     ],
   },
 ];

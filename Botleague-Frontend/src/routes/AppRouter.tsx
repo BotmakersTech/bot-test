@@ -185,6 +185,11 @@ import "../styles/eventsUser.css";
 import RankingRow from "../feature/Rankings/components/RankingRow";
 import "../styles/rankings.css";
 
+// TEMP — visual QA harness, see DevPreviewMMM below.
+import MobileMemberManagement from "../feature/Team/TeamMembership/components/MobileMemberManagement";
+import "../styles/teamDashboard.css";
+import "../styles/memberManagement.css";
+
 
 // TEMP — visual QA harness, see DevPreviewMJG below.
 import MobileJudgeEcosystem from "../feature/Admin/components/MobileJudgeEcosystem";
@@ -457,6 +462,58 @@ function DevPreviewNOTIF() {
   );
 }
 
+// TEMP — visual QA harness for MobileMemberManagement, no auth/backend
+// needed. Remove once the styling review is done.
+function DevPreviewMMM() {
+  const baseRow = {
+    actionLoading: false,
+    onChangeRole: () => {},
+    confirmingCaptain: false,
+    onStartMakeCaptain: () => {},
+    onConfirmMakeCaptain: () => {},
+    onCancelMakeCaptain: () => {},
+    isRemoving: false,
+    confirmingRemove: false,
+    onStartRemove: () => {},
+    onConfirmRemove: () => {},
+    onCancelRemove: () => {},
+  };
+  const rows = [
+    { ...baseRow, userId: "1", name: "Aditi Sharma", initials: "AS", photoSrc: null, roleLabel: "Captain", roleClass: "captain", featured: true, showActions: false, roleOptions: [], canMakeCaptain: false },
+    { ...baseRow, userId: "2", name: "Rohan Mehta", initials: "RM", photoSrc: null, roleLabel: "Vice Captain", roleClass: "vice_captain", featured: false, showActions: true, roleOptions: [{ value: "MEMBER", label: "Member" }, { value: "MENTOR", label: "Mentor" }], canMakeCaptain: true },
+    { ...baseRow, userId: "3", name: "Jai Ho", initials: "JH", photoSrc: null, roleLabel: "Member", roleClass: "member", featured: false, showActions: true, roleOptions: [{ value: "VICE_CAPTAIN", label: "Vice Captain" }, { value: "MENTOR", label: "Mentor" }], canMakeCaptain: true },
+  ];
+
+  return (
+    <Layout>
+      <div className="teamdash-page teamdash-desktop-only">
+        <div style={{ position: "relative", zIndex: 1, padding: 24 }}>DESKTOP PLACEHOLDER (unchanged)</div>
+      </div>
+      <div className="teamdash-mobile-only">
+        <MobileMemberManagement
+          onBack={() => {}}
+          error={null}
+          onRetry={() => {}}
+          loading={false}
+          isAdmin={true}
+          botleagueId=""
+          onBotleagueIdChange={() => {}}
+          inviteRole="MEMBER"
+          onInviteRoleChange={() => {}}
+          inviteRoleOptions={[{ value: "MEMBER", label: "Member" }, { value: "VICE_CAPTAIN", label: "Vice Captain" }, { value: "MENTOR", label: "Mentor" }]}
+          inviteLoading={false}
+          inviteMessage={null}
+          onInvite={() => {}}
+          searchQuery=""
+          onSearchQueryChange={() => {}}
+          totalMemberCount={rows.length}
+          rows={rows}
+        />
+      </div>
+    </Layout>
+  );
+}
+
 // ======================================================
 // APP ROUTES
 // ======================================================
@@ -475,6 +532,7 @@ function AppRoutes() {
       <Route path="/dev-preview/mjg" element={<DevPreviewMJG />} />
       <Route path="/dev-preview/evt" element={<DevPreviewEVT />} />
       <Route path="/dev-preview/rank" element={<DevPreviewRANK />} />
+      <Route path="/dev-preview/mmm" element={<DevPreviewMMM />} />
       <Route path="/dev-preview/notif" element={<DevPreviewNOTIF />} />
       {/* Public profiles — accepts both UUID and BL-code (BLT.../BLR.../BLU...) */}
       <Route path="/team/:teamId"    element={<FooterShell><TeamPublicPage /></FooterShell>} />
