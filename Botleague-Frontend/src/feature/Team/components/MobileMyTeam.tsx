@@ -272,24 +272,26 @@ export default function MobileMyTeam({
 
         {primaryRobot ? (
           <div className="mmt-build-stage">
-            <div className="mmt-build-primary">
-              <img src={primaryRobot.image} alt={primaryRobot.name} />
-              <div className="mmt-build-primary-overlay" />
-              <span className="mmt-build-status">{primaryRobot.statusLabel}</span>
-            </div>
+            <div className="mmt-build-top-row">
+              <div className="mmt-build-primary">
+                <img src={primaryRobot.image} alt={primaryRobot.name} />
+                <div className="mmt-build-primary-overlay" />
+                <span className="mmt-build-status">{primaryRobot.statusLabel}</span>
+              </div>
 
-            <div className="mmt-build-banner">
-              <div className="mmt-build-banner-inner">
-                <div className="mmt-bb-name">{primaryRobot.name}</div>
-                <div className="mmt-bb-tag">{primaryRobot.category}</div>
-                <div className="mmt-bb-stats">
-                  <div className="mmt-bb-col">
-                    <div className="mmt-bb-num">{wins}</div>
-                    <div className="mmt-bb-sub">Victories</div>
-                  </div>
-                  <div className="mmt-bb-col">
-                    <div className="mmt-bb-num">{primaryRobot.weightClassLabel}</div>
-                    <div className="mmt-bb-sub">Class</div>
+              <div className="mmt-build-banner">
+                <div className="mmt-build-banner-inner">
+                  <div className="mmt-bb-name">{primaryRobot.name}</div>
+                  <div className="mmt-bb-tag">{primaryRobot.category}</div>
+                  <div className="mmt-bb-stats">
+                    <div className="mmt-bb-col">
+                      <div className="mmt-bb-num">{wins}</div>
+                      <div className="mmt-bb-sub">Victories</div>
+                    </div>
+                    <div className="mmt-bb-col">
+                      <div className="mmt-bb-num">{primaryRobot.weightClassLabel}</div>
+                      <div className="mmt-bb-sub">Class</div>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -177,6 +177,10 @@ import "../styles/teamDashboard.css";
 import MobileTeamManagement from "../feature/SuperAdmin/components/MobileTeamManagement";
 import MobileUserManagement from "../feature/SuperAdmin/components/MobileUserManagement";
 
+// TEMP — visual QA harness, see DevPreviewEVT below.
+import { EventCard } from "../feature/Event/pages/UserEventPage";
+import "../styles/eventsUser.css";
+
 // TEMP — visual QA harness, see DevPreviewMJG below.
 import MobileJudgeEcosystem from "../feature/Admin/components/MobileJudgeEcosystem";
 
@@ -399,6 +403,28 @@ function DevPreviewMJG() {
   );
 }
 
+// TEMP — visual QA harness for the Browse Events card, no auth/backend
+// needed. Remove once the styling review is done.
+function DevPreviewEVT() {
+  const events = [
+    { id: "1", eventCode: "EVT-001", eventName: "Robowars Nationals 2026", eventDescription: "The biggest combat robotics championship of the year, featuring 8kg and 15kg weight classes across three arenas.", eventLogoUrl: undefined, venueName: "Pragati Maidan", city: "New Delhi", state: "Delhi", startDate: "2026-03-12", endDate: "2026-03-14", status: "REGISTRATION_OPEN", createdAt: "2025-01-01" },
+    { id: "2", eventCode: "EVT-002", eventName: "Soccer Bots Invitational", eventDescription: "Autonomous soccer robots compete for the regional title.", eventLogoUrl: undefined, venueName: "IIT Bombay Grounds", city: "Mumbai", state: "MH", startDate: "2026-04-05", endDate: "2026-04-05", status: "PUBLISHED", createdAt: "2025-01-01" },
+    { id: "3", eventCode: "EVT-003", eventName: "Line Follower Sprint", eventDescription: undefined, eventLogoUrl: undefined, venueName: "NIT Trichy Arena", city: "Trichy", state: "TN", startDate: "2026-02-20", endDate: "2026-02-20", status: "LIVE", createdAt: "2025-01-01" },
+  ] as import("../feature/Event/api/event.api").EventResponse[];
+
+  return (
+    <Layout>
+      <div className="evt-page min-h-screen p-4">
+        <div className="flex flex-col gap-3">
+          {events.map((ev) => (
+            <EventCard key={ev.id} event={ev} onClick={() => {}} />
+          ))}
+        </div>
+      </div>
+    </Layout>
+  );
+}
+
 // ======================================================
 // APP ROUTES
 // ======================================================
@@ -415,6 +441,7 @@ function AppRoutes() {
       <Route path="/dev-preview/mtm" element={<DevPreviewMTM />} />
       <Route path="/dev-preview/mum" element={<DevPreviewMUM />} />
       <Route path="/dev-preview/mjg" element={<DevPreviewMJG />} />
+      <Route path="/dev-preview/evt" element={<DevPreviewEVT />} />
       {/* Public profiles — accepts both UUID and BL-code (BLT.../BLR.../BLU...) */}
       <Route path="/team/:teamId"    element={<FooterShell><TeamPublicPage /></FooterShell>} />
       <Route path="/robot/:robotId"  element={<FooterShell><RobotPublicPage /></FooterShell>} />

@@ -40,11 +40,18 @@ function StatusPill({ status }: { status?: string }) {
 }
 
 // ─── Event Card ───────────────────────────────────────
-function EventCard({ event, onClick }: { event: EventResponse; onClick: () => void }) {
+// Mobile (<sm) shows a decluttered set — logo, name, venue, date, and a
+// full-width View button — instead of desktop's fuller card (code,
+// description, location). That fuller text block used to be much taller
+// than the 52px logo next to it, leaving the row lopsided with dead space
+// under the logo on narrow screens; the venue/date tags and button now get
+// their own full-width rows below instead of being squeezed into the
+// logo's narrow sibling column.
+export function EventCard({ event, onClick }: { event: EventResponse; onClick: () => void }) {
   const location = [event.city, event.state].filter(Boolean).join(", ");
   return (
-    <div className="evt-event-card flex flex-col sm:flex-row sm:items-center gap-4" onClick={onClick}>
-      <div className="flex items-start gap-4 flex-1 min-w-0">
+    <div className="evt-event-card flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4" onClick={onClick}>
+      <div className="flex items-center gap-3 sm:items-start sm:gap-4 flex-1 min-w-0">
         <div
           className="evt-event-thumb"
           style={
@@ -61,13 +68,13 @@ function EventCard({ event, onClick }: { event: EventResponse; onClick: () => vo
             <h3 className="evt-font-poppins font-bold text-[15px] text-[#1a1a2e] truncate">{event.eventName}</h3>
             <StatusPill status={event.status} />
           </div>
-          <p className="text-[11px] text-gray-400 font-medium mb-2">{event.eventCode}</p>
+          <p className="hidden sm:block text-[11px] text-gray-400 font-medium mb-2">{event.eventCode}</p>
 
           {event.eventDescription && (
-            <p className="text-[12.5px] text-gray-500 leading-relaxed mb-2 line-clamp-2">{event.eventDescription}</p>
+            <p className="hidden sm:block text-[12.5px] text-gray-500 leading-relaxed mb-2 line-clamp-2">{event.eventDescription}</p>
           )}
 
-          <div className="flex gap-2 flex-wrap">
+          <div className="hidden sm:flex gap-2 flex-wrap">
             {event.venueName && (
               <span className="evt-tag"><MapPin size={11} />{event.venueName}</span>
             )}
@@ -82,9 +89,25 @@ function EventCard({ event, onClick }: { event: EventResponse; onClick: () => vo
         </div>
       </div>
 
+      {/* mobile-only: venue/date get the full card width instead of being
+          squeezed beside the logo */}
+      {(event.venueName || event.startDate) && (
+        <div className="flex sm:hidden gap-2 flex-wrap">
+          {event.venueName && (
+            <span className="evt-tag"><MapPin size={11} />{event.venueName}</span>
+          )}
+          {event.startDate && (
+            <span className="evt-tag">
+              <Calendar size={11} />
+              {fmtDate(event.startDate)}{event.endDate && event.endDate !== event.startDate ? ` – ${fmtDate(event.endDate)}` : ""}
+            </span>
+          )}
+        </div>
+      )}
+
       <button
         type="button"
-        className="evt-view-btn self-start sm:self-center"
+        className="evt-view-btn w-full sm:w-auto sm:self-center"
         onClick={(e) => { e.stopPropagation(); onClick(); }}
       >
         View Event →
