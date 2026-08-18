@@ -1,11 +1,17 @@
 import { useEffect, useState } from "react"
-import { LayoutGrid, List, Download, Award } from "lucide-react"
-import { getMyCertificates, type IssuedCertificate } from "../../Certificates/api/certificate.api"
+import { LayoutGrid, List, Download, Award, Search, CheckCircle2, XCircle } from "lucide-react"
+import { getMyCertificates, verifyCertificate, type IssuedCertificate, type PublicVerificationResponse } from "../../Certificates/api/certificate.api"
 import CertificateCard from "../components/CertificateCard"
 import "../styles/CertificatesPage.css"
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
+}
+
+const VERIFY_RESULT_COPY: Record<PublicVerificationResponse["result"], { title: string; className: string }> = {
+  VALID: { title: "Certificate Verified", className: "bl-verify-result-valid" },
+  REVOKED: { title: "Certificate Revoked", className: "bl-verify-result-invalid" },
+  NOT_FOUND: { title: "Certificate Not Found", className: "bl-verify-result-invalid" },
 }
 
 export default function CertificatesPage() {
@@ -14,12 +20,32 @@ export default function CertificatesPage() {
   const [error, setError] = useState<string | null>(null)
   const [view, setView] = useState<"grid" | "list">("grid")
 
+  // Verify-by-number — independent of the "my certificates" list above, so
+  // it also works for a certificate someone else shared (not necessarily
+  // one of the logged-in user's own).
+  const [verifyNumber, setVerifyNumber] = useState("")
+  const [verifying, setVerifying] = useState(false)
+  const [verifyResult, setVerifyResult] = useState<PublicVerificationResponse | null>(null)
+  const [verifyError, setVerifyError] = useState<string | null>(null)
+
   useEffect(() => {
     getMyCertificates()
       .then(setCertificates)
       .catch(() => setError("Failed to load certificates"))
       .finally(() => setLoading(false))
   }, [])
+
+  const handleVerify = (e: React.FormEvent) => {
+    e.preventDefault()
+    const number = verifyNumber.trim()
+    if (!number) return
+    setVerifying(true)
+    setVerifyError(null)
+    verifyCertificate(number)
+      .then(setVerifyResult)
+      .catch(() => setVerifyError("Could not reach the verification service — try again shortly."))
+      .finally(() => setVerifying(false))
+  }
 
   return (
     <div className="bl-page">
@@ -44,6 +70,42 @@ export default function CertificatesPage() {
         <p className="bl-page-subtitle">
           {loading ? "Loading…" : `${certificates.length} certificate${certificates.length !== 1 ? "s" : ""} earned`}
         </p>
+
+        {/* Verify any certificate by number — separate from the "my
+            certificates" list below, so it works for a certificate number
+            shared by someone else too, not just the logged-in user's own. */}
+        <div className="bl-verify-card">
+          <p className="bl-verify-label">Verify a certificate</p>
+          <form onSubmit={handleVerify} className="bl-verify-bar">
+            <input
+              type="text"
+              value={verifyNumber}
+              onChange={(e) => setVerifyNumber(e.target.value)}
+              placeholder="Enter certificate number, e.g. CERT-000123"
+              className="bl-verify-input"
+            />
+            <button type="submit" disabled={verifying || !verifyNumber.trim()} className="bl-verify-btn">
+              <Search size={14} />
+              {verifying ? "Checking…" : "Verify"}
+            </button>
+          </form>
+
+          {verifyError && <p className="bl-verify-error">{verifyError}</p>}
+
+          {!verifyError && verifyResult && (
+            <div className={`bl-verify-result ${VERIFY_RESULT_COPY[verifyResult.result].className}`}>
+              {verifyResult.result === "VALID" ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
+              <div className="bl-verify-result-text">
+                <span className="bl-verify-result-title">{VERIFY_RESULT_COPY[verifyResult.result].title}</span>
+                {verifyResult.result !== "NOT_FOUND" && (
+                  <span className="bl-verify-result-detail">
+                    {[verifyResult.recipientName, verifyResult.eventName, verifyResult.label].filter(Boolean).join(" · ")}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         {error ? (
           <div className="bl-state-card bl-state-error">{error}</div>

@@ -185,6 +185,43 @@ const CSS = `
   }
   .apm-done-btn:hover { filter: brightness(1.05); }
   .apm-done-btn:disabled { opacity: 0.65; cursor: default; }
+
+  /* Mobile/tablet — the fluid single-row layout above still forces all 5
+     tiles onto one nowrap line, so at narrow widths flex-shrink squeezes
+     each one down to ~50px with the name label overflowing. Below 950px,
+     wrap into rows of 3 fixed-size tiles instead (matches the Figma mobile
+     "Select your Profile" frame), and switch the selected-state ring from
+     the desktop's thick 7px inset border to a thin border + soft glow —
+     proportionate on a 72px circle instead of eating a quarter of it. */
+  @media (max-width: 950px) {
+    .apm-row {
+      flex-wrap: wrap;
+      gap: 18px 12px;
+    }
+    .apm-tile {
+      flex: 0 0 auto;
+      width: 72px;
+      max-width: 72px;
+      gap: 8px;
+    }
+    .apm-avatar-frame.selected {
+      border: 2px solid #0162D1;
+      background: none;
+      box-shadow: 0 0 0 3px rgba(1, 98, 209, 0.2);
+    }
+    .apm-tile:hover .apm-avatar-frame:not(.selected) {
+      border: 2px solid transparent;
+      background: none;
+      box-shadow: 0 0 0 3px rgba(140, 108, 255, 0.2);
+    }
+    .apm-avatar-name {
+      font-size: 13px;
+    }
+    .apm-upload-frame {
+      font-size: 10px;
+      padding: 0 8%;
+    }
+  }
 `;
 
 export default function AvatarPickerModal({

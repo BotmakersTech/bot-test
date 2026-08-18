@@ -8,6 +8,7 @@ import useTeamMembership from "../../Team/TeamMembership/hooks/useTeamMembership
 import CreateRobotForm from "../components/CreateRobotFrom";
 import TeamBuildEmptyState from "../components/TeamBuildEmptyState";
 import MobileRobotBuild from "../components/MobileRobotBuild";
+import MobileRobotEmptyState from "../components/MobileRobotEmptyState";
 import useRobots from "../hooks/useRobots";
 import type { Robot } from "../types/types";
 import robotFallback from "../../../assets/robot.png";
@@ -109,9 +110,14 @@ export default function RobotsPage() {
 
   if (!teamCode) {
     return (
-      <div className="robot-build-page robot-build-state">
-        <h1>Team Build</h1>
-        <p>Create or join a team before adding robots.</p>
+      <div className="robot-build-page">
+        <div className="robot-build-state max-[950px]:hidden">
+          <h1>Team Build</h1>
+          <p>Create or join a team before adding robots.</p>
+        </div>
+        <div className="hidden max-[950px]:block">
+          <MobileRobotEmptyState mode="no-team" onCreateTeam={() => navigate("/create-team")} />
+        </div>
       </div>
     );
   }
@@ -149,7 +155,12 @@ export default function RobotsPage() {
   if (robots.length === 0) {
     return (
       <div className="robot-build-page">
-        <TeamBuildEmptyState canManageRobots={canManageRobots} onCreateClick={openCreate} />
+        <div className="max-[950px]:hidden">
+          <TeamBuildEmptyState canManageRobots={canManageRobots} onCreateClick={openCreate} />
+        </div>
+        <div className="hidden max-[950px]:block">
+          <MobileRobotEmptyState mode="no-robots" canManageRobots={canManageRobots} onCreateRobot={openCreate} />
+        </div>
       </div>
     );
   }

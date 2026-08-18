@@ -469,7 +469,7 @@
     align-self: center;
     flex-shrink: 0;
     padding: 7px 14px;
-    font-size: 12.5px;
+    font-size: 12px;
     border-radius: 7px;
   }
 
@@ -498,7 +498,7 @@
     border-radius: 9px;
     padding: 0 10px;
     gap: 6px;
-    font-size: 12.5px;
+    font-size: 12px;
   }
 
   .notif-tab span {
@@ -532,11 +532,11 @@
   }
 
   .notif-row-text {
-    font-size: 13.5px;
+    font-size: 14px;
   }
 
   .notif-message {
-    font-size: 12.5px;
+    font-size: 12px;
   }
 
   .notif-row-text time {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import {
   getGlobalRanking, getAvailablePools,
   type GlobalRankingPage,
@@ -98,6 +99,12 @@ export default function GlobalRankingsPage() {
   const [draftLeagueSlug, setDraftLeagueSlug] = useState("");
   const [draftSportSlug,  setDraftSportSlug]  = useState("");
   const [draftWeightKg,   setDraftWeightKg]   = useState("");
+
+  // Mobile/tablet only — the filter card starts collapsed behind a "Sort"
+  // trigger instead of always taking up space above the results; desktop
+  // never reads this (the card is always visible there, see the card's
+  // className below).
+  const [sortOpen, setSortOpen] = useState(false);
 
   // Applied filter state — what the current results were actually fetched
   // with. These stay in the ranking table's own OLD sport/ageGroup code
@@ -212,8 +219,21 @@ export default function GlobalRankingsPage() {
           Rankings
         </h1>
 
+        {/* Mobile/tablet-only trigger — the filter card is collapsed by
+            default below 950px; desktop never sees this button and always
+            shows the card (see its className just below). */}
+        <button
+          type="button"
+          onClick={() => setSortOpen((v) => !v)}
+          className="hidden max-[950px]:flex items-center gap-2 mb-3 h-[42px] px-4 rounded-md border border-[#0162D1] bg-white text-[14px] font-medium text-[#0162D1] cursor-pointer"
+        >
+          <SlidersHorizontal size={16} />
+          Sort
+          <ChevronDown size={16} className={`transition-transform ${sortOpen ? "rotate-180" : ""}`} />
+        </button>
+
         {/* ── Sort / filter card ─────────────────────────────────────── */}
-        <div className="rank-filter-card mt-1 mb-8 sm:mb-10 w-full bg-white pt-4 pb-5 px-4 sm:px-6 lg:px-9 shadow-[0_4px_4px_1px_rgba(0,0,0,0.25)]">
+        <div className={`rank-filter-card mt-1 mb-8 sm:mb-10 w-full bg-white pt-4 pb-5 px-4 sm:px-6 lg:px-9 shadow-[0_4px_4px_1px_rgba(0,0,0,0.25)] ${sortOpen ? "" : "max-[950px]:hidden"}`}>
           <h2 className="mb-3 text-[22px] sm:text-[26px] lg:text-[30px] font-medium text-[#0162D1]" style={{ fontFamily: "Poppins, sans-serif" }}>
             Sort by
           </h2>

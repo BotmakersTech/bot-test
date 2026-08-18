@@ -1,157 +1,109 @@
-import { useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import { UploadCloud, User } from "lucide-react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { UploadCloud } from "lucide-react";
 
 import { createRobot } from "../api/robot.api";
 import { uploadRobotImage } from "../api/uploadRobot.api";
-import { getWeightClassOptions, weightClassLabel } from "../constants/weightClasses";
+import { getPublicLeagueSports, type LeagueSport } from "../../../shared/api/catalog.api";
+import { useLeagues, formatAgeRange } from "../../../temp/pages/leagues/useLeagues";
 
-type AgeCategory = "JUNIOR_INNOVATORS" | "YOUNG_ENGINEERS" | "ROBO_MINDS";
+type RobotCategoryKey =
+  | "COMBAT_ROBOT" | "SOCCER_ROBOT" | "SUMO_ROBOT" | "LINE_FOLLOWER_ROBOT" | "RC_VEHICLE" | "DRONE";
 type ControlMode = "WIRED" | "WIRELESS";
 type ControlType = "MANUAL" | "AUTONOMOUS" | "HYBRID";
-
-interface SportOption {
-  key: string;
-  label: string;
-  maxWeightKg: number | null;
-  dims: [number, number, number] | null;
-  controlType: ControlType;
-  controlMode: ControlMode | null;
-  eligibleCategories: AgeCategory[];
-  weightClass?: string;
-}
-
-interface RobotTypeConfig {
-  key: string;
-  label: string;
-  sports: SportOption[];
-  extraFields?: { key: string; label: string; options: string[] }[];
-}
 
 interface Props {
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-const ROBOT_TYPES: RobotTypeConfig[] = [
-  {
-    key: "COMBAT_ROBOT",
-    label: "Combat Robot",
-    extraFields: [
-      { key: "weaponType", label: "Weapon Type", options: ["SPINNER", "FLIPPER", "CRUSHER", "WEDGE", "LIFTER", "HAMMER", "OTHER"] },
-    ],
-    sports: [
-      { key: "ROBOWAR_1_5KG", label: "RoboWar 1.5 kg", maxWeightKg: 1.5, dims: null, controlType: "MANUAL", controlMode: "WIRELESS", eligibleCategories: ["YOUNG_ENGINEERS", "ROBO_MINDS"], weightClass: "1.5KG" },
-      { key: "ROBOWAR_8KG", label: "RoboWar 8 kg", maxWeightKg: 8, dims: null, controlType: "MANUAL", controlMode: "WIRELESS", eligibleCategories: ["ROBO_MINDS"], weightClass: "8KG" },
-      { key: "ROBOWAR_15KG", label: "RoboWar 15 kg", maxWeightKg: 15, dims: null, controlType: "MANUAL", controlMode: "WIRELESS", eligibleCategories: ["ROBO_MINDS"], weightClass: "15KG" },
-      { key: "ROBOWAR_30KG", label: "RoboWar 30 kg", maxWeightKg: 30, dims: null, controlType: "MANUAL", controlMode: "WIRELESS", eligibleCategories: ["ROBO_MINDS"], weightClass: "30KG" },
-      { key: "ROBOWAR_60KG", label: "RoboWar 60 kg", maxWeightKg: 60, dims: null, controlType: "MANUAL", controlMode: "WIRELESS", eligibleCategories: ["ROBO_MINDS"], weightClass: "60KG" },
-    ],
-  },
-  {
-    key: "SOCCER_ROBOT",
-    label: "Soccer Robot",
-    sports: [
-      { key: "ROBO_SOCCER", label: "Robo Soccer", maxWeightKg: 5, dims: [45, 45, 45], controlType: "MANUAL", controlMode: "WIRELESS", eligibleCategories: ["YOUNG_ENGINEERS", "ROBO_MINDS"] },
-    ],
-  },
-  {
-    key: "SUMO_ROBOT",
-    label: "Sumo Robot",
-    sports: [
-      { key: "ROBO_SUMO", label: "Robo Sumo", maxWeightKg: 1, dims: [20, 20, 20], controlType: "MANUAL", controlMode: null, eligibleCategories: ["JUNIOR_INNOVATORS"] },
-    ],
-  },
-  {
-    key: "LINE_FOLLOWER_ROBOT",
-    label: "Line Follower",
-    sports: [
-      { key: "LINE_FOLLOWER", label: "Line Follower", maxWeightKg: 1, dims: [20, 20, 20], controlType: "MANUAL", controlMode: null, eligibleCategories: ["JUNIOR_INNOVATORS"] },
-      { key: "LINE_FOLLOWER_AUTO", label: "Line Follower Auto", maxWeightKg: 1.5, dims: null, controlType: "AUTONOMOUS", controlMode: "WIRELESS", eligibleCategories: ["YOUNG_ENGINEERS"] },
-    ],
-  },
-  {
-    key: "RC_VEHICLE",
-    label: "RC Vehicle",
-    extraFields: [
-      { key: "vehicleType", label: "Vehicle Type", options: ["ELECTRIC", "NITRO"] },
-      { key: "scaleClass", label: "Scale Class", options: ["1:8", "1:12", "OTHER"] },
-    ],
-    sports: [
-      { key: "RC_RACING", label: "RC Racing", maxWeightKg: null, dims: null, controlType: "MANUAL", controlMode: "WIRELESS", eligibleCategories: ["YOUNG_ENGINEERS", "ROBO_MINDS"] },
-    ],
-  },
-  {
-    key: "DRONE",
-    label: "Drone",
-    extraFields: [
-      { key: "droneType", label: "Drone Type", options: ["FPV", "STANDARD_RACING", "FREESTYLE", "OTHER"] },
-      { key: "frameSizeCm", label: "Frame Size (cm)", options: ["10", "20", "25", "30", "OTHER"] },
-    ],
-    sports: [
-      { key: "DRONE_RACING", label: "Drone Racing", maxWeightKg: null, dims: null, controlType: "MANUAL", controlMode: "WIRELESS", eligibleCategories: ["YOUNG_ENGINEERS", "ROBO_MINDS"] },
-      { key: "DRONE_SOCCER", label: "Drone Soccer", maxWeightKg: null, dims: [30, 30, 30], controlType: "MANUAL", controlMode: "WIRELESS", eligibleCategories: ["YOUNG_ENGINEERS", "ROBO_MINDS"] },
-    ],
-  },
-];
+// ── Catalog sport -> robot-creation payload bridge ─────────────────────────
+//
+// The sport list and each sport's weight/size limits now come straight from
+// the League/Sport catalog (real leagues, real per-league specs). But two
+// fields the backend still needs are NOT catalog-driven:
+//   - `robotType` is a hard Java enum (RobotCategory) with no free-text
+//     escape hatch — an unrecognised value fails robot creation outright.
+//   - `sport` is free text, but SportRegistrationService matches it against
+//     a fixed set of OLD keys (ROBOWAR_8KG, ROBO_SOCCER, ...) to check a
+//     robot is built for the right sport before it can register for an
+//     event. An unrecognised key silently SKIPS that check rather than
+//     failing, which is worse than getting it right here.
+// This is the one place that bridges catalog sport name (+ league age group
+// + chosen weight, for Robo War's per-weight-class keys) to those values.
+interface SportBridge {
+  robotCategory: RobotCategoryKey;
+  sportKey: string;
+  controlType: ControlType;
+  /** null = no fixed connection type for this sport; user picks Wired/Wireless. */
+  controlMode: ControlMode | null;
+}
 
-const AGE_OPTIONS: { key: AgeCategory; label: string; range: string }[] = [
-  { key: "JUNIOR_INNOVATORS", label: "Ignite", range: "8-11 years" },
-  { key: "YOUNG_ENGINEERS", label: "Inferno", range: "12-17 years" },
-  { key: "ROBO_MINDS", label: "Apex", range: "18+ years" },
-];
+function resolveSportBridge(catalogSportName: string, ageGroup: string, weightKg: number | null): SportBridge {
+  switch (catalogSportName) {
+    case "Robo Sumo":
+      return { robotCategory: "SUMO_ROBOT", sportKey: "ROBO_SUMO", controlType: "MANUAL", controlMode: null };
+    case "Robo Soccer":
+      return { robotCategory: "SOCCER_ROBOT", sportKey: "ROBO_SOCCER", controlType: "MANUAL", controlMode: "WIRELESS" };
+    case "Line Follower":
+      return ageGroup === "JUNIOR_INNOVATORS"
+        ? { robotCategory: "LINE_FOLLOWER_ROBOT", sportKey: "LINE_FOLLOWER", controlType: "MANUAL", controlMode: null }
+        : { robotCategory: "LINE_FOLLOWER_ROBOT", sportKey: "LINE_FOLLOWER_AUTO", controlType: "AUTONOMOUS", controlMode: "WIRELESS" };
+    case "Robo War":
+      return {
+        robotCategory: "COMBAT_ROBOT",
+        sportKey: weightKg != null ? `ROBOWAR_${String(weightKg).replace(".", "_")}KG` : "ROBOWAR",
+        controlType: "MANUAL",
+        controlMode: "WIRELESS",
+      };
+    case "Drone Soccer":
+      return { robotCategory: "DRONE", sportKey: "DRONE_SOCCER", controlType: "MANUAL", controlMode: "WIRELESS" };
+    case "Robo Race":
+    case "RC Racing Car":
+      return { robotCategory: "RC_VEHICLE", sportKey: "RC_RACING", controlType: "MANUAL", controlMode: "WIRELESS" };
+    default:
+      // A catalog sport with no historical mapping (newly added by an admin,
+      // never existed under the old system). Best-effort, non-blocking
+      // fallback rather than refusing to let the team create a robot at all
+      // — the sport-compatibility check on registration simply skips an
+      // unrecognised key instead of rejecting it.
+      return {
+        robotCategory: "COMBAT_ROBOT",
+        sportKey: catalogSportName.toUpperCase().replace(/[^A-Z0-9]+/g, "_"),
+        controlType: "MANUAL",
+        controlMode: "WIRELESS",
+      };
+  }
+}
 
-const AGE_LABELS: Record<AgeCategory, string> = {
-  JUNIOR_INNOVATORS: "Ignite",
-  YOUNG_ENGINEERS: "Inferno",
-  ROBO_MINDS: "Apex",
+const EXTRA_FIELDS_BY_CATEGORY: Partial<Record<RobotCategoryKey, { key: string; label: string; options: string[] }[]>> = {
+  COMBAT_ROBOT: [
+    { key: "weaponType", label: "Weapon Type", options: ["SPINNER", "FLIPPER", "CRUSHER", "WEDGE", "LIFTER", "HAMMER", "OTHER"] },
+  ],
+  RC_VEHICLE: [
+    { key: "vehicleType", label: "Vehicle Type", options: ["ELECTRIC", "NITRO"] },
+    { key: "scaleClass", label: "Scale Class", options: ["1:8", "1:12", "OTHER"] },
+  ],
+  DRONE: [
+    { key: "droneType", label: "Drone Type", options: ["FPV", "STANDARD_RACING", "FREESTYLE", "OTHER"] },
+    { key: "frameSizeCm", label: "Frame Size (cm)", options: ["10", "20", "25", "30", "OTHER"] },
+  ],
 };
 
-function competitionOptionsForAge(age: AgeCategory) {
-  return ROBOT_TYPES.flatMap((type) =>
-    type.sports
-      .filter((sport) => sport.eligibleCategories.includes(age))
-      .map((sport) => ({ type, sport }))
-  );
-}
-
-function shortCompetitionLabel(label: string) {
-  return label
-    .replace("Project Based Competition", "Project\nBased\nCompetition")
-    .replace("Plug N Play Soccer", "Plug N Play\nCompetition")
-    .replace("Line Follower Auto", "Line\nFollower")
-    .replace("Line Follower", "Line\nFollower")
-    .replace("Robo Sumo", "RoboSumo")
-    .replace("Manual Task", "Manual\nTask")
-    .replace(" Competition", "");
-}
-
-function computeEligibility(
-  sport: SportOption | null,
-  weightKg: number | null,
-  lengthCm: number | null,
-  widthCm: number | null,
-  heightCm: number | null
-) {
-  if (!sport) return [];
-
-  return sport.eligibleCategories.filter(() => {
-    if (sport.maxWeightKg !== null && weightKg !== null && weightKg > sport.maxWeightKg) return false;
-    if (sport.dims !== null) {
-      const [maxL, maxW, maxH] = sport.dims;
-      if (lengthCm !== null && lengthCm > maxL) return false;
-      if (widthCm !== null && widthCm > maxW) return false;
-      if (heightCm !== null && heightCm > maxH) return false;
-    }
-    return true;
-  });
+// Same "8kg -> 8KG" / "1.5kg -> 1_5KG" shape the ranking/weight-class system
+// uses elsewhere (see Robots/constants/weightClasses.ts's WEIGHT_CLASS_LABELS).
+function toWeightClassCode(weightKg: number): string {
+  return `${String(weightKg).replace(".", "_")}KG`;
 }
 
 export default function CreateRobotForm({ onSuccess, onCancel }: Props) {
-  const [selectedAge, setSelectedAge] = useState<AgeCategory>("JUNIOR_INNOVATORS");
-  const competitionOptions = useMemo(() => competitionOptionsForAge(selectedAge), [selectedAge]);
+  const { leagues } = useLeagues();
 
-  const [selectedType, setSelectedType] = useState<RobotTypeConfig | null>(competitionOptions[0]?.type ?? null);
-  const [selectedSport, setSelectedSport] = useState<SportOption | null>(competitionOptions[0]?.sport ?? null);
+  const [selectedLeagueSlug, setSelectedLeagueSlug] = useState("");
+  const [leagueSports, setLeagueSports] = useState<LeagueSport[]>([]);
+  const [leagueSportsLoading, setLeagueSportsLoading] = useState(false);
+  const [selectedSportSlug, setSelectedSportSlug] = useState("");
+  const [selectedWeightKgStr, setSelectedWeightKgStr] = useState("");
+
   const [robotName, setRobotName] = useState("");
   const [description, setDescription] = useState("");
   const [weightKg, setWeightKg] = useState<number | null>(null);
@@ -159,7 +111,6 @@ export default function CreateRobotForm({ onSuccess, onCancel }: Props) {
   const [widthCm, setWidthCm] = useState<number | null>(null);
   const [heightCm, setHeightCm] = useState<number | null>(null);
   const [controlMode, setControlMode] = useState<ControlMode>("WIRELESS");
-  const [weightClass, setWeightClass] = useState("");
   const [extraAttrs, setExtraAttrs] = useState<Record<string, string>>({});
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -167,24 +118,67 @@ export default function CreateRobotForm({ onSuccess, onCancel }: Props) {
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const liveEligibility = computeEligibility(selectedSport, weightKg, lengthCm, widthCm, heightCm);
+  // Default to the first league once the catalog loads, so there's one less
+  // click for the common case — but nothing past it auto-selects (see below).
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!selectedLeagueSlug && leagues.length > 0) setSelectedLeagueSlug(leagues[0].slug);
+  }, [leagues, selectedLeagueSlug]);
 
-  const pickAge = (age: AgeCategory) => {
-    const first = competitionOptionsForAge(age)[0];
-    setSelectedAge(age);
-    setSelectedType(first?.type ?? null);
-    setSelectedSport(first?.sport ?? null);
-    setWeightClass(first?.sport?.weightClass ?? "");
+  // League chosen -> fetch that league's real LIVE sports (e.g. Ignite's 5)
+  // and reset whatever sport/spec selection was made for the previous league.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedSportSlug("");
+    setSelectedWeightKgStr("");
     setExtraAttrs({});
-  };
+    if (!selectedLeagueSlug) {
+      setLeagueSports([]);
+      return;
+    }
+    let cancelled = false;
+    setLeagueSportsLoading(true);
+    getPublicLeagueSports(selectedLeagueSlug)
+      .then((rows) => { if (!cancelled) setLeagueSports(rows); })
+      .catch(() => { if (!cancelled) setLeagueSports([]); })
+      .finally(() => { if (!cancelled) setLeagueSportsLoading(false); });
+    return () => { cancelled = true; };
+  }, [selectedLeagueSlug]);
 
-  const pickCompetition = (type: RobotTypeConfig, sport: SportOption) => {
-    const opts = sport.weightClass ? [sport.weightClass] : getWeightClassOptions(sport.key);
-    setSelectedType(type);
-    setSelectedSport(sport);
-    setWeightClass(opts.length === 1 ? opts[0] : "");
+  const selectedLeague = leagues.find((l) => l.slug === selectedLeagueSlug) ?? null;
+  const selectedLeagueSport = leagueSports.find((ls) => ls.sportSlug === selectedSportSlug) ?? null;
+
+  const weightOptions: { weightKg: number; label: string }[] = selectedLeagueSport
+    ? selectedLeagueSport.weightClasses.length > 0
+      ? selectedLeagueSport.weightClasses.map((wc) => ({ weightKg: wc.weightKg, label: wc.label }))
+      : selectedLeagueSport.weightLimitKg != null
+        ? [{ weightKg: selectedLeagueSport.weightLimitKg, label: `${selectedLeagueSport.weightLimitKg} kg` }]
+        : []
+    : [];
+  const selectedWeightOption = weightOptions.find((w) => String(w.weightKg) === selectedWeightKgStr) ?? null;
+  const weightCeilingKg = selectedWeightOption?.weightKg ?? selectedLeagueSport?.weightLimitKg ?? null;
+
+  const bridge = selectedLeagueSport && selectedLeague
+    ? resolveSportBridge(selectedLeagueSport.sportName, selectedLeague.ageGroupValue, selectedWeightOption?.weightKg ?? null)
+    : null;
+  const extraFields = bridge ? EXTRA_FIELDS_BY_CATEGORY[bridge.robotCategory] ?? [] : [];
+
+  // Auto-pick the sport's single weight option (nothing to choose); force an
+  // explicit pick when there's more than one (e.g. Robo War's weight tiers).
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedWeightKgStr(weightOptions.length === 1 ? String(weightOptions[0].weightKg) : "");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setExtraAttrs({});
-  };
+  }, [selectedSportSlug]);
+
+  const withinLeagueLimits =
+    !selectedLeagueSport ||
+    ((weightCeilingKg == null || weightKg == null || weightKg <= weightCeilingKg) &&
+      (selectedLeagueSport.maxLengthCm == null || lengthCm == null || lengthCm <= selectedLeagueSport.maxLengthCm) &&
+      (selectedLeagueSport.maxWidthCm == null || widthCm == null || widthCm <= selectedLeagueSport.maxWidthCm) &&
+      (selectedLeagueSport.maxHeightCm == null || heightCm == null || heightCm <= selectedLeagueSport.maxHeightCm));
+  const hasEnteredSpecs = weightKg !== null || widthCm !== null || heightCm !== null || lengthCm !== null;
 
   const handlePhotoChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -195,14 +189,12 @@ export default function CreateRobotForm({ onSuccess, onCancel }: Props) {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!selectedType || !selectedSport) return;
+    if (!selectedLeagueSport || !bridge) return;
     if (!robotName.trim()) {
       setError("Robot name is required");
       return;
     }
-
-    const wcOptions = selectedSport.weightClass ? [selectedSport.weightClass] : getWeightClassOptions(selectedSport.key);
-    if (wcOptions.length > 0 && !weightClass) {
+    if (weightOptions.length > 0 && !selectedWeightOption) {
       setError("Please select a weight class");
       return;
     }
@@ -213,11 +205,11 @@ export default function CreateRobotForm({ onSuccess, onCancel }: Props) {
     try {
       const created = await createRobot({
         robotName: robotName.trim(),
-        robotType: selectedType.key,
-        sport: selectedSport.key,
-        controlType: selectedSport.controlType,
-        controlMode: selectedSport.controlMode ?? controlMode,
-        weightClass: weightClass || selectedSport.weightClass,
+        robotType: bridge.robotCategory,
+        sport: bridge.sportKey,
+        controlType: bridge.controlType,
+        controlMode: bridge.controlMode ?? controlMode,
+        weightClass: selectedWeightOption ? toWeightClassCode(selectedWeightOption.weightKg) : undefined,
         weightKg: weightKg ?? undefined,
         lengthCm: lengthCm ?? undefined,
         widthCm: widthCm ?? undefined,
@@ -238,10 +230,6 @@ export default function CreateRobotForm({ onSuccess, onCancel }: Props) {
     }
   };
 
-  const weightClassOptions = selectedSport?.weightClass
-    ? [selectedSport.weightClass]
-    : getWeightClassOptions(selectedSport?.key);
-
   return (
     <form className="robot-create-form" onSubmit={handleSubmit}>
       <header className="robot-create-head">
@@ -250,7 +238,7 @@ export default function CreateRobotForm({ onSuccess, onCancel }: Props) {
           <div className="robot-create-progress" aria-hidden="true">
             <span className="active" />
             <span />
-            <span />
+            <span className={selectedSportSlug ? "active" : ""} />
             <span />
           </div>
         </div>
@@ -265,20 +253,19 @@ export default function CreateRobotForm({ onSuccess, onCancel }: Props) {
       <section className="robot-create-section">
         <div className="robot-create-section-title">
           <span>1</span>
-          <strong>Select Age Category</strong>
+          <strong>Select League</strong>
         </div>
 
         <div className="robot-age-grid">
-          {AGE_OPTIONS.map((age) => (
+          {leagues.map((league) => (
             <button
-              key={age.key}
+              key={league.slug}
               type="button"
-              className={selectedAge === age.key ? "robot-age-card active" : "robot-age-card"}
-              onClick={() => pickAge(age.key)}
+              className={selectedLeagueSlug === league.slug ? "robot-age-card active" : "robot-age-card"}
+              onClick={() => setSelectedLeagueSlug(league.slug)}
             >
-              <span className="robot-age-icon"><User size={36} /></span>
-              <strong>{age.label}</strong>
-              <em>{age.range}</em>
+              <strong>{league.shortName}</strong>
+              <em>{formatAgeRange(league.minAge, league.maxAge)} yrs</em>
             </button>
           ))}
         </div>
@@ -287,160 +274,168 @@ export default function CreateRobotForm({ onSuccess, onCancel }: Props) {
       <section className="robot-create-section">
         <div className="robot-create-section-title">
           <span>2</span>
-          <strong>Select Competition</strong>
+          <strong>Select Sport</strong>
         </div>
 
         <div className="robot-competition-grid">
-          {competitionOptions.map(({ type, sport }) => (
-            <button
-              key={`${type.key}-${sport.key}`}
-              type="button"
-              className={selectedSport?.key === sport.key ? "robot-competition-card active" : "robot-competition-card"}
-              onClick={() => pickCompetition(type, sport)}
-            >
-              {shortCompetitionLabel(sport.label).split("\n").map((line) => (
-                <span key={line}>{line}</span>
-              ))}
-            </button>
-          ))}
+          {leagueSportsLoading ? (
+            <p style={{ gridColumn: "1 / -1", margin: 0, color: "#7e7e7e", fontSize: 13 }}>Loading sports…</p>
+          ) : leagueSports.length === 0 ? (
+            <p style={{ gridColumn: "1 / -1", margin: 0, color: "#7e7e7e", fontSize: 13 }}>
+              {selectedLeagueSlug ? "No sports are live for this league yet." : "Select a league first."}
+            </p>
+          ) : (
+            leagueSports.map((ls) => (
+              <button
+                key={ls.sportSlug}
+                type="button"
+                className={selectedSportSlug === ls.sportSlug ? "robot-competition-card active" : "robot-competition-card"}
+                onClick={() => setSelectedSportSlug(ls.sportSlug)}
+              >
+                <span>{ls.sportName}</span>
+              </button>
+            ))
+          )}
         </div>
       </section>
 
-      <section className="robot-create-section">
-        <div className="robot-create-section-title">
-          <span>3</span>
-          <strong>Robot Details</strong>
-        </div>
+      {selectedLeagueSport && bridge && (
+        <section className="robot-create-section">
+          <div className="robot-create-section-title">
+            <span>3</span>
+            <strong>Robot Details</strong>
+          </div>
 
-        {error && <div className="robot-create-error">{error}</div>}
+          {error && <div className="robot-create-error">{error}</div>}
 
-        <div className="robot-create-fields">
-          <label className="robot-create-field robot-create-field-full">
-            <span>Robot Name</span>
-            <input value={robotName} onChange={(event) => setRobotName(event.target.value)} placeholder="Enter Your Robot Name" />
-          </label>
-
-          <label className="robot-create-field">
-            <span>Weight Class</span>
-            {weightClassOptions.length > 0 ? (
-              <select value={weightClass} onChange={(event) => setWeightClass(event.target.value)} disabled={weightClassOptions.length === 1}>
-                {weightClassOptions.length > 1 && <option value="">Weight Class</option>}
-                {weightClassOptions.map((wc) => (
-                  <option key={wc} value={wc}>{weightClassLabel(wc)}</option>
-                ))}
-              </select>
-            ) : (
-              <input readOnly placeholder="Weight Class" />
-            )}
-          </label>
-
-          <label className="robot-create-field">
-            <span>Height (in cm)</span>
-            <input
-              type="number"
-              min="0"
-              step="0.1"
-              max={selectedSport?.dims?.[2] ?? undefined}
-              value={heightCm ?? ""}
-              onChange={(event) => setHeightCm(event.target.value ? parseFloat(event.target.value) : null)}
-              placeholder="Height"
-            />
-          </label>
-
-          <label className="robot-create-field">
-            <span>Weight (in kg)</span>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              max={selectedSport?.maxWeightKg ?? undefined}
-              value={weightKg ?? ""}
-              onChange={(event) => setWeightKg(event.target.value ? parseFloat(event.target.value) : null)}
-              placeholder="Weight"
-            />
-          </label>
-
-          <label className="robot-create-field">
-            <span>Width (in cm)</span>
-            <input
-              type="number"
-              min="0"
-              step="0.1"
-              max={selectedSport?.dims?.[1] ?? undefined}
-              value={widthCm ?? ""}
-              onChange={(event) => setWidthCm(event.target.value ? parseFloat(event.target.value) : null)}
-              placeholder="Width"
-            />
-          </label>
-
-          <label className="robot-create-field">
-            <span>Length (in cm)</span>
-            <input
-              type="number"
-              min="0"
-              step="0.1"
-              max={selectedSport?.dims?.[0] ?? undefined}
-              value={lengthCm ?? ""}
-              onChange={(event) => setLengthCm(event.target.value ? parseFloat(event.target.value) : null)}
-              placeholder="Length"
-            />
-          </label>
-
-          <label className="robot-create-field robot-create-field-full">
-            <span>Description</span>
-            <textarea value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Describe Your Robot" />
-          </label>
-
-          <label className="robot-create-field robot-create-field-full">
-            <span>Robot Image</span>
-            <button type="button" className="robot-upload-zone" onClick={() => fileRef.current?.click()}>
-              {photoPreview ? (
-                <img src={photoPreview} alt="Robot preview" />
-              ) : (
-                <>
-                  <UploadCloud size={34} />
-                  <em>Click to upload or <b>drag & drop</b></em>
-                </>
-              )}
-            </button>
-            <input ref={fileRef} type="file" accept="image/*" hidden onChange={handlePhotoChange} />
-          </label>
-
-          {selectedSport?.controlMode === null && (
-            <div className="robot-control-mode">
-              {(["WIRED", "WIRELESS"] as ControlMode[]).map((mode) => (
-                <button key={mode} type="button" className={controlMode === mode ? "active" : ""} onClick={() => setControlMode(mode)}>
-                  {mode === "WIRED" ? "Wired" : "Wireless"}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {selectedType?.extraFields?.map((field) => (
-            <label className="robot-create-field" key={field.key}>
-              <span>{field.label}</span>
-              <select value={extraAttrs[field.key] ?? ""} onChange={(event) => setExtraAttrs(prev => ({ ...prev, [field.key]: event.target.value }))}>
-                <option value="">Select {field.label}</option>
-                {field.options.map((option) => (
-                  <option key={option} value={option}>{option.replace(/_/g, " ")}</option>
-                ))}
-              </select>
+          <div className="robot-create-fields">
+            <label className="robot-create-field robot-create-field-full">
+              <span>Robot Name</span>
+              <input value={robotName} onChange={(event) => setRobotName(event.target.value)} placeholder="Enter Your Robot Name" />
             </label>
-          ))}
 
-          {(weightKg !== null || widthCm !== null || heightCm !== null || lengthCm !== null) && (
-            <div className="robot-create-eligibility">
-              {liveEligibility.length > 0
-                ? `Eligible: ${liveEligibility.map((cat) => AGE_LABELS[cat]).join(", ")}`
-                : "Specs exceed the selected competition limits."}
-            </div>
-          )}
+            <label className="robot-create-field">
+              <span>Weight Class</span>
+              {weightOptions.length > 0 ? (
+                <select value={selectedWeightKgStr} onChange={(event) => setSelectedWeightKgStr(event.target.value)} disabled={weightOptions.length === 1}>
+                  {weightOptions.length > 1 && <option value="">Weight Class</option>}
+                  {weightOptions.map((w) => (
+                    <option key={w.weightKg} value={w.weightKg}>{w.label}</option>
+                  ))}
+                </select>
+              ) : (
+                <input readOnly placeholder="Weight Class" />
+              )}
+            </label>
 
-          <button type="submit" className="robot-create-save" disabled={submitting || !robotName.trim() || !selectedType || !selectedSport}>
-            {submitting ? "Saving..." : "Save Profile"}
-          </button>
-        </div>
-      </section>
+            <label className="robot-create-field">
+              <span>Height (in cm)</span>
+              <input
+                type="number"
+                min="0"
+                step="0.1"
+                max={selectedLeagueSport.maxHeightCm ?? undefined}
+                value={heightCm ?? ""}
+                onChange={(event) => setHeightCm(event.target.value ? parseFloat(event.target.value) : null)}
+                placeholder="Height"
+              />
+            </label>
+
+            <label className="robot-create-field">
+              <span>Weight (in kg)</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                max={weightCeilingKg ?? undefined}
+                value={weightKg ?? ""}
+                onChange={(event) => setWeightKg(event.target.value ? parseFloat(event.target.value) : null)}
+                placeholder="Weight"
+              />
+            </label>
+
+            <label className="robot-create-field">
+              <span>Width (in cm)</span>
+              <input
+                type="number"
+                min="0"
+                step="0.1"
+                max={selectedLeagueSport.maxWidthCm ?? undefined}
+                value={widthCm ?? ""}
+                onChange={(event) => setWidthCm(event.target.value ? parseFloat(event.target.value) : null)}
+                placeholder="Width"
+              />
+            </label>
+
+            <label className="robot-create-field">
+              <span>Length (in cm)</span>
+              <input
+                type="number"
+                min="0"
+                step="0.1"
+                max={selectedLeagueSport.maxLengthCm ?? undefined}
+                value={lengthCm ?? ""}
+                onChange={(event) => setLengthCm(event.target.value ? parseFloat(event.target.value) : null)}
+                placeholder="Length"
+              />
+            </label>
+
+            <label className="robot-create-field robot-create-field-full">
+              <span>Description</span>
+              <textarea value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Describe Your Robot" />
+            </label>
+
+            <label className="robot-create-field robot-create-field-full">
+              <span>Robot Image</span>
+              <button type="button" className="robot-upload-zone" onClick={() => fileRef.current?.click()}>
+                {photoPreview ? (
+                  <img src={photoPreview} alt="Robot preview" />
+                ) : (
+                  <>
+                    <UploadCloud size={34} />
+                    <em>Click to upload or <b>drag & drop</b></em>
+                  </>
+                )}
+              </button>
+              <input ref={fileRef} type="file" accept="image/*" hidden onChange={handlePhotoChange} />
+            </label>
+
+            {bridge.controlMode === null && (
+              <div className="robot-control-mode">
+                {(["WIRED", "WIRELESS"] as ControlMode[]).map((mode) => (
+                  <button key={mode} type="button" className={controlMode === mode ? "active" : ""} onClick={() => setControlMode(mode)}>
+                    {mode === "WIRED" ? "Wired" : "Wireless"}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {extraFields.map((field) => (
+              <label className="robot-create-field" key={field.key}>
+                <span>{field.label}</span>
+                <select value={extraAttrs[field.key] ?? ""} onChange={(event) => setExtraAttrs(prev => ({ ...prev, [field.key]: event.target.value }))}>
+                  <option value="">Select {field.label}</option>
+                  {field.options.map((option) => (
+                    <option key={option} value={option}>{option.replace(/_/g, " ")}</option>
+                  ))}
+                </select>
+              </label>
+            ))}
+
+            {hasEnteredSpecs && (
+              <div className="robot-create-eligibility">
+                {withinLeagueLimits
+                  ? `Within ${selectedLeague?.shortName ?? "this league"}'s specs for ${selectedLeagueSport.sportName}.`
+                  : `Exceeds ${selectedLeague?.shortName ?? "this league"}'s specs for ${selectedLeagueSport.sportName}.`}
+              </div>
+            )}
+
+            <button type="submit" className="robot-create-save" disabled={submitting || !robotName.trim()}>
+              {submitting ? "Saving..." : "Save Profile"}
+            </button>
+          </div>
+        </section>
+      )}
     </form>
   );
 }

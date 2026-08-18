@@ -196,8 +196,15 @@ import MobileJudgeEcosystem from "../feature/Admin/components/MobileJudgeEcosyst
 
 // TEMP — visual QA harness, see DevPreviewROBOTS below.
 import MobileRobotBuild from "../feature/Robots/components/MobileRobotBuild";
+import MobileRobotEmptyState from "../feature/Robots/components/MobileRobotEmptyState";
 import { toLabel as robotToLabel, getRobotImage as getRobotPreviewImage, getWeight as getRobotPreviewWeight } from "../feature/Robots/pages/RobotsPages";
 import "../styles/robots.css";
+
+// TEMP — visual QA harness, see DevPreviewAPM below.
+import AvatarPickerModal from "../feature/Profile/components/AvatarPickerModal";
+
+// TEMP — visual QA harness, see DevPreviewCRF below.
+import CreateRobotForm from "../feature/Robots/components/CreateRobotFrom";
 
 function FooterShell({ children }: { children: ReactNode }) {
   return (
@@ -562,6 +569,63 @@ function DevPreviewROBOTS() {
   );
 }
 
+// TEMP — visual QA harness for AvatarPickerModal's mobile tile-grid, no
+// auth/backend needed. Remove once the styling review is done.
+function DevPreviewAPM() {
+  return (
+    <Layout>
+      <AvatarPickerModal
+        currentValue="avatar:nova"
+        onClose={() => {}}
+        onSelectAvatar={async () => {}}
+        onUploadFile={async () => {}}
+      />
+    </Layout>
+  );
+}
+
+// TEMP — visual QA harness for the catalog-driven CreateRobotForm, no
+// auth/backend team-membership needed. Remove once the styling review is done.
+function DevPreviewCRF() {
+  return (
+    <Layout>
+      <div className="robot-build-page">
+        <div className="robot-build-shell robot-create-shell">
+          <CreateRobotForm onSuccess={() => {}} onCancel={() => {}} />
+        </div>
+      </div>
+    </Layout>
+  );
+}
+
+// TEMP — visual QA harness for MobileRobotEmptyState (no-robots / no-team),
+// no auth/backend needed. Remove once the styling review is done.
+function DevPreviewROBOTSEMPTY() {
+  return (
+    <Layout>
+      <div className="robot-build-page">
+        <div className="max-[950px]:hidden" style={{ position: "relative", zIndex: 1, padding: 24 }}>DESKTOP PLACEHOLDER (unchanged)</div>
+        <div className="hidden max-[950px]:block">
+          <MobileRobotEmptyState mode="no-robots" canManageRobots={true} onCreateRobot={() => {}} />
+        </div>
+      </div>
+    </Layout>
+  );
+}
+
+function DevPreviewROBOTSNOTEAM() {
+  return (
+    <Layout>
+      <div className="robot-build-page">
+        <div className="max-[950px]:hidden" style={{ position: "relative", zIndex: 1, padding: 24 }}>DESKTOP PLACEHOLDER (unchanged)</div>
+        <div className="hidden max-[950px]:block">
+          <MobileRobotEmptyState mode="no-team" onCreateTeam={() => {}} />
+        </div>
+      </div>
+    </Layout>
+  );
+}
+
 // ======================================================
 // APP ROUTES
 // ======================================================
@@ -584,6 +648,11 @@ function AppRoutes() {
       <Route path="/dev-preview/mmm" element={<DevPreviewMMM />} />
       <Route path="/dev-preview/notif" element={<DevPreviewNOTIF />} />
       <Route path="/dev-preview/robots" element={<DevPreviewROBOTS />} />
+      <Route path="/dev-preview/apm" element={<DevPreviewAPM />} />
+      <Route path="/dev-preview/crf" element={<DevPreviewCRF />} />
+      <Route path="/dev-preview/certs" element={<Layout><CertificatesPage /></Layout>} />
+      <Route path="/dev-preview/robots-empty" element={<DevPreviewROBOTSEMPTY />} />
+      <Route path="/dev-preview/robots-noteam" element={<DevPreviewROBOTSNOTEAM />} />
       {/* Public profiles — accepts both UUID and BL-code (BLT.../BLR.../BLU...) */}
       <Route path="/team/:teamId"    element={<FooterShell><TeamPublicPage /></FooterShell>} />
       <Route path="/robot/:robotId"  element={<FooterShell><RobotPublicPage /></FooterShell>} />
