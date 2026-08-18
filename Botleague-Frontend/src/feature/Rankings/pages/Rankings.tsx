@@ -1,28 +1,47 @@
 import { useCallback, useEffect, useId, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  getGlobalRanking, getAvailablePools, getWeightClasses,
+  getGlobalRanking, getAvailablePools,
   type GlobalRankingPage,
 } from "../api/rankings.api";
-import { weightClassLabel } from "../../Robots/constants/weightClasses";
+import { getPublicLeagueSports, type LeagueSport } from "../../../shared/api/catalog.api";
 import RankingRow from "../components/RankingRow";
 import { useLeagues, formatAgeRange } from "../../../temp/pages/leagues/useLeagues";
 import "../../../styles/rankings.css";
 
-// ── Constants ────────────────────────────────────────────────────────────────
+// ── Catalog sport -> ranking-query sport code ─────────────────────────────────
+//
+// The ranking table is keyed by the OLD free-text sport codes (EventSports.sport
+// is an organiser-typed string, e.g. "ROBO_WAR_OPEN") — a different system from
+// the new admin-managed League/Sport catalog this page's dropdowns are now
+// sourced from (catalog sports are just "Robo War", one row, with per-league
+// specs). This table is the one place that bridges them: catalog sport name +
+// league age-group -> the ranking code to actually query with. Ages without a
+// known code (e.g. a sport newly offered at a league that never had it under
+// the old system) fall back to a same-shape generated code, which is honest —
+// if there's truly no ranking data under that code yet, the empty state below
+// says so rather than silently mismatching.
+const CATALOG_SPORT_TO_RANKING_CODE: Record<string, Partial<Record<string, string>>> = {
+  "Robo Sumo":      { JUNIOR_INNOVATORS: "ROBO_SUMO" },
+  "Line Follower":  { JUNIOR_INNOVATORS: "LINE_FOLLOWER", YOUNG_ENGINEERS: "LINE_FOLLOWER_AUTO" },
+  "Robo Soccer":    { JUNIOR_INNOVATORS: "ROBO_SOCCER", YOUNG_ENGINEERS: "ROBO_SOCCER", ROBO_MINDS: "ROBO_SOCCER_OPEN" },
+  "Robo War":       { YOUNG_ENGINEERS: "ROBO_WAR", ROBO_MINDS: "ROBO_WAR_OPEN" },
+  "Drone Soccer":   { YOUNG_ENGINEERS: "DRONE_RACING_SOCCER", ROBO_MINDS: "DRONE_RACING_FPV" },
+  "Robo Race":      { JUNIOR_INNOVATORS: "RC_ROBO_RACING", YOUNG_ENGINEERS: "RC_ROBO_RACING", ROBO_MINDS: "RC_ROBO_RACING" },
+  "RC Racing Car":  { YOUNG_ENGINEERS: "RC_RACING_NITRO", ROBO_MINDS: "RC_RACING_NITRO" },
+};
 
-// All sports that can possibly exist (superset — user can always browse any combination).
-// Deliberately NOT sourced from the League/Sport catalog: EventSports.sport is free
-// text an organiser types at event-sport creation time, not constrained to the
-// catalog's admin-managed sport list, so this stays its own superset.
-const ALL_SPORTS = [
-  "ROBO_WAR", "ROBO_WAR_OPEN", "ROBO_SOCCER", "ROBO_SOCCER_OPEN",
-  "LINE_FOLLOWER", "LINE_FOLLOWER_AUTO", "ROBO_SUMO",
-  "DRONE_RACING_SOCCER", "DRONE_RACING_FPV", "RC_ROBO_RACING", "RC_RACING_NITRO",
-];
+function toRankingSportCode(sportName: string, ageGroup: string): string {
+  return (
+    CATALOG_SPORT_TO_RANKING_CODE[sportName]?.[ageGroup] ??
+    sportName.toUpperCase().replace(/[^A-Z0-9]+/g, "_")
+  );
+}
 
-function toLabel(raw: string) {
-  return raw.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+// Same "1.5kg -> 1_5KG" shape the old ranking system's weight-class codes use
+// (see Robots/constants/weightClasses.ts's WEIGHT_CLASS_LABELS keys).
+function toRankingWeightCode(weightKg: number): string {
+  return `${String(weightKg).replace(".", "_")}KG`;
 }
 
 // ── Filter select (gradient border + gradient chevron) ────────────────────────
@@ -70,53 +89,75 @@ export default function GlobalRankingsPage() {
   const navigate = useNavigate();
   const { leagues } = useLeagues();
 
-  // Draft filter state — what the selects show, only committed to a fetch on
-  // "Apply Filter" (matching the mockup's explicit apply-to-commit UX).
-  const [draftSport,       setDraftSport]       = useState("");
-  const [draftAgeGroup,    setDraftAgeGroup]    = useState("");
-  const [draftWeightClass, setDraftWeightClass] = useState("");
+  // Draft filter state — cascades League -> Sport -> Weight Class, each
+  // gated on the one before it, only committed to a fetch on "Apply
+  // Filter" (matching the mockup's explicit apply-to-commit UX). Sport and
+  // weight are stored as strings (slug / stringified kg) so they plug into
+  // the same generic FilterSelect as everything else; resolved back to
+  // real values via draftLeague/selectedLeagueSport below.
+  const [draftLeagueSlug, setDraftLeagueSlug] = useState("");
+  const [draftSportSlug,  setDraftSportSlug]  = useState("");
+  const [draftWeightKg,   setDraftWeightKg]   = useState("");
 
-  // Applied filter state — what the current results were actually fetched with.
+  // Applied filter state — what the current results were actually fetched
+  // with. These stay in the ranking table's own OLD sport/ageGroup code
+  // space (see CATALOG_SPORT_TO_RANKING_CODE) — only ever set from a draft
+  // selection via handleApplyFilter, never touched directly by a select.
   const [sport,       setSport]       = useState("");
   const [ageGroup,    setAgeGroup]    = useState("");
   const [weightClass, setWeightClass] = useState("");
 
   // Data state
-  const [pools,             setPools]             = useState<{ sport: string; ageGroup: string }[]>([]);
-  const [weightClassOptions, setWeightClassOptions] = useState<string[]>([]);
-  const [page,              setPage]              = useState<GlobalRankingPage | null>(null);
-  const [loading,           setLoading]           = useState(false);
-  const [error,             setError]             = useState<string | null>(null);
+  const [pools, setPools] = useState<{ sport: string; ageGroup: string }[]>([]);
+  const [leagueSports, setLeagueSports] = useState<LeagueSport[]>([]);
+  const [leagueSportsLoading, setLeagueSportsLoading] = useState(false);
+  const [page,    setPage]    = useState<GlobalRankingPage | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState<string | null>(null);
 
-  // On mount: load pools, then default both draft + applied filters to the first pool with data.
+  // Only used for the "no ranking data yet for this pool" vs. "no matches
+  // played yet" distinction in the empty state below — no longer drives
+  // any dropdown (those are catalog-sourced now).
   useEffect(() => {
-    getAvailablePools()
-      .then((p) => {
-        setPools(p);
-        const initial = p[0] ?? { sport: "ROBO_WAR", ageGroup: "JUNIOR_INNOVATORS" };
-        setDraftSport(initial.sport);
-        setDraftAgeGroup(initial.ageGroup);
-        setSport(initial.sport);
-        setAgeGroup(initial.ageGroup);
-      })
-      .catch(() => {
-        setDraftSport("ROBO_WAR");
-        setDraftAgeGroup("JUNIOR_INNOVATORS");
-        setSport("ROBO_WAR");
-        setAgeGroup("JUNIOR_INNOVATORS");
-      });
+    getAvailablePools().then(setPools).catch(() => setPools([]));
   }, []);
 
-  // Weight-class options reload as soon as the draft sport changes (no need
-  // to wait for Apply Filter — only the actual ranking query waits for that).
+  const draftLeague = leagues.find((l) => l.slug === draftLeagueSlug) ?? null;
+  const selectedLeagueSport = leagueSports.find((ls) => ls.sportSlug === draftSportSlug) ?? null;
+  const weightOptions: { weightKg: number; label: string }[] = selectedLeagueSport
+    ? selectedLeagueSport.weightClasses.length > 0
+      ? selectedLeagueSport.weightClasses.map((wc) => ({ weightKg: wc.weightKg, label: wc.label }))
+      : selectedLeagueSport.weightLimitKg != null
+        ? [{ weightKg: selectedLeagueSport.weightLimitKg, label: `${selectedLeagueSport.weightLimitKg} kg` }]
+        : []
+    : [];
+
+  // League chosen -> fetch that league's real sports from the catalog
+  // (exactly what's LIVE for it — e.g. Ignite's 5, not every sport that's
+  // ever existed) and reset whatever was chosen further down the chain.
   useEffect(() => {
-    if (!draftSport) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDraftWeightClass("");
-    getWeightClasses(draftSport)
-      .then(setWeightClassOptions)
-      .catch(() => setWeightClassOptions([]));
-  }, [draftSport]);
+    setDraftSportSlug("");
+    setDraftWeightKg("");
+    if (!draftLeagueSlug) {
+      setLeagueSports([]);
+      return;
+    }
+    let cancelled = false;
+    setLeagueSportsLoading(true);
+    getPublicLeagueSports(draftLeagueSlug)
+      .then((rows) => { if (!cancelled) setLeagueSports(rows); })
+      .catch(() => { if (!cancelled) setLeagueSports([]); })
+      .finally(() => { if (!cancelled) setLeagueSportsLoading(false); });
+    return () => { cancelled = true; };
+  }, [draftLeagueSlug]);
+
+  // Sport chosen -> its weight-class options change; whatever weight was
+  // picked for the PREVIOUS sport no longer applies.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDraftWeightKg("");
+  }, [draftSportSlug]);
 
   const loadRankings = useCallback(async () => {
     if (!sport || !ageGroup) return;
@@ -143,14 +184,18 @@ export default function GlobalRankingsPage() {
     loadRankings();
   }, [loadRankings]);
 
+  // Results (and the ranking query itself) only ever appear after this —
+  // nothing auto-loads on mount, so "pick League -> Sport -> Weight, then
+  // Apply Filter" is the only way to see a ranking table.
   const handleApplyFilter = () => {
-    setSport(draftSport);
-    setAgeGroup(draftAgeGroup);
-    setWeightClass(draftWeightClass);
+    if (!draftLeague || !selectedLeagueSport) return;
+    setSport(toRankingSportCode(selectedLeagueSport.sportName, draftLeague.ageGroupValue));
+    setAgeGroup(draftLeague.ageGroupValue);
+    setWeightClass(draftWeightKg ? toRankingWeightCode(Number(draftWeightKg)) : "");
   };
 
   const entries = page?.entries ?? [];
-  const hasPoolData = pools.some((p) => p.sport === draftSport && p.ageGroup === draftAgeGroup);
+  const hasPoolData = pools.some((p) => p.sport === sport && p.ageGroup === ageGroup);
 
   return (
     <div className="rank-page min-h-screen overflow-auto w-full">
@@ -174,42 +219,49 @@ export default function GlobalRankingsPage() {
           </h2>
 
           <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4">
-            <FilterSelect
-              widthClass="lg:max-w-[360px]"
-              placeholder="Select Sport"
-              value={draftSport}
-              onChange={setDraftSport}
-              options={ALL_SPORTS.map((s) => ({
-                value: s,
-                label: `${pools.some((p) => p.sport === s) ? "● " : ""}${toLabel(s)}`,
-              }))}
-            />
-
+            {/* League first — everything else cascades from it, matching
+                how the catalog itself is structured (a Sport only exists
+                *within* a League). */}
             <FilterSelect
               widthClass="lg:max-w-[303px]"
-              placeholder="Select Category"
-              value={draftAgeGroup}
-              onChange={setDraftAgeGroup}
+              placeholder="Select League"
+              value={draftLeagueSlug}
+              onChange={setDraftLeagueSlug}
               options={leagues.map((l) => ({
-                value: l.ageGroupValue,
+                value: l.slug,
                 label: `${l.shortName} (${formatAgeRange(l.minAge, l.maxAge)} yrs)`,
               }))}
             />
 
+            {/* Only that League's real LIVE sports (e.g. Ignite's 5) —
+                disabled until a League is picked. */}
+            <FilterSelect
+              widthClass="lg:max-w-[360px]"
+              placeholder={leagueSportsLoading ? "Loading sports…" : "Select Sport"}
+              value={draftSportSlug}
+              onChange={setDraftSportSlug}
+              disabled={!draftLeagueSlug || leagueSportsLoading}
+              options={leagueSports.map((ls) => ({ value: ls.sportSlug, label: ls.sportName }))}
+            />
+
+            {/* That Sport's own weight classes within the League — disabled
+                until a Sport is picked (and simply has no options for
+                sports with no weight-class concept, e.g. Drone/RC). */}
             <FilterSelect
               widthClass="lg:max-w-[303px]"
               placeholder="Select Weight Class"
-              value={draftWeightClass}
-              onChange={setDraftWeightClass}
-              disabled={weightClassOptions.length === 0}
-              options={weightClassOptions.map((wc) => ({ value: wc, label: weightClassLabel(wc) }))}
+              value={draftWeightKg}
+              onChange={setDraftWeightKg}
+              disabled={!draftSportSlug || weightOptions.length === 0}
+              options={weightOptions.map((w) => ({ value: String(w.weightKg), label: w.label }))}
             />
 
             <button
               type="button"
               onClick={handleApplyFilter}
+              disabled={!draftLeagueSlug || !draftSportSlug}
               className="h-[48px] sm:h-[51px] w-full lg:w-[159px] lg:ml-auto shrink-0 rounded-md
-                         bg-gradient-to-b from-[#0162D1]/[0.75] to-[#8C6CFF]/[0.75]
+                         bg-gradient-to-b from-[#0162D1]/[0.75] to-[#8C6CFF]/[0.75] disabled:opacity-50 disabled:cursor-not-allowed
                          px-6 text-[14px] sm:text-[16px] font-medium text-white
                          shadow-[0_4px_4px_rgba(0,0,0,0.25)] transition hover:brightness-110 cursor-pointer"
             >
@@ -226,7 +278,7 @@ export default function GlobalRankingsPage() {
         {/* ── States ─────────────────────────────────────────────────── */}
         {(!sport || !ageGroup) && !loading && (
           <div className="rounded-2xl border border-dashed border-[#0162D1]/25 py-20 text-center">
-            <p className="text-[#0162D1] font-semibold">Select a sport and category, then Apply Filter</p>
+            <p className="text-[#0162D1] font-semibold">Select a league and sport, then Apply Filter</p>
           </div>
         )}
 

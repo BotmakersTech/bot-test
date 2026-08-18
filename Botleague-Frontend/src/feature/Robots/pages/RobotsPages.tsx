@@ -7,6 +7,7 @@ import Modal from "../../../shared/components/Modal";
 import useTeamMembership from "../../Team/TeamMembership/hooks/useTeamMembership";
 import CreateRobotForm from "../components/CreateRobotFrom";
 import TeamBuildEmptyState from "../components/TeamBuildEmptyState";
+import MobileRobotBuild from "../components/MobileRobotBuild";
 import useRobots from "../hooks/useRobots";
 import type { Robot } from "../types/types";
 import robotFallback from "../../../assets/robot.png";
@@ -26,7 +27,7 @@ const heroFallbacks = [
   "/icons/robo.png",
 ];
 
-function toLabel(value?: string | null) {
+export function toLabel(value?: string | null) {
   if (!value) return "-";
   return value
     .replace(/_/g, " ")
@@ -34,11 +35,11 @@ function toLabel(value?: string | null) {
     .replace(/\b\w/g, char => char.toUpperCase());
 }
 
-function getRobotImage(robot?: Robot) {
+export function getRobotImage(robot?: Robot) {
   return robot?.robotIMG || heroFallbacks[0];
 }
 
-function getWeight(robot: Robot) {
+export function getWeight(robot: Robot) {
   if (robot.weightKg != null) return `${robot.weightKg} Kg`;
   if (robot.weightClass) return toLabel(robot.weightClass);
   return "-";
@@ -155,128 +156,147 @@ export default function RobotsPage() {
 
   return (
     <div className="robot-build-page">
-      <img className="robot-build-bg robot-build-bg-flight-left" src={flightDecoration} alt="" aria-hidden="true" />
-      <img className="robot-build-bg robot-build-bg-flight-right" src={flightDecoration} alt="" aria-hidden="true" />
-      <img className="robot-build-star robot-build-star-top" src={starDecoration} alt="" aria-hidden="true" />
-      <img className="robot-build-star robot-build-star-mid" src={starDecoration} alt="" aria-hidden="true" />
-      <img className="robot-build-star robot-build-star-bottom" src={starDecoration} alt="" aria-hidden="true" />
+      {/* Desktop (>950px) — unchanged */}
+      <div className="max-[950px]:hidden">
+        <img className="robot-build-bg robot-build-bg-flight-left" src={flightDecoration} alt="" aria-hidden="true" />
+        <img className="robot-build-bg robot-build-bg-flight-right" src={flightDecoration} alt="" aria-hidden="true" />
+        <img className="robot-build-star robot-build-star-top" src={starDecoration} alt="" aria-hidden="true" />
+        <img className="robot-build-star robot-build-star-mid" src={starDecoration} alt="" aria-hidden="true" />
+        <img className="robot-build-star robot-build-star-bottom" src={starDecoration} alt="" aria-hidden="true" />
 
-      <div className="robot-build-shell">
-        <header className="robot-build-header">
-          <h1>Team Build</h1>
-          {canManageRobots && (
-            <button type="button" className="robot-build-add" onClick={() => setShowCreate(true)}>
-              <Plus size={19} />
-              Add Robot
-            </button>
-          )}
-        </header>
-
-        <section className="robot-hero" aria-label="Robot image carousel">
-          <button type="button" className="robot-hero-arrow robot-hero-arrow-left" onClick={() => changeHero(-1)} aria-label="Previous robot image">
-            <ChevronLeft size={56} strokeWidth={1.7} />
-          </button>
-
-          <div className="robot-hero-stage">
-            {carouselSlots(heroImages, activeHero).map(item => (
-              <img
-                key={item.key}
-                src={item.src}
-                alt=""
-                aria-hidden="true"
-                className={`robot-hero-img robot-hero-img-${item.offset + 2}`}
-                draggable={false}
-              />
-            ))}
-          </div>
-
-          <button type="button" className="robot-hero-arrow robot-hero-arrow-right" onClick={() => changeHero(1)} aria-label="Next robot image">
-            <ChevronRight size={56} strokeWidth={1.7} />
-          </button>
-        </section>
-
-        <section className="robot-list-zone" aria-label="Team robots">
-          <div className="robot-filter-tabs" role="tablist" aria-label="Filter robots">
-            {[
-              { key: "ALL" as const, label: "All" },
-              { key: "ACTIVE" as const, label: "Active" },
-              { key: "INACTIVE" as const, label: "Inactive" },
-            ].map(tab => (
-              <button
-                key={tab.key}
-                type="button"
-                className={`robot-filter-tab${filter === tab.key ? " active" : ""}`}
-                onClick={() => setFilter(tab.key)}
-              >
-                {tab.label}
+        <div className="robot-build-shell">
+          <header className="robot-build-header">
+            <h1>Team Build</h1>
+            {canManageRobots && (
+              <button type="button" className="robot-build-add" onClick={() => setShowCreate(true)}>
+                <Plus size={19} />
+                Add Robot
               </button>
-            ))}
-          </div>
+            )}
+          </header>
 
-          {visibleRobots.length === 0 ? (
-            // robots.length is guaranteed > 0 here (the zero-robots case
-            // early-returns TeamBuildEmptyState above) — this is only the
-            // "current filter matches nothing" case.
-            <div className="robot-empty-row">
-              <img src={getRobotImage()} alt="" />
-              <div>
-                <h2>No robots found</h2>
-                <p>Try another filter.</p>
+          <section className="robot-hero" aria-label="Robot image carousel">
+            <button type="button" className="robot-hero-arrow robot-hero-arrow-left" onClick={() => changeHero(-1)} aria-label="Previous robot image">
+              <ChevronLeft size={56} strokeWidth={1.7} />
+            </button>
+
+            <div className="robot-hero-stage">
+              {carouselSlots(heroImages, activeHero).map(item => (
+                <img
+                  key={item.key}
+                  src={item.src}
+                  alt=""
+                  aria-hidden="true"
+                  className={`robot-hero-img robot-hero-img-${item.offset + 2}`}
+                  draggable={false}
+                />
+              ))}
+            </div>
+
+            <button type="button" className="robot-hero-arrow robot-hero-arrow-right" onClick={() => changeHero(1)} aria-label="Next robot image">
+              <ChevronRight size={56} strokeWidth={1.7} />
+            </button>
+          </section>
+
+          <section className="robot-list-zone" aria-label="Team robots">
+            <div className="robot-filter-tabs" role="tablist" aria-label="Filter robots">
+              {[
+                { key: "ALL" as const, label: "All" },
+                { key: "ACTIVE" as const, label: "Active" },
+                { key: "INACTIVE" as const, label: "Inactive" },
+              ].map(tab => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  className={`robot-filter-tab${filter === tab.key ? " active" : ""}`}
+                  onClick={() => setFilter(tab.key)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {visibleRobots.length === 0 ? (
+              // robots.length is guaranteed > 0 here (the zero-robots case
+              // early-returns TeamBuildEmptyState above) — this is only the
+              // "current filter matches nothing" case.
+              <div className="robot-empty-row">
+                <img src={getRobotImage()} alt="" />
+                <div>
+                  <h2>No robots found</h2>
+                  <p>Try another filter.</p>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="robot-rows">
-              {visibleRobots.map(robot => {
-                const active = robot.status === "ACTIVE";
+            ) : (
+              <div className="robot-rows">
+                {visibleRobots.map(robot => {
+                  const active = robot.status === "ACTIVE";
 
-                return (
-                 <article className="robot-data-row" key={robot.id}>
-  <img className="robot-row-image" src={getRobotImage(robot)} alt={robot.robotName} />
+                  return (
+                   <article className="robot-data-row" key={robot.id}>
+    <img className="robot-row-image" src={getRobotImage(robot)} alt={robot.robotName} />
 
-  <div className="flex flex-col gap-2 flex-1">
-    {/* Row 1: name + status pill, View Profile pinned to the right */}
-    <div className="flex items-center justify-between">
-      <div className="robot-row-name flex items-center gap-2">
-        <h2>{robot.robotName}</h2>
-        <span className={`robot-status-pill${active ? " active" : " inactive"}`}>
-          <span />
-          {active ? "Active" : "Inactive"}
-        </span>
+    <div className="flex flex-col gap-2 flex-1">
+      {/* Row 1: name + status pill, View Profile pinned to the right */}
+      <div className="flex items-center justify-between">
+        <div className="robot-row-name flex items-center gap-2">
+          <h2>{robot.robotName}</h2>
+          <span className={`robot-status-pill${active ? " active" : " inactive"}`}>
+            <span />
+            {active ? "Active" : "Inactive"}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          className="robot-profile-link"
+          onClick={() => navigate(`/robots/${robot.id}`)}
+        >
+          View Profile
+        </button>
       </div>
 
-      <button
-        type="button"
-        className="robot-profile-link"
-        onClick={() => navigate(`/robots/${robot.id}`)}
-      >
-        View Profile
-      </button>
+      {/* Row 2: BotID, Weight, Sport side by side */}
+      <div className="flex items-center gap-6 justify-center">
+        <div className="robot-row-field">
+          <span>BotID</span>
+          <strong>{robot.robotCode || "-"}</strong>
+        </div>
+
+        <div className="robot-row-field">
+          <span>Weight</span>
+          <strong>{getWeight(robot)}</strong>
+        </div>
+
+        <div className="robot-row-field">
+          <span>Sports</span>
+          <strong>{toLabel(robot.sport)}</strong>
+        </div>
+      </div>
     </div>
-
-    {/* Row 2: BotID, Weight, Sport side by side */}
-    <div className="flex items-center gap-6 justify-center">
-      <div className="robot-row-field">
-        <span>BotID</span>
-        <strong>{robot.robotCode || "-"}</strong>
+  </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        </div>
       </div>
 
-      <div className="robot-row-field">
-        <span>Weight</span>
-        <strong>{getWeight(robot)}</strong>
-      </div>
-
-      <div className="robot-row-field">
-        <span>Sports</span>
-        <strong>{toLabel(robot.sport)}</strong>
-      </div>
-    </div>
-  </div>
-</article>
-                );
-              })}
-            </div>
-          )}
-        </section>
+      {/* Mobile/Tablet (<=950px) */}
+      <div className="hidden max-[950px]:block">
+        <MobileRobotBuild
+          robots={robots}
+          visibleRobots={visibleRobots}
+          filter={filter}
+          onFilterChange={setFilter}
+          canManageRobots={canManageRobots}
+          onAddRobot={() => setShowCreate(true)}
+          onOpenRobot={(robotId) => navigate(`/robots/${robotId}`)}
+          getRobotImage={getRobotImage}
+          getWeight={getWeight}
+          toLabel={toLabel}
+        />
       </div>
 
       {showCreate && (

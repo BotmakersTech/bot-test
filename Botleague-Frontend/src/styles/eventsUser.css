@@ -181,3 +181,36 @@
   border-radius: 50%;
   animation: evt-spin 700ms linear infinite;
 }
+
+/* ── Search submit button — sits beside .evt-input now that Filters (with
+   its own Apply button) is gone; reuses that same gradient recipe. ──────── */
+.evt-search-btn {
+  flex-shrink: 0;
+  padding: 0 22px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #0162D1, #8C6CFF);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 150ms ease;
+}
+.evt-search-btn:hover { filter: brightness(1.08); }
+
+/* ── Mobile/tablet heading normalization (<=950px) — every page heading
+   (title, empty-state messages) becomes the same 20px/600/#0162D1 instead
+   of each carrying its own size/weight/color; desktop above this breakpoint
+   is untouched (its own Tailwind classes still apply as before). ────────── */
+@media (max-width: 950px) {
+  .evt-heading-mobile {
+    font-size: 20px !important;
+    font-weight: 600 !important;
+    color: #0162D1 !important;
+  }
+  .evt-heading-mobile .evt-text-gradient {
+    background: none !important;
+    -webkit-text-fill-color: #0162D1 !important;
+    color: #0162D1 !important;
+  }
+}

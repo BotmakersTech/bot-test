@@ -48,6 +48,18 @@ const gradientText = {
   backgroundClip: "text" as const,
   color: "transparent",
 };
+// Plain, muted caption under a gradient-filled stat number — sharing the
+// number's own gradient fill (as this used to) reads as more number than
+// label, since both end up the same eye-catching color; a flat neutral
+// tone makes it unambiguous which text is the value and which is the tag.
+const statLabelStyle = {
+  margin: 0,
+  fontFamily: "Inter, sans-serif",
+  fontWeight: 500 as const,
+  fontSize: 12,
+  color: "#6b7280",
+  whiteSpace: "nowrap" as const,
+};
 
 const DESIGN_WIDTH = 412;
 // 917 (Figma) minus the omitted 69px top bar and the page's own bottom nav
@@ -287,17 +299,17 @@ export default function MobileDashboard({
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, width: 78 }}>
               <CalendarDays size={24} style={{ color: "#3269d0" }} />
               <p style={{ ...gradientText, margin: 0, fontFamily: "Sarpanch, sans-serif", fontWeight: 600, fontSize: 20, whiteSpace: "nowrap" }}>{eventsParticipated}</p>
-              <p style={{ ...gradientText, margin: 0, fontFamily: "Inter, sans-serif", fontWeight: 500, fontSize: 12, whiteSpace: "nowrap" }}>Events</p>
+              <p style={statLabelStyle}>Events</p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, width: 78 }}>
               <Swords size={24} style={{ color: "#3269d0" }} />
               <p style={{ ...gradientText, margin: 0, fontFamily: "Sarpanch, sans-serif", fontWeight: 600, fontSize: 20, whiteSpace: "nowrap" }}>{matchesTotal}</p>
-              <p style={{ ...gradientText, margin: 0, fontFamily: "Inter, sans-serif", fontWeight: 500, fontSize: 12, whiteSpace: "nowrap" }}>Matches</p>
+              <p style={statLabelStyle}>Matches</p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, width: 78 }}>
               <Medal size={24} style={{ color: "#3269d0" }} />
               <p style={{ ...gradientText, margin: 0, fontFamily: "Sarpanch, sans-serif", fontWeight: 600, fontSize: 20, whiteSpace: "nowrap" }}>{winRate}%</p>
-              <p style={{ ...gradientText, margin: 0, fontFamily: "Inter, sans-serif", fontWeight: 500, fontSize: 12, whiteSpace: "nowrap" }}>Win Rate</p>
+              <p style={statLabelStyle}>Win Rate</p>
             </div>
           </div>
         </div>

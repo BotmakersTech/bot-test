@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -61,6 +61,18 @@ export default function MobileMoreMenu({ primaryRole, pendingInvites }: Props) {
 
   const close = () => { setOpen(false); setQuery(""); };
   const go = (link: string) => { close(); navigate(link); };
+
+  // Phone/tablet back button closes the sheet instead of navigating the
+  // page underneath it — push one history entry while open so the next
+  // back press pops that instead, then just sync our own state to closed
+  // rather than calling history.back() again (already consumed).
+  useEffect(() => {
+    if (!open) return;
+    window.history.pushState({ mnavSheet: true }, "");
+    const handlePopState = () => setOpen(false);
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [open]);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -168,7 +180,6 @@ export default function MobileMoreMenu({ primaryRole, pendingInvites }: Props) {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search"
               aria-label="Search menu"
-              autoFocus
             />
           </div>
 

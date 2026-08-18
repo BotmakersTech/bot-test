@@ -194,6 +194,11 @@ import "../styles/memberManagement.css";
 // TEMP — visual QA harness, see DevPreviewMJG below.
 import MobileJudgeEcosystem from "../feature/Admin/components/MobileJudgeEcosystem";
 
+// TEMP — visual QA harness, see DevPreviewROBOTS below.
+import MobileRobotBuild from "../feature/Robots/components/MobileRobotBuild";
+import { toLabel as robotToLabel, getRobotImage as getRobotPreviewImage, getWeight as getRobotPreviewWeight } from "../feature/Robots/pages/RobotsPages";
+import "../styles/robots.css";
+
 function FooterShell({ children }: { children: ReactNode }) {
   return (
     <>
@@ -429,6 +434,17 @@ function DevPreviewEVT() {
   );
 }
 
+// TEMP — visual QA harness for the full UserEventPage (header/search/
+// heading), not just the card. Uses the real component/hook, so it needs
+// the backend up but not auth. Remove once the styling review is done.
+function DevPreviewEVTPage() {
+  return (
+    <Layout>
+      <UserEventPage />
+    </Layout>
+  );
+}
+
 // TEMP — visual QA harness for the Rankings mobile card, no auth/backend
 // needed. Remove once the styling review is done.
 function DevPreviewRANK() {
@@ -514,6 +530,38 @@ function DevPreviewMMM() {
   );
 }
 
+// TEMP — visual QA harness for MobileRobotBuild, no auth/backend needed.
+// Remove once the styling review is done.
+function DevPreviewROBOTS() {
+  const robots = [
+    { id: "r1", robotCode: "BLR2600001", robotName: "Vortex R1", robotType: "SUMO_ROBOT", sport: "ROBO_SUMO", eligibleCategories: [], weightKg: 5, controlType: "MANUAL", description: "", status: "ACTIVE", teamId: "t1", createdAt: "", robotIMG: fallbackRobotPreview },
+    { id: "r2", robotCode: "BLR2600002", robotName: "Ironclaw", robotType: "COMBAT_ROBOT", sport: "ROBOWAR_8KG", eligibleCategories: [], weightKg: 2, controlType: "MANUAL", description: "", status: "ACTIVE", teamId: "t1", createdAt: "", robotIMG: fallbackRobotPreview },
+    { id: "r3", robotCode: "BLR2600003", robotName: "Falcon", robotType: "DRONE", sport: "DRONE_SOCCER", eligibleCategories: [], weightKg: 1.5, controlType: "AUTONOMOUS", description: "", status: "MAINTENANCE", teamId: "t1", createdAt: "", robotIMG: fallbackRobotPreview },
+  ] as unknown as Parameters<typeof MobileRobotBuild>[0]["robots"];
+
+  return (
+    <Layout>
+      <div className="robot-build-page">
+        <div className="max-[950px]:hidden" style={{ position: "relative", zIndex: 1, padding: 24 }}>DESKTOP PLACEHOLDER (unchanged)</div>
+        <div className="hidden max-[950px]:block">
+          <MobileRobotBuild
+            robots={robots}
+            visibleRobots={robots}
+            filter="ALL"
+            onFilterChange={() => {}}
+            canManageRobots={true}
+            onAddRobot={() => {}}
+            onOpenRobot={() => {}}
+            getRobotImage={getRobotPreviewImage}
+            getWeight={getRobotPreviewWeight}
+            toLabel={robotToLabel}
+          />
+        </div>
+      </div>
+    </Layout>
+  );
+}
+
 // ======================================================
 // APP ROUTES
 // ======================================================
@@ -531,9 +579,11 @@ function AppRoutes() {
       <Route path="/dev-preview/mum" element={<DevPreviewMUM />} />
       <Route path="/dev-preview/mjg" element={<DevPreviewMJG />} />
       <Route path="/dev-preview/evt" element={<DevPreviewEVT />} />
+      <Route path="/dev-preview/evtpage" element={<DevPreviewEVTPage />} />
       <Route path="/dev-preview/rank" element={<DevPreviewRANK />} />
       <Route path="/dev-preview/mmm" element={<DevPreviewMMM />} />
       <Route path="/dev-preview/notif" element={<DevPreviewNOTIF />} />
+      <Route path="/dev-preview/robots" element={<DevPreviewROBOTS />} />
       {/* Public profiles — accepts both UUID and BL-code (BLT.../BLR.../BLU...) */}
       <Route path="/team/:teamId"    element={<FooterShell><TeamPublicPage /></FooterShell>} />
       <Route path="/robot/:robotId"  element={<FooterShell><RobotPublicPage /></FooterShell>} />
