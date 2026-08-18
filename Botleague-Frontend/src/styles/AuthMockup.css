@@ -104,6 +104,17 @@
 @media (min-width: 481px) and (max-width: 767px) {
   .cna-gradient-card--login { max-width: 360px; }
 }
+/* Phone only (<=480px) — plain, no gradient border/shadow/fill, matching
+   the reference screenshot. The 481-767px "tab" tier above keeps the
+   bordered card, as does 768px+ desktop below. */
+@media (max-width: 480px) {
+  .cna-gradient-card--login {
+    background: none;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+}
 /* Desktop: width now also follows viewport height, not just a flat 692px —
    a short-but-wide window (e.g. a laptop with the browser resized down)
    narrows the card instead of just shrinking padding. 80dvh ≈ 692px at the
@@ -137,6 +148,16 @@
 @media (min-width: 768px)  { .cna-gradient-card--register { padding-left: 32px; padding-right: 32px; } }
 @media (min-width: 1024px) { .cna-gradient-card--register { padding-left: 48px; padding-right: 48px; } }
 @media (min-width: 1280px) { .cna-gradient-card--register { padding-left: 72px; padding-right: 72px; } }
+
+/* Phone only (<=480px) — same plain treatment as the login card. */
+@media (max-width: 480px) {
+  .cna-gradient-card--register {
+    background: none;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+}
 
 /* ── Login outline "Create new account" button ── */
 .cna-gradient-btn {

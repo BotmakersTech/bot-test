@@ -482,6 +482,14 @@
    themselves), and a smaller digit font so it doesn't clip in a thinner
    box. */
 @media (max-width: 480px) {
+    /* Plain, no gradient frame — matches the reference screenshot. The
+       481-767px "tab" tier and 768px+ desktop keep the bordered frame. */
+    .cba-form-border {
+        background: none;
+        padding: 0;
+        border-radius: 0;
+    }
+
     .cba-form-card {
         padding: 28px 18px 24px;
     }
