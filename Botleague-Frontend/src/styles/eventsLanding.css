@@ -424,10 +424,72 @@
   }
 }
 
-@media (max-width: 600px) {
+/* ── Mobile/tablet (<=950px) — same markup as desktop throughout this
+   file, just restyled: a shorter hero, and the events grid becomes a
+   horizontally-scrolling card strip instead of a multi-column grid
+   (overrides the 1024px tier above for this narrower range). Also fixes a
+   real touch-usability gap, not just a resize: event-card's name/date/
+   location/"View Details" are desktop-only :hover-revealed, which never
+   triggers on a touch device — below this width they're always visible. */
+@media (max-width: 950px) {
+  .events-hero {
+    min-height: clamp(320px, 70vw, 460px);
+    padding-bottom: 28px;
+  }
+
+  .events-hero-content {
+    padding: 24px 20px 0;
+    gap: 10px;
+  }
+
+  .events-hero-explore {
+    margin-top: 16px;
+  }
+
+  .events-content {
+    padding: 40px 16px 8px;
+  }
+
+  .events-section + .events-section {
+    margin-top: 40px;
+  }
+
+  .events-section-header {
+    margin-bottom: 20px;
+  }
+
   .events-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
+    display: flex;
+    grid-template-columns: unset;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    gap: 14px;
+    padding: 2px 2px 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .events-grid .event-card {
+    flex: 0 0 auto;
+    width: min(78vw, 300px);
+    scroll-snap-align: start;
+  }
+
+  .events-empty {
+    flex: 1 1 auto;
+  }
+
+  /* No :hover on touch — show what hover would have revealed by default,
+     and use hover's darker scrim so that text stays legible over the
+     image instead of the lighter always-on default. */
+  .event-card-image::after {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.35) 55%, rgba(0, 0, 0, 0.05) 80%);
+  }
+
+  .event-card-meta,
+  .event-card-view-details {
+    max-height: none;
+    opacity: 1;
+    transform: none;
   }
 
   .events-see-more {
@@ -437,5 +499,14 @@
   .events-see-more button {
     width: 100%;
     justify-content: center;
+  }
+
+  .events-about {
+    padding: 40px 20px 48px;
+  }
+
+  .events-about-decor {
+    width: 90px;
+    top: 0;
   }
 }

@@ -9,6 +9,7 @@ import { getProfile } from "../feature/Profile/api/profile.api";
 import { getMyTeam } from "../feature/Team/api/team.api";
 
 import Layout from "../routes/AppRouter";
+import ScrollToTop from "../shared/components/ScrollToTop";
 import { RealtimeProvider } from "../shared/realtime/RealtimeProvider";
 import { useNotificationRealtime } from "../shared/realtime/useNotificationRealtime";
 import { useNotificationToast } from "../shared/realtime/useNotificationToast";
@@ -128,6 +129,7 @@ function App() {
 
   return (
     <RealtimeProvider>
+      <ScrollToTop />
       <GlobalRealtimeSubscriptions />
       <Layout />
     </RealtimeProvider>
