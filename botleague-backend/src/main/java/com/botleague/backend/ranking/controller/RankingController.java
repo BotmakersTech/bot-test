@@ -30,6 +30,7 @@ import java.util.UUID;
  *   GET  /api/rankings/global                             — global ranking pool
  *   GET  /api/rankings/global/top                         — top N
  *   GET  /api/rankings/global/team/{teamId}               — every robot the team has ranked in a pool
+ *   GET  /api/rankings/global/team/{teamId}/best           — team's single best rank across any pool
  *   GET  /api/rankings/global/team/{teamId}/breakdown     — per-event point breakdown, rolled up across robots
  *   GET  /api/rankings/global/team/{teamId}/history       — rank change history, rolled up across robots
  *   GET  /api/rankings/global/robot/{robotId}             — a single robot's global rank
@@ -168,6 +169,21 @@ public class RankingController {
             @RequestParam                              String ageGroup,
             @RequestParam(required = false)            String weightClass) {
         return ResponseEntity.ok(queryService.getTeamRobotRankings(teamId, sport, ageGroup, weightClass));
+    }
+
+    /**
+     * GET /api/rankings/global/team/{teamId}/best
+     *
+     * The team's single best rank across every sport/league any of its
+     * robots is ranked in — for a team-overview "Rank" badge that has no
+     * filter UI of its own, as opposed to /global/team/{teamId} above which
+     * needs one specific pool. 404 when the team has no ranked robot yet.
+     */
+    @GetMapping("/global/team/{teamId}/best")
+    public ResponseEntity<GlobalRankingResponse> getTeamBestRank(@PathVariable UUID teamId) {
+        GlobalRankingResponse res = queryService.getTeamBestRank(teamId);
+        if (res == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(res);
     }
 
     /**

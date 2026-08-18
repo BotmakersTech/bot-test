@@ -176,6 +176,24 @@ public class RankingQueryService {
         return result;
     }
 
+    /**
+     * The team's single best (lowest-numbered) rank across EVERY pool any of
+     * its robots is ranked in — any sport, any league — as opposed to
+     * getTeamRobotRankings, which needs one specific pool passed in. Used by
+     * the team dashboard's "Rank" badge, which has no filter UI of its own.
+     * Null when the team has no ranked robot yet.
+     */
+    public GlobalRankingResponse getTeamBestRank(UUID teamId) {
+        Ranking best = null;
+        for (Ranking r : rankingRepository.findByTeamId(teamId)) {
+            if (!SCOPE_NATIONAL.equals(r.getScope())) continue;
+            if (!SEASON_GLOBAL.equals(r.getSeason())) continue;
+            if (r.getCurrentRank() == null) continue;
+            if (best == null || r.getCurrentRank() < best.getCurrentRank()) best = r;
+        }
+        return best == null ? null : toGlobalResponse(best, best.getCurrentRank());
+    }
+
     /** Per-event point breakdown for a robot — the primary breakdown view. */
     public RobotPointBreakdownResponse getRobotPointBreakdown(UUID robotId, String sport, String ageGroup, String weightClass) {
         List<RankingPointTransaction> txs = transactionRepository

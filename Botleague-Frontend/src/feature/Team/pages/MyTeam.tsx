@@ -12,6 +12,7 @@ import {
 } from "../../UserDashboard/api/userMembership.api";
 import useTeam from "../hooks/useTeam";
 import { useSponsors } from "../hooks/useSponsors";
+import { getTeamBestRank, type GlobalRankingEntry } from "../../Rankings/api/rankings.api";
 import useTeamMembership from "../TeamMembership/hooks/useTeamMembership";
 import { resolveAvatarSrc } from "../../Profile/constants/avatars";
 import TeamLogo from "../../../shared/components/TeamLogo";
@@ -182,6 +183,27 @@ export default function MyTeam() {
   // primary/featured, prefer that over array position, e.g.:
   //   sponsors.find((s) => s.isPrimary) ?? sponsors[0] ?? null
   const primarySponsor = useMemo(() => sponsors[0] ?? null, [sponsors]);
+  // ─────────────────────────────────────────────────────────
+
+  // ── BEST RANK (any sport, any league) ───────────────────────
+  // The team-wide "Rank" pill isn't tied to one sport — it's whichever of
+  // the team's robots currently sits highest in ANY pool, so this is a
+  // separate fetch from the rest of the dashboard data rather than
+  // something derivable from `stats` (which only knows the viewer's own
+  // personal dashboard rank, not the team's).
+  const [bestRank, setBestRank] = useState<GlobalRankingEntry | null>(null);
+  useEffect(() => {
+    if (!resolvedTeam?.id) {
+      setBestRank(null);
+      return;
+    }
+    let cancelled = false;
+    getTeamBestRank(resolvedTeam.id)
+      .then((entry) => { if (!cancelled) setBestRank(entry); })
+      .catch(() => { if (!cancelled) setBestRank(null); });
+    return () => { cancelled = true; };
+  }, [resolvedTeam?.id]);
+  const teamRankLabel = bestRank ? bestRank.rank : "Pending";
   // ─────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -405,7 +427,7 @@ export default function MyTeam() {
           <section className="teamdash-team-panel">
             <div className="teamdash-rank-pill">
               <Star size={16} fill="currentColor" />
-              Rank - {stats.rankNum || "Pending"}
+              Rank - {teamRankLabel}
             </div>
 
             <div className="teamdash-team-copy">
@@ -551,7 +573,7 @@ export default function MyTeam() {
         teamLogo={teamLogo}
         isActive={isActive}
         statusLabel={toLabel(resolvedTeam?.status)}
-        rankLabel={stats.rankNum || "Pending"}
+        rankLabel={teamRankLabel}
         winRatePct={stats.winRateNum || 0}
         sinceYear={yearFrom(resolvedTeam?.createdAt)}
         sinceLine={

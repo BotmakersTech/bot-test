@@ -104,6 +104,19 @@ export const getTopRanked = async (params: {
   return res.data;
 };
 
+/** The team's single best rank across every sport/league any of its robots
+ *  is ranked in — for a team-overview "Rank" badge with no filter UI of its
+ *  own. Null when the team has no ranked robot yet. */
+export const getTeamBestRank = async (teamId: string): Promise<GlobalRankingEntry | null> => {
+  try {
+    const res = await api.get(`/rankings/global/team/${encodeURIComponent(teamId)}/best`);
+    return res.data;
+  } catch (e: any) {
+    if (e?.response?.status === 404) return null;
+    throw e;
+  }
+};
+
 export const getAvailableSports = async (): Promise<string[]> => {
   const res = await api.get("/rankings/sports");
   return res.data ?? [];
