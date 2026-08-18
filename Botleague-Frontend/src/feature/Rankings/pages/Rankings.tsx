@@ -214,23 +214,24 @@ export default function GlobalRankingsPage() {
           aria-hidden="true"
         />
 
-        {/* Page title */}
-        <h1 className="font-sarpanch text-[26px] sm:text-[30px] lg:text-[38px] font-medium text-[#0162D1] mb-2" style={{ fontFamily: "Sarpanch, sans-serif" }}>
-          Rankings
-        </h1>
+        {/* Page title — the mobile/tablet "Sort" trigger sits in this same
+            row, right-aligned; desktop never sees that button and always
+            shows the filter card below instead (see its className below). */}
+        <div className="flex items-center justify-between gap-3 mb-2">
+          <h1 className="font-sarpanch text-[26px] sm:text-[30px] lg:text-[38px] font-medium text-[#0162D1]" style={{ fontFamily: "Sarpanch, sans-serif" }}>
+            Rankings
+          </h1>
 
-        {/* Mobile/tablet-only trigger — the filter card is collapsed by
-            default below 950px; desktop never sees this button and always
-            shows the card (see its className just below). */}
-        <button
-          type="button"
-          onClick={() => setSortOpen((v) => !v)}
-          className="hidden max-[950px]:flex items-center gap-2 mb-3 h-[42px] px-4 rounded-md border border-[#0162D1] bg-white text-[14px] font-medium text-[#0162D1] cursor-pointer"
-        >
-          <SlidersHorizontal size={16} />
-          Sort
-          <ChevronDown size={16} className={`transition-transform ${sortOpen ? "rotate-180" : ""}`} />
-        </button>
+          <button
+            type="button"
+            onClick={() => setSortOpen((v) => !v)}
+            className="hidden max-[950px]:flex items-center gap-2 h-[42px] px-4 rounded-md border border-[#0162D1] bg-white text-[14px] font-medium text-[#0162D1] cursor-pointer shrink-0"
+          >
+            <SlidersHorizontal size={16} />
+            Sort
+            <ChevronDown size={16} className={`transition-transform ${sortOpen ? "rotate-180" : ""}`} />
+          </button>
+        </div>
 
         {/* ── Sort / filter card ─────────────────────────────────────── */}
         <div className={`rank-filter-card mt-1 mb-8 sm:mb-10 w-full bg-white pt-4 pb-5 px-4 sm:px-6 lg:px-9 shadow-[0_4px_4px_1px_rgba(0,0,0,0.25)] ${sortOpen ? "" : "max-[950px]:hidden"}`}>
