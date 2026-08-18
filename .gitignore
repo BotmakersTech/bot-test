@@ -22,11 +22,15 @@ replay_pid*.log
 botleague-backend/target/
 botleague-backend/.mvn/wrapper/maven-wrapper.jar
 botleague-backend/build/
+botleague-backend/.vite/
 
 # ── Frontend build artefacts ──────────────────────────────────────────────────
 Botleague-Frontend/node_modules/
 Botleague-Frontend/dist/
 Botleague-Frontend/dist-ssr/
+
+# ── Ad-hoc local scratch scripts (Playwright visual-QA snippets etc.) ─────────
+Botleague-Frontend/_shot*.mjs
 
 # ── Database seed / scratch files ────────────────────────────────────────────
 seed_data.sql

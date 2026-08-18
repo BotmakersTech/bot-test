@@ -6,9 +6,14 @@ import {
   type GlobalRankingPage,
 } from "../api/rankings.api";
 import { getPublicLeagueSports, type LeagueSport } from "../../../shared/api/catalog.api";
+import { getDashboard } from "../../UserDashboard/api/userDashboard.api";
 import RankingRow from "../components/RankingRow";
 import { useLeagues, formatAgeRange } from "../../../temp/pages/leagues/useLeagues";
 import "../../../styles/rankings.css";
+
+// Landing default when nobody's picked a filter yet and the viewer has no
+// participation history to go on (logged out, or a brand-new account).
+const FALLBACK_DEFAULT = { sport: "ROBO_WAR_OPEN", ageGroup: "ROBO_MINDS", weightClass: "60KG" };
 
 // ── Catalog sport -> ranking-query sport code ─────────────────────────────────
 //
@@ -129,6 +134,57 @@ export default function GlobalRankingsPage() {
     getAvailablePools().then(setPools).catch(() => setPools([]));
   }, []);
 
+  // Land on a populated ranking table instead of the "pick a filter" empty
+  // state: default to whichever (sport, ageGroup, weightClass) the viewer
+  // has actually played the most events in, going by their own dashboard
+  // history. Logged-out visitors, brand-new accounts, or anyone with no
+  // usable event data fall back to Robo War 60kg. Runs once on mount only —
+  // never overrides an explicit Apply Filter click afterwards, since sport/
+  // ageGroup only ever change here or there.
+  useEffect(() => {
+    let cancelled = false;
+
+    const applyFallback = () => {
+      if (cancelled) return;
+      setSport(FALLBACK_DEFAULT.sport);
+      setAgeGroup(FALLBACK_DEFAULT.ageGroup);
+      setWeightClass(FALLBACK_DEFAULT.weightClass);
+    };
+
+    getDashboard()
+      .then((data) => {
+        if (cancelled) return;
+
+        const tally = new Map<string, { sport: string; ageGroup: string; weightClass: string; count: number }>();
+        for (const ev of data.events ?? []) {
+          const s = ev.sport?.sport;
+          const ag = ev.sport?.ageGroup;
+          if (!s || !ag) continue;
+          const wc = ev.sport?.weightClass ?? "";
+          const key = `${s}::${ag}::${wc}`;
+          const existing = tally.get(key);
+          if (existing) existing.count += 1;
+          else tally.set(key, { sport: s, ageGroup: ag, weightClass: wc, count: 1 });
+        }
+
+        let mostPlayed: { sport: string; ageGroup: string; weightClass: string; count: number } | null = null;
+        for (const entry of tally.values()) {
+          if (!mostPlayed || entry.count > mostPlayed.count) mostPlayed = entry;
+        }
+
+        if (mostPlayed) {
+          setSport(mostPlayed.sport);
+          setAgeGroup(mostPlayed.ageGroup);
+          setWeightClass(mostPlayed.weightClass);
+        } else {
+          applyFallback();
+        }
+      })
+      .catch(applyFallback);
+
+    return () => { cancelled = true; };
+  }, []);
+
   const draftLeague = leagues.find((l) => l.slug === draftLeagueSlug) ?? null;
   const selectedLeagueSport = leagueSports.find((ls) => ls.sportSlug === draftSportSlug) ?? null;
   const weightOptions: { weightKg: number; label: string }[] = selectedLeagueSport
@@ -191,9 +247,9 @@ export default function GlobalRankingsPage() {
     loadRankings();
   }, [loadRankings]);
 
-  // Results (and the ranking query itself) only ever appear after this —
-  // nothing auto-loads on mount, so "pick League -> Sport -> Weight, then
-  // Apply Filter" is the only way to see a ranking table.
+  // Explicit override of whatever the mount-time default effect picked —
+  // "pick League -> Sport -> Weight, then Apply Filter" replaces it same as
+  // it would replace a manually-applied filter from earlier.
   const handleApplyFilter = () => {
     if (!draftLeague || !selectedLeagueSport) return;
     setSport(toRankingSportCode(selectedLeagueSport.sportName, draftLeague.ageGroupValue));
