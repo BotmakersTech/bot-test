@@ -8,7 +8,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.3</version>
+        <version>4.1.0</version>
         <relativePath/>
     </parent>
 
@@ -46,6 +46,40 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Spring Boot 4's modularization split Jackson/RestTemplateBuilder/etc.
+             out of the old all-in-one autoconfigure jar. These two bridge
+             dependencies restore that Boot-3-era surface (ObjectMapper,
+             Jackson2ObjectMapperBuilderCustomizer, RestTemplateBuilder) so the
+             existing Jackson 2 usage across the codebase keeps compiling as-is.
+             Deprecated by Spring — a real Jackson 3 migration is future work,
+             not part of this Java-version upgrade. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-classic</artifactId>
+            <exclusions>
+                <!-- This app has nothing to do with gRPC — excluded because
+                     spring-boot-grpc-test (pulled in transitively via the
+                     test-classic starter below) has a known packaging bug in
+                     4.1.0 (spring-projects/spring-boot#50825): a listener
+                     references org.springframework.grpc.server.lifecycle.
+                     GrpcServerStartedEvent, a class from spring-boot-grpc-server
+                     that isn't actually resolvable, breaking @SpringBootTest
+                     context loading with a ClassNotFoundException. -->
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-grpc-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-grpc-server</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-jackson2</artifactId>
         </dependency>
 
         <dependency>
@@ -170,8 +204,14 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
+            <artifactId>spring-boot-starter-test-classic</artifactId>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-grpc-test</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 

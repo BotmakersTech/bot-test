@@ -6,7 +6,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -147,7 +147,7 @@ public class OtpService {
         HttpHeaders headers = new HttpHeaders();
         headers.set("authkey", authKey);
 
-        String url = UriComponentsBuilder.fromHttpUrl(RESEND_URL)
+        String url = UriComponentsBuilder.fromUriString(RESEND_URL)
                 .queryParam("mobile", COUNTRY_CODE + phone)
                 .queryParam("retrytype", "text")
                 .toUriString();
