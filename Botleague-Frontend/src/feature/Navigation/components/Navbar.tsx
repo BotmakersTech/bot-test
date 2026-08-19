@@ -215,21 +215,22 @@ export default function Navbar() {
 
   return (
     <header
-      className="app-navbar relative flex h-18 shrink-0 items-center justify-end px-4 sm:px-6"
+      className="app-navbar relative flex h-18 shrink-0 items-center justify-between min-[951px]:justify-end px-4 sm:px-6"
     >
       <button
         type="button"
         onClick={() => navigate("/")}
         aria-label="BotLeague home"
-        className="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center"
+        className="flex items-center min-[951px]:absolute min-[951px]:top-1/2 min-[951px]:left-1/2 min-[951px]:-translate-x-1/2 min-[951px]:-translate-y-1/2"
       >
         {/* Black logo on the mobile bar's light background, white logo once
             the desktop gradient bar takes over at 951px+. Smaller on mobile
             — h-11 read oversized against the 72px bar and the 40px menu
-            button next to it. Centered on the screen at every width (absolute
-            + the header's own relative positioning above) — the action-icon
-            row(s) are pushed to justify-end since the logo now sits outside
-            the normal flex flow regardless of breakpoint. */}
+            button next to it. Mobile keeps its original left-aligned flow
+            position; only the desktop (951px+) logo is centered on the
+            screen (absolute + the header's own relative positioning above),
+            with the desktop action-icon row pushed to justify-end since the
+            logo sits outside the flex flow at that width only. */}
         <img src={LOGO_BLACK_URL} alt="BotLeague" className="h-7 w-auto select-none min-[951px]:hidden" draggable={false} />
         <img src={LOGO_URL} alt="BotLeague" className="hidden h-11 w-auto select-none min-[951px]:inline" draggable={false} />
       </button>
