@@ -1,5 +1,5 @@
 # ── Stage 1: build ────────────────────────────────────────────────────────────
-FROM maven:3.9-eclipse-temurin-17 AS build
+FROM maven:3.9-eclipse-temurin-25 AS build
 WORKDIR /app
 
 # Cache dependencies separately so Docker layer cache is used on re-builds
@@ -11,7 +11,7 @@ COPY src ./src
 RUN mvn package -DskipTests -B -q
 
 # ── Stage 2: runtime ──────────────────────────────────────────────────────────
-FROM eclipse-temurin:17-jre-jammy
+FROM eclipse-temurin:25-jre-jammy
 WORKDIR /app
 
 RUN addgroup --system botleague && adduser --system --ingroup botleague botleague
