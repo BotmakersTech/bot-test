@@ -102,7 +102,7 @@ export default function MobileRobotBuild({
     <div className="px-1 py-2">
       <div className="flex items-center justify-between gap-3 mb-4">
         <h1
-          className="m-0 text-[clamp(20px,4vw,38px)] font-bold"
+          className="m-0 text-[clamp(20px,4vw,38px)] font-medium"
           style={{ fontFamily: "Orbitron, sans-serif", color: "#0162D1" }}
         >
           Team Build

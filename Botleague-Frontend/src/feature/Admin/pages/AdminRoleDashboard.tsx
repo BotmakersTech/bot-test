@@ -93,7 +93,7 @@ export default function AdminRoleDashboard() {
   return (
     <div className="min-h-full p-8" style={{ background: "#fafafa" }}>
       <h1
-        className="font-display mb-9 text-[clamp(20px,4vw,38px)] font-bold tracking-wide text-[#0162d1]"
+        className="font-display mb-9 text-[clamp(20px,4vw,38px)] font-medium tracking-wide text-[#0162d1]"
       >
         Welcome back, {authUser?.firstName || "Admin"}!
       </h1>

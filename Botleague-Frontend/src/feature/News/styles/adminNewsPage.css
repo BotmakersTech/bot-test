@@ -36,7 +36,7 @@
 
 .an-page-heading {
   font-family: "Orbitron", sans-serif;
-  font-weight: 700;
+  font-weight: 500;
   font-size: clamp(20px, 4vw, 38px);
   line-height: 1;
   margin-bottom: 30px;

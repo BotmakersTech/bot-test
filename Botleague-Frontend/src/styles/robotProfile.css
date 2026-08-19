@@ -386,7 +386,7 @@
   color: #0162D1;
   font-family: "Orbitron", "Inter", system-ui, sans-serif;
   font-size: clamp(20px, 4vw, 38px);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .rprofile-state p {

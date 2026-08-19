@@ -280,7 +280,7 @@ export default function SettingsPage() {
         <h1 style={{
           margin: 0,
           fontSize: "clamp(20px,4vw,38px)",
-          fontWeight: 700,
+          fontWeight: 500,
           fontFamily: "Orbitron, sans-serif",
           color: "#fff",
         }}>

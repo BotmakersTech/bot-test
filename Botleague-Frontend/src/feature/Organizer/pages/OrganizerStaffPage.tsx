@@ -80,7 +80,7 @@ export default function OrganizerStaffPage() {
     <div className="min-h-full p-8 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="font-display text-[clamp(20px,4vw,38px)] font-bold text-[#0162d1]">Staff Management</h1>
+          <h1 className="font-display text-[clamp(20px,4vw,38px)] font-medium text-[#0162d1]">Staff Management</h1>
           <p className="text-sm text-[#5d5d5d] mt-0.5">Operations, technical, security and medical teams</p>
         </div>
         <button onClick={openAdd}

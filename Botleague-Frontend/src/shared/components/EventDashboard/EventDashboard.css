@@ -96,7 +96,7 @@
 
 .ed-title {
     font-family: "Orbitron", sans-serif;
-    font-weight: 700;
+    font-weight: 500;
     color: #0162D1;
     font-size: clamp(20px, 4vw, 38px);
     margin: 0;

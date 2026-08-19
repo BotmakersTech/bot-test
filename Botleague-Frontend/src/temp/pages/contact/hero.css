@@ -27,7 +27,7 @@
 .cu-hero-content h1 {
   font-family: "Orbitron", sans-serif;
   font-size: clamp(20px, 4vw, 38px);
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1;
   letter-spacing: 3px;
   /* White, not the app-wide #0162D1 — this sits on a dark hero photo

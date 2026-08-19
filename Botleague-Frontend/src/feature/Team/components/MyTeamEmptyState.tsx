@@ -50,7 +50,7 @@ export default function MyTeamEmptyState({ onCreateClick }: MyTeamEmptyStateProp
       <OutlineStar className="myteam-empty-star absolute bottom-[6%] right-[8%] w-20 h-20 text-indigo-200 opacity-60" />
       <OutlineStar className="myteam-empty-star absolute top-[30%] right-[24%] w-10 h-10 text-indigo-200 opacity-60" />
 
-      <h1 className="myteam-empty-title text-[clamp(20px,4vw,38px)] font-bold text-[#0162D1] tracking-wide mb-10">Team Dashboard</h1>
+      <h1 className="myteam-empty-title text-[clamp(20px,4vw,38px)] font-medium text-[#0162D1] tracking-wide mb-10">Team Dashboard</h1>
 
       <div className="flex flex-wrap gap-x-12 gap-y-6 mb-10">
         <StatItem

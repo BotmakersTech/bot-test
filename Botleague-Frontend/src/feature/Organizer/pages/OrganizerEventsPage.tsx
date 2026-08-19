@@ -62,7 +62,7 @@ export default function OrganizerEventsPage() {
     <div className="org-page-bg p-8" style={{ fontFamily: ORG.fontBody }}>
       <div style={{ marginBottom: "24px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
         <div>
-          <h1 style={{ color: "#0162d1", fontFamily: ORG.fontHeading, fontSize: "clamp(20px,4vw,38px)", fontWeight: 700, margin: 0, letterSpacing: "0.02em" }}>Event Management</h1>
+          <h1 style={{ color: "#0162d1", fontFamily: ORG.fontHeading, fontSize: "clamp(20px,4vw,38px)", fontWeight: 500, margin: 0, letterSpacing: "0.02em" }}>Event Management</h1>
           <p style={{ color: MUTED, fontSize: "0.85rem", margin: "4px 0 0" }}>
             {loading ? "Loading…" : `${filtered.length} of ${events.length} event${events.length !== 1 ? "s" : ""}`}
           </p>

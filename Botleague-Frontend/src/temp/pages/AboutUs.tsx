@@ -48,7 +48,7 @@ export default function AboutUs() {
             Our Story
           </span>
 
-          <h1 className="font-display mx-auto mt-5 max-w-[900px] text-[clamp(20px,4vw,38px)] font-bold leading-[0.95] text-[#0162D1]">
+          <h1 className="font-display mx-auto mt-5 max-w-[900px] text-[clamp(20px,4vw,38px)] font-medium leading-[0.95] text-[#0162D1]">
             ABOUT US
           </h1>
 

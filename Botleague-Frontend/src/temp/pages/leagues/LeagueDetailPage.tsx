@@ -50,7 +50,7 @@ const BRAND_STYLES = `
      white text (.lg-hero's own text-white), unlike every other heading
      this pass touches; forcing the flat blue here would be illegible. */
   font-family: 'Orbitron', sans-serif;
-  font-weight: 700;
+  font-weight: 500;
   font-size: clamp(20px, 4vw, 38px);
 }
 .lg-hero-subtitle {

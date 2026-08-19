@@ -169,7 +169,7 @@ export default function UserEventPage() {
       <div className="relative z-10  mx-auto flex flex-col gap-6">
         {/* HEADER */}
         <div>
-          <h1 className="evt-heading-mobile font-display text-[clamp(20px,4vw,38px)] font-bold text-[#0162D1]">
+          <h1 className="evt-heading-mobile font-display text-[clamp(20px,4vw,38px)] font-medium text-[#0162D1]">
             Find Events
           </h1>
           <p className="evt-font-poppins text-[13px] sm:text-[14px] text-gray-500 mt-1">

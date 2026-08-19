@@ -154,7 +154,7 @@ export default function TeamPublicPage() {
               {/* GOLD, not the app-wide #0162D1 — this page is dark-themed
                   (background: BG, color: TEXT elsewhere here), where the
                   flat blue reads far weaker than this page's own accent. */}
-              <h1 style={{ margin: 0, fontSize: "clamp(20px,4vw,38px)", fontWeight: 700, color: GOLD, fontFamily: "'Orbitron', Inter, sans-serif", letterSpacing: "0.02em", lineHeight: 1.1 }}>
+              <h1 style={{ margin: 0, fontSize: "clamp(20px,4vw,38px)", fontWeight: 500, color: GOLD, fontFamily: "'Orbitron', Inter, sans-serif", letterSpacing: "0.02em", lineHeight: 1.1 }}>
                 {profile.teamName}
               </h1>
               {profile.status && (

@@ -107,7 +107,7 @@ export default function OrganizerClosurePage() {
 
   return (
     <div className="min-h-screen p-8 text-[#111111]">
-      <h1 className="font-display mb-2 text-[clamp(20px,4vw,38px)] font-bold text-[#0162d1]">Event Closure</h1>
+      <h1 className="font-display mb-2 text-[clamp(20px,4vw,38px)] font-medium text-[#0162d1]">Event Closure</h1>
       <p className="mb-6 text-sm text-[#5d5d5d]">Complete pre-closure checks and submit the event summary report.</p>
 
       {/* Event selector */}

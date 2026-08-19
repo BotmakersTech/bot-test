@@ -120,7 +120,7 @@ export default function AdminAuditLogsPage() {
     <>
     <div className="min-h-full p-8 space-y-6 view-desktop-only">
       <div>
-        <h1 className="font-display text-[clamp(20px,4vw,38px)] font-bold text-[#0162d1]">
+        <h1 className="font-display text-[clamp(20px,4vw,38px)] font-medium text-[#0162d1]">
           Audit Logs
         </h1>
         <p className="text-sm text-[#6b7280] mt-0.5">

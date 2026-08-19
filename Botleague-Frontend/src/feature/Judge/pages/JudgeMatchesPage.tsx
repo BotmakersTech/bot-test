@@ -63,7 +63,7 @@ export default function JudgeMatchesPage() {
   return (
     <div className="min-h-full p-8 space-y-6">
       <div>
-        <h1 className="font-display text-[clamp(20px,4vw,38px)] font-bold text-[#0162d1]">Assigned Matches</h1>
+        <h1 className="font-display text-[clamp(20px,4vw,38px)] font-medium text-[#0162d1]">Assigned Matches</h1>
         <p className="text-sm text-[#6b7280] mt-0.5">All matches you have been assigned to judge</p>
       </div>
 

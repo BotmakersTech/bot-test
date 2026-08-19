@@ -319,7 +319,7 @@ export default function SystemNotificationsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="font-display text-[clamp(20px,4vw,38px)] font-bold text-[#0162d1] tracking-wide">System Notifications</h1>
+            <h1 className="font-display text-[clamp(20px,4vw,38px)] font-medium text-[#0162d1] tracking-wide">System Notifications</h1>
             <p className="text-sm text-gray-400 mt-1">Manage and send notifications to users</p>
           </div>
           <button

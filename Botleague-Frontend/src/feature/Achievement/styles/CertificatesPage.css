@@ -77,7 +77,7 @@
 
 .bl-page-title {
     font-family: "Orbitron", sans-serif;
-    font-weight: 700;
+    font-weight: 500;
 
     color: var(--cp-blue);
     font-size: clamp(20px, 4vw, 38px);

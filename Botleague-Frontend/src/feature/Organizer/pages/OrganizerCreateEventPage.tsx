@@ -179,7 +179,7 @@ export default function OrganizerCreateEventPage() {
           </button>
           <div>
             <h2
-              className="font-display capitalize tracking-wide text-[clamp(20px,4vw,38px)] font-bold text-[#0162d1]"
+              className="font-display capitalize tracking-wide text-[clamp(20px,4vw,38px)] font-medium text-[#0162d1]"
             >
               Create Event
             </h2>
