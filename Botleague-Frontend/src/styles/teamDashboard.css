@@ -36,8 +36,9 @@
 
 .teamdash-state h1 {
   margin: 0;
-  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
-  font-size: 34px;
+  color: #0162D1;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
+  font-size: clamp(20px, 4vw, 38px);
   font-weight: 700;
 }
 
@@ -145,10 +146,10 @@
 
 .teamdash-top-row h1 {
   margin: 0;
-  color: #0162d1;
-  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
-  font-size: 38px;
-  font-weight: 600;
+  color: #0162D1;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
+  font-size: clamp(20px, 4vw, 38px);
+  font-weight: 700;
   line-height: 1.1;
 }
 
@@ -1120,10 +1121,6 @@
     flex-direction: column;
   }
 
-  .teamdash-top-row h1 {
-    font-size: 30px;
-  }
-
   .teamdash-build-stage {
     grid-template-columns: 1fr;
   }
@@ -1146,7 +1143,7 @@
    ========================================================= */
 
 .myteam-empty-title {
-  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
 }
 
 .myteam-empty-star {
@@ -1218,10 +1215,10 @@
 
 .mmt-top-row h1 {
   margin: 0;
-  color: #0162d1;
-  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
-  font-size: 22px;
-  font-weight: 600;
+  color: #0162D1;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
+  font-size: clamp(20px, 4vw, 38px);
+  font-weight: 700;
   line-height: 1.15;
 }
 

@@ -76,11 +76,11 @@
 }
 
 .bl-page-title {
-    font-family: "Sarpanch", sans-serif;
-    font-weight: 500;
+    font-family: "Orbitron", sans-serif;
+    font-weight: 700;
 
     color: var(--cp-blue);
-    font-size: 38px;
+    font-size: clamp(20px, 4vw, 38px);
     margin: 0;
 }
 
@@ -534,10 +534,6 @@
     .bl-grid {
         grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
         gap: 14px;
-    }
-
-    .bl-page-title {
-        font-size: 1.6rem;
     }
 
     .bl-list-item {

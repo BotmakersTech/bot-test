@@ -138,7 +138,7 @@ export default function OrganizerCommunicationPage() {
 
   return (
     <div className="min-h-screen p-8 text-[#111111]">
-      <h1 className="font-display mb-2 text-[38px] font-medium text-[#0162d1]">Communication</h1>
+      <h1 className="font-display mb-2 text-[clamp(20px,4vw,38px)] font-bold text-[#0162d1]">Communication</h1>
       <p className="mb-6 text-sm text-[#5d5d5d]">Broadcast announcements and manage your event chat room.</p>
 
       {/* Toast */}

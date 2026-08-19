@@ -35,15 +35,12 @@
 }
 
 .an-page-heading {
-  font-family: "Sarpanch", sans-serif;
-  font-weight: 900;
-  font-size: 56px;
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: clamp(20px, 4vw, 38px);
   line-height: 1;
   margin-bottom: 30px;
-  background: var(--an-grad);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #0162D1;
 }
 
 .an-page-header {
@@ -420,7 +417,6 @@
 @media (max-width: 991px) {
   .an-page-header { flex-direction: column; align-items: flex-start; }
   .an-create-btn { width: 100%; justify-content: center; }
-  .an-page-heading { font-size: 42px; }
   .an-hero-card { grid-template-columns: 1fr; }
   .an-hero-img { min-height: 220px; }
   .an-hero-body { padding: 28px; border-left: none; }
@@ -430,6 +426,5 @@
 }
 
 @media (max-width: 560px) {
-  .an-page-heading { font-size: 32px; }
   .an-pill { flex: 1; min-width: 130px; text-align: center; }
 }

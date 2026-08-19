@@ -103,7 +103,7 @@ export default function OrganizerMonitoringPage() {
     <div className="min-h-screen p-8 text-[#111111]">
       <div className="mb-6 flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 className="font-display text-[38px] font-medium text-[#0162d1]">Event Monitoring</h1>
+          <h1 className="font-display text-[clamp(20px,4vw,38px)] font-bold text-[#0162d1]">Event Monitoring</h1>
           <p className="mt-1 text-sm text-[#5d5d5d]">Live match status — auto-refreshes every 15 s</p>
         </div>
         {lastRefresh && (

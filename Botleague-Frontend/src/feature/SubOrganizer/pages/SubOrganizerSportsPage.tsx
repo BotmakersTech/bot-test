@@ -28,7 +28,7 @@ export default function SubOrganizerSportsPage() {
 
   return (
     <div className="org-page-bg p-8">
-      <h1 className="font-display mb-6 text-[38px] font-medium text-[#0162d1] tracking-wide">My Sports</h1>
+      <h1 className="font-display mb-6 text-[clamp(20px,4vw,38px)] font-bold text-[#0162d1] tracking-wide">My Sports</h1>
 
       {sports.length === 0 ? (
         <div className="rounded-xl bg-white border p-8 text-center text-gray-400" style={{ borderColor: "rgba(75,134,232,0.2)" }}>

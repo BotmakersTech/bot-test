@@ -41,9 +41,9 @@
 
 .notif-heading-row h1 {
   margin: 0;
-  color: #3569d2;
-  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
-  font-size: clamp(32px, 3vw, 48px);
+  color: #0162D1;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
+  font-size: clamp(20px, 4vw, 38px);
   font-weight: 700;
   line-height: 1;
   letter-spacing: 2px;
@@ -458,11 +458,6 @@
     justify-content: space-between;
     gap: 10px;
     margin-bottom: 20px;
-  }
-
-  .notif-heading-row h1 {
-    font-size: 20px;
-    letter-spacing: 0.3px;
   }
 
   .notif-mark-read {

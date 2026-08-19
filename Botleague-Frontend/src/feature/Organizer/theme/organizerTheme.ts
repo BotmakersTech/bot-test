@@ -31,7 +31,7 @@ export const ORG = {
   radiusBtn: "8px",
   btnShadow: "0 3px 4px rgba(82, 71, 159, 0.28)",
 
-  fontHeading: "'Sarpanch', 'Inter', system-ui, sans-serif",
+  fontHeading: "'Orbitron', 'Inter', system-ui, sans-serif",
   fontBody: "'Inter', system-ui, sans-serif",
 
   pageBg: [

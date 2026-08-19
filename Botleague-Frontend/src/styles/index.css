@@ -1,11 +1,14 @@
 @import "tailwindcss";
 
-/* App-wide font tokens — Sarpanch/Inter/Poppins are already loaded via the
+/* App-wide font tokens — Orbitron/Inter/Poppins are already loaded via the
    Google Fonts <link> in index.html; this just exposes them as the
    font-display/font-sans/font-body Tailwind utilities so pages don't need
-   to repeat inline fontFamily styles everywhere. */
+   to repeat inline fontFamily styles everywhere. font-display is the page-
+   heading font app-wide (Sarpanch until this changed to Orbitron) — every
+   page's <h1> uses it, so this one token is the single point of truth for
+   "all headings" rather than each page hardcoding its own font-family. */
 @theme {
-  --font-display: 'Sarpanch', sans-serif;
+  --font-display: 'Orbitron', sans-serif;
   --font-sans: 'Inter', sans-serif;
   --font-body: 'Poppins', sans-serif;
 }

@@ -100,10 +100,10 @@
 
 .support-title {
   margin: 0;
-  font-family: "Sarpanch", sans-serif;
-  font-weight: 500;
-  font-size: clamp(26px, 4vw, 38px);
-  color: #0162d1;
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: clamp(20px, 4vw, 38px);
+  color: #0162D1;
   letter-spacing: 0.5px;
 }
 

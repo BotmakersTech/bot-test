@@ -112,7 +112,7 @@ export default function AdminCatalogPage() {
   return (
     <div className="org-page-bg p-8">
       <div className="mb-6">
-        <h1 className="font-display text-[38px] font-medium text-[#0162d1] tracking-wide">League Catalog</h1>
+        <h1 className="font-display text-[clamp(20px,4vw,38px)] font-bold text-[#0162d1] tracking-wide">League Catalog</h1>
         <p className="mt-1 text-sm text-gray-400">
           Manage leagues, sports, and each sport's specs within a league. Only LIVE pairings under an ACTIVE
           league are visible to organisers when they set up an event.

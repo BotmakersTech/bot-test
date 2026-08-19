@@ -279,9 +279,10 @@ export default function SettingsPage() {
         </button>
         <h1 style={{
           margin: 0,
-          fontSize: "1.2rem",
+          fontSize: "clamp(20px,4vw,38px)",
           fontWeight: 700,
-          fontFamily: "Sarpanch, sans-serif",
+          fontFamily: "Orbitron, sans-serif",
+          color: "#fff",
         }}>
           Settings
         </h1>

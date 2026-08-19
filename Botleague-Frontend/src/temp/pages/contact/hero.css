@@ -25,14 +25,16 @@
 }
 
 .cu-hero-content h1 {
-  font-family: "Sarpanch", sans-serif;
-  font-size: 128px;
+  font-family: "Orbitron", sans-serif;
+  font-size: clamp(20px, 4vw, 38px);
   font-weight: 700;
   line-height: 1;
   letter-spacing: 3px;
+  /* White, not the app-wide #0162D1 — this sits on a dark hero photo
+     (see .cu-overlay), where the flat blue would be illegible. */
   color: #ffffff;
   text-transform: uppercase;
-  margin: 0 0 145px;
+  margin: 0 0 60px;
 }
 
 .cu-explore-btn {

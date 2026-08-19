@@ -361,7 +361,7 @@ export default function SearchMatches() {
         <div style={{ marginBottom: "24px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "4px" }}>
             <div style={{ width: "4px", height: "30px", background: `linear-gradient(to bottom, ${ACCENT}, ${ACCENT2})`, borderRadius: "2px", boxShadow: "0 0 10px rgba(250,71,21,0.5)" }} />
-            <h1 style={{ margin: 0, fontSize: "1.65rem", fontFamily: "'Sarpanch', sans-serif", fontWeight: 700, letterSpacing: "0.06em" }}>MATCHES</h1>
+            <h1 style={{ margin: 0, fontSize: "clamp(20px,4vw,38px)", fontFamily: "'Orbitron', sans-serif", fontWeight: 700, letterSpacing: "0.06em", color: TEXT }}>MATCHES</h1>
           </div>
           <p style={{ margin: 0, color: MUTED, fontSize: "0.8rem", marginLeft: "16px" }}>All tournament matches, grouped by sport</p>
         </div>

@@ -160,7 +160,7 @@ export default function TeamManagementPage() {
         {/* Header */}
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="font-display text-[38px] font-medium text-[#0162d1] tracking-wide">
+            <h1 className="font-display text-[clamp(20px,4vw,38px)] font-bold text-[#0162d1] tracking-wide">
               Team Management
             </h1>
             <p className="mt-1 text-sm text-gray-400">

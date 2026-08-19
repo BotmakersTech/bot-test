@@ -36,9 +36,9 @@
 
 .chat-title-wrap h1 {
   margin: 0;
-  color: #0064d7;
-  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
-  font-size: 31px;
+  color: #0162D1;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
+  font-size: clamp(20px, 4vw, 38px);
   font-weight: 700;
   line-height: 1;
   letter-spacing: 1px;

@@ -60,10 +60,13 @@
 .events-hero-title {
   margin: 0;
   max-width: 1000px;
+  /* White, not the app-wide #0162D1 — this sits on the hero's own dark
+     background (see .events-hero), where the flat blue would be
+     illegible. */
   color: #ffffff;
-  font-family: "Sarpanch", sans-serif;
+  font-family: "Orbitron", sans-serif;
   font-weight: 700;
-  font-size: clamp(32px, 7vw, 96px);
+  font-size: clamp(20px, 4vw, 38px);
   letter-spacing: 1px;
   line-height: 1.1;
   text-transform: uppercase;

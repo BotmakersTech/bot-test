@@ -104,7 +104,10 @@ export default function UserPublicPage() {
           )}
 
           <div>
-            <h1 style={{ margin: "0 0 4px", fontSize: "clamp(1.5rem,4vw,2rem)", fontWeight: 900, color: GOLD, fontFamily: "'Sarpanch', sans-serif" }}>
+            {/* GOLD, not the app-wide #0162D1 — this page is dark-themed
+                (background: BG, color: TEXT elsewhere here), where the flat
+                blue reads far weaker than this page's own accent. */}
+            <h1 style={{ margin: "0 0 4px", fontSize: "clamp(20px,4vw,38px)", fontWeight: 700, color: GOLD, fontFamily: "'Orbitron', sans-serif" }}>
               {displayName}
             </h1>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>

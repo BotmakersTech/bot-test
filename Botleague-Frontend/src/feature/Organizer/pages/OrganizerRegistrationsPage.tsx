@@ -131,7 +131,7 @@ export default function OrganizerRegistrationsPage() {
   return (
     <div className="p-8" style={{ minHeight: "100vh", background: BG, fontFamily: "'Inter',sans-serif" }}>
       <div style={{ marginBottom: "24px" }}>
-        <h1 style={{ color: "#0162d1", fontFamily: "'Sarpanch',sans-serif", fontSize: "38px", fontWeight: 500, margin: 0 }}>Registrations</h1>
+        <h1 style={{ color: "#0162d1", fontFamily: "'Orbitron',sans-serif", fontSize: "clamp(20px,4vw,38px)", fontWeight: 700, margin: 0 }}>Registrations</h1>
         <p style={{ color: MUTED, fontSize: "0.85rem", margin: "4px 0 0" }}>
           {loadingRegs ? "Loading…" : `${filtered.length} registration${filtered.length !== 1 ? "s" : ""} (${activeCount} active)`}
         </p>

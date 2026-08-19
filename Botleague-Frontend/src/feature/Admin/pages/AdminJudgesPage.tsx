@@ -67,7 +67,7 @@ export default function AdminJudgesPage() {
     <>
     <div className="org-page-bg p-8 view-desktop-only">
       <div style={{ position: "relative", zIndex: 1 }}>
-        <h1 className="font-display mb-2 text-[38px] font-medium text-[#0162d1] tracking-wide">
+        <h1 className="font-display mb-2 text-[clamp(20px,4vw,38px)] font-bold text-[#0162d1] tracking-wide">
           Judge Ecosystem
         </h1>
         <p className="mb-6 text-sm text-gray-500">

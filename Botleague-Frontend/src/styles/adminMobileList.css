@@ -38,13 +38,10 @@
 .mrm-header h1,
 .mum-header h1 {
   margin: 0;
-  font-family: "Sarpanch", sans-serif;
-  font-weight: 600;
-  font-size: 24px;
-  background: linear-gradient(135deg, #4c8ee7, #8c6cff);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: clamp(20px, 4vw, 38px);
+  color: #0162D1;
 }
 
 .mal-header p,

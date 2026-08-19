@@ -80,14 +80,8 @@ export default function MobileRobotEmptyState({
   return (
     <div className="px-1 py-2">
       <h1
-        className="m-0 mb-4 text-[22px] font-medium"
-        style={{
-          fontFamily: "Sarpanch, sans-serif",
-          background: "linear-gradient(180deg, #0162D1 0%, #8C6CFF 100%)",
-          WebkitBackgroundClip: "text",
-          backgroundClip: "text",
-          color: "transparent",
-        }}
+        className="m-0 mb-4 text-[clamp(20px,4vw,38px)] font-bold"
+        style={{ fontFamily: "Orbitron, sans-serif", color: "#0162D1" }}
       >
         Team Build
       </h1>

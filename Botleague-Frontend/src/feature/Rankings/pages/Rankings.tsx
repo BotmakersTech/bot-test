@@ -274,7 +274,7 @@ export default function GlobalRankingsPage() {
             row, right-aligned; desktop never sees that button and always
             shows the filter card below instead (see its className below). */}
         <div className="flex items-center justify-between gap-3 mb-2">
-          <h1 className="font-sarpanch text-[26px] sm:text-[30px] lg:text-[38px] font-medium text-[#0162D1]" style={{ fontFamily: "Sarpanch, sans-serif" }}>
+          <h1 className="font-display text-[clamp(20px,4vw,38px)] font-bold text-[#0162D1]">
             Rankings
           </h1>
 

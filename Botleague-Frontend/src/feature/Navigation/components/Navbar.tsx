@@ -215,18 +215,21 @@ export default function Navbar() {
 
   return (
     <header
-      className="app-navbar flex h-18 shrink-0 items-center justify-between px-4 sm:px-6"
+      className="app-navbar relative flex h-18 shrink-0 items-center justify-between max-[950px]:justify-end px-4 sm:px-6"
     >
       <button
         type="button"
         onClick={() => navigate("/")}
         aria-label="BotLeague home"
-        className="flex items-center"
+        className="flex items-center max-[950px]:absolute max-[950px]:left-1/2 max-[950px]:top-1/2 max-[950px]:-translate-x-1/2 max-[950px]:-translate-y-1/2"
       >
         {/* Black logo on the mobile bar's light background, white logo once
             the desktop gradient bar takes over at 951px+. Smaller on mobile
             — h-11 read oversized against the 72px bar and the 40px menu
-            button next to it. */}
+            button next to it. Centered on the screen at mobile/tablet widths
+            (absolute + the header's own relative positioning above) instead
+            of left-aligned — desktop keeps the original left-aligned flow
+            position, unaffected. */}
         <img src={LOGO_BLACK_URL} alt="BotLeague" className="h-7 w-auto select-none min-[951px]:hidden" draggable={false} />
         <img src={LOGO_URL} alt="BotLeague" className="hidden h-11 w-auto select-none min-[951px]:inline" draggable={false} />
       </button>

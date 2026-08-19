@@ -46,9 +46,12 @@ const BRAND_STYLES = `
   max-width: 900px;
 }
 .lg-hero-title {
-  font-family: 'Sarpanch', sans-serif;
+  /* No explicit color — this hero has a dark background with inherited
+     white text (.lg-hero's own text-white), unlike every other heading
+     this pass touches; forcing the flat blue here would be illegible. */
+  font-family: 'Orbitron', sans-serif;
   font-weight: 700;
-  font-size: clamp(2.5rem, 6vw, 6rem);
+  font-size: clamp(20px, 4vw, 38px);
 }
 .lg-hero-subtitle {
   font-size: clamp(1rem, 2vw, 1.4rem);

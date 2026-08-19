@@ -68,7 +68,7 @@ export default function AdminAnalyticsPage() {
   return (
     <div className="org-page-bg p-8">
       <div className="mb-6">
-        <h1 className="font-display text-[38px] font-medium text-[#0162d1] tracking-wide">Analytics</h1>
+        <h1 className="font-display text-[clamp(20px,4vw,38px)] font-bold text-[#0162d1] tracking-wide">Analytics</h1>
         <p className="text-gray-400 text-sm mt-1">Platform-wide metrics and trends</p>
       </div>
 

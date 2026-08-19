@@ -161,7 +161,7 @@ export default function VolunteerEventPage() {
       <div className="relative z-10 flex flex-col gap-6">
         {/* HEADER */}
         <div>
-          <h1 className="font-display text-[38px] font-medium text-[#0162d1]">
+          <h1 className="font-display text-[clamp(20px,4vw,38px)] font-bold text-[#0162d1]">
             My Events
           </h1>
           <p className="evt-font-poppins text-[13px] sm:text-[14px] text-gray-500 mt-1">
