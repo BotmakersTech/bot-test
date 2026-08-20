@@ -580,7 +580,7 @@
         gap: clamp(14px, 3.4vw, 28px);
     }
     .evd-page .event-card {
-        aspect-ratio: 3 / 2;
+        aspect-ratio: 4 / 5;
         border-radius: clamp(10px, 2.4vw, 18px);
     }
     .evd-page .event-card-body { padding: clamp(12px, 2.9vw, 20px); gap: 6px; }

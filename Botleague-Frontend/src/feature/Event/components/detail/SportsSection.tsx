@@ -15,9 +15,13 @@ function titleCase(val?: string | null): string {
 
 // Same weight formatting SportDetailsHeader uses for its own "Weight" spec
 // badge — kept consistent so a card's title and its own detail page agree.
+// "OPEN" is a real weightClass value in the sport catalogue (sports with no
+// weight subdivisions, e.g. Drone Racing) — not a meaningful class to call
+// out on the card, so it's treated the same as no class at all.
 function weightLabel(sport: EventSportResponse): string {
   if (sport.weightLimitKg != null) return `${sport.weightLimitKg}kg`;
-  return titleCase(sport.weightClass);
+  const cls = titleCase(sport.weightClass);
+  return cls.toUpperCase() === "OPEN" ? "" : cls;
 }
 
 export default function SportsSection({ eventId, eventSports }: SportsSectionProps) {
