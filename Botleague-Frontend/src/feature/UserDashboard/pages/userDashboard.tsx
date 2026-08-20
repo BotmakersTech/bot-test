@@ -179,7 +179,7 @@ export default function UserDashboard() {
 
       <section className="dash-content">
         <div className="dash-top-row">
-          <h1>Welcome back, {displayUsername}!</h1>
+          <h1>Welcome , {displayUsername}!</h1>
           <button type="button" className="dash-chat-btn" onClick={() => navigate("/messages")}>
             Chats
           </button>

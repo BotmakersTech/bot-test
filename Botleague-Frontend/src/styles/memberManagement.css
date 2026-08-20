@@ -171,11 +171,28 @@
 }
 
 .memmgmt-readonly-note {
-  padding: 20px;
+  padding: 20px 20px 8px;
   text-align: center;
   color: #7c7c7c;
   font-size: 13px;
   font-weight: 600;
+}
+
+/* Non-admin members get a Leave Team action instead of the roster
+   management controls — reuses the same destructive-red button and
+   confirm/cancel treatment as the roster's own Remove/Make Captain rows. */
+.memmgmt-leave-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 20px;
+}
+
+.memmgmt-leave-confirm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 /* Shared with the desktop roster's loading/empty state — previously
@@ -235,7 +252,7 @@
   width: 60px;
   background: linear-gradient(90deg, #0162d1, #8c6cff);
   border-radius: 2px;
-  margin: 6px 0 18px 42px;
+  margin: 4px 0 20px clamp(44px, 9.4vw, 56px);
 }
 
 .mmm-card {
@@ -244,14 +261,14 @@
   box-shadow: 0 4px 4px rgba(0, 0, 0, 0.15);
   background: #ffffff;
   padding: 14px 16px 16px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .mmm-card-label {
   margin: 0 0 10px;
   font-family: "Poppins", sans-serif;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 16px;
   color: #0162d1;
 }
 
@@ -265,19 +282,20 @@
 .mmm-input-shell {
   flex: 1 1 140px;
   min-width: 0;
-  height: 34px;
+  height: 33px;
   border: 1px solid #0162d1;
   border-radius: 8px;
   background: #ffffff;
-  box-shadow: inset 3px 3px 4px rgba(0, 0, 0, 0.12);
+  box-shadow: inset 4px 4px 4px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
   padding: 0 10px;
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
+.mmm-input-shell:hover,
 .mmm-input-shell:focus-within {
   border-color: #8c6cff;
-  box-shadow: inset 3px 3px 4px rgba(0, 0, 0, 0.12), 0 0 0 2px rgba(140, 108, 255, 0.15);
+  box-shadow: inset 4px 4px 4px rgba(0, 0, 0, 0.15), 0 0 0 2px rgba(140, 108, 255, 0.15);
 }
 .mmm-input-shell input {
   border: none;
@@ -306,7 +324,7 @@
 
 .mmm-action-btn {
   flex: 0 0 auto;
-  min-width: 76px;
+  width: 92px;
   height: 34px;
   border: none;
   border-radius: 6px;
@@ -332,7 +350,7 @@
 .mmm-team-title {
   font-family: "Sarpanch", sans-serif;
   font-weight: 600;
-  font-size: 20px;
+  font-size: 22px;
   background-image: linear-gradient(180deg, #0162d1, #8c6cff);
   -webkit-background-clip: text;
   background-clip: text;
@@ -366,7 +384,7 @@
   justify-content: center;
   font-family: "Inter", sans-serif;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 14px;
   color: #ffffff;
   background: #7a5cff;
   object-fit: cover;
@@ -377,7 +395,7 @@
   margin: 0;
   font-family: "Inter", sans-serif;
   font-weight: 500;
-  font-size: 15px;
+  font-size: 16px;
   color: rgba(56, 19, 190, 0.85);
   overflow: hidden;
   text-overflow: ellipsis;

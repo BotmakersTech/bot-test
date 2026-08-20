@@ -12,7 +12,7 @@ import { clearTeam } from "../../../feature/Team/store/TeamSlice";
 import { getNavItemsForRoles, MOBILE_NAV_VISIBLE_COUNT } from "../../../shared/config/sidebarConfig";
 import { AppRole, type AppRoleType } from "../../../shared/constants/roles";
 import { getIcon } from "./Sidebar";
-import { ChatIcon, UserCircleIcon, SettingsGearIcon, SearchIcon, LiveIcon, AnalyticsIcon } from "./Icons/Icons";
+import { ChatIcon, UserCircleIcon, SettingsGearIcon, SearchIcon } from "./Icons/Icons";
 import { resolveAvatarSrc } from "../../Profile/constants/avatars";
 import "../../../styles/mobileNav.css";
 
@@ -110,10 +110,7 @@ export default function MobileMoreMenu({ primaryRole, pendingInvites }: Props) {
     if (primaryRole === AppRole.SUPER_ADMIN) {
       accountRows.push(
         { key: "search", label: "Global Search", icon: <SearchIcon />, onClick: () => go("/admin/search") },
-        { key: "live", label: "Live Events", icon: <LiveIcon />, onClick: () => go("/admin/user") },
-        { key: "analytics", label: "Analytics Snapshot", icon: <AnalyticsIcon />, onClick: () => go("/admin/analytics") },
         { key: "profile", label: "Profile", icon: <UserCircleIcon />, onClick: () => go("/profile") },
-        { key: "settings", label: "System Settings", icon: <SettingsGearIcon />, onClick: () => go("/settings") },
       );
     } else if (primaryRole === AppRole.ADMIN) {
       accountRows.push(

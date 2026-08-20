@@ -491,6 +491,10 @@ function DevPreviewMMM() {
   const baseRow = {
     actionLoading: false,
     onChangeRole: () => {},
+    confirmingRoleChange: false,
+    pendingRoleLabel: "",
+    onConfirmRoleChange: () => {},
+    onCancelRoleChange: () => {},
     confirmingCaptain: false,
     onStartMakeCaptain: () => {},
     onConfirmMakeCaptain: () => {},
@@ -531,6 +535,11 @@ function DevPreviewMMM() {
           onSearchQueryChange={() => {}}
           totalMemberCount={rows.length}
           rows={rows}
+          onLeaveTeam={() => {}}
+          confirmingLeaveTeam={false}
+          onStartLeaveTeam={() => {}}
+          onCancelLeaveTeam={() => {}}
+          leaveTeamLoading={false}
         />
       </div>
     </Layout>

@@ -44,6 +44,11 @@ export interface MobileMemberManagementRow {
   onChangeRole: (role: string) => void;
   actionLoading: boolean;
 
+  confirmingRoleChange: boolean;
+  pendingRoleLabel: string;
+  onConfirmRoleChange: () => void;
+  onCancelRoleChange: () => void;
+
   canMakeCaptain: boolean;
   confirmingCaptain: boolean;
   onStartMakeCaptain: () => void;
@@ -78,6 +83,12 @@ export interface MobileMemberManagementProps {
 
   totalMemberCount: number;
   rows: MobileMemberManagementRow[];
+
+  onLeaveTeam: () => void;
+  confirmingLeaveTeam: boolean;
+  onStartLeaveTeam: () => void;
+  onCancelLeaveTeam: () => void;
+  leaveTeamLoading: boolean;
 }
 
 export default function MobileMemberManagement({
@@ -98,6 +109,11 @@ export default function MobileMemberManagement({
   onSearchQueryChange,
   totalMemberCount,
   rows,
+  onLeaveTeam,
+  confirmingLeaveTeam,
+  onStartLeaveTeam,
+  onCancelLeaveTeam,
+  leaveTeamLoading,
 }: MobileMemberManagementProps) {
   return (
     <div className="mmm-root">
@@ -191,22 +207,34 @@ export default function MobileMemberManagement({
 
             {m.showActions && (
               <div className="mmm-member-actions">
-                <select
-                  className="memmgmt-action-select"
-                  defaultValue=""
-                  disabled={m.actionLoading}
-                  onChange={(e) => {
-                    const role = e.target.value;
-                    if (!role) return;
-                    e.target.value = "";
-                    m.onChangeRole(role);
-                  }}
-                >
-                  <option value="" disabled>Change role</option>
-                  {m.roleOptions.map((r) => (
-                    <option key={r.value} value={r.value}>{r.label}</option>
-                  ))}
-                </select>
+                {m.confirmingRoleChange ? (
+                  <>
+                    <span className="memmgmt-confirm-text">Change role to {m.pendingRoleLabel}?</span>
+                    <button type="button" className="memmgmt-captain-btn" disabled={m.actionLoading} onClick={m.onConfirmRoleChange}>
+                      Confirm
+                    </button>
+                    <button type="button" className="memmgmt-cancel-btn" onClick={m.onCancelRoleChange}>
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <select
+                    className="memmgmt-action-select"
+                    defaultValue=""
+                    disabled={m.actionLoading}
+                    onChange={(e) => {
+                      const role = e.target.value;
+                      if (!role) return;
+                      e.target.value = "";
+                      m.onChangeRole(role);
+                    }}
+                  >
+                    <option value="" disabled>Change role</option>
+                    {m.roleOptions.map((r) => (
+                      <option key={r.value} value={r.value}>{r.label}</option>
+                    ))}
+                  </select>
+                )}
 
                 {m.canMakeCaptain && (
                   m.confirmingCaptain ? (
@@ -248,7 +276,24 @@ export default function MobileMemberManagement({
       )}
 
       {!isAdmin && (
-        <div className="memmgmt-readonly-note">Only the captain or vice-captain can manage members.</div>
+        <div className="memmgmt-leave-section">
+          <p className="memmgmt-readonly-note">Only the captain or vice-captain can manage members.</p>
+          {confirmingLeaveTeam ? (
+            <div className="memmgmt-leave-confirm">
+              <span className="memmgmt-confirm-text">Are you sure you want to leave the team?</span>
+              <button type="button" className="memmgmt-remove-btn" disabled={leaveTeamLoading} onClick={onLeaveTeam}>
+                Confirm
+              </button>
+              <button type="button" className="memmgmt-cancel-btn" onClick={onCancelLeaveTeam}>
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button type="button" className="memmgmt-remove-btn" onClick={onStartLeaveTeam}>
+              Leave Team
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

@@ -200,8 +200,8 @@ const CSS = `
     }
     .apm-tile {
       flex: 0 0 auto;
-      width: 72px;
-      max-width: 72px;
+      width: 100px;
+      max-width: 100px;
       gap: 8px;
     }
     .apm-avatar-frame.selected {

@@ -9,8 +9,6 @@ import {
   SettingsGearIcon,
   ChatIcon,
   SearchIcon,
-  LiveIcon,
-  AnalyticsIcon,
 } from "./Icons/Icons"
 import { useAppDispatch } from "../../../app/hooks"
 import { fetchUnreadCount } from "../../Notifications/store/notificationSlice"
@@ -163,18 +161,9 @@ function SuperAdminNavActions({ unreadCount }: { unreadCount: number }) {
           <SearchIcon className="h-5 w-5" />
         </IconButton>
       )}
-      <IconButton label="Live Events" onClick={() => navigate("/admin/user")}>
-        <LiveIcon className="h-5 w-5" />
-      </IconButton>
       <NotificationButton unreadCount={unreadCount} onClick={() => navigate("/notifications")} />
-      <IconButton label="Analytics Snapshot" onClick={() => navigate("/admin/analytics")}>
-        <AnalyticsIcon className="h-5 w-5" />
-      </IconButton>
       <IconButton label="Profile" onClick={() => navigate("/profile")}>
         <UserCircleIcon className="h-[22px] w-[22px]" />
-      </IconButton>
-      <IconButton label="System Settings" onClick={() => navigate("/settings")}>
-        <SettingsGearIcon className="h-5 w-5" />
       </IconButton>
     </div>
   )

@@ -208,6 +208,24 @@
     margin-top: 1px;
 }
 
+/* Hidden by default — swaps in for .cba-role-desc on hover so each card
+   shows a fuller "about this role" line instead of the short tagline. */
+.cba-role-desc-hover {
+    display: none;
+    font-weight: 500;
+    font-size: clamp(0.6rem, 1.1dvh, 0.72rem);
+    color: #444;
+    margin-top: 1px;
+}
+
+.cba-role-card:hover .cba-role-desc {
+    display: none;
+}
+
+.cba-role-card:hover .cba-role-desc-hover {
+    display: block;
+}
+
 .cba-role-card--active {
     background: var(--cba-gradient);
     border-image: none;
@@ -220,7 +238,8 @@
 }
 
 .cba-role-card--active .cba-role-title,
-.cba-role-card--active .cba-role-desc {
+.cba-role-card--active .cba-role-desc,
+.cba-role-card--active .cba-role-desc-hover {
     color: #fff;
 }
 

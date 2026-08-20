@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useEvent } from "../hook/useEvent";
 import { useEventRealtime } from "../../../shared/realtime/useEventRealtime";
+import PublicNavbar from "../../../shared/components/PublicNavbar";
 import Hero from "../components/detail/Hero";
 import Overview from "../components/detail/Overview";
 import SportsSection from "../components/detail/SportsSection";
@@ -36,36 +37,40 @@ export default function UserEventDetail() {
 
   const event = events.find((e) => e.id === eventId);
 
+  let body: React.ReactNode;
   if (loading && !event) {
-    return (
+    body = (
       <div className="evd-page" style={{ padding: "120px 0", textAlign: "center", fontSize: 18, color: "#666" }}>
         Loading event…
       </div>
     );
-  }
-
-  if (error && !event) {
-    return (
+  } else if (error && !event) {
+    body = (
       <div className="evd-page" style={{ padding: "120px 0", textAlign: "center", fontSize: 18, color: "#dc2626" }}>
         {error}
       </div>
     );
-  }
-
-  if (!event) {
-    return (
+  } else if (!event) {
+    body = (
       <div className="evd-page" style={{ padding: "120px 0", textAlign: "center", fontSize: 18, color: "#666" }}>
         Event not found.
+      </div>
+    );
+  } else {
+    body = (
+      <div className="evd-page">
+        <Hero title={event.eventName} />
+        <Overview description={event.eventDescription} />
+        <VolunteerCTA eventId={event.id} eventName={event.eventName} volunteersNeeded={event.volunteersNeeded} />
+        <SportsSection eventId={event.id} eventSports={eventSports} />
       </div>
     );
   }
 
   return (
-    <div className="evd-page">
-      <Hero title={event.eventName} />
-      <Overview description={event.eventDescription} />
-      <VolunteerCTA eventId={event.id} eventName={event.eventName} volunteersNeeded={event.volunteersNeeded} />
-      <SportsSection eventId={event.id} eventSports={eventSports} />
-    </div>
+    <>
+      <PublicNavbar showLeagues />
+      {body}
+    </>
   );
 }

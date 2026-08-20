@@ -27,6 +27,7 @@ import useMatches from "../../Matches/Hooks/useMatches";
 import { useSportMatchRealtime } from "../../../shared/realtime/useMatchRealtime";
 import useLeaderboard from "../../Leaderboard/hook/useLeaderboard";
 import { useEligibility } from "../../Eligibility/hooks/useEligibility";
+import PublicNavbar from "../../../shared/components/PublicNavbar";
 import "../../../styles/eventDetail.css";
 
 import Hero from "../components/detail/Hero";
@@ -211,63 +212,69 @@ export default function UserSportDetail() {
     }
   };
 
+  let body: React.ReactNode;
   if (loading && !sport) {
-    return <div className="evd-page" style={{ padding: "120px 0", textAlign: "center", fontSize: 18, color: "#666" }}>Loading sport…</div>;
-  }
-  if (error && !sport) {
-    return <div className="evd-page" style={{ padding: "120px 0", textAlign: "center", fontSize: 18, color: "#dc2626" }}>{error}</div>;
-  }
-  if (!event || !sport) {
-    return <div className="evd-page" style={{ padding: "120px 0", textAlign: "center", fontSize: 18, color: "#666" }}>Sport not found.</div>;
+    body = <div className="evd-page" style={{ padding: "120px 0", textAlign: "center", fontSize: 18, color: "#666" }}>Loading sport…</div>;
+  } else if (error && !sport) {
+    body = <div className="evd-page" style={{ padding: "120px 0", textAlign: "center", fontSize: 18, color: "#dc2626" }}>{error}</div>;
+  } else if (!event || !sport) {
+    body = <div className="evd-page" style={{ padding: "120px 0", textAlign: "center", fontSize: 18, color: "#666" }}>Sport not found.</div>;
+  } else {
+    body = (
+      <div className="evd-page">
+        <Hero title={sport.sport?.replace(/_/g, " ") ?? "Sport"} imageUrl={sport.sportThumbnailUrl} />
+        <SportDetailsHeader sport={sport} contacts={contacts} />
+
+        <TournamentTabs
+          matches={<MatchesTab matches={matches} loading={matchesLoading} error={matchesError} />}
+          rankings={<LeaderboardTab leaderboard={leaderboard} loading={lbLoading} error={lbError} />}
+          schedule={<ScheduleTab matches={matches} loading={matchesLoading} error={matchesError} sportLabel={sport.sport?.replace(/_/g, " ") ?? "Sport"} />}
+          registration={
+            <RegistrationTab
+              sport={sport}
+              teamId={teamId}
+              teamCode={teamCode}
+              isCaptain={isCaptain}
+              isLoggedIn={isAuthenticated}
+              existingRegs={existingRegs}
+              busyReg={busyReg}
+              regError={regError}
+              eligibility={eligibility}
+              teamMembers={teamMembers}
+              onRegister={handleRegister}
+              onCancel={handleCancel}
+              onManageLineup={(id) => setActiveRegId(id)}
+              onDismissError={() => setRegError(null)}
+              onRequireLogin={requireLogin}
+            />
+          }
+          lineup={
+            <LineupTab
+              sport={sport}
+              existingRegs={existingRegs}
+              activeRegId={activeRegId || (existingRegs[0] ? regId(existingRegs[0]) : "")}
+              setActiveRegId={setActiveRegId}
+              isCaptain={isCaptain}
+              isLoggedIn={isAuthenticated}
+              teamMembers={teamMembers}
+              lineupsMap={lineupsMap}
+              lineupLoading={lineupLoading}
+              lineupError={lineupError}
+              onFetch={handleFetchLineup}
+              onAdd={handleAddMember}
+              onRemove={handleRemoveMember}
+              onRequireLogin={requireLogin}
+            />
+          }
+        />
+      </div>
+    );
   }
 
   return (
-    <div className="evd-page">
-      <Hero title={sport.sport?.replace(/_/g, " ") ?? "Sport"} imageUrl={sport.sportThumbnailUrl} />
-      <SportDetailsHeader sport={sport} contacts={contacts} />
-
-      <TournamentTabs
-        matches={<MatchesTab matches={matches} loading={matchesLoading} error={matchesError} />}
-        rankings={<LeaderboardTab leaderboard={leaderboard} loading={lbLoading} error={lbError} />}
-        schedule={<ScheduleTab matches={matches} loading={matchesLoading} error={matchesError} sportLabel={sport.sport?.replace(/_/g, " ") ?? "Sport"} />}
-        registration={
-          <RegistrationTab
-            sport={sport}
-            teamId={teamId}
-            teamCode={teamCode}
-            isCaptain={isCaptain}
-            isLoggedIn={isAuthenticated}
-            existingRegs={existingRegs}
-            busyReg={busyReg}
-            regError={regError}
-            eligibility={eligibility}
-            teamMembers={teamMembers}
-            onRegister={handleRegister}
-            onCancel={handleCancel}
-            onManageLineup={(id) => setActiveRegId(id)}
-            onDismissError={() => setRegError(null)}
-            onRequireLogin={requireLogin}
-          />
-        }
-        lineup={
-          <LineupTab
-            sport={sport}
-            existingRegs={existingRegs}
-            activeRegId={activeRegId || (existingRegs[0] ? regId(existingRegs[0]) : "")}
-            setActiveRegId={setActiveRegId}
-            isCaptain={isCaptain}
-            isLoggedIn={isAuthenticated}
-            teamMembers={teamMembers}
-            lineupsMap={lineupsMap}
-            lineupLoading={lineupLoading}
-            lineupError={lineupError}
-            onFetch={handleFetchLineup}
-            onAdd={handleAddMember}
-            onRemove={handleRemoveMember}
-            onRequireLogin={requireLogin}
-          />
-        }
-      />
-    </div>
+    <>
+      <PublicNavbar showLeagues />
+      {body}
+    </>
   );
 }

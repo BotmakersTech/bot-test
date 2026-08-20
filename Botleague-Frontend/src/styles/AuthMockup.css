@@ -5,17 +5,17 @@
    so the "default" variant (Forgot/Reset password) is untouched.
    ========================================================= */
 
-/* Logo at its natural 609x57 size for the login/register variants.
-   `.cna-logo` hard-codes width:320px in BOTH AuthLayout.css and
-   login.css (a near-duplicate stylesheet also loaded on every auth
-   page); whichever of those two happens to load last wins a plain
-   single-class override, which is exactly the kind of load-order
-   accident that broke padding earlier in this file. Written as a
-   compound selector (.cna-logo.cna-logo--auth) instead, which is
-   MORE specific than either single-class `.cna-logo` rule, so it
-   wins unconditionally regardless of load order. */
+/* Same 320px as the shared `.cna-logo` rule in AuthLayout.css/login.css —
+   this used to be the logo's raw native width (609px), nearly as wide as
+   the login card itself (max-width 692px), which read oversized. Kept as
+   its own compound selector (.cna-logo.cna-logo--auth) rather than
+   relying on those single-class rules, since whichever of those two
+   near-duplicate stylesheets happens to load last would otherwise win a
+   plain single-class override — the same load-order accident that broke
+   padding earlier in this file. This compound selector is MORE specific
+   than either, so it wins unconditionally regardless of load order. */
 .cna-logo.cna-logo--auth {
-  width: 609px;
+  width: 320px;
   max-width: 100%;
   height: auto;
 }

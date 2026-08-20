@@ -220,7 +220,7 @@ export default function ProfilePage() {
                   type="button"
                   onClick={() => void handleUsernameToggle()}
                   title="Edit username"
-                  className="pfm-font-sarpanch text-indigo-600 font-bold text-4xl underline decoration-2 underline-offset-2 cursor-pointer mb-3"
+                  className="pfm-font-sarpanch text-indigo-600 font-bold text-2xl underline decoration-2 underline-offset-2 cursor-pointer mb-3"
                 >
                   @{p.username || "UserName"}
                 </button>

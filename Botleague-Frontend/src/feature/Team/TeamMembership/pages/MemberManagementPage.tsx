@@ -50,6 +50,7 @@ export default function MemberManagementPage() {
     assignRole,
     removeMember,
     transferCaptain,
+    leaveTeam,
   } = useTeamMembership(teamCode);
 
   const [botleagueId, setBotleagueId] = useState("");
@@ -57,6 +58,8 @@ export default function MemberManagementPage() {
   const [inviteMessage, setInviteMessage] = useState<string | null>(null);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
   const [confirmCaptainId, setConfirmCaptainId] = useState<string | null>(null);
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const [pendingRoleChange, setPendingRoleChange] = useState<{ userId: string; role: TeamRole } | null>(null);
   // Mobile-only — desktop's roster has no search of its own.
   const [mobileSearch, setMobileSearch] = useState("");
 
@@ -71,6 +74,28 @@ export default function MemberManagementPage() {
       setInviteRole("MEMBER");
     } catch {
       // error already surfaced via the shared error banner below
+    }
+  };
+
+  const handleConfirmRoleChange = async () => {
+    if (!pendingRoleChange) return;
+    try {
+      await assignRole(pendingRoleChange.userId, pendingRoleChange.role);
+    } catch {
+      // error already surfaced via the shared error banner below
+    } finally {
+      setPendingRoleChange(null);
+    }
+  };
+
+  const handleLeaveTeam = async () => {
+    try {
+      await leaveTeam();
+      navigate("/my-team");
+    } catch {
+      // error already surfaced via the shared error banner below
+    } finally {
+      setConfirmLeave(false);
     }
   };
 
@@ -128,8 +153,13 @@ export default function MemberManagementPage() {
 
       showActions,
       roleOptions: roleOptionsFor(member).map((r) => ({ value: r, label: roleLabel(r) })),
-      onChangeRole: (role) => { assignRole(member.userId, role as TeamRole).catch(() => {}); },
+      onChangeRole: (role) => setPendingRoleChange({ userId: member.userId, role: role as TeamRole }),
       actionLoading,
+
+      confirmingRoleChange: pendingRoleChange?.userId === member.userId,
+      pendingRoleLabel: pendingRoleChange?.userId === member.userId ? roleLabel(pendingRoleChange.role) : "",
+      onConfirmRoleChange: handleConfirmRoleChange,
+      onCancelRoleChange: () => setPendingRoleChange(null),
 
       canMakeCaptain: isCaptain,
       confirmingCaptain: confirmCaptainId === member.userId,
@@ -235,26 +265,43 @@ export default function MemberManagementPage() {
 
                     {showActions && (
                       <div className="memmgmt-row-actions">
-                        <select
-                          className="memmgmt-action-select"
-                          defaultValue=""
-                          disabled={actionLoading}
-                          onChange={async (e) => {
-                            const role = e.target.value as TeamRole;
-                            if (!role) return;
-                            e.target.value = "";
-                            try {
-                              await assignRole(member.userId, role);
-                            } catch {
-                              // error already surfaced via the shared error banner
-                            }
-                          }}
-                        >
-                          <option value="" disabled>Change role</option>
-                          {roleOptionsFor(member).map((r) => (
-                            <option key={r} value={r}>{roleLabel(r)}</option>
-                          ))}
-                        </select>
+                        {pendingRoleChange?.userId === member.userId ? (
+                          <>
+                            <span className="memmgmt-confirm-text">Change role to {roleLabel(pendingRoleChange.role)}?</span>
+                            <button
+                              type="button"
+                              className="memmgmt-captain-btn"
+                              disabled={actionLoading}
+                              onClick={handleConfirmRoleChange}
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              type="button"
+                              className="memmgmt-cancel-btn"
+                              onClick={() => setPendingRoleChange(null)}
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <select
+                            className="memmgmt-action-select"
+                            defaultValue=""
+                            disabled={actionLoading}
+                            onChange={(e) => {
+                              const role = e.target.value as TeamRole;
+                              if (!role) return;
+                              e.target.value = "";
+                              setPendingRoleChange({ userId: member.userId, role });
+                            }}
+                          >
+                            <option value="" disabled>Change role</option>
+                            {roleOptionsFor(member).map((r) => (
+                              <option key={r} value={r}>{roleLabel(r)}</option>
+                            ))}
+                          </select>
+                        )}
 
                         {isCaptain && (
                           confirmCaptainId === member.userId ? (
@@ -339,7 +386,24 @@ export default function MemberManagementPage() {
             )}
           </div>
           {!isAdmin && (
-            <div className="memmgmt-readonly-note">Only the captain or vice-captain can manage members.</div>
+            <div className="memmgmt-leave-section">
+              <p className="memmgmt-readonly-note">Only the captain or vice-captain can manage members.</p>
+              {confirmLeave ? (
+                <div className="memmgmt-leave-confirm">
+                  <span className="memmgmt-confirm-text">Are you sure you want to leave the team?</span>
+                  <button type="button" className="memmgmt-remove-btn" disabled={actionLoading} onClick={handleLeaveTeam}>
+                    Confirm
+                  </button>
+                  <button type="button" className="memmgmt-cancel-btn" onClick={() => setConfirmLeave(false)}>
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button type="button" className="memmgmt-remove-btn" onClick={() => setConfirmLeave(true)}>
+                  Leave Team
+                </button>
+              )}
+            </div>
           )}
         </section>
       </div>
@@ -364,6 +428,11 @@ export default function MemberManagementPage() {
         onSearchQueryChange={setMobileSearch}
         totalMemberCount={members.length}
         rows={mobileRows}
+        onLeaveTeam={handleLeaveTeam}
+        confirmingLeaveTeam={confirmLeave}
+        onStartLeaveTeam={() => setConfirmLeave(true)}
+        onCancelLeaveTeam={() => setConfirmLeave(false)}
+        leaveTeamLoading={actionLoading}
       />
     </div>
     </>

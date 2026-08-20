@@ -10,6 +10,7 @@ const ROLES = [
     key: "participant",
     title: "Participant",
     desc: "Compete. Innovate. Become a Champion",
+    hoverDesc: "Register your robot, compete in matches, and climb the leaderboard against builders from around the world.",
     icon: (
       <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor">
         <path d="M12 2a2 2 0 0 1 2 2v1h2a3 3 0 0 1 3 3v2h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v2a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-2H4a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1V8a3 3 0 0 1 3-3h2V4a2 2 0 0 1 2-2Zm-3 9a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm6 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z" />
@@ -20,6 +21,7 @@ const ROLES = [
     key: "volunteer",
     title: "Volunteer",
     desc: "Learn. Contribute. Grow",
+    hoverDesc: "Help run the show — check-ins, logistics, and keeping matches on schedule at live events.",
     icon: (
       <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor">
         <path d="M12 21s-7.5-4.6-10-9.1C.5 8.6 2 5 5.4 5c1.9 0 3.3 1 4.1 2.3C10.3 6 11.7 5 13.6 5 17 5 18.5 8.6 22 11.9 14.5 16.4 12 21 12 21Z" />
@@ -30,6 +32,7 @@ const ROLES = [
     key: "organiser",
     title: "Organiser",
     desc: "Host World-Class Robotics Competitions.",
+    hoverDesc: "Create and manage your own events — registrations, schedules, judging, and live results, all in one place.",
     icon: (
       <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor">
         <path d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm3 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-2 8h4a2 2 0 0 0-4 0Zm8-6h6v-1h-6Zm0 3h6v-1h-6Z" />
@@ -40,6 +43,7 @@ const ROLES = [
     key: "judge",
     title: "Judge",
     desc: "Share your Expertise. Shape the Future of Robotics",
+    hoverDesc: "Score matches fairly using each sport's rubric and help decide who takes the win.",
     icon: (
       <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor">
         <path d="m14.5 2.5 7 7-2 2-1-1-4 4a3 3 0 0 1-4 4l-5-5a3 3 0 0 1 4-4l4-4-1-1Zm-8 14 1.5 1.5L3 23H0v-3Z" />
@@ -102,6 +106,7 @@ export default function CreateAccountPage() {
                       )}
                     </span>
                     <span className="cba-role-desc">{role.desc}</span>
+                    <span className="cba-role-desc-hover">{role.hoverDesc}</span>
                   </span>
                 </button>
               ))}

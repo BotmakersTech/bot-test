@@ -29,8 +29,6 @@ export const NAV_CONFIG: NavItem[] = [
   { id: "s-robots",   label: "All Robots",           link: "/admin/robots",          iconName: "robot",      roles: [SA] },
   { id: "s-judges",   label: "Judge Ecosystem",      link: "/admin/judges",          iconName: "judge",      roles: [SA] },
   { id: "s-events",   label: "All Events",           link: "/admin/user",            iconName: "calendar",   roles: [SA] },
-  { id: "s-partners", label: "Sponsors & Partners",  link: "/admin/sponsors",        iconName: "partners",   roles: [SA] },
-  { id: "s-reports",  label: "Reports",              link: "/admin/reports",         iconName: "reports",    roles: [SA] },
   { id: "s-audit",    label: "Audit Logs",           link: "/admin/audit-logs",      iconName: "audit",      roles: [SA] },
   { id: "s-catalog",  label: "League Catalog",       link: "/admin/catalog",         iconName: "sports",     roles: [SA] },
   { id: "s-news",     label: "News",                 link: "/admin/news",            iconName: "communication", roles: [SA] },
