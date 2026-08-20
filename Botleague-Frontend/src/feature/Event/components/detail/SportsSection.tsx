@@ -8,6 +8,18 @@ interface SportsSectionProps {
   eventSports: EventSportResponse[];
 }
 
+function titleCase(val?: string | null): string {
+  if (!val) return "";
+  return val.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// Same weight formatting SportDetailsHeader uses for its own "Weight" spec
+// badge — kept consistent so a card's title and its own detail page agree.
+function weightLabel(sport: EventSportResponse): string {
+  if (sport.weightLimitKg != null) return `${sport.weightLimitKg}kg`;
+  return titleCase(sport.weightClass);
+}
+
 export default function SportsSection({ eventId, eventSports }: SportsSectionProps) {
   const navigate = useNavigate();
 
@@ -35,6 +47,8 @@ export default function SportsSection({ eventId, eventSports }: SportsSectionPro
             key={sport.id}
             image={sport.sportThumbnailUrl}
             title={sport.sport?.replace(/_/g, " ") ?? "Sport"}
+            category={weightLabel(sport)}
+            eligibleLeague={titleCase(sport.ageGroup)}
             description={sport.sportsDescription}
             onExplore={() => navigate(`/events/${eventId}/sports/${sport.id}`)}
           />

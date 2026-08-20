@@ -552,28 +552,41 @@
 .evd-page .event-card-view-details:hover { transform: scale(1.05); }
 .evd-page .event-card-view-details:disabled { opacity: .5; cursor: not-allowed; transform: none; }
 
+.evd-page .event-card-league {
+    display: inline-block;
+    width: fit-content;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .18);
+    border: 1px solid rgba(255, 255, 255, .35);
+    color: #fff;
+    font-family: Inter, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .02em;
+}
+
 @media (max-width: 1200px) and (min-width: 901px) { .evd-page .cards { grid-template-columns: repeat(2, 1fr); } }
 
-/* Mobile/tablet: the mockup uses a dense 3-per-row thumbnail grid (near-
-   square cards, aspect-ratio 120:123) at every width from 412 to 900px,
-   not a stepped 2-col/1-col layout. Cards this small have no room for the
-   hover-reveal description/Explore button (also unreachable by :hover on
-   touch anyway), so that content is hidden here — the whole card is
-   already a tap target (EventCard's onClick), and the sport name (never
-   hover-gated) is enough to identify it before tapping through. */
+/* Mobile/tablet: 2-per-row (not 3) so each card has room to carry its full
+   identity — title + weight class (two entries of the same sport, e.g. two
+   Robowar weight classes in one event, would otherwise render as two
+   identical-looking cards) plus the eligible-league badge. Hover-reveal
+   description/Explore button stays hidden — unreachable by :hover on touch
+   anyway, and the whole card is already a tap target (EventCard's onClick). */
 @media (max-width: 900px) {
     .evd-page .cards {
-        grid-template-columns: repeat(3, 1fr);
-        gap: clamp(10px, 2.4272vw, 21.84px);
+        grid-template-columns: repeat(2, 1fr);
+        gap: clamp(14px, 3.4vw, 28px);
     }
     .evd-page .event-card {
-        aspect-ratio: 120 / 123;
-        border-radius: clamp(5px, 1.2136vw, 10.92px);
+        aspect-ratio: 3 / 2;
+        border-radius: clamp(10px, 2.4vw, 18px);
     }
-    .evd-page .event-card-body { padding: clamp(6px, 1.5vw, 10px); gap: 2px; }
+    .evd-page .event-card-body { padding: clamp(12px, 2.9vw, 20px); gap: 6px; }
     .evd-page .event-card h3 {
-        font-size: clamp(9px, 2.2vw, 13px);
-        line-height: 1.2;
+        font-size: clamp(13px, 3.2vw, 19px);
+        line-height: 1.25;
         letter-spacing: 0;
     }
     .evd-page .event-card-reveal { display: none; }
@@ -668,6 +681,30 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* EVENT FACTS — 4 always-2x2 cards (Date/Venue/Organiser/Sports Offered)
+   under Overview. Reuses .sport-stat's own badge styling (icon + label +
+   value) — same visual language as the sport-level header's spec badges,
+   just a fixed 2-column grid instead of 3-then-2-then-1, since this is
+   always exactly 4 items. */
+.evd-page .event-facts {
+    padding: 0 80px 60px;
+}
+
+.evd-page .event-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+@media (max-width: 900px) {
+    .evd-page .event-facts { padding: 0 clamp(16px, 3.8835vw, 34.95px) clamp(24px, 5.8252vw, 52.43px); }
+    .evd-page .event-stats { gap: 10px; }
+    .evd-page .event-stats .sport-stat { padding: 10px 14px; gap: 10px; }
+    .evd-page .event-stats .sport-stat-value { font-size: 15px; }
 }
 
 @media (max-width: 992px) {

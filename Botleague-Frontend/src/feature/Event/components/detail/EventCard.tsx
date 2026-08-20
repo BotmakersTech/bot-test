@@ -3,12 +3,20 @@ import { ArrowRight, Trophy } from "lucide-react";
 interface EventCardProps {
   image?: string | null;
   title: string;
+  /** Weight class/limit — appended to the title so two entries of the same
+   * sport (e.g. two Robowar weight classes in the same event) read as
+   * distinct cards instead of two identical-looking "ROBOWAR" tiles. */
+  category?: string | null;
+  /** Age-group eligibility (Junior/Senior/Open/…) — shown as its own badge
+   * so competitors can tell at a glance which league/division a card is
+   * for before tapping through. */
+  eligibleLeague?: string | null;
   description?: string | null;
   disabled?: boolean;
   onExplore: () => void;
 }
 
-export default function EventCard({ image, title, description, disabled, onExplore }: EventCardProps) {
+export default function EventCard({ image, title, category, eligibleLeague, description, disabled, onExplore }: EventCardProps) {
   const handleCardClick = () => {
     if (!disabled) onExplore();
   };
@@ -47,7 +55,8 @@ export default function EventCard({ image, title, description, disabled, onExplo
       <div className="event-card-image-overlay" />
 
       <div className="event-card-body">
-        <h3>{title}</h3>
+        <h3>{title}{category ? ` – ${category}` : ""}</h3>
+        {eligibleLeague && <span className="event-card-league">{eligibleLeague}</span>}
         <div className="event-card-reveal">
           <p>{description || "Details for this sport will be published soon."}</p>
           <button type="button" className="event-card-view-details" onClick={handleExploreClick} disabled={disabled}>
