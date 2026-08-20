@@ -208,9 +208,7 @@ function BubbleGroup({ group, onDeleteMessage }: { group: MessageGroup; onDelete
 
       <div className="chat-bubble-stack">
         {!group.isMine && group.senderName && (
-          <span style={{ fontSize: "0.74rem", fontWeight: 700, color: "#6b6b6b", padding: "0 4px" }}>
-            {group.senderName}
-          </span>
+          <span className="chat-bubble-sender">{group.senderName}</span>
         )}
         {group.messages.map((msg) => (
           <div key={msg.id} style={{ display: "flex", flexDirection: "column", alignItems: group.isMine ? "flex-end" : "flex-start" }}>
@@ -247,9 +245,7 @@ function BubbleGroup({ group, onDeleteMessage }: { group: MessageGroup; onDelete
                 </button>
               )}
             </div>
-            <span style={{ fontSize: "0.68rem", color: "#9ca3af", marginTop: "3px", padding: "0 4px" }}>
-              {formatMessageTime(msg.sentAt)}
-            </span>
+            <span className="chat-bubble-time">{formatMessageTime(msg.sentAt)}</span>
           </div>
         ))}
       </div>
