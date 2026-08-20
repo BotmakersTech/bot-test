@@ -278,6 +278,14 @@ public class UserManagementService {
             throw ApiException.conflict("Phone number already registered");
         }
 
+        // Blank email must become null, not "" — the column is unique, and
+        // treating "no email" as null (rather than a shared empty string)
+        // lets more than one admin-created user go without one.
+        String email = (req.getEmail() == null || req.getEmail().isBlank()) ? null : req.getEmail().trim();
+        if (email != null && userRepository.existsByEmailIgnoreCase(email)) {
+            throw ApiException.conflict("Email already registered");
+        }
+
         AccountType roleType;
         try { roleType = AccountType.valueOf(req.getRole().toUpperCase()); }
         catch (IllegalArgumentException e) { throw ApiException.badRequest("Unknown role: " + req.getRole()); }
@@ -286,13 +294,13 @@ public class UserManagementService {
         user.setFirstName(req.getFirstName());
         user.setLastName(req.getLastName());
         user.setPhone(req.getPhone());
-        user.setEmail(req.getEmail());
+        user.setEmail(email);
         user.setBotleagueId(botleagueIdService.generateBotleagueUserId());
         user.setPasswordHash(passwordHasher.hash(req.getPassword()));
         user.setAccountType(roleType);
         user.setAccountStatus(AccountStatus.ACTIVE);
         user.setPhoneVerified(true);
-        user.setEmailVerified(req.getEmail() != null && !req.getEmail().isBlank());
+        user.setEmailVerified(email != null);
         User saved = userRepository.save(user);
 
         UserRole role = new UserRole();

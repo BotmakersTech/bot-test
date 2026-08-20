@@ -60,6 +60,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return build(HttpStatus.FORBIDDEN, "You do not have permission to perform this action");
     }
 
+    // Safety net for unique/FK constraint violations that reach the DB layer
+    // without a prior existsBy... check catching them first (e.g. a race
+    // between two concurrent requests) — without this they fell through to
+    // the catch-all below and surfaced as an opaque 500.
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleDataIntegrity(org.springframework.dao.DataIntegrityViolationException ex) {
+        log.warn("Data integrity violation", ex);
+        return build(HttpStatus.CONFLICT, "That value conflicts with an existing record (e.g. a duplicate email or phone number)");
+    }
+
     // ---- Spring MVC infrastructure exceptions (override parent) ----
 
     @Override
