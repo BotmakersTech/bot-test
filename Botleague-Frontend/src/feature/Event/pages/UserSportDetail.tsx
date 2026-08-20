@@ -226,6 +226,7 @@ export default function UserSportDetail() {
         <SportDetailsHeader sport={sport} contacts={contacts} />
 
         <TournamentTabs
+          isRegistered={existingRegs.length > 0}
           matches={<MatchesTab matches={matches} loading={matchesLoading} error={matchesError} />}
           rankings={<LeaderboardTab leaderboard={leaderboard} loading={lbLoading} error={lbError} />}
           schedule={<ScheduleTab matches={matches} loading={matchesLoading} error={matchesError} sportLabel={sport.sport?.replace(/_/g, " ") ?? "Sport"} />}
