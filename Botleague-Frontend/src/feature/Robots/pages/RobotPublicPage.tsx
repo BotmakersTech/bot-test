@@ -8,6 +8,7 @@ import flightDecoration from "../../../assets/Auth/flight.svg";
 import droneDecoration from "../../../assets/Auth/drone.svg";
 import bLogo from "../../../assets/Dashboard/B_LOGO.png";
 import PublicNavbar from "../../../shared/components/PublicNavbar";
+import MobileRobotProfile from "../components/MobileRobotProfile";
 import "../../../styles/robotProfile.css";
 
 // Same visual language as the editable /robots/:robotId page (RobotProfilePage.tsx)
@@ -93,7 +94,30 @@ export default function RobotPublicPage() {
       <img className="rprofile-bg rprofile-bg-drone" src={droneDecoration} alt="" aria-hidden="true" />
 
       <div className="rprofile-shell">
-        <section className="rprofile-hero">
+        <div className="rprofile-mobile-only">
+          <MobileRobotProfile
+            robotName={profile.robotName}
+            botId={profile.robotCode || "-"}
+            weightLabel={profile.weightKg != null ? `${profile.weightKg} Kg` : "-"}
+            sportLabel={profile.sport?.replace(/_/g, " ") || "-"}
+            active={active}
+            imageUrl={!imgErr ? profile.imageUrl : null}
+            imageAlt={profile.robotName}
+            eventsPlayed={profile.eventsPlayed}
+            totalMatches={profile.totalMatches}
+            winRate={winRate}
+            records={profile.records.map((rec, i) => ({
+              key: `${rec.eventSportId}-${i}`,
+              tournament: rec.eventName ?? "Unknown Event",
+              points: rec.pointsEarned,
+              sport: rec.sport?.replace(/_/g, " ") ?? "-",
+              position: rec.eventRank ? ordinal(rec.eventRank) : "-",
+            }))}
+            onShare={shareRobot}
+          />
+        </div>
+
+        <section className="rprofile-hero rprofile-desktop-only">
           <OutlineStar className="rprofile-card-star-a" />
           <OutlineStar className="rprofile-card-star-b" />
 
@@ -163,7 +187,7 @@ export default function RobotPublicPage() {
           </div>
         </section>
 
-        <section className="rprofile-records">
+        <section className="rprofile-records rprofile-desktop-only">
           <h2>Tournament Records</h2>
 
           {profile.records.length === 0 ? (

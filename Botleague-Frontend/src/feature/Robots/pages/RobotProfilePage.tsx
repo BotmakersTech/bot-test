@@ -7,6 +7,7 @@ import useTeamMembership from "../../Team/TeamMembership/hooks/useTeamMembership
 import { getRobotById } from "../api/robot.api";
 import { getPublicRobotProfile, type PublicRobotProfile } from "../api/robotPublic.api";
 import RobotEditPanel from "../components/RobotEditPanel";
+import MobileRobotProfile from "../components/MobileRobotProfile";
 import type { Robot } from "../types/types";
 import robotFallback from "../../../assets/robot.png";
 import flightDecoration from "../../../assets/Auth/flight.svg";
@@ -129,7 +130,31 @@ export default function RobotProfilePage() {
               Back to Robots
             </button>
 
-            <section className="rprofile-hero">
+            <div className="rprofile-mobile-only">
+              <MobileRobotProfile
+                robotName={robot.robotName}
+                botId={robot.robotCode || "-"}
+                weightLabel={profile?.weightKg != null ? `${profile.weightKg} Kg` : "-"}
+                sportLabel={profile?.sport?.replace(/_/g, " ") || "-"}
+                active={active}
+                imageUrl={!imgErr ? robot.robotIMG : null}
+                imageAlt={robot.robotName}
+                eventsPlayed={profile?.eventsPlayed ?? 0}
+                totalMatches={profile?.totalMatches ?? 0}
+                winRate={winRate}
+                records={(profile?.records ?? []).map((rec, i) => ({
+                  key: `${rec.eventSportId}-${i}`,
+                  tournament: rec.eventName ?? "Unknown Event",
+                  points: rec.pointsEarned,
+                  sport: rec.sport?.replace(/_/g, " ") ?? "-",
+                  position: rec.eventRank ? ordinal(rec.eventRank) : "-",
+                }))}
+                onShare={shareRobot}
+                onEdit={canManageRobots ? () => setEditing(true) : undefined}
+              />
+            </div>
+
+            <section className="rprofile-hero rprofile-desktop-only">
               <OutlineStar className="rprofile-card-star-a" />
               <OutlineStar className="rprofile-card-star-b" />
 
@@ -196,7 +221,7 @@ export default function RobotProfilePage() {
               </div>
             </section>
 
-            <section className="rprofile-records">
+            <section className="rprofile-records rprofile-desktop-only">
               <h2>Tournament Records</h2>
 
               {!profile || profile.records.length === 0 ? (

@@ -541,20 +541,55 @@
   }
 }
 
+/* Hidden by default (desktop shows both panes side by side, so there's
+   nothing to navigate "back" from) — shown only inside the mobile thread
+   header below. */
+.chat-mobile-back {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #111111;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+.chat-mobile-back:hover { background: rgba(1, 98, 209, 0.08); }
+
 @media (max-width: 760px) {
   .chat-page {
-    height: auto;
-    min-height: calc(100vh - 72px);
+    height: calc(100vh - 72px);
     grid-template-columns: 1fr;
-    overflow: visible;
+    overflow: hidden;
   }
 
+  /* Room list and open conversation are two separate full-height screens
+     here, not a shared scrolling page — .chat-mobile-room-open (toggled in
+     MessagesPage.tsx by tapping a room / the back button) picks which one
+     is visible. */
   .chat-sidebar-panel {
-    max-height: 520px;
+    max-height: none;
     border-right-width: 3px;
   }
 
   .chat-thread {
-    min-height: 620px;
+    min-height: 0;
+    display: none;
+  }
+
+  .chat-page.chat-mobile-room-open .chat-sidebar-panel {
+    display: none;
+  }
+
+  .chat-page.chat-mobile-room-open .chat-thread {
+    display: flex;
+  }
+
+  .chat-mobile-back {
+    display: inline-flex;
   }
 }

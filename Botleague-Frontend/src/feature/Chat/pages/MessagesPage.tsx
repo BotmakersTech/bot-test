@@ -6,7 +6,7 @@ import {
   type ChangeEvent,
   type KeyboardEvent,
 } from "react";
-import { ChevronDown, Paperclip, Plus, Send, Trash2, UserPlus, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, Paperclip, Plus, Send, Trash2, UserPlus, X } from "lucide-react";
 import { useSelector } from "react-redux";
 
 import { useAppDispatch } from "../../../app/hooks";
@@ -269,6 +269,10 @@ export default function MessagesPage() {
   const activeRoomMessages = useSelector(selectMessages(activeRoomId ?? ""));
 
   const [activeTab, setActiveTab] = useState<MessagesTab>("team");
+  // Mobile-only (<=760px, see chat.css) — the room list and the open
+  // conversation are two separate screens there instead of a shared
+  // scrolling page. Desktop's side-by-side layout ignores this entirely.
+  const [mobileRoomOpen, setMobileRoomOpen] = useState(false);
   const [messageText, setMessageText] = useState("");
   const [query, setQuery] = useState("");
   const [showAddMember, setShowAddMember] = useState(false);
@@ -326,6 +330,7 @@ export default function MessagesPage() {
   function handleRoomSelect(roomId: string) {
     dispatch(setActiveRoom(roomId));
     dispatch(markChatRoomRead(roomId));
+    setMobileRoomOpen(true);
   }
 
   function handleTextareaChange(e: ChangeEvent<HTMLTextAreaElement>) {
@@ -381,7 +386,7 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="chat-page">
+    <div className={mobileRoomOpen ? "chat-page chat-mobile-room-open" : "chat-page"}>
       <aside className="chat-sidebar-panel">
         <div className="chat-panel-header">
           <div className="chat-title-wrap">
@@ -453,6 +458,14 @@ export default function MessagesPage() {
         {activeRoom ? (
           <>
             <header className="chat-thread-header">
+              <button
+                type="button"
+                className="chat-mobile-back"
+                aria-label="Back to conversations"
+                onClick={() => setMobileRoomOpen(false)}
+              >
+                <ChevronLeft size={22} />
+              </button>
               <span className={avatarTone(activeRoom.name)}>{getInitials(activeRoom.name)}</span>
               <div>
                 <h2>{activeRoom.name}</h2>
