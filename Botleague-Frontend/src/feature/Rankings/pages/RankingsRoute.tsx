@@ -2,6 +2,7 @@ import { useSelector } from "react-redux";
 import type { RootState } from "../../../app/store";
 import Layout from "../../Navigation/pages/Layout";
 import PublicNavbar from "../../../shared/components/PublicNavbar";
+import PublicBottomNav from "../../../shared/components/PublicBottomNav";
 import AppFooter from "../../../shared/components/AppFooter";
 import Rankings from "./Rankings";
 
@@ -35,6 +36,7 @@ export default function RankingsRoute() {
       <PublicNavbar showLeagues />
       <Rankings />
       <AppFooter />
+      <PublicBottomNav />
     </>
   );
 }

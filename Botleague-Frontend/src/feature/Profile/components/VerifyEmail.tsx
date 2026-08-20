@@ -1,6 +1,7 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { verifyEmail } from "../api/profile.api";
+import PublicNavbar from "../../../shared/components/PublicNavbar";
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
@@ -76,16 +77,16 @@ console.log("token from url:", token);
 
   // 🔥 UI STATES
 
+  let body: React.ReactNode = null;
+
   if (isLoading) {
-    return (
+    body = (
       <div className="flex items-center justify-center min-h-screen text-lg">
         Verifying your email...
       </div>
     );
-  }
-
-  if (error) {
-    return (
+  } else if (error) {
+    body = (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <h1 className="text-2xl font-bold text-red-500">
           Verification Failed
@@ -101,10 +102,8 @@ console.log("token from url:", token);
         </button>
       </div>
     );
-  }
-
-  if (success) {
-    return (
+  } else if (success) {
+    body = (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <h1 className="text-2xl font-bold text-green-600">
           Email Verified Successfully
@@ -117,5 +116,10 @@ console.log("token from url:", token);
     );
   }
 
-  return null;
+  return (
+    <>
+      <PublicNavbar />
+      {body}
+    </>
+  );
 }

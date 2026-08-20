@@ -6,6 +6,8 @@ import type { ReactNode } from "react";
 // ============================
 import Layout from "../feature/Navigation/pages/Layout";
 import AppFooter from "../shared/components/AppFooter";
+import PublicNavbar from "../shared/components/PublicNavbar";
+import PublicBottomNav from "../shared/components/PublicBottomNav";
 
 // ============================
 // AUTH PAGES
@@ -211,6 +213,7 @@ function FooterShell({ children }: { children: ReactNode }) {
     <>
       {children}
       <AppFooter />
+      <PublicBottomNav />
     </>
   );
 }
@@ -865,7 +868,8 @@ function AppRoutes() {
         path="*"
         element={
           <FooterShell>
-            <div className="flex h-screen items-center justify-center bg-gray-950 text-white text-xl">
+            <PublicNavbar />
+            <div className="flex min-h-[70vh] items-center justify-center bg-gray-950 text-white text-xl">
               Page not found.
             </div>
           </FooterShell>

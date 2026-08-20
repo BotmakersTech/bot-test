@@ -291,24 +291,24 @@ export default function MobileDashboard({
         )}
 
         {/* Stats card */}
-        <div className="dash-m-hover-card" style={{ position: "absolute", backgroundColor: "#fff", border: "1px solid #0162d1", height: 84, left: 25, top: 289, width: 361, borderRadius: 10, boxShadow: "0px 4px 4px 0px rgba(0,0,0,0.13)", overflow: "clip" }}>
+        <div className="dash-m-hover-card" style={{ position: "absolute", backgroundColor: "#fff", border: "1px solid #0162d1", height: 84, left: 25, top: 289, width: 361, borderRadius: 10, boxShadow: "0px 4px 4px 0px rgba(0,0,0,0.13)", overflow: "visible" }}>
           <div style={{ position: "absolute", background: GRADIENT_SOLID, height: 57, left: 113, top: 12, width: 1, borderRadius: 15 }} />
           <div style={{ position: "absolute", background: GRADIENT_SOLID, height: 57, left: 239, top: 12, width: 1, borderRadius: 15 }} />
 
-          <div style={{ position: "absolute", display: "flex", gap: 38, alignItems: "center", left: 24, top: 20 }}>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, width: 78 }}>
-              <CalendarDays size={24} style={{ color: "#3269d0" }} />
-              <p style={{ ...gradientText, margin: 0, fontFamily: "Sarpanch, sans-serif", fontWeight: 600, fontSize: 20, whiteSpace: "nowrap" }}>{eventsParticipated}</p>
+          <div style={{ position: "absolute", display: "flex", gap: 38, alignItems: "center", left: 24, top: 14 }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, width: 78 }}>
+              <CalendarDays size={20} style={{ color: "#3269d0" }} />
+              <p style={{ ...gradientText, margin: 0, fontFamily: "Sarpanch, sans-serif", fontWeight: 600, fontSize: 18, whiteSpace: "nowrap" }}>{eventsParticipated}</p>
               <p style={statLabelStyle}>Events</p>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, width: 78 }}>
-              <Swords size={24} style={{ color: "#3269d0" }} />
-              <p style={{ ...gradientText, margin: 0, fontFamily: "Sarpanch, sans-serif", fontWeight: 600, fontSize: 20, whiteSpace: "nowrap" }}>{matchesTotal}</p>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, width: 78 }}>
+              <Swords size={20} style={{ color: "#3269d0" }} />
+              <p style={{ ...gradientText, margin: 0, fontFamily: "Sarpanch, sans-serif", fontWeight: 600, fontSize: 18, whiteSpace: "nowrap" }}>{matchesTotal}</p>
               <p style={statLabelStyle}>Matches</p>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, width: 78 }}>
-              <Medal size={24} style={{ color: "#3269d0" }} />
-              <p style={{ ...gradientText, margin: 0, fontFamily: "Sarpanch, sans-serif", fontWeight: 600, fontSize: 20, whiteSpace: "nowrap" }}>{winRate}%</p>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, width: 78 }}>
+              <Medal size={20} style={{ color: "#3269d0" }} />
+              <p style={{ ...gradientText, margin: 0, fontFamily: "Sarpanch, sans-serif", fontWeight: 600, fontSize: 18, whiteSpace: "nowrap" }}>{winRate}%</p>
               <p style={statLabelStyle}>Win Rate</p>
             </div>
           </div>

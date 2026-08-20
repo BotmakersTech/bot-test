@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { verifyCertificate, type PublicVerificationResponse } from "../api/certificate.api";
-import logo from "../../../assets/BrandLogo/BotLeaguewhite.png";
+import PublicNavbar from "../../../shared/components/PublicNavbar";
 
 function formatDate(iso?: string) {
   if (!iso) return "—";
@@ -38,9 +38,9 @@ export default function VerifyCertificatePage() {
   const copy = result ? RESULT_COPY[result.result] : null;
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-white flex flex-col items-center p-4 sm:p-6 lg:p-8">
-      <img src={logo} alt="BotLeague" className="h-8 mb-10" />
-
+    <>
+    <PublicNavbar />
+    <div className="min-h-screen bg-[#0a0c10] text-white flex flex-col items-center p-4 sm:p-6 lg:p-8 pt-10">
       <div className="w-full max-w-lg">
         <h1 className="text-2xl font-bold text-center mb-2">Certificate Verification</h1>
         <p className="text-gray-400 text-sm text-center mb-8">
@@ -108,6 +108,7 @@ export default function VerifyCertificatePage() {
         )}
       </div>
     </div>
+    </>
   );
 }
 

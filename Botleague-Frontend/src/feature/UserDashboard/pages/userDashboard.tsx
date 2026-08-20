@@ -259,7 +259,7 @@ export default function UserDashboard() {
                   : "Loading members..."
                 : "Join or create a team"}
             </span>
-            <button type="button" onClick={() => navigate(team ? "/my-team" : "/create-team")}>
+            <button type="button" onClick={() => navigate(team ? "/my-team" : "/my-team")}>
               {team ? "Edit Team" : "Create Team"}
             </button>
           </div>

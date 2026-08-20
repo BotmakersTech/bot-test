@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getPublicTeamProfile, getPublicTeamProfileByCode, type PublicTeamProfile } from "../api/teamPublic.api";
 import ShareButton from "../../../shared/components/ShareButton";
 import TeamLogo from "../../../shared/components/TeamLogo";
+import PublicNavbar from "../../../shared/components/PublicNavbar";
 
 // ── Design tokens (matching the dark esports aesthetic) ───────────────────────
 const BG      = "#0d0d0f";
@@ -109,24 +110,32 @@ export default function TeamPublicPage() {
   }, [param, isCode]);
 
   if (loading) return (
-    <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ width: 44, height: 44, border: `3px solid rgba(255,255,255,0.06)`, borderTop: `3px solid ${GOLD}`, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
+    <>
+      <PublicNavbar />
+      <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: 44, height: 44, border: `3px solid rgba(255,255,255,0.06)`, borderTop: `3px solid ${GOLD}`, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </>
   );
 
   if (error || !profile) return (
-    <div style={{ minHeight: "100vh", background: BG, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, color: MUTED }}>
-      <div style={{ fontSize: "3rem" }}>🤖</div>
-      <p style={{ color: TEXT, fontWeight: 700, fontSize: "1rem" }}>{error ?? "Team not found"}</p>
-      <button onClick={() => navigate(-1)} style={{ background: GOLD, border: "none", color: "#000", borderRadius: 8, padding: "10px 24px", fontWeight: 800, cursor: "pointer", fontSize: "0.88rem" }}>← Go Back</button>
-    </div>
+    <>
+      <PublicNavbar />
+      <div style={{ minHeight: "100vh", background: BG, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, color: MUTED }}>
+        <div style={{ fontSize: "3rem" }}>🤖</div>
+        <p style={{ color: TEXT, fontWeight: 700, fontSize: "1rem" }}>{error ?? "Team not found"}</p>
+        <button onClick={() => navigate(-1)} style={{ background: GOLD, border: "none", color: "#000", borderRadius: 8, padding: "10px 24px", fontWeight: 800, cursor: "pointer", fontSize: "0.88rem" }}>← Go Back</button>
+      </div>
+    </>
   );
 
   const winRate   = profile.matchesPlayed > 0 ? Math.round((profile.totalWins / profile.matchesPlayed) * 100) : 0;
   const shareUrl  = `${window.location.origin}/team/${profile.teamCode}`;
 
   return (
+    <>
+    <PublicNavbar />
     <div style={{ minHeight: "100vh", background: BG, color: TEXT, fontFamily: "Inter, system-ui, sans-serif" }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} * { box-sizing: border-box; }`}</style>
 
@@ -336,5 +345,6 @@ export default function TeamPublicPage() {
         </p>
       </div>
     </div>
+    </>
   );
 }

@@ -143,7 +143,7 @@ export interface UseProfileReturn {
   setIsEditingName: (v: boolean) => void;
   isEditingEmail: boolean;
   setIsEditingEmail: (v: boolean) => void;
-  saveUsername: () => Promise<void>;
+  saveUsername: () => Promise<boolean>;
   handleUpdate: () => Promise<void>;
   saveEmail: () => Promise<void>;
   refetch: () => Promise<void>;
@@ -535,24 +535,27 @@ const loadTeamMembership = useCallback(async (teamCode: string) => {
   // ───────────────────────────────────────────────────
 
   const saveUsername = useCallback(async () => {
+    clearError("username");
     if (!username.trim()) {
       setError("username", "Username cannot be empty.");
-      return;
+      return false;
     }
     startLoading("username");
     try {
       await updateUsername(username.trim());
       setIsEditingUsername(false);
       await loadProfile();
+      return true;
     } catch (err: any) {
       setError(
         "username",
         err?.response?.data?.message ?? "Username update failed."
       );
+      return false;
     } finally {
       stopLoading("username");
     }
-  }, [loadProfile, setError, startLoading, stopLoading, username]);
+  }, [clearError, loadProfile, setError, startLoading, stopLoading, username]);
 
   // ───────────────────────────────────────────────────
   // UPDATE PROFILE

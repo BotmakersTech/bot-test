@@ -84,8 +84,13 @@
     .evd-page .overlay { padding-bottom: 60px; }
     .evd-page .overlay h1 { font-size: 48px; letter-spacing: 2px; }
 }
+/* Mobile/tablet hero switches from a fixed height to the mockup's own
+   412:261 aspect ratio, fluidly scaling with viewport width instead of
+   stepping between fixed px values at each breakpoint. */
+@media (max-width: 900px) {
+    .evd-page .hero { height: auto; aspect-ratio: 412 / 261; }
+}
 @media (max-width: 480px) {
-    .evd-page .hero { height: 480px; }
     .evd-page .overlay h1 { font-size: 34px; }
 }
 
@@ -150,16 +155,19 @@
     z-index: 5;
 }
 
-@media (max-width: 768px) {
-    .evd-page .overview { padding: 80px 25px; }
-    .evd-page .overview h2 { font-size: 50px; }
-    .evd-page .overview p { font-size: 18px; line-height: 34px; }
-    .evd-page .overview::before { width: 130px; height: 130px; }
-    .evd-page .overview::after { width: 100px; height: 100px; right: 20px; }
-}
-@media (max-width: 480px) {
-    .evd-page .overview h2 { font-size: 34px; }
-    .evd-page .overview p { font-size: 16px; line-height: 28px; }
+/* Mobile/tablet: fluid clamp() sizing matching the mockup's own 412->900px
+   scale (fl() helper in the pasted spec) instead of stepped px values per
+   breakpoint. The decorative plane/star are dropped entirely here — the
+   mockup's "At A Glance" section is clean text only, no decoratives. */
+@media (max-width: 900px) {
+    .evd-page .overview { padding: clamp(28px, 6.7961vw, 61.17px) clamp(16px, 3.8835vw, 34.95px); }
+    .evd-page .overview h2 { font-size: clamp(26px, 6.3107vw, 56.80px); margin-bottom: 14px; }
+    .evd-page .overview p {
+        font-size: clamp(12px, 2.9126vw, 26.21px);
+        line-height: 1.5;
+        max-width: clamp(347px, 84.2233vw, 758.01px);
+        margin-top: clamp(12px, 2.9126vw, 26.21px);
+    }
     .evd-page .overview::before,
     .evd-page .overview::after { display: none; }
 }
@@ -224,11 +232,38 @@
 .evd-page .volunteer-status-pill.pending  { background: rgba(251, 191, 36, .15); color: #92660a; }
 .evd-page .volunteer-status-pill.approved { background: rgba(34, 197, 94, .15); color: #15803d; }
 
-@media (max-width: 768px) {
-    .evd-page .volunteer-cta { margin: 0 20px 40px; padding: 26px 22px; }
-    .evd-page .volunteer-cta-text h3 { font-size: 21px; }
-    .evd-page .volunteer-cta-inner { flex-direction: column; align-items: flex-start; }
-    .evd-page .volunteer-cta-btn, .evd-page .volunteer-status-pill { width: 100%; text-align: center; }
+/* Mobile/tablet: the mockup's CTA is a solid-purple, edge-to-edge bar (no
+   side margin, no rounded corners) rather than the desktop's pale inset
+   card — matched here, with type sized for this page's real (longer)
+   dynamic message instead of the mockup's short one-line tagline. */
+@media (max-width: 900px) {
+    .evd-page .volunteer-cta {
+        margin: 0;
+        padding: clamp(10px, 2.4272vw, 21.84px) clamp(14px, 3.3981vw, 30.58px);
+        border-radius: 0;
+        border: none;
+        background: #8C6CFF;
+        min-height: clamp(46px, 11.1650vw, 100.49px);
+    }
+    .evd-page .volunteer-cta-inner { align-items: center; }
+    .evd-page .volunteer-cta-text h3 {
+        font-size: clamp(13px, 3.1vw, 20px);
+        letter-spacing: 0.5px;
+        color: #fff;
+        margin-bottom: 2px;
+    }
+    .evd-page .volunteer-cta-text p { font-size: clamp(11px, 2.7vw, 15px); color: rgba(255,255,255,.9); }
+    .evd-page .volunteer-cta-btn {
+        height: auto;
+        padding: clamp(8px, 1.9vw, 12px) clamp(16px, 3.4vw, 22px);
+        font-size: clamp(12px, 2.7vw, 15px);
+        background: #fff;
+        color: #8C6CFF;
+        box-shadow: none;
+    }
+    .evd-page .volunteer-status-pill { background: rgba(255,255,255,.2); color: #fff; }
+    .evd-page .volunteer-status-pill.pending  { background: rgba(255,255,255,.22); color: #fff; }
+    .evd-page .volunteer-status-pill.approved { background: rgba(255,255,255,.22); color: #fff; }
 }
 
 .evd-page .volunteer-modal-overlay {
@@ -358,6 +393,14 @@
     z-index: 1;
 }
 
+.evd-page .sports-empty {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    color: #fff;
+    opacity: .85;
+}
+
 .evd-page .star-2 {
     right: 70px;
     top: 40px;
@@ -370,15 +413,26 @@
     z-index: 1;
 }
 
-@media (max-width: 768px) {
-    .evd-page .sports { padding: 70px 20px; }
-    .evd-page .sports h2 { font-size: 50px; margin-bottom: 45px; }
-    .evd-page .sports::before { width: 100px; height: 105px; }
-    .evd-page .star-1, .evd-page .star-2 { width: 110px; }
-}
-@media (max-width: 480px) {
-    .evd-page .sports h2 { font-size: 34px; }
-    .evd-page .sports::before, .evd-page .star-1, .evd-page .star-2 { display: none; }
+/* Mobile/tablet: the mockup drops the blue/purple gradient panel entirely
+   for "Find Your Challenge" — plain white background, no decorative stars,
+   a compact heading over a dense thumbnail grid (see .cards below). */
+@media (max-width: 900px) {
+    .evd-page .sports {
+        padding: 0 clamp(16px, 3.8835vw, 34.95px) clamp(24px, 5.8252vw, 52.43px);
+        background: none;
+        border-radius: 0;
+        margin: 0;
+    }
+    .evd-page .sports h2 {
+        font-size: clamp(22px, 5.3398vw, 48.06px);
+        color: #0162D1;
+        letter-spacing: 1px;
+        margin: clamp(35px, 8.4951vw, 76.46px) 0 clamp(20px, 4.8544vw, 43.69px);
+    }
+    .evd-page .sports::before,
+    .evd-page .star-1,
+    .evd-page .star-2 { display: none; }
+    .evd-page .sports-empty { color: #333; }
 }
 
 /* CARD — deliberately mirrors the /events landing page's .event-card:
@@ -498,13 +552,31 @@
 .evd-page .event-card-view-details:hover { transform: scale(1.05); }
 .evd-page .event-card-view-details:disabled { opacity: .5; cursor: not-allowed; transform: none; }
 
-@media (max-width: 1200px) { .evd-page .cards { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 768px) {
-    .evd-page .cards { grid-template-columns: 1fr; }
-}
-@media (max-width: 480px) {
-    .evd-page .event-card h3 { font-size: 19px; }
-    .evd-page .event-card p { font-size: 12.5px; }
+@media (max-width: 1200px) and (min-width: 901px) { .evd-page .cards { grid-template-columns: repeat(2, 1fr); } }
+
+/* Mobile/tablet: the mockup uses a dense 3-per-row thumbnail grid (near-
+   square cards, aspect-ratio 120:123) at every width from 412 to 900px,
+   not a stepped 2-col/1-col layout. Cards this small have no room for the
+   hover-reveal description/Explore button (also unreachable by :hover on
+   touch anyway), so that content is hidden here — the whole card is
+   already a tap target (EventCard's onClick), and the sport name (never
+   hover-gated) is enough to identify it before tapping through. */
+@media (max-width: 900px) {
+    .evd-page .cards {
+        grid-template-columns: repeat(3, 1fr);
+        gap: clamp(10px, 2.4272vw, 21.84px);
+    }
+    .evd-page .event-card {
+        aspect-ratio: 120 / 123;
+        border-radius: clamp(5px, 1.2136vw, 10.92px);
+    }
+    .evd-page .event-card-body { padding: clamp(6px, 1.5vw, 10px); gap: 2px; }
+    .evd-page .event-card h3 {
+        font-size: clamp(9px, 2.2vw, 13px);
+        line-height: 1.2;
+        letter-spacing: 0;
+    }
+    .evd-page .event-card-reveal { display: none; }
 }
 
 /* EVENT DETAILS (used for both event-level and sport-level headers) */

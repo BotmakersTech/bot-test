@@ -6,6 +6,15 @@
   background: #171129;
 }
 
+/* Reserve room so the last bit of footer content never sits under
+   PublicBottomNav's fixed floating pill — same reasoning/values as
+   .app-scroll-area's padding for the protected MobileBottomNav. */
+@media (max-width: 950px) {
+  .app-footer {
+    padding-bottom: 104px;
+  }
+}
+
 .app-footer .footer_rpz {
   display: none !important;
 }

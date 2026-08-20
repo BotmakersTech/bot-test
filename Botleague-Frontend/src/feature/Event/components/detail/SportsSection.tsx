@@ -15,7 +15,7 @@ export default function SportsSection({ eventId, eventSports }: SportsSectionPro
     return (
       <section className="sports" style={{ "--star": `url(${star})` } as React.CSSProperties}>
         <h2>SPORTS</h2>
-        <p style={{ position: "relative", zIndex: 2, textAlign: "center", color: "#fff", opacity: 0.85 }}>
+        <p className="sports-empty">
           Sports for this event haven't been published yet — check back soon.
         </p>
       </section>

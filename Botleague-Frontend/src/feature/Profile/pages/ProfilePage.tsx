@@ -87,10 +87,20 @@ export default function ProfilePage() {
 
   const handleUsernameToggle = async () => {
     if (!isEditingUsername) {
+      p.clearError("username");
       setIsEditingUsername(true);
       return;
     }
-    await p.saveUsername();
+    // Only leave edit mode on a successful save — closing unconditionally
+    // meant a failed save (empty username, duplicate, network error) just
+    // silently reverted the field with no indication anything went wrong.
+    const saved = await p.saveUsername();
+    if (saved) setIsEditingUsername(false);
+  };
+
+  const handleUsernameCancel = () => {
+    p.setUsername(p.profile?.userName ?? "");
+    p.clearError("username");
     setIsEditingUsername(false);
   };
 
@@ -206,15 +216,43 @@ export default function ProfilePage() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               {isEditingUsername ? (
-                <input
-                  type="text"
-                  value={p.username}
-                  onChange={(e) => p.setUsername(e.target.value)}
-                  onBlur={() => void handleUsernameToggle()}
-                  onKeyDown={(e) => e.key === "Enter" && void handleUsernameToggle()}
-                  autoFocus
-                  className="pfm-username-input pfm-font-sarpanch text-indigo-600 font-bold text-lg"
-                />
+                <>
+                  <input
+                    type="text"
+                    value={p.username}
+                    onChange={(e) => p.setUsername(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") void handleUsernameToggle();
+                      if (e.key === "Escape") handleUsernameCancel();
+                    }}
+                    autoFocus
+                    disabled={p.isLoading}
+                    className="pfm-username-input pfm-font-sarpanch text-indigo-600 font-bold text-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void handleUsernameToggle()}
+                    disabled={p.isLoading}
+                    title="Save username"
+                    aria-label="Save username"
+                    className="w-7 h-7 rounded-full bg-indigo-500 hover:bg-indigo-600 transition-colors flex items-center justify-center shrink-0 cursor-pointer disabled:opacity-60"
+                  >
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleUsernameCancel}
+                    title="Cancel"
+                    aria-label="Cancel editing username"
+                    className="w-7 h-7 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors flex items-center justify-center shrink-0 cursor-pointer"
+                  >
+                    <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </>
               ) : (
                 <button
                   type="button"
@@ -227,6 +265,9 @@ export default function ProfilePage() {
               )}
               <span className="text-xs font-semibold text-indigo-500 bg-indigo-100 px-3 py-0.5 rounded-full">Profile</span>
             </div>
+            {isEditingUsername && p.errors.username && (
+              <p className="pfm-error">{p.errors.username}</p>
+            )}
 
             <p className="text-base font-semibold text-black tracking-wide">BOTLEAGUE ID</p>
             <p className="text-indigo-600 font-bold text-2xl leading-tight px-4">{p.botleagueId || "BL-PENDING"}</p>

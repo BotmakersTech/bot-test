@@ -7,6 +7,7 @@ import robotFallback from "../../../assets/robot.png";
 import flightDecoration from "../../../assets/Auth/flight.svg";
 import droneDecoration from "../../../assets/Auth/drone.svg";
 import bLogo from "../../../assets/Dashboard/B_LOGO.png";
+import PublicNavbar from "../../../shared/components/PublicNavbar";
 import "../../../styles/robotProfile.css";
 
 // Same visual language as the editable /robots/:robotId page (RobotProfilePage.tsx)
@@ -64,17 +65,17 @@ export default function RobotPublicPage() {
     }
   };
 
+  let body: React.ReactNode;
+
   if (loading) {
-    return (
+    body = (
       <div className="rprofile-page rprofile-state">
         <div className="rprofile-spinner" />
         <p>Loading robot profile...</p>
       </div>
     );
-  }
-
-  if (error || !profile) {
-    return (
+  } else if (error || !profile) {
+    body = (
       <div className="rprofile-page rprofile-state">
         <h1>Robot Profile</h1>
         <p>{error ?? "Robot not found"}</p>
@@ -83,11 +84,10 @@ export default function RobotPublicPage() {
         </button>
       </div>
     );
-  }
-
+  } else {
   const active = profile.status === "ACTIVE";
 
-  return (
+  body = (
     <div className="rprofile-page">
       <img className="rprofile-bg rprofile-bg-flight-left" src={flightDecoration} alt="" aria-hidden="true" />
       <img className="rprofile-bg rprofile-bg-drone" src={droneDecoration} alt="" aria-hidden="true" />
@@ -195,5 +195,13 @@ export default function RobotPublicPage() {
         </section>
       </div>
     </div>
+  );
+  }
+
+  return (
+    <>
+      <PublicNavbar />
+      {body}
+    </>
   );
 }
