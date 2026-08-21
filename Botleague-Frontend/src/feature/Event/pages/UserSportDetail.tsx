@@ -25,7 +25,7 @@ import type {
 } from "../api/event.api";
 import useMatches from "../../Matches/Hooks/useMatches";
 import { useSportMatchRealtime } from "../../../shared/realtime/useMatchRealtime";
-import useLeaderboard from "../../Leaderboard/hook/useLeaderboard";
+import useEventLeaderboard from "../../Leaderboard/hook/useEventLeaderboard";
 import { useEligibility } from "../../Eligibility/hooks/useEligibility";
 import PublicNavbar from "../../../shared/components/PublicNavbar";
 import "../../../styles/eventDetail.css";
@@ -61,7 +61,7 @@ export default function UserSportDetail() {
   const { matches, loading: matchesLoading, error: matchesError } = useMatches(sportId ?? "");
   useSportMatchRealtime(sportId);
 
-  const { leaderboard, loading: lbLoading, error: lbError } = useLeaderboard(eventId ?? "", sportId ?? "");
+  const { leaderboard, loading: lbLoading, error: lbError } = useEventLeaderboard(sportId ?? "");
 
   const [contacts, setContacts] = useState<SupportContact[]>([]);
 

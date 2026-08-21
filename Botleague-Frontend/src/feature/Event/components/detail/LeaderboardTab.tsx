@@ -1,17 +1,12 @@
 import { useState } from "react";
-import type { LeaderboardResponseDTO, LeaderboardStatus } from "../../../Leaderboard/api/leaderboard.api";
+import { useNavigate } from "react-router-dom";
+import type { EventLeaderboard } from "../../../Rankings/api/rankings.api";
 
 interface LeaderboardTabProps {
-  leaderboard: LeaderboardResponseDTO | null;
+  leaderboard: EventLeaderboard | null;
   loading: boolean;
   error: string | null;
 }
-
-const STATUS_LABEL: Record<LeaderboardStatus, string> = {
-  CHAMPION: "🏆 Champion",
-  ACTIVE: "In Progress",
-  ELIMINATED: "Eliminated",
-};
 
 const PAGE_SIZE = 8;
 
@@ -21,6 +16,7 @@ function initials(name?: string | null) {
 }
 
 export default function LeaderboardTab({ leaderboard, loading, error }: LeaderboardTabProps) {
+  const navigate = useNavigate();
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   if (loading) return <p style={{ textAlign: "center", padding: "40px 0" }}>Loading leaderboard…</p>;
@@ -34,40 +30,32 @@ export default function LeaderboardTab({ leaderboard, loading, error }: Leaderbo
 
   return (
     <div className="leaderboard">
-      {leaderboard.championTeamName && (
-        <div className="champion-banner">
-          🏆 Champion: {leaderboard.championTeamName}
-          {leaderboard.championRobotName ? ` — ${leaderboard.championRobotName}` : ""}
-        </div>
-      )}
-
       <div className="heading">
         <span>Rank</span>
-        <span>Team</span>
-        <span>Status</span>
-        <span>Record</span>
-        <span>Diff</span>
+        <span>Robot Name</span>
+        <span>View</span>
+        <span>Point</span>
       </div>
 
       {visible.map((entry) => (
-        <div className="player-card" key={entry.registrationId}>
-          <div>{entry.tied ? `T-${entry.rank}` : entry.rank}</div>
+        <div className="player-card" key={`${entry.teamId}-${entry.robotId ?? entry.rank}`}>
+          <div>{entry.rank}</div>
 
           <div className="user">
-            <div className="avatar">{initials(entry.teamName ?? entry.robotName)}</div>
-            <span>
-              {entry.teamName ?? "—"}
-              {entry.robotName ? ` — ${entry.robotName}` : ""}
-            </span>
+            <div className="avatar">{initials(entry.robotName ?? entry.teamName)}</div>
+            <span>{entry.robotName ?? entry.teamName ?? "—"}</span>
           </div>
 
-          <button type="button" className="profile-btn" disabled style={{ opacity: 0.85, cursor: "default" }}>
-            {STATUS_LABEL[entry.status]}
+          <button
+            type="button"
+            className="profile-btn"
+            disabled={!entry.robotId}
+            onClick={() => entry.robotId && navigate(`/robot/${entry.robotId}`)}
+          >
+            Profile
           </button>
 
-          <div>{entry.wins}-{entry.losses}</div>
-
-          <div>{entry.pointDifferential > 0 ? `+${entry.pointDifferential}` : entry.pointDifferential}</div>
+          <div className="point">{entry.pointsEarned}</div>
         </div>
       ))}
 
