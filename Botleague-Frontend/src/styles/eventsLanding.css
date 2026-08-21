@@ -1,7 +1,7 @@
-/* Sarpanch/Poppins/Inter are already loaded app-wide via index.html's
+/* Orbitron/Poppins/Inter are already loaded app-wide via index.html's
    Google Fonts <link> — the pasted mockup also asked for Racing Sans One
    (logo) and Roboto (buttons), but this app has a standing 3-font system
-   (Sarpanch/Poppins/Inter only), so the logo and buttons below use Sarpanch
+   (Orbitron/Poppins/Inter only), so the logo and buttons below use Orbitron
    and Poppins respectively instead of introducing two more typefaces. */
 
 :root {
@@ -49,7 +49,7 @@
 }
 
 .events-hero-eyebrow {
-  font-family: "Sarpanch", sans-serif;
+  font-family: "Orbitron", sans-serif;
   font-weight: 700;
   font-size: clamp(20px, 3vw, 32px);
   letter-spacing: 3px;
@@ -75,7 +75,7 @@
 .events-hero-subtitle {
   max-width: 780px;
   color: #ffffff;
-  font-family: "Sarpanch", sans-serif;
+  font-family: "Orbitron", sans-serif;
   font-weight: 700;
   font-size: clamp(15px, 2vw, 24px);
   letter-spacing: 1.5px;
@@ -140,7 +140,7 @@
 
 .events-section-eyebrow {
   display: block;
-  font-family: "Sarpanch", sans-serif;
+  font-family: "Orbitron", sans-serif;
   font-weight: 600;
   font-size: clamp(20px, 3.4vw, 32px);
   letter-spacing: 1.5px;
@@ -167,7 +167,7 @@
   background: none;
   -webkit-text-fill-color: initial;
   color: var(--evt-black);
-  font-family: "Sarpanch", sans-serif;
+  font-family: "Orbitron", sans-serif;
   font-size: clamp(24px, 4vw, 40px);
 }
 

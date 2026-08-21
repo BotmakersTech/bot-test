@@ -63,9 +63,9 @@
   box-shadow: 0 10px 25px -8px rgba(124, 92, 246, 0.55);
 }
 
-.onb-font-sarpanch { font-family: "Sarpanch", sans-serif; }
+.onb-font-Orbitron { font-family: "Orbitron", sans-serif; }
 
-/* Poppins, not Sarpanch — Sarpanch's single-story lowercase "a" is easy to
+/* Poppins, not Orbitron — Orbitron's single-story lowercase "a" is easy to
    misread as "o" in full sentences (e.g. "made" reads as "mode"), which only
    shows up here because these titles are conversational, not short labels. */
 .onb-title {

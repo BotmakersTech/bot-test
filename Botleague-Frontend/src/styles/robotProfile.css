@@ -80,7 +80,7 @@
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
-  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
   font-size: 45px;
   font-weight: 600;
   line-height: 40px;
@@ -271,7 +271,7 @@
 }
 
 .rprofile-stat-ribbon strong {
-  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
   font-size: 39px;
   font-weight: 900;
   line-height: 1;
@@ -285,7 +285,7 @@
 .rprofile-records h2 {
   margin: 0 0 18px;
   color: #536be9;
-  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
   font-size: 26px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -498,7 +498,7 @@
 
 /* =========================================================================
    MOBILE (<=900px) — MobileRobotProfile.tsx
-   Ported from "Robotdetailpage.jsx": Roboto/Sarpanch/Poppins/Inter fonts,
+   Ported from "Robotdetailpage.jsx": Roboto/Orbitron/Poppins/Inter fonts,
    the #0162d1 -> #8c6cff gradient, translucent "B" watermark behind the
    robot photo, stat-card-with-dividers treatment.
    ========================================================================= */
@@ -660,7 +660,7 @@
   right: clamp(-40px, -8.4vw, -22px);
   top: 46%;
   transform: translateY(-50%) skewX(-6deg);
-  font-family: "Sarpanch", sans-serif;
+  font-family: "Orbitron", sans-serif;
   font-weight: 700;
   font-size: clamp(112px, 27vw, 235px);
   line-height: 1;
@@ -690,7 +690,7 @@
 .mrp-stat-icon { color: #0162d1; flex: 0 0 auto; }
 
 .mrp-stat-num {
-  font-family: "Sarpanch", sans-serif;
+  font-family: "Orbitron", sans-serif;
   font-weight: 600;
   font-size: clamp(18px, 3vw, 24px);
   line-height: 1;

@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Sarpanch:wght@500;600&family=Poppins:wght@500;600&family=Inter:wght@500;600;700&family=Racing+Sans+One&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600&family=Poppins:wght@500;600&family=Inter:wght@500;600;700&family=Racing+Sans+One&display=swap");
 
 /* Ported 1:1 from the supplied JudgeDashboard.css — only the `.jd-`
    selector prefix is renamed to `.rhd-` (shared by two roles now), no
@@ -86,7 +86,7 @@
 /* ---------- heading ---------- */
 .rhd-welcome {
     margin: 0;
-    font-family: "Sarpanch", sans-serif;
+    font-family: "Orbitron", sans-serif;
     font-weight: 500;
     font-size: 38px;
     line-height: normal;
@@ -220,7 +220,7 @@
 
 .rhd-stat-num {
     margin: 0;
-    font-family: "Sarpanch", sans-serif;
+    font-family: "Orbitron", sans-serif;
     font-weight: 600;
     font-size: 36px;
     color: #000000;
@@ -250,7 +250,7 @@
 
 .rhd-section-title {
     margin: 0;
-    font-family: "Sarpanch", sans-serif;
+    font-family: "Orbitron", sans-serif;
     font-weight: 600;
     font-size: 22px;
     line-height: 22px;

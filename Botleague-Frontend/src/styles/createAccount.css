@@ -1,4 +1,4 @@
-/* Poppins/Sarpanch are already loaded app-wide via the Google Fonts <link>
+/* Poppins/Orbitron are already loaded app-wide via the Google Fonts <link>
    in index.html, so no @import is repeated here — same font, one request. */
 
 :root {
@@ -100,7 +100,7 @@
     display: block;
     font-weight: 900;
     font-size: clamp(14px, 2.2dvh, 20px);
-    font-family: "Sarpanch", sans-serif;
+    font-family: "Orbitron", sans-serif;
     color: #797878;
     margin: 0 auto;
     padding-bottom: clamp(3px, 0.8dvh, 8px);

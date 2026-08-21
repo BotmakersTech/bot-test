@@ -247,7 +247,7 @@
 }
 
 .dash-stat-ribbon strong {
-  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
   font-size: 36px;
   font-weight: 600;
   line-height: 1;
@@ -303,7 +303,7 @@
 .dash-team-info h3 {
   margin: 0;
   color: #4f65e8;
-  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
   font-size: 26px;
   font-weight: 600;
   line-height: 1;

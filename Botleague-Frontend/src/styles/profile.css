@@ -44,7 +44,7 @@ body {
   display: flex;
   align-items: baseline;
   gap: 0.4rem;
-  font-family: 'Sarpanch', sans-serif;
+  font-family: 'Orbitron', sans-serif;
   font-style: italic;
   font-weight: 900;
   font-size: 1.6rem;
@@ -139,7 +139,7 @@ body {
 }
 
 .page-title {
-  font-family: 'Sarpanch', sans-serif;
+  font-family: 'Orbitron', sans-serif;
   font-size: 1.9rem;
   font-weight: 700;
   color: #111111;
@@ -191,7 +191,7 @@ body {
 }
 
 .profile-name-gradient {
-  font-family: 'Sarpanch', sans-serif;
+  font-family: 'Orbitron', sans-serif;
   font-weight: 800;
   font-size: 2.5rem;
   letter-spacing: -1px;
@@ -529,7 +529,7 @@ body {
 
 .profile-page-title {
   margin: 0 0 28px 28px;
-  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
   font-size: 38px;
   font-weight: 700;
   line-height: 1;
@@ -729,7 +729,7 @@ body {
 .profile-name,
 .profile-name-input {
   margin: 0;
-  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
   font-size: 56px;
   font-weight: 700;
   line-height: 1;

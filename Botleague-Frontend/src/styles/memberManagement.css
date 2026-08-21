@@ -207,7 +207,7 @@
 
 /* =========================================================================
    MOBILE (<=950px) — MobileMemberManagement.tsx
-   Ported from the "Membermanagementmobile.jsx" mock: Sarpanch/Poppins/Inter
+   Ported from the "Membermanagementmobile.jsx" mock: Orbitron/Poppins/Inter
    fonts, the #0162d1 -> #8c6cff gradient, card/pill treatment matching the
    rest of the mmt-* (MobileMyTeam) mobile styling this page sits beside.
    ========================================================================= */
@@ -348,7 +348,7 @@
 }
 
 .mmm-team-title {
-  font-family: "Sarpanch", sans-serif;
+  font-family: "Orbitron", sans-serif;
   font-weight: 600;
   font-size: 22px;
   background-image: linear-gradient(180deg, #0162d1, #8c6cff);

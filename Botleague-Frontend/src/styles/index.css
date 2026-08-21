@@ -4,7 +4,7 @@
    Google Fonts <link> in index.html; this just exposes them as the
    font-display/font-sans/font-body Tailwind utilities so pages don't need
    to repeat inline fontFamily styles everywhere. font-display is the page-
-   heading font app-wide (Sarpanch until this changed to Orbitron) — every
+   heading font app-wide (Orbitron until this changed to Orbitron) — every
    page's <h1> uses it, so this one token is the single point of truth for
    "all headings" rather than each page hardcoding its own font-family. */
 @theme {

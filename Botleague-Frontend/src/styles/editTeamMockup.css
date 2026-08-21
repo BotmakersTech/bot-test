@@ -5,7 +5,7 @@
    the hard way that generic names like .field-input/.btn-primary
    collide with Tailwind CDN utilities or other pages' legacy CSS
    (see profile.css's old .field-input/.form-card/.btn-primary).
-   Sarpanch/Poppins/Inter are already loaded globally in index.html.
+   Orbitron/Poppins/Inter are already loaded globally in index.html.
    ========================================================= */
 
 .etm-page {
@@ -26,7 +26,7 @@
   background: #FBFBFB;
 }
 
-.etm-font-sarpanch { font-family: "Sarpanch", sans-serif; }
+.etm-font-Orbitron { font-family: "Orbitron", sans-serif; }
 .etm-font-poppins  { font-family: "Poppins", sans-serif; }
 .etm-font-inter    { font-family: "Inter", sans-serif; }
 

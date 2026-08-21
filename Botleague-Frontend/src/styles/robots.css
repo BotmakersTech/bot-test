@@ -603,7 +603,7 @@
 .robot-create-head h1 {
   margin: 0 0 12px;
   color: #536be9;
-  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
   font-size: 28px;
   font-weight: 700;
   letter-spacing: 0.4px;
@@ -1002,7 +1002,7 @@
    ========================================================= */
 
 .robot-build-empty-title {
-  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
 }
 
 .robot-build-empty-gradient-text {

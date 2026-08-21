@@ -110,7 +110,7 @@
   display: flex;
   align-items: baseline;
   gap: 6px;
-  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
   font-size: 26px;
   font-weight: 800;
   letter-spacing: 0.5px;
@@ -233,7 +233,7 @@
 .teamdash-event-copy h2 {
   margin: 8px 0 12px;
   color: #ffffff;
-  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
   font-size: 44px;
   font-weight: 500;
   line-height: 1.1;
@@ -1193,7 +1193,7 @@
 
 /* =========================================================================
    MOBILE (<=950px) — MobileMyTeam.tsx
-   Same #0162d1 -> #8c6cff gradient system, Sarpanch/Poppins/Inter fonts, and
+   Same #0162d1 -> #8c6cff gradient system, Orbitron/Poppins/Inter fonts, and
    card/badge/star treatment as the desktop teamdash-* rules above, restacked
    for narrow widths.
    ========================================================================= */
@@ -1337,7 +1337,7 @@
 .mmt-event-copy h2 {
   margin: 5px 0 8px;
   color: #ffffff;
-  font-family: "Sarpanch", "Inter", system-ui, sans-serif;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
   font-size: 20px;
   font-weight: 500;
   line-height: 1.15;
