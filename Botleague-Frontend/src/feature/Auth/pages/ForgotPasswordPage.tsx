@@ -2,7 +2,9 @@ import AuthLayout from "../../../layouts/AuthLayout";
 import AuthCard from "../components/AuthCard";
 import OtpSection from "../components/OtpSection";
 import PasswordSection from "../components/PasswordSection";
+import MobileForgotPassword from "../components/MobileForgotPassword";
 import useForgotPassword from "../hooks/useForgotPassword";
+import "../../../styles/responsiveView.css";
 
 const TITLE = (
   <>
@@ -13,6 +15,17 @@ const TITLE = (
 export default function ForgotPasswordPage() {
   const fp = useForgotPassword();
 
+  return (
+    <>
+      <div className="view-mobile-only">
+        <MobileForgotPassword {...fp} />
+      </div>
+      <div className="view-desktop-only">{desktopContent(fp)}</div>
+    </>
+  );
+}
+
+function desktopContent(fp: ReturnType<typeof useForgotPassword>) {
   if (fp.mode === "email") {
     return (
       <AuthLayout variant="forgot">
