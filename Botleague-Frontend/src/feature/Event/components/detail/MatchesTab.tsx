@@ -21,6 +21,16 @@ function teamsOf(m: PublicMatchView): TeamSlot[] {
   return slots;
 }
 
+function slotLabel(slot: TeamSlot) {
+  return `${slot.name}${slot.robotName ? ` — ${slot.robotName}` : ""}`;
+}
+
+// Mobile's narrower 180px slice only fits "Robot vs Robot" — falls back to
+// the team name when no robot has been set on that registration yet.
+function slotCompactLabel(slot: TeamSlot) {
+  return slot.robotName || slot.name;
+}
+
 function MatchCard({ match }: { match: PublicMatchView }) {
   const teams = teamsOf(match);
   const left = teams[0];
@@ -39,12 +49,14 @@ function MatchCard({ match }: { match: PublicMatchView }) {
       <div className={`match left${leftWon ? " winner" : ""}`}>
         <div className="team-slot">
           <div className="team-image" />
-          <span>{left ? `${left.name}${left.robotName ? ` — ${left.robotName}` : ""}` : "TBD"}</span>
+          <span className="match-name-full">{left ? slotLabel(left) : "TBD"}</span>
+          <span className="match-name-compact">{left ? slotCompactLabel(left) : "TBD"}</span>
         </div>
       </div>
       <div className={`match right${rightWon ? " winner" : ""}`}>
         <div className="team-slot">
-          <span>{right ? `${right.name}${right.robotName ? ` — ${right.robotName}` : ""}` : "TBD"}</span>
+          <span className="match-name-full">{right ? slotLabel(right) : "TBD"}</span>
+          <span className="match-name-compact">{right ? slotCompactLabel(right) : "TBD"}</span>
           <div className="team-image" />
         </div>
       </div>
