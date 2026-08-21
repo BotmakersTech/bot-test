@@ -16,6 +16,7 @@ import com.botleague.backend.news.dto.NewsRequest;
 import com.botleague.backend.news.dto.NewsResponse;
 import com.botleague.backend.news.dto.NewsUpdateRequest;
 import com.botleague.backend.news.entity.News;
+import com.botleague.backend.news.enums.NewsCategory;
 import com.botleague.backend.news.repository.NewsRepository;
 import com.botleague.backend.notification.dto.NotificationResponse;
 import com.botleague.backend.notification.enums.NotificationPriority;
@@ -102,6 +103,7 @@ public class NewsService {
         news.setCreatedBy(createdBy);
         news.setTargetAgeCategories(serialize(ages.stream().map(Enum::name).collect(Collectors.toList())));
         news.setTargetSports(serialize(sports));
+        news.setCategory(parseCategory(req.getCategory()));
         news.setAttachmentUrl(req.getAttachmentUrl());
         news.setAttachmentKey(req.getAttachmentKey());
         news.setAttachmentFileType(req.getAttachmentFileType());
@@ -311,6 +313,15 @@ public class NewsService {
                 .orElseThrow(() -> ApiException.notFound("News item not found: " + id));
     }
 
+    private NewsCategory parseCategory(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try {
+            return NewsCategory.valueOf(raw);
+        } catch (IllegalArgumentException e) {
+            throw ApiException.badRequest("Invalid category: " + raw);
+        }
+    }
+
     private List<AgeCategory> parseAgeCategories(List<String> raw) {
         if (raw == null || raw.isEmpty()) return List.of();
         try {
@@ -364,6 +375,7 @@ public class NewsService {
         r.createdBy = n.getCreatedBy();
         r.targetAgeCategories = deserializeStrings(n.getTargetAgeCategories());
         r.targetSports = deserializeStrings(n.getTargetSports());
+        r.category = n.getCategory() != null ? n.getCategory().name() : null;
         r.attachmentUrl = n.getAttachmentUrl();
         r.attachmentKey = n.getAttachmentKey();
         r.attachmentFileType = n.getAttachmentFileType();

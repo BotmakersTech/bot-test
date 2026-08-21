@@ -12,6 +12,7 @@ public class NewsResponse {
     public UUID createdBy;
     public List<String> targetAgeCategories;
     public List<String> targetSports;
+    public String category;
     public String attachmentUrl;
     public String attachmentKey;
     public String attachmentFileType;

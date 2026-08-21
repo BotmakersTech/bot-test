@@ -1,5 +1,6 @@
 package com.botleague.backend.news.entity;
 
+import com.botleague.backend.news.enums.NewsCategory;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -38,6 +39,11 @@ public class News {
     /** JSON array of sport catalogue value strings. Null/empty = no sport restriction. */
     @Column(name = "target_sports", columnDefinition = "TEXT")
     private String targetSports;
+
+    /** Editorial tag (Events Recap / Global / Team Spotlight / Tech / Update). Null = uncategorized. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category", length = 30)
+    private NewsCategory category;
 
     @Column(name = "attachment_url")
     private String attachmentUrl;
@@ -100,6 +106,9 @@ public class News {
 
     public String getTargetSports() { return targetSports; }
     public void setTargetSports(String targetSports) { this.targetSports = targetSports; }
+
+    public NewsCategory getCategory() { return category; }
+    public void setCategory(NewsCategory category) { this.category = category; }
 
     public String getAttachmentUrl() { return attachmentUrl; }
     public void setAttachmentUrl(String attachmentUrl) { this.attachmentUrl = attachmentUrl; }

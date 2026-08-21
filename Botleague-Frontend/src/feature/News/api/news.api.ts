@@ -1,6 +1,8 @@
 import api from "../../../shared/api/Base";
 import type { PagedResponse } from "../../Notifications/api/notification.api";
 
+export type NewsCategory = "EVENTS_RECAP" | "GLOBAL" | "TEAM_SPOTLIGHT" | "TECH" | "UPDATE";
+
 export interface NewsResponse {
   id: string;
   title: string;
@@ -8,6 +10,7 @@ export interface NewsResponse {
   createdBy?: string;
   targetAgeCategories: string[];
   targetSports: string[];
+  category?: NewsCategory | null;
   attachmentUrl?: string;
   attachmentKey?: string;
   attachmentFileType?: string;
@@ -24,6 +27,7 @@ export interface NewsRequest {
   body: string;
   targetAgeCategories?: string[];
   targetSports?: string[];
+  category?: NewsCategory;
   isPinned?: boolean;
   attachmentKey?: string;
   attachmentUrl?: string;

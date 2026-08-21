@@ -8,6 +8,7 @@ import {
   uploadNewsAttachment,
   type NewsResponse,
   type NewsRequest,
+  type NewsCategory,
 } from "../api/news.api";
 import { AGE_GROUP_CATALOGUE, AGE_CATEGORY_RANGES } from "../../../shared/constants/sportCatalogue";
 import heroImg from "../../../assets/home/Img/sports-img/sport3.png";
@@ -31,11 +32,19 @@ interface CreateModalProps {
   onCreated: (news: NewsResponse) => void;
 }
 
+const NEWS_CATEGORIES: { value: NewsCategory; label: string }[] = [
+  { value: "EVENTS_RECAP", label: "Events Recap" },
+  { value: "GLOBAL", label: "Global" },
+  { value: "TEAM_SPOTLIGHT", label: "Team Spotlight" },
+  { value: "TECH", label: "Tech" },
+  { value: "UPDATE", label: "Update" },
+];
+
 function CreateNewsModal({ onClose, onCreated }: CreateModalProps) {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [ages, setAges] = useState<Set<string>>(new Set());
-  const [sports, setSports] = useState<Set<string>>(new Set());
+  const [category, setCategory] = useState<NewsCategory | null>(null);
   const [isPinned, setIsPinned] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -69,7 +78,7 @@ function CreateNewsModal({ onClose, onCreated }: CreateModalProps) {
         title: title.trim(),
         body: body.trim(),
         targetAgeCategories: Array.from(ages),
-        targetSports: Array.from(sports),
+        category: category ?? undefined,
         isPinned,
         ...attachment,
       };
@@ -86,21 +95,16 @@ function CreateNewsModal({ onClose, onCreated }: CreateModalProps) {
   };
 
   const recipientPreview =
-    ages.size === 0 && sports.size === 0
+    ages.size === 0
       ? "Everyone (all active users)"
-      : [
-          ages.size > 0 ? `Age: ${Array.from(ages).map((a) => a.replace(/_/g, " ")).join(", ")}` : null,
-          sports.size > 0 ? `Sport: ${sports.size} selected` : null,
-        ]
-          .filter(Boolean)
-          .join("  ·  ");
+      : `Age: ${Array.from(ages).map((a) => a.replace(/_/g, " ")).join(", ")}`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 py-8">
-      <div className="bg-[#13151c] border border-white/[0.08] rounded-xl w-full max-w-2xl shadow-xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.08] sticky top-0 bg-[#13151c]">
-          <h2 className="text-lg font-semibold text-white">Publish News</h2>
-          <button type="button" onClick={onClose} className="text-neutral-400 hover:text-white transition-colors">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 py-8">
+      <div className="bg-white border border-slate-200 rounded-xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 sticky top-0 bg-white">
+          <h2 className="text-lg font-semibold text-[#0162D1]">Publish News</h2>
+          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-700 transition-colors">
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -109,37 +113,70 @@ function CreateNewsModal({ onClose, onCreated }: CreateModalProps) {
 
         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
           {error && (
-            <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
+            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
               {error}
             </div>
           )}
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-neutral-400 uppercase tracking-wide">Title</label>
+            <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">Title</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
               placeholder="News title"
-              className="bg-white/[0.05] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-[#0162D1]/50"
+              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#0162D1]/60 focus:bg-white"
             />
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-neutral-400 uppercase tracking-wide">Body</label>
+            <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">Body</label>
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
               required
               rows={5}
               placeholder="Write the News content…"
-              className="bg-white/[0.05] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-[#0162D1]/50 resize-vertical"
+              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#0162D1]/60 focus:bg-white resize-vertical"
             />
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-medium text-neutral-400 uppercase tracking-wide">
+            <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+              Category
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setCategory(null)}
+                className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
+                  category === null
+                    ? "bg-[#0162D1] border-[#0162D1] text-white"
+                    : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"
+                }`}
+              >
+                All
+              </button>
+              {NEWS_CATEGORIES.map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  onClick={() => setCategory(c.value)}
+                  className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
+                    category === c.value
+                      ? "bg-[#0162D1] border-[#0162D1] text-white"
+                      : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"
+                  }`}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
               Age category (leave empty = every age)
             </label>
             <div className="flex flex-wrap gap-2">
@@ -148,8 +185,8 @@ function CreateNewsModal({ onClose, onCreated }: CreateModalProps) {
                   key={g.value}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium cursor-pointer transition-colors ${
                     ages.has(g.value)
-                      ? "bg-[#0162D1]/15 border-[#0162D1]/50 text-white"
-                      : "bg-white/[0.03] border-white/[0.1] text-neutral-400"
+                      ? "bg-[#0162D1]/10 border-[#0162D1]/50 text-[#0162D1]"
+                      : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"
                   }`}
                 >
                   <input
@@ -164,53 +201,18 @@ function CreateNewsModal({ onClose, onCreated }: CreateModalProps) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-medium text-neutral-400 uppercase tracking-wide">
-              Sport interest (leave empty = every sport)
-            </label>
-            <div className="flex flex-col gap-3 max-h-52 overflow-y-auto border border-white/[0.08] rounded-lg p-3">
-              {AGE_GROUP_CATALOGUE.map((g) => (
-                <div key={g.value}>
-                  <div className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wide mb-1.5">
-                    {g.label}
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {g.sports.map((s) => (
-                      <label
-                        key={s.value}
-                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[0.72rem] cursor-pointer transition-colors ${
-                          sports.has(s.value)
-                            ? "bg-[#8C6CFF]/15 border-[#8C6CFF]/50 text-white"
-                            : "bg-white/[0.03] border-white/[0.08] text-neutral-400"
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={sports.has(s.value)}
-                          onChange={() => toggle(sports, setSports, s.value)}
-                          className="accent-[#8C6CFF]"
-                        />
-                        {s.label}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="text-xs text-neutral-500 bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2">
+          <div className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
             Recipients: {recipientPreview}
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-neutral-400 uppercase tracking-wide">
+            <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
               Attachment (optional — image or video)
             </label>
             {file ? (
-              <div className="flex items-center gap-2 text-sm text-white">
+              <div className="flex items-center gap-2 text-sm text-slate-700">
                 {file.name}
-                <button type="button" onClick={() => setFile(null)} className="text-red-400 hover:text-red-300 text-xs">
+                <button type="button" onClick={() => setFile(null)} className="text-red-500 hover:text-red-600 text-xs">
                   Remove
                 </button>
               </div>
@@ -218,7 +220,7 @@ function CreateNewsModal({ onClose, onCreated }: CreateModalProps) {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="self-start flex items-center gap-2 bg-white/[0.03] border border-dashed border-white/[0.15] text-neutral-400 rounded-lg px-3 py-2 text-xs"
+                className="self-start flex items-center gap-2 bg-slate-50 border border-dashed border-slate-300 text-slate-500 hover:border-slate-400 rounded-lg px-3 py-2 text-xs"
               >
                 Attach a file
               </button>
@@ -232,7 +234,7 @@ function CreateNewsModal({ onClose, onCreated }: CreateModalProps) {
             />
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-neutral-300">
+          <label className="flex items-center gap-2 text-sm text-slate-700">
             <input type="checkbox" checked={isPinned} onChange={(e) => setIsPinned(e.target.checked)} className="accent-[#0162D1]" />
             Pin to top of feed
           </label>
@@ -241,7 +243,7 @@ function CreateNewsModal({ onClose, onCreated }: CreateModalProps) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 text-sm font-medium text-neutral-400 hover:text-white border border-white/[0.1] hover:border-white/20 rounded-lg transition-colors"
+              className="flex-1 py-2 text-sm font-medium text-slate-500 hover:text-slate-800 border border-slate-200 hover:border-slate-300 rounded-lg transition-colors"
             >
               Cancel
             </button>

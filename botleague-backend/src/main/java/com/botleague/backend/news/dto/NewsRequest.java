@@ -20,6 +20,9 @@ public class NewsRequest {
     /** Sport catalogue value strings. Empty/null = no sport restriction. */
     private List<String> targetSports;
 
+    /** NewsCategory enum name (EVENTS_RECAP/GLOBAL/TEAM_SPOTLIGHT/TECH/UPDATE). Null = uncategorized. */
+    private String category;
+
     private Boolean isPinned;
 
     private String attachmentKey;
@@ -37,6 +40,9 @@ public class NewsRequest {
 
     public List<String> getTargetSports() { return targetSports; }
     public void setTargetSports(List<String> targetSports) { this.targetSports = targetSports; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 
     public Boolean getIsPinned() { return isPinned; }
     public void setIsPinned(Boolean isPinned) { this.isPinned = isPinned; }
