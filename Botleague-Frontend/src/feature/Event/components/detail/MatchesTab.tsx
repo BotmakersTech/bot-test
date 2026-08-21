@@ -9,14 +9,15 @@ interface MatchesTabProps {
 interface TeamSlot {
   name: string;
   robotName?: string;
+  registrationId?: string;
 }
 
 function teamsOf(m: PublicMatchView): TeamSlot[] {
   const slots: TeamSlot[] = [];
-  if (m.teamAName) slots.push({ name: m.teamAName, robotName: m.teamARobotName });
-  if (m.teamBName) slots.push({ name: m.teamBName, robotName: m.teamBRobotName });
-  if (m.teamCName) slots.push({ name: m.teamCName, robotName: m.teamCRobotName });
-  if (m.teamDName) slots.push({ name: m.teamDName, robotName: m.teamDRobotName });
+  if (m.teamAName) slots.push({ name: m.teamAName, robotName: m.teamARobotName, registrationId: m.teamARegistrationId });
+  if (m.teamBName) slots.push({ name: m.teamBName, robotName: m.teamBRobotName, registrationId: m.teamBRegistrationId });
+  if (m.teamCName) slots.push({ name: m.teamCName, robotName: m.teamCRobotName, registrationId: m.teamCRegistrationId });
+  if (m.teamDName) slots.push({ name: m.teamDName, robotName: m.teamDRobotName, registrationId: m.teamDRegistrationId });
   return slots;
 }
 
@@ -25,15 +26,23 @@ function MatchCard({ match }: { match: PublicMatchView }) {
   const left = teams[0];
   const right = teams[1];
 
+  // Robot-vs-robot bracket slice: only a decided match highlights its
+  // winner's slice in the blue-violet gradient — everything else (scheduled,
+  // live, no winner recorded yet) renders both slices in the neutral pale
+  // gradient so the tab never implies a result that hasn't happened.
+  const decided = match.status === "COMPLETED" && !!match.winnerRegistrationId;
+  const leftWon = decided && left?.registrationId === match.winnerRegistrationId;
+  const rightWon = decided && right?.registrationId === match.winnerRegistrationId;
+
   return (
     <div className="match-grid" style={{ marginBottom: 24 }}>
-      <div className="match left">
+      <div className={`match left${leftWon ? " winner" : ""}`}>
         <div className="team-slot">
           <div className="team-image" />
           <span>{left ? `${left.name}${left.robotName ? ` — ${left.robotName}` : ""}` : "TBD"}</span>
         </div>
       </div>
-      <div className="match right">
+      <div className={`match right${rightWon ? " winner" : ""}`}>
         <div className="team-slot">
           <span>{right ? `${right.name}${right.robotName ? ` — ${right.robotName}` : ""}` : "TBD"}</span>
           <div className="team-image" />

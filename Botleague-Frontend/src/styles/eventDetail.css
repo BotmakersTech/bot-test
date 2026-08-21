@@ -771,29 +771,28 @@
 
 .evd-page .match { height: 92px; position: relative; }
 
-.evd-page .match.left::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, #2F7DF5, #9A5FFF);
-    border: 4px solid #5EA8FF;
-    clip-path: polygon(0 0, 92% 0, 82% 100%, 0 100%);
-    border-radius: 16px;
-}
-.evd-page .match.left .team-slot { justify-content: flex-start; gap: 25px; padding-left: 22px; padding-right: 110px; }
-.evd-page .match.left span { color: #fff; }
-
+/* Each slice is its own flat-filled parallelogram — no border ring, no
+   corner radius, just the gradient fill clipped to a diagonal cut on the
+   side facing the gap between the two robots. Neutral (pale) by default;
+   .winner (set per-slice in MatchesTab.tsx from the match's actual result)
+   swaps in the vivid blue-violet fill for whichever robot actually won —
+   not a fixed left/right color. */
+.evd-page .match.left::before,
 .evd-page .match.right::before {
     content: "";
     position: absolute;
     inset: 0;
     background: linear-gradient(90deg, #ECE7FF, #C8D7FF);
-    border: 4px solid #D5E4FF;
-    clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%);
-    border-radius: 16px;
 }
+.evd-page .match.left::before { clip-path: polygon(0 0, 92% 0, 82% 100%, 0 100%); }
+.evd-page .match.right::before { clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%); }
+
+.evd-page .match.winner::before { background: linear-gradient(90deg, #2F7DF5, #9A5FFF); }
+.evd-page .match.winner span { color: #fff; }
+.evd-page .match:not(.winner) span { color: #1b1b1b; }
+
+.evd-page .match.left .team-slot { justify-content: flex-start; gap: 25px; padding-left: 22px; padding-right: 110px; }
 .evd-page .match.right .team-slot { justify-content: space-between; padding-left: 85px; padding-right: 22px; }
-.evd-page .match.right span { color: #1b1b1b; }
 
 .evd-page .match .team-slot {
     position: absolute;
@@ -805,7 +804,7 @@
     z-index: 2;
 }
 .evd-page .match .team-slot span { font-size: 22px; font-weight: 700; white-space: nowrap; }
-.evd-page .match .team-image { width: 60px; height: 60px; background: #4a4a4a; border-radius: 4px; flex-shrink: 0; }
+.evd-page .match .team-image { width: 60px; height: 60px; background: #4a4a4a; flex-shrink: 0; }
 
 .evd-page .round2 { margin-top: 80px; }
 
