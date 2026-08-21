@@ -803,8 +803,12 @@
     padding: 0 22px;
     z-index: 2;
 }
-.evd-page .match .team-slot span { font-size: 22px; font-weight: 700; white-space: nowrap; }
+.evd-page .match .team-slot span { font-size: 22px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .evd-page .match .team-image { width: 60px; height: 60px; background: #4a4a4a; flex-shrink: 0; }
+
+/* Desktop shows "Team — Robot"; mobile's narrow 180px slice (≤768px below)
+   swaps to just the robot name via this pair instead. */
+.evd-page .match .match-name-compact { display: none; }
 
 .evd-page .round2 { margin-top: 80px; }
 
@@ -877,14 +881,22 @@
     .evd-page .tournament .tabs { grid-template-columns: 1fr; border-radius: 12px; }
     .evd-page .tournament .tabs button { height: 52px; font-size: 15px; }
     .evd-page .tournament h2 { font-size: 28px; margin: 0 0 25px; }
-    .evd-page .match { height: 72px; }
-    .evd-page .match .team-slot { padding: 0 14px; }
-    .evd-page .match.left .team-slot { padding-left: 14px; padding-right: 65px; }
-    .evd-page .match.right .team-slot { padding-left: 60px; padding-right: 14px; }
-    .evd-page .match .team-slot span { font-size: 16px; }
-    .evd-page .match .team-image { width: 42px; height: 42px; }
+
+    /* Both robots stay in one row — narrow, fixed-width slices side by side
+       instead of the ≤992px block's full-width stack above. */
+    .evd-page .match-grid { grid-template-columns: repeat(2, 180px); justify-content: center; gap: 10px; }
+    .evd-page .match { width: 180px; max-width: 180px; height: 64px; }
+    .evd-page .match .team-slot { max-width: 180px; padding: 0 10px; gap: 8px; }
+    .evd-page .match.left .team-slot { padding-left: 10px; padding-right: 40px; }
+    .evd-page .match.right .team-slot { padding-left: 36px; padding-right: 10px; }
+    .evd-page .match .team-slot span { font-size: 13px; }
+    .evd-page .match .team-image { width: 30px; height: 30px; }
     .evd-page .match.left::before { clip-path: polygon(0 0, 94% 0, 82% 100%, 0 100%); }
     .evd-page .match.right::before { clip-path: polygon(12% 0, 100% 0, 100% 100%, 0 100%); }
+
+    /* Robot vs Robot only — no room for the team name at 180px. */
+    .evd-page .match .match-name-full { display: none; }
+    .evd-page .match .match-name-compact { display: inline; }
 }
 @media (max-width: 480px) {
     .evd-page .tournament { padding: 25px 12px; }
@@ -892,12 +904,13 @@
     .tabs-mobile button { height: 46px; font-size: 12.5px; }
     .tournament-action-btn { height: 46px; font-size: 13px; }
     .evd-page .tournament h2 { font-size: 24px; }
-    .evd-page .match { height: 66px; }
-    .evd-page .match .team-slot span { font-size: 14px; }
-    .evd-page .match .team-image { width: 36px; height: 36px; }
-    .evd-page .match.left .team-slot { padding-left: 10px; padding-right: 50px; }
-    .evd-page .match.right .team-slot { padding-left: 45px; padding-right: 10px; }
-    .evd-page .match.left::before, .evd-page .match.right::before { border-width: 2px; border-radius: 10px; }
+    .evd-page .match-grid { grid-template-columns: repeat(2, minmax(0, 150px)); gap: 8px; }
+    .evd-page .match { width: 150px; max-width: 150px; height: 58px; }
+    .evd-page .match .team-slot { max-width: 150px; }
+    .evd-page .match .team-slot span { font-size: 12px; }
+    .evd-page .match .team-image { width: 26px; height: 26px; }
+    .evd-page .match.left .team-slot { padding-left: 8px; padding-right: 34px; }
+    .evd-page .match.right .team-slot { padding-left: 30px; padding-right: 8px; }
 }
 
 /* ANIMATIONS */
@@ -915,77 +928,78 @@
 
 .evd-page .leaderboard { background: #fff; padding: 0; font-family: Inter, sans-serif; }
 
-.evd-page .leaderboard .champion-banner {
-    text-align: center;
-    margin-bottom: 40px;
-    padding: 24px;
-    border-radius: 18px;
-    background: linear-gradient(90deg, #1b75ff, #9272ff);
-    color: #fff;
-    font-family: Sarpanch;
-    font-size: 22px;
-}
-
+/* Rank | Robot Name | View | Point — global ranking points (fixed award
+   per win, not a scored-points margin), so no "Reward" column here. */
 .evd-page .heading {
     display: grid;
-    grid-template-columns: 100px 2fr 1fr 1fr 1fr;
-    margin-bottom: 25px;
-    padding: 0 35px;
-    font-size: 22px;
+    grid-template-columns: 80px 2fr 150px 110px;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 0 30px;
+    font-size: 20px;
     font-weight: 700;
     color: #0065d9;
+    text-align: center;
 }
+.evd-page .heading span:nth-child(2) { text-align: left; }
 
 .evd-page .player-card {
     display: grid;
-    grid-template-columns: 100px 2fr 1fr 1fr 1fr;
+    grid-template-columns: 80px 2fr 150px 110px;
     align-items: center;
-    padding: 10px 35px;
-    border: 2px solid #2563eb;
-    border-radius: 20px;
-    margin-bottom: 18px;
-    min-height: 90px;
+    padding: 10px 30px;
+    border: 1px solid #cfe0ff;
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(1, 98, 209, 0.06);
+    margin-bottom: 14px;
+    min-height: 76px;
+    text-align: center;
 }
+.evd-page .player-card > div:first-child { font-weight: 700; color: #1b1b1b; }
 
-.evd-page .user { display: flex; align-items: center; gap: 18px; font-size: 20px; }
+.evd-page .user { display: flex; align-items: center; gap: 14px; font-size: 17px; font-weight: 600; text-align: left; }
 .evd-page .user .avatar {
-    width: 50px;
-    height: 50px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, #0162D1, #8C6CFF);
     color: #fff;
+    font-size: 13px;
     font-weight: 700;
     flex-shrink: 0;
 }
 
 .evd-page .profile-btn {
-    width: 150px;
-    height: 46px;
+    width: 120px;
+    height: 38px;
+    margin: 0 auto;
     border: none;
-    border-radius: 10px;
-    background: linear-gradient(90deg, #1b75ff, #9272ff);
+    border-radius: 8px;
+    background: linear-gradient(90deg, #7c8bfa, #8c6cff);
     color: #fff;
-    font-size: 15px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
+    transition: filter .2s ease;
 }
+.evd-page .profile-btn:hover:not(:disabled) { filter: brightness(1.08); }
+.evd-page .profile-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.evd-page .player-card div { font-size: 18px; }
+.evd-page .point { font-size: 17px; font-weight: 700; color: #1b1b1b; }
 
 .evd-page .more { text-align: center; margin-top: 45px; color: #6d5cff; font-size: 22px; font-weight: 700; cursor: pointer; }
 
 @media (max-width: 992px) {
     .evd-page .heading { display: none; }
-    .evd-page .player-card { grid-template-columns: 1fr; gap: 15px; min-height: 0; padding: 25px; text-align: center; }
+    .evd-page .player-card { grid-template-columns: 1fr; gap: 12px; min-height: 0; padding: 22px; text-align: center; }
     .evd-page .user { justify-content: center; }
-    .evd-page .profile-btn { margin: auto; }
 }
 @media (max-width: 480px) {
-    .evd-page .user { font-size: 18px; }
-    .evd-page .profile-btn, .evd-page .player-card div { font-size: 16px; }
+    .evd-page .user { font-size: 16px; }
+    .evd-page .point { font-size: 15px; }
     .evd-page .more { font-size: 20px; }
 }
 
@@ -997,71 +1011,108 @@
 .evd-page .schedule-title h1 { font-family: Sarpanch; font-size: 44px; color: #0162D1; }
 .evd-page .schedule-title p { font-size: 18px; color: #444; margin-top: 10px; }
 
-.evd-page .round-section { margin-bottom: 60px; }
-.evd-page .round-section h2 { text-align: center; font-family: Sarpanch; color: #2D72F6; font-size: 36px; margin-bottom: 30px; }
+/* BRACKET GRAPH (connected-match view, see BracketGraphView.tsx — same
+   layout the admin Organizer bracket page renders, view-only here) */
 
-.evd-page .match-card {
-    background: #fff;
-    border-radius: 20px;
-    border: 2px solid #dfe8ff;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, .05);
-    overflow: hidden;
-    transition: .35s ease;
-}
-.evd-page .match-card:hover { transform: translateY(-6px); box-shadow: 0 18px 40px rgba(1, 98, 209, .12); }
-
-.evd-page .match-header {
+.evd-page .bracket-graph-header {
     display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     justify-content: space-between;
-    align-items: center;
-    padding: 18px 25px;
-    background: linear-gradient(90deg, #0162D1, #8C6CFF);
-    color: #fff;
-    font-size: 16px;
-    font-weight: 600;
+    gap: 14px;
+    margin-bottom: 16px;
 }
 
-.evd-page .team-row { display: flex; justify-content: space-between; align-items: center; padding: 30px; gap: 16px; }
-.evd-page .team-row .team { display: flex; align-items: center; gap: 15px; font-size: 18px; font-weight: 600; }
-.evd-page .team-row .team-logo {
-    width: 58px;
-    height: 58px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
+.evd-page .bracket-graph-legend { display: flex; flex-wrap: wrap; gap: 16px; }
+.evd-page .bracket-graph-legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #5d5d5d; }
+.evd-page .bracket-graph-legend i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+.evd-page .bracket-graph-champion {
+    display: inline-flex;
     align-items: center;
-    color: #fff;
-    font-size: 20px;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: rgba(161, 98, 7, 0.08);
+    border: 1px solid rgba(161, 98, 7, 0.25);
+    color: #a16207;
     font-weight: 700;
-    background: linear-gradient(135deg, #0162D1, #8C6CFF);
-    flex-shrink: 0;
+    font-size: 14px;
 }
-.evd-page .vs { font-size: 22px; font-weight: 700; color: #0162D1; }
 
-@media (max-width: 1400px) { .evd-page .schedule-page .match-grid { gap: 25px; } }
-@media (max-width: 1200px) { .evd-page .schedule-page .match-grid { grid-template-columns: 1fr; } }
+.evd-page .bracket-graph-canvas {
+    position: relative;
+    height: 65vh;
+    min-height: 380px;
+    overflow: hidden;
+    border: 1px solid #dfe8ff;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .05);
+    touch-action: none;
+    user-select: none;
+}
+
+.evd-page .bracket-graph-zoom {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid #dfe8ff;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .1);
+}
+.evd-page .bracket-graph-zoom button {
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: 6px;
+    background: rgba(1, 98, 209, 0.08);
+    color: #0162D1;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.evd-page .bracket-graph-zoom button:hover { background: rgba(1, 98, 209, 0.16); }
+.evd-page .bracket-graph-zoom span { font-size: 12px; font-weight: 600; color: #5d5d5d; width: 38px; text-align: center; }
+
+.evd-page .bracket-graph-third { margin-top: 28px; max-width: 320px; }
+.evd-page .bracket-graph-third-label { font-weight: 700; color: #a16207; margin-bottom: 10px; }
+.evd-page .bracket-graph-third-card {
+    border: 1px solid rgba(140, 108, 255, 0.35);
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+}
+.evd-page .bracket-graph-third-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    font-size: 14px;
+}
+
 @media (max-width: 992px) {
     .evd-page .schedule-title h1 { font-size: 42px; }
     .evd-page .schedule-title p { font-size: 18px; }
-    .evd-page .round-section h2 { font-size: 32px; }
-    .evd-page .team-row { flex-direction: column; gap: 20px; text-align: center; }
 }
 @media (max-width: 768px) {
     .evd-page .schedule-title { margin-bottom: 40px; }
     .evd-page .schedule-title h1 { font-size: 30px; line-height: 42px; }
     .evd-page .schedule-title p { font-size: 15px; }
-    .evd-page .round-section { margin-bottom: 40px; }
-    .evd-page .round-section h2 { font-size: 28px; }
-    .evd-page .match-card { border-radius: 16px; }
-    .evd-page .match-header { padding: 15px; font-size: 14px; }
-    .evd-page .team-row .team { flex-direction: column; text-align: center; gap: 10px; font-size: 16px; }
-    .evd-page .team-row .team-logo { width: 50px; height: 50px; font-size: 18px; }
-    .evd-page .vs { font-size: 18px; }
+    .evd-page .bracket-graph-canvas { height: 55vh; border-radius: 12px; }
 }
 @media (max-width: 480px) {
     .evd-page .schedule-title h1 { font-size: 26px; }
     .evd-page .schedule-title p { font-size: 14px; }
-    .evd-page .round-section h2 { font-size: 24px; }
+    .evd-page .bracket-graph-canvas { height: 48vh; }
 }
 
 /* REGISTRATION TAB */
