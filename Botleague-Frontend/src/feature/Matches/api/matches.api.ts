@@ -8,6 +8,15 @@ export interface PublicMatchView {
 
   format: string;
 
+  // MatchResponseDTO already sends these — the type just didn't declare
+  // them yet. Needed to lay out the public Schedule tab as the same
+  // connected bracket graph the admin bracket page renders (view-only).
+  tournamentFormat?: "SINGLE_ELIMINATION" | "DOUBLE_ELIMINATION";
+  matchType?: "ONE_VS_ONE" | "TRIPLE_THREAT" | "FATAL_FOUR";
+  bracketSide?: "WINNERS" | "LOSERS" | "GRAND_FINAL" | "THIRD_PLACE";
+  loserNextMatchId?: string;
+  leaderboardPosition?: number;
+  isBracketReset?: boolean;
 
   roundNumber?: number;
 
@@ -15,7 +24,7 @@ export interface PublicMatchView {
 
   bracketPosition?: number;
 
- 
+
   teamARegistrationId?: string;
   teamBRegistrationId?: string;
   teamCRegistrationId?: string;
