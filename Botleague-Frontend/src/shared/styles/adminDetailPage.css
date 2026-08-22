@@ -573,18 +573,151 @@
 
 /* ── Responsive ── */
 
-@media (max-width: 992px) {
+@media (max-width: 992px) and (min-width: 901px) {
   .adp-form-grid { grid-template-columns: 1fr; }
   .adp-full-width { grid-column: auto; }
   .adp-card { flex-direction: column; align-items: flex-start; gap: 20px; }
   .adp-card-right { width: 100%; justify-content: space-between; text-align: left; }
-}
-
-@media (max-width: 768px) {
   .adp-card-left { flex-direction: column; text-align: center; }
   .adp-title-row { flex-direction: column; gap: 8px; }
   .adp-entity-name { font-size: 22px; }
-  .adp-tabs { overflow-x: auto; }
-  .adp-buttons { flex-direction: column; }
-  .adp-buttons button { width: 100%; }
+}
+
+/* ── Mobile (<=900px) — pixel-matches the "Team Info" mobile mockup:
+   compact single-row entity card (no stacking), a 2-column form grid kept
+   even at phone widths (not collapsed to 1 column), gradient-text labels,
+   30px-tall inputs, and side-by-side Cancel/Save buttons. The app's real
+   Navbar/MobileBottomNav (via Layout) already covers the mockup's own
+   header/logo bar, so that part isn't reproduced here. ── */
+@media (max-width: 900px) {
+  .adp-content { padding: clamp(14px, 3.5vw, 22px); }
+
+  .adp-card {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: clamp(10px, 2.5vw, 14px);
+    padding: clamp(12px, 3vw, 16px);
+    border-width: 1px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(1, 98, 209, 0.15) 0%, rgba(140, 108, 255, 0.15) 100%);
+    box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.25);
+  }
+  .adp-card-left {
+    flex-direction: row;
+    align-items: center;
+    text-align: left;
+    gap: clamp(10px, 2.5vw, 14px);
+    flex: 1;
+    min-width: 0;
+  }
+  .adp-avatar {
+    width: clamp(46px, 12vw, 55px);
+    height: clamp(46px, 12vw, 55px);
+    font-size: clamp(16px, 4vw, 20px);
+  }
+  .adp-title-row { flex-direction: row; gap: 8px; flex-wrap: wrap; }
+  .adp-entity-name {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    font-size: clamp(13px, 3.2vw, 15px);
+  }
+  .adp-entity-meta, .adp-entity-code {
+    font-weight: 500;
+    font-size: clamp(11px, 2.6vw, 12px);
+  }
+  .adp-status {
+    border-radius: 5px;
+    padding: 1px 8px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 9px;
+  }
+  .adp-card-right {
+    width: auto;
+    flex-shrink: 0;
+    text-align: right;
+    justify-content: flex-start;
+    gap: clamp(10px, 2.5vw, 16px);
+  }
+  .adp-stat h4 { font-size: 10px; margin-bottom: 2px; }
+  .adp-stat span {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(12px, 2.8vw, 14px);
+    font-weight: 700;
+  }
+
+  /* Tabs — gradient-text active tab with a real underline, no bar. */
+  .adp-tabs {
+    gap: clamp(14px, 4vw, 22px);
+    margin: clamp(16px, 4vw, 24px) 0 clamp(14px, 3vw, 18px);
+    border-bottom: none;
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+  .adp-tab {
+    padding: 4px 2px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.12px;
+  }
+  .adp-tab.adp-tab-active {
+    background: var(--adp-grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .adp-tab.adp-tab-active::after { display: none; }
+
+  /* Form — 2-column grid kept, compact gradient-labelled inputs. */
+  .adp-form-card { padding: clamp(14px, 3.5vw, 20px) clamp(14px, 3.5vw, 20px) clamp(12px, 3vw, 16px); border-radius: 12px; }
+  .adp-form-grid { grid-template-columns: repeat(2, 1fr); gap: 0 clamp(10px, 2.5vw, 16px); }
+  .adp-full-width { grid-column: 1 / -1; }
+  .adp-field { margin-bottom: clamp(14px, 3vw, 18px); }
+  .adp-field label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.12px;
+    background: var(--adp-grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 6px;
+  }
+  .adp-field input,
+  .adp-field select,
+  .adp-field textarea {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    letter-spacing: 0.1px;
+    min-height: 30px;
+    padding: 0 10px;
+    border-radius: 5px;
+    color: var(--adp-gray);
+  }
+  .adp-field textarea { min-height: 49px; padding: 6px 8px; line-height: 12px; }
+
+  /* Buttons — side by side, not stacked. */
+  .adp-buttons { flex-direction: row; margin-top: clamp(10px, 2.5vw, 16px); gap: clamp(10px, 2.5vw, 14px); }
+  .adp-buttons button {
+    flex: 1;
+    min-width: 0;
+    height: 30px;
+    border-radius: 5px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+  }
+  .adp-btn-cancel { border-width: 2px; color: #000; }
+  .adp-btn-save { box-shadow: none; }
+}
+
+@media (max-width: 460px) {
+  .adp-card { flex-wrap: wrap; }
+  .adp-card-right { width: 100%; text-align: left; justify-content: space-between; margin-top: 8px; }
 }

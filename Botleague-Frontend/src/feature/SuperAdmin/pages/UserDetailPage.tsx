@@ -282,10 +282,10 @@ export default function UserDetailPage() {
                   onChange={(v) => setProfileForm((f) => ({ ...f, state: v }))} />
                 <div className="adp-field adp-full-width">
                   <label>Address</label>
-                  <input
-                    type="text"
+                  <textarea
                     value={profileForm.address}
                     onChange={(e) => setProfileForm((f) => ({ ...f, address: e.target.value }))}
+                    rows={3}
                   />
                 </div>
               </div>
