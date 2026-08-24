@@ -1279,29 +1279,31 @@ export default function OrganizerSportDetailPage() {
 
   return (
     <>
-    <PageWrapper>
+    {/* ── EDIT SPORT MODAL ── (fixed overlay — rendered outside the desktop/
+        mobile split so it still works when opened from the mobile view) */}
+    {showEditSport && sport && eventId && sportId && (
+      <EditSportModal
+        sport={sport}
+        eventId={eventId}
+        sportId={sportId}
+        onSave={updateEventSport}
+        saving={sportLoading}
+        onClose={() => setShowEditSport(false)}
+        onDone={(result) => {
+          setShowEditSport(false)
+          setSaveResultMsg({ text: result.message, pending: result.status === "PENDING_APPROVAL" })
+          setPendingPanelKey(k => k + 1)
+        }}
+        onMediaChange={refetch}
+      />
+    )}
 
-      {/* ── EDIT SPORT MODAL ── */}
-      {showEditSport && sport && eventId && sportId && (
-        <EditSportModal
-          sport={sport}
-          eventId={eventId}
-          sportId={sportId}
-          onSave={updateEventSport}
-          saving={sportLoading}
-          onClose={() => setShowEditSport(false)}
-          onDone={(result) => {
-            setShowEditSport(false)
-            setSaveResultMsg({ text: result.message, pending: result.status === "PENDING_APPROVAL" })
-            setPendingPanelKey(k => k + 1)
-          }}
-          onMediaChange={refetch}
-        />
-      )}
-
-      {/* SEND ANNOUNCEMENT — inline, one-way organiser -> sport participants.
-          Rendered once here (shared by desktop + mobile "Send Announcement"
-          buttons below) so it doesn't double-mount under both view toggles. */}
+    {/* Announcement form / save-result banner / pending change-request panel —
+        rendered once here (shared by the desktop header's and the mobile
+        MobileSportDetail's "Send Announcement" buttons, and visible at every
+        width) so they don't double-mount under the ssd-desktop-only /
+        ssd-mobile-only split below. */}
+    <div className="ssd-shared-panels">
       {showAnnounceForm && eventId && sportId && (
         <SportAnnouncementForm
           eventId={eventId}
@@ -1314,7 +1316,6 @@ export default function OrganizerSportDetailPage() {
         />
       )}
 
-      {/* save-result feedback (applied vs held for approval) */}
       {saveResultMsg && (
         <div style={{
           display: "flex", alignItems: "center", gap: "8px",
@@ -1332,7 +1333,6 @@ export default function OrganizerSportDetailPage() {
         </div>
       )}
 
-      {/* pending sport-edit change requests awaiting review */}
       {eventId && sportId && (
         <PendingChangeRequestPanel
           key={pendingPanelKey}
@@ -1345,8 +1345,13 @@ export default function OrganizerSportDetailPage() {
           onResolved={refetch}
         />
       )}
+    </div>
 
-      <div className="ssd-desktop-only">
+    {/* PageWrapper carries min-height:100vh — toggling the class here (not on
+        an inner div) so the whole box (including that min-height) collapses
+        to nothing on mobile instead of leaving a near-full-screen empty gap
+        above MobileSportDetail. */}
+    <PageWrapper className="ssd-desktop-only">
 
       {/* ── BACK ── */}
       <button onClick={() => navigate(-1)} className="sdt-back-btn" style={{ marginBottom: "24px" }}>
@@ -1586,7 +1591,6 @@ export default function OrganizerSportDetailPage() {
         </div>
       </div>
 
-      </div>
     </PageWrapper>
 
     <div className="ssd-mobile-only">

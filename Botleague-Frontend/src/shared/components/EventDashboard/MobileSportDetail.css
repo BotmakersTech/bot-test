@@ -19,6 +19,17 @@
     .ssd-mobile-only { display: block; }
 }
 
+/* Organizer-only extras (announcement form / save-result banner / pending
+   change-request panel) that stay visible at every width — see
+   OrganizerSportDetailPage.tsx. */
+.ssd-shared-panels {
+    padding: 24px 32px 0;
+}
+@media (max-width: 950px) {
+    .ssd-shared-panels { padding: 16px 16px 0; }
+}
+.ssd-shared-panels:empty { padding: 0; }
+
 .ssd-m-root {
     padding: 16px 16px 40px;
     max-width: 900px;
@@ -122,26 +133,23 @@
 .ssd-m-banner.error { background: rgba(224,75,75,0.08); border: 1px solid rgba(224,75,75,0.25); color: #da172e; }
 .ssd-m-banner.ok     { background: rgba(31,169,82,0.08); border: 1px solid rgba(31,169,82,0.25); color: var(--ssd-green); }
 
-/* Stat cards */
+/* Stat cards — 2-column grid (Teams/Players/Max Team/Entry Fee/Prize Pool) */
 .ssd-m-stats-scroll {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    padding-bottom: 4px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
     margin-bottom: 18px;
 }
-.ssd-m-stats-scroll::-webkit-scrollbar { height: 4px; }
 
 .ssd-m-stat-card {
-    flex: 0 0 auto;
-    width: 150px;
-    height: 45px;
+    height: 48px;
     border: 1px solid var(--ssd-blue);
     border-radius: 5px;
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 0 10px;
+    min-width: 0;
 }
 .ssd-m-stat-icon {
     width: 30px;
@@ -154,8 +162,9 @@
     justify-content: center;
     color: #fff;
 }
-.ssd-m-stat-value { font-family: "Inter", sans-serif; font-weight: 600; font-size: 15px; line-height: 1; color: #000; }
-.ssd-m-stat-label { font-family: Arial, sans-serif; font-weight: 400; font-size: 10px; letter-spacing: .04em; text-transform: uppercase; color: #000; margin-top: 2px; }
+.ssd-m-stat-card > div:last-child { min-width: 0; }
+.ssd-m-stat-value { font-family: "Inter", sans-serif; font-weight: 600; font-size: 15px; line-height: 1; color: #000; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ssd-m-stat-label { font-family: Arial, sans-serif; font-weight: 400; font-size: 10px; letter-spacing: .04em; text-transform: uppercase; color: #000; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Section title */
 .ssd-m-section-title {
@@ -384,7 +393,3 @@
 .ssd-m-team-action-btn.reject  { background: rgba(218,23,46,0.08); border-color: rgba(218,23,46,0.25); color: #da172e; }
 .ssd-m-team-action-btn.accept  { background: rgba(31,169,82,0.08); border-color: rgba(31,169,82,0.25); color: var(--ssd-green); }
 .ssd-m-team-action-btn.message { background: rgba(1,98,209,0.08); border-color: rgba(1,98,209,0.25); color: var(--ssd-blue); }
-
-@media (max-width: 380px) {
-    .ssd-m-teams-scroll { grid-template-columns: 1fr; }
-}

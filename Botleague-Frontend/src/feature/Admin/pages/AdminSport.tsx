@@ -1084,28 +1084,31 @@ export default function AdminSport() {
 
   return (
     <>
-    <PageWrapper>
+    {/* ── EDIT SPORT MODAL ── (fixed overlay — rendered outside the desktop/
+        mobile split so it still works when opened from the mobile view) */}
+    {showEditSport && sport && eventId && sportId && (
+      <EditSportModal
+        sport={sport}
+        eventId={eventId}
+        sportId={sportId}
+        onSave={updateEventSport}
+        saving={sportLoading}
+        onClose={() => setShowEditSport(false)}
+        onDone={async () => {
+          setShowEditSport(false)
+          try { await refetch() } catch { /* modal is already closed; stale data is better than a crash */ }
+        }}
+        onMediaChange={refetch}
+      />
+    )}
 
-      {/* ── EDIT SPORT MODAL ── */}
-      {showEditSport && sport && eventId && sportId && (
-        <EditSportModal
-          sport={sport}
-          eventId={eventId}
-          sportId={sportId}
-          onSave={updateEventSport}
-          saving={sportLoading}
-          onClose={() => setShowEditSport(false)}
-          onDone={async () => {
-            setShowEditSport(false)
-            try { await refetch() } catch { /* modal is already closed; stale data is better than a crash */ }
-          }}
-          onMediaChange={refetch}
-        />
-      )}
+    <style>{`@keyframes admin-sport-spin { to { transform: rotate(360deg); } }`}</style>
 
-      <style>{`@keyframes admin-sport-spin { to { transform: rotate(360deg); } }`}</style>
-
-      <div className="ssd-desktop-only">
+    {/* PageWrapper carries min-height:100vh — toggling the class here (not on
+        an inner div) so the whole box (including that min-height) collapses
+        to nothing on mobile instead of leaving a near-full-screen empty gap
+        above MobileSportDetail. */}
+    <PageWrapper className="ssd-desktop-only">
 
       {/* ── BACK ── */}
       <button onClick={() => navigate(-1)} className="sdt-back-btn" style={{ marginBottom: "24px" }}>
@@ -1341,7 +1344,6 @@ export default function AdminSport() {
         </div>
       </div>
 
-      </div>
     </PageWrapper>
 
     <div className="ssd-mobile-only">
