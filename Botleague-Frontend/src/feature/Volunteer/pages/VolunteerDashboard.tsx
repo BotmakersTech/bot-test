@@ -6,7 +6,7 @@ import type { RootState } from "../../../app/store"
 import RoleHeroDashboard, { type RoleHeroRecentItem } from "../../../shared/components/RoleHeroDashboard"
 import { getMyVolunteerAssignments, type VolunteerAssignment } from "../../Event/api/volunteerApplication.api"
 import { getMyCertificates, type IssuedCertificate } from "../../Certificates/api/certificate.api"
-import { resolveAvatarSrc } from "../../Profile/constants/avatars"
+import { resolveDashboardAvatarSrc } from "../../Profile/constants/avatars"
 
 function fmtDate(d?: string | null) {
   if (!d) return "—"
@@ -74,7 +74,7 @@ export default function VolunteerDashboard() {
       <RoleHeroDashboard
         welcomeName="Volunteer"
         name={fullName}
-        photoUrl={resolveAvatarSrc(user?.profilePhotoUrl)}
+        photoUrl={resolveDashboardAvatarSrc(user?.profilePhotoUrl)}
         idLabel="Volunteer ID"
         idValue={user?.botleagueId || "—"}
         roleLabel="Event Volunteer"
