@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link } from "react-router-dom"
 import { useSelector } from "react-redux"
+import { Clock } from "lucide-react"
 import type { RootState } from "../../../app/store"
-import RoleHeroDashboard from "../../../shared/components/RoleHeroDashboard"
+import RoleHeroDashboard, { type RoleHeroRecentItem } from "../../../shared/components/RoleHeroDashboard"
 import { getMyVolunteerAssignments, type VolunteerAssignment } from "../../Event/api/volunteerApplication.api"
+import { getMyCertificates, type IssuedCertificate } from "../../Certificates/api/certificate.api"
 import { resolveAvatarSrc } from "../../Profile/constants/avatars"
 
 function fmtDate(d?: string | null) {
@@ -12,15 +14,17 @@ function fmtDate(d?: string | null) {
 }
 
 export default function VolunteerDashboard() {
-  const navigate = useNavigate()
   const [assignments, setAssignments] = useState<VolunteerAssignment[]>([])
+  const [certificates, setCertificates] = useState<IssuedCertificate[]>([])
   const [loading, setLoading] = useState(true)
   const user = useSelector((state: RootState) => state.auth.user)
 
   useEffect(() => {
-    getMyVolunteerAssignments()
-      .then(setAssignments)
-      .catch(() => setAssignments([]))
+    Promise.all([
+      getMyVolunteerAssignments().catch(() => []),
+      getMyCertificates().catch(() => []),
+    ])
+      .then(([a, c]) => { setAssignments(a); setCertificates(c) })
       .finally(() => setLoading(false))
   }, [])
 
@@ -28,12 +32,40 @@ export default function VolunteerDashboard() {
   const pending  = assignments.filter(a => a.status === "PENDING")
   const checkedIn = approved.filter(a => a.checkedInAt && !a.checkedOutAt)
 
+  const now = Date.now()
+  const nextEvents = approved.filter(a => {
+    const end = a.eventEndDate ? new Date(a.eventEndDate).getTime() : null
+    const start = a.eventStartDate ? new Date(a.eventStartDate).getTime() : null
+    return (end ?? start ?? 0) >= now
+  })
+
+  const totalHours = approved.reduce((sum, a) => {
+    if (!a.checkedInAt || !a.checkedOutAt) return sum
+    const ms = new Date(a.checkedOutAt).getTime() - new Date(a.checkedInAt).getTime()
+    return ms > 0 ? sum + ms / 3_600_000 : sum
+  }, 0)
+
   const sortedApproved = [...approved].sort((a, b) => {
     const at = a.eventStartDate ? new Date(a.eventStartDate).getTime() : 0
     const bt = b.eventStartDate ? new Date(b.eventStartDate).getTime() : 0
     return bt - at
   })
-  const latest = sortedApproved[0]
+
+  const certByEventId = new Map(certificates.map(c => [c.eventId, c]))
+
+  const recentItems: RoleHeroRecentItem[] = sortedApproved.slice(0, 5).map(a => {
+    const cert = certByEventId.get(a.eventId)
+    return {
+      id: a.id,
+      title: a.eventName || "Event",
+      subtitle: [
+        a.dutyStation || null,
+        a.eventStartDate ? fmtDate(a.eventStartDate) : null,
+      ].filter(Boolean).join(" · "),
+      actionLabel: cert ? "View Certificate" : undefined,
+      actionHref: cert?.pdfUrl,
+    }
+  })
 
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.userName || "Volunteer"
 
@@ -47,19 +79,22 @@ export default function VolunteerDashboard() {
         idValue={user?.botleagueId || "—"}
         roleLabel="Event Volunteer"
         stat1Value={approved.length}
-        stat1Label="Confirmed Events"
-        stat2Value={pending.length}
-        stat2Label="Pending Applications"
-        stat3Value={assignments.length}
-        stat3Label="Total Applications"
-        eventTitle={latest ? (latest.eventName || "Event") : "No confirmed events yet"}
-        eventTag={latest ? (latest.checkedOutAt ? "Completed" : latest.checkedInAt ? "Checked In" : "Confirmed") : ""}
-        eventArena={latest?.dutyStation || undefined}
-        eventTime={latest?.shift ? latest.shift.replace("_", " ") : undefined}
-        eventPlace={latest?.eventCity || undefined}
-        onViewEvent={latest ? () => navigate(`/events/${latest.eventId}`) : undefined}
+        stat1Label="Volunteered"
+        stat2Value={nextEvents.length}
+        stat2Label="Next Events"
+        stat3Value={Math.round(totalHours)}
+        stat3Label="Total Hours"
+        stat3Icon={<Clock size={20} />}
+        recentItemsTitle="Matches Volunteered"
+        recentItems={recentItems}
+        recentItemsEmptyText="No volunteer assignments yet."
+        recentItemsHref="/volunteer/event"
         achievement1Label="3+ Events Volunteered"
+        achievement1Sublabel="Volunteering"
+        achievement1Achieved={approved.length >= 3}
         achievement2Label="10+ Events Volunteered"
+        achievement2Sublabel="Volunteering"
+        achievement2Achieved={approved.length >= 10}
       />
 
       {/* Quick links */}

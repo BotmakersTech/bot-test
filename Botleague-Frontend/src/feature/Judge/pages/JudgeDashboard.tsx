@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
+import { BarChart3 } from "lucide-react"
 import api from "../../../shared/api/Base"
 import type { RootState } from "../../../app/store"
-import RoleHeroDashboard from "../../../shared/components/RoleHeroDashboard"
+import RoleHeroDashboard, { type RoleHeroRecentItem } from "../../../shared/components/RoleHeroDashboard"
 import { resolveAvatarSrc } from "../../Profile/constants/avatars"
 
 interface AssignedMatch {
@@ -56,7 +57,17 @@ export default function JudgeDashboard() {
     const bt = b.scheduledAt ? new Date(b.scheduledAt).getTime() : 0
     return bt - at
   })
-  const latest = sortedCompleted[0]
+
+  const recentItems: RoleHeroRecentItem[] = sortedCompleted.slice(0, 5).map(m => ({
+    id: m.matchId,
+    title: `${m.teamARobotName || m.teamAName || "TBD"} vs ${m.teamBRobotName || m.teamBName || "TBD"}`,
+    subtitle: [
+      `Round ${m.roundNumber ?? "—"} · Match ${m.matchNumber ?? "—"}`,
+      fmt(m.scheduledAt),
+    ].filter(Boolean).join(" · "),
+    actionLabel: "View Details",
+    onAction: () => navigate("/judge/matches"),
+  }))
 
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.userName || "Judge"
 
@@ -70,17 +81,22 @@ export default function JudgeDashboard() {
         idValue={user?.botleagueId || "—"}
         roleLabel="Match Judge"
         stat1Value={completed.length}
-        stat1Label="Matches Judged"
+        stat1Label="Judged"
         stat2Value={scheduled.length}
-        stat2Label="Upcoming Matches"
+        stat2Label="Next events"
         stat3Value={distinctSports}
-        stat3Label="Sports Experience"
-        eventTitle={latest ? `${latest.teamARobotName || latest.teamAName || "TBD"} vs ${latest.teamBRobotName || latest.teamBName || "TBD"}` : "No matches judged yet"}
-        eventTag={latest ? `Round ${latest.roundNumber ?? "—"} · Match ${latest.matchNumber ?? "—"}` : ""}
-        eventTime={latest ? fmt(latest.scheduledAt) : undefined}
-        onViewEvent={latest ? () => navigate("/judge/matches") : undefined}
+        stat3Label="Experience"
+        stat3Icon={<BarChart3 size={20} />}
+        recentItemsTitle="Previous Events"
+        recentItems={recentItems}
+        recentItemsEmptyText="No matches judged yet."
+        recentItemsHref="/judge/matches"
         achievement1Label="5+ Matches Judged"
+        achievement1Sublabel="Judging"
+        achievement1Achieved={completed.length >= 5}
         achievement2Label="20+ Matches Judged"
+        achievement2Sublabel="Judging"
+        achievement2Achieved={completed.length >= 20}
       />
 
       {/* Quick links */}
