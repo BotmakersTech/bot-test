@@ -5,9 +5,12 @@ import {
   CalendarDays, Trophy, Radio, Plus, AlertCircle, CheckCircle2,
   Search, MapPin, Building2, Calendar
 } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 import { useAdminEvents } from "../hooks/useAdmin"
 import type { AdminEventResponse } from "../api/admin.api"
 import { Link } from "react-router-dom"
+import MobileEventList from "../../../shared/components/EventDashboard/MobileEventList"
+import "../../../shared/components/EventDashboard/MobileEventList.css"
 import "../../../styles/adminDashboard.css"
 
 // =====================================================
@@ -53,6 +56,7 @@ const formatDate = (dateStr?: string) => {
 // =====================================================
 
 export default function AdminEventsDashboard() {
+  const navigate = useNavigate()
   const { events: rawEvents, loading, error } = useAdminEvents()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const events: AdminEventResponse[] = Array.isArray(rawEvents) ? rawEvents : []
@@ -100,7 +104,8 @@ export default function AdminEventsDashboard() {
 
   // ── UI ──
   return (
-    <div className="adb-page">
+    <>
+    <div className="adb-page el-desktop-only">
       <div className="adb-content">
 
         {/* ── HEADING ── */}
@@ -169,6 +174,40 @@ export default function AdminEventsDashboard() {
 
       </div>
     </div>
+
+    <div className="el-mobile-only">
+      <MobileEventList
+        heading="Event Dashboard"
+        subheading="Botleague Admin"
+        totalCount={totalEvents}
+        completedCount={completedCount}
+        upcomingCount={upcomingCount}
+        liveCount={liveCount}
+        search={search}
+        onSearchChange={setSearch}
+        statusFilter={filterStatus}
+        onStatusFilterChange={v => setFilterStatus(v as (typeof FILTERS)[number])}
+        statusOptions={FILTERS.map(f => ({ value: f, label: f === "all" ? "All" : STATUS_LABEL[f] }))}
+        loading={loading}
+        onSelectEvent={id => navigate(`/admin/event/${id}`)}
+        onCreateEvent={() => navigate("/admin/events/create")}
+        events={filteredEvents.map(event => ({
+          id: event.id,
+          eventName: event.eventName,
+          organizationName: event.organizationName,
+          city: event.city,
+          state: event.state,
+          venueName: event.venueName,
+          startDate: event.startDate,
+          status: normalizeStatus(event.status),
+          statusLabel: STATUS_LABEL[normalizeStatus(event.status)],
+          sportsCount: event.sports?.length ?? 0,
+          registeredCount: event.sports?.reduce((sum, s) => sum + (s.registeredTeamsCount || 0), 0) ?? 0,
+          imageUrl: event.eventThumbnailUrl || event.eventLogoUrl,
+        }))}
+      />
+    </div>
+    </>
   )
 }
 

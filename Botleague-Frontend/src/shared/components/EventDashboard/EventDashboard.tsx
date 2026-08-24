@@ -1,4 +1,5 @@
 import { ArrowLeft, Edit2, Plus, Calendar, Trophy, Users, CheckCircle2, Check, Ban, UserCog, Trash2 } from "lucide-react"
+import MobileEventDetail from "./MobileEventDetail"
 import "./EventDashboard.css"
 
 export interface EventDashboardSport {
@@ -119,7 +120,7 @@ export default function EventDashboard({
 
   return (
     <div className="ed-root">
-      <main className="ed-main">
+      <main className="ed-main ed-desktop-only">
         <button type="button" className="ed-back-btn" onClick={onBack}>
           <ArrowLeft size={14} /> {backLabel}
         </button>
@@ -337,6 +338,20 @@ export default function EventDashboard({
 
         {extraSponsorSections}
       </main>
+
+      <div className="ed-mobile-only">
+        <MobileEventDetail
+          event={event} sports={sports} canEdit={canEdit} canAddSport={canAddSport} canManageEvent={canManageEvent}
+          statusTransitions={statusTransitions} actionLoading={actionLoading}
+          onEditEvent={onEditEvent} onAddSport={onAddSport} onStatusChange={onStatusChange} onManageSport={onManageSport}
+          onSubmitApproval={onSubmitApproval} submitApprovalId={submitApprovalId}
+          onApproveSport={onApproveSport} onRejectSport={onRejectSport} approveRejectBusyId={approveRejectBusyId}
+          onOpenUserControl={onOpenUserControl} pendingApprovalCount={pendingApprovalCount}
+          onBack={onBack} errorBanner={errorBanner}
+          eventSponsors={eventSponsors} extraSponsorSections={extraSponsorSections}
+          canDelete={canDelete} onDelete={onDelete}
+        />
+      </div>
     </div>
   )
 }

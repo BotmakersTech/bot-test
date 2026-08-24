@@ -780,3 +780,321 @@ button.ed-stat-card {
         animation: none !important;
     }
 }
+
+/* =====================================================
+   MOBILE (<=950px) — MobileEventDetail.tsx, pixel-matching the pasted
+   "Eventmanagementdashboard.jsx" mockup. Same .ed-root wraps both; only one
+   of .ed-desktop-only / .ed-mobile-only is ever visible, so there's no
+   resize-driven remount. No page-level header is drawn here — the app's
+   real Navbar/MobileBottomNav already wraps this page.
+   ===================================================== */
+
+.ed-mobile-only { display: none; }
+
+@media (max-width: 950px) {
+    .ed-desktop-only { display: none; }
+    .ed-mobile-only { display: block; }
+}
+
+.ed-m-root {
+    padding: 16px 16px 40px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.ed-m-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.ed-m-back-btn {
+    background: none;
+    border: none;
+    color: var(--ed-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.ed-m-btn-start {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: linear-gradient(180deg, rgba(1, 98, 209, 0.75), rgba(140, 108, 255, 0.75));
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 0.72rem;
+    padding: 6px 14px;
+    cursor: pointer;
+}
+.ed-m-btn-start:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.ed-m-error-banner {
+    background: rgba(224, 75, 75, 0.08);
+    border: 1px solid rgba(224, 75, 75, 0.25);
+    color: var(--ed-danger);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 14px;
+}
+
+.ed-m-banner {
+    border-radius: 10px;
+    background: linear-gradient(90deg, #6a7bf0 0%, #a99bff 100%);
+    color: #fff;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+.ed-m-banner-text { font-weight: 600; font-size: 0.78rem; }
+.ed-m-btn-accept {
+    background: #fff;
+    color: var(--ed-purple-2);
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.72rem;
+    padding: 5px 14px;
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.ed-m-event-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.ed-m-event-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ed-m-event-title h2 {
+    font-family: "Orbitron", sans-serif;
+    font-weight: 500;
+    font-size: 1.15rem;
+    color: var(--ed-blue);
+    margin: 0;
+}
+.ed-m-badge-status {
+    border: 1px solid var(--ed-success);
+    color: var(--ed-success);
+    font-size: 0.6rem;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 2px 9px;
+    white-space: nowrap;
+}
+
+.ed-m-title-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.ed-m-btn-outline-gradient {
+    border: 1px solid var(--ed-blue);
+    border-radius: 5px;
+    background: transparent;
+    font-weight: 600;
+    font-size: 0.72rem;
+    padding: 4px 12px;
+    background-image: linear-gradient(180deg, var(--ed-blue), var(--ed-purple));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    cursor: pointer;
+}
+.ed-m-btn-danger { border-color: var(--ed-danger); -webkit-background-clip: initial; background: none; color: var(--ed-danger); display: flex; align-items: center; }
+
+.ed-m-desc {
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--ed-ink);
+    margin: 0 0 14px;
+}
+
+.ed-m-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+.ed-m-stat-card {
+    border: 1px solid var(--ed-blue);
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    height: 44px;
+    background: #fff;
+    font-family: inherit;
+    cursor: default;
+    text-align: left;
+}
+button.ed-m-stat-card { cursor: pointer; }
+.ed-m-stat-icon {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    background: var(--ed-blue);
+    color: #fff;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.ed-m-stat-value { font-family: "Poppins", sans-serif; font-weight: 600; font-size: 0.95rem; line-height: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ed-m-stat-label { font-size: 0.65rem; color: var(--ed-ink-soft); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+.ed-m-section-title {
+    font-family: "Poppins", sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--ed-blue);
+    text-transform: uppercase;
+    margin: 0 0 10px;
+}
+.ed-m-section-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.ed-m-section-title-row .ed-m-section-title { margin: 0; }
+
+.ed-m-details-box {
+    border: 2px solid var(--ed-blue);
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(1, 98, 209, 0.12), rgba(140, 108, 255, 0.12));
+    padding: 14px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.ed-m-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ed-m-field-label { font-size: 0.68rem; font-weight: 600; color: var(--ed-ink-soft); margin-bottom: 2px; }
+.ed-m-field-value {
+    background: #fff;
+    border: 1px solid var(--ed-purple);
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--ed-ink-mute);
+}
+
+.ed-m-btn-gradient-pill {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(180deg, rgba(1, 98, 209, 0.75), rgba(140, 108, 255, 0.75));
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 0.7rem;
+    padding: 5px 12px;
+    cursor: pointer;
+}
+
+.ed-m-sports-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.ed-m-sport-card {
+    background: #fff;
+    border: 1px solid var(--ed-purple);
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.ed-m-sport-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
+.ed-m-sport-name { font-family: "Poppins", sans-serif; font-weight: 600; font-size: 0.8rem; color: var(--ed-blue); text-transform: uppercase; }
+.ed-m-badge-open, .ed-m-badge-closed {
+    border-radius: 999px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 2px 9px;
+    white-space: nowrap;
+}
+.ed-m-badge-open { border: 1px solid var(--ed-purple-2); color: var(--ed-purple-2); }
+.ed-m-badge-closed { border: 1px solid var(--ed-ink-mute); color: var(--ed-ink-mute); }
+.ed-m-sport-meta { display: flex; gap: 6px; flex-wrap: wrap; font-size: 0.65rem; color: #2b2b2b; }
+.ed-m-sport-meta .sep { color: #ccc; }
+
+.ed-m-sport-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.ed-m-mini-stat {
+    border: 1px solid var(--ed-blue-soft);
+    border-radius: 8px;
+    padding: 6px 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--ed-blue);
+}
+.ed-m-mini-stat .label { font-size: 0.58rem; color: var(--ed-ink-mute); text-transform: uppercase; font-weight: 600; }
+.ed-m-mini-stat .value { font-weight: 700; font-size: 0.82rem; color: var(--ed-ink-soft); }
+
+.ed-m-sport-bottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
+.ed-m-sport-dates { display: flex; align-items: center; gap: 4px; font-size: 0.68rem; font-weight: 600; color: var(--ed-ink-mute); }
+.ed-m-sport-dates .cal-icon { color: var(--ed-blue); }
+.ed-m-sport-dates .arrow-icon { color: var(--ed-ink-mute); }
+.ed-m-btn-manage {
+    background: linear-gradient(180deg, rgba(1, 98, 209, 0.75), rgba(140, 108, 255, 0.75));
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 0.68rem;
+    padding: 5px 12px;
+    cursor: pointer;
+}
+
+.ed-m-sport-actions { display: flex; gap: 6px; }
+.ed-m-sport-actions button {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border-radius: 8px;
+    padding: 7px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+.ed-m-btn-submit { background: rgba(140, 108, 255, 0.1); border: 1px solid rgba(140, 108, 255, 0.3); color: var(--ed-purple); }
+.ed-m-btn-approve { background: rgba(31, 169, 82, 0.1); border: 1px solid rgba(31, 169, 82, 0.35); color: var(--ed-success); }
+.ed-m-btn-reject { background: rgba(224, 75, 75, 0.08); border: 1px solid rgba(224, 75, 75, 0.25); color: var(--ed-danger); }
+
+.ed-m-show-more {
+    background: none;
+    border: 1px dashed var(--ed-purple);
+    color: var(--ed-purple);
+    border-radius: 8px;
+    padding: 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.ed-m-empty-state {
+    text-align: center;
+    padding: 30px 0;
+    color: var(--ed-ink-mute);
+    font-size: 0.82rem;
+    margin-bottom: 20px;
+}

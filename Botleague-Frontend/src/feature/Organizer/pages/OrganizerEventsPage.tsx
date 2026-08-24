@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom"
 import { Search, MapPin, CalendarDays, Trophy, Users, ChevronRight } from "lucide-react"
 import { getMyEvents, type OrganizerEvent } from "../api/organizer.api"
 import { ORG } from "../theme/organizerTheme"
+import MobileEventList from "../../../shared/components/EventDashboard/MobileEventList"
+import "../../../shared/components/EventDashboard/MobileEventList.css"
 import "../../../styles/organizerTheme.css"
 
 // ── theme — Organizer light theme (organizerTheme.ts), matching the
@@ -58,8 +60,13 @@ export default function OrganizerEventsPage() {
       (ev.eventCode ?? "").toLowerCase().includes(q)
   }), [events, tab, search])
 
+  const completedCount = events.filter(e => e.status?.toUpperCase() === "COMPLETED").length
+  const upcomingCount  = events.filter(e => e.status?.toUpperCase() === "PUBLISHED").length
+  const liveCount      = events.filter(e => e.status?.toUpperCase() === "LIVE").length
+
   return (
-    <div className="org-page-bg p-8" style={{ fontFamily: ORG.fontBody }}>
+    <>
+    <div className="org-page-bg p-8 el-desktop-only" style={{ fontFamily: ORG.fontBody }}>
       <div style={{ marginBottom: "24px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
         <div>
           <h1 style={{ color: "#0162d1", fontFamily: ORG.fontHeading, fontSize: "clamp(20px,4vw,38px)", fontWeight: 500, margin: 0, letterSpacing: "0.02em" }}>Event Management</h1>
@@ -178,5 +185,39 @@ export default function OrganizerEventsPage() {
         </div>
       )}
     </div>
+
+    <div className="el-mobile-only">
+      <MobileEventList
+        heading="Event Management"
+        totalCount={events.length}
+        completedCount={completedCount}
+        upcomingCount={upcomingCount}
+        liveCount={liveCount}
+        search={search}
+        onSearchChange={setSearch}
+        statusFilter={tab}
+        onStatusFilterChange={setTab}
+        statusOptions={TABS.map(t => ({ value: t, label: t === "ALL" ? "All" : t.charAt(0) + t.slice(1).toLowerCase() }))}
+        loading={loading}
+        onSelectEvent={id => navigate(`/organizer/events/${id}`)}
+        onCreateEvent={() => navigate("/organizer/events/create")}
+        events={filtered.map(ev => {
+          const s = STATUS_MAP[ev.status?.toUpperCase()] ?? STATUS_MAP.DRAFT
+          return {
+            id: ev.id,
+            eventName: ev.eventName,
+            city: ev.city,
+            state: ev.state,
+            startDate: ev.startDate,
+            status: ev.status,
+            statusLabel: s.label,
+            sportsCount: ev.sports?.length ?? 0,
+            registeredCount: ev.sports?.reduce((a, sp) => a + (sp.registeredTeamsCount ?? 0), 0) ?? 0,
+            imageUrl: ev.eventThumbnailUrl || ev.eventLogoUrl,
+          }
+        })}
+      />
+    </div>
+    </>
   )
 }
