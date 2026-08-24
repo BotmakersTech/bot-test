@@ -1,169 +1,467 @@
-import { useNavigate } from "react-router-dom";
-import { Scale, ShieldCheck, BookOpen, Trophy, TrendingUp, Sprout } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, Fragment, type RefObject } from "react";
 import PublicNavbar from "../../shared/components/PublicNavbar";
+import "../../styles/aboutUs.css";
 
-const heroImg = "/home-img/about.png";
-const arenaImg = "/home-img/about-us.png";
-const representImg = "/home-img/what.png";
-const representImgMobile = "/home-img/about-mob.png";
+interface StoryStep {
+  n: string;
+  year: string;
+  title: string;
+  text: string;
+}
 
-const VALUES = [
-  { icon: Scale, label: "Fair & Transparent Events" },
-  { icon: ShieldCheck, label: "Safety-First Standards" },
-  { icon: BookOpen, label: "Learning Through Competition" },
-  { icon: Trophy, label: "National Recognition" },
-  { icon: TrendingUp, label: "League Rankings" },
-  { icon: Sprout, label: "Sustainable Growth" },
+const STORY_STEPS: StoryStep[] = [
+  {
+    n: "01",
+    year: "2014",
+    title: "The First Arena",
+    text: "A handful of engineering students at IIT Bombay build a plywood arena in a hostel courtyard. No sponsors, no rulebook — just a stopwatch and a dream to see robots fight fair.",
+  },
+  {
+    n: "02",
+    year: "2018",
+    title: "The Rulebook Gets Real",
+    text: "After four seasons of Techfest, BITS Pilani and IIT Roorkee, the crew starts writing down every judging call. What began as house rules becomes the standard other campuses start borrowing.",
+  },
+  {
+    n: "03",
+    year: "2024",
+    title: "BotLeague Goes National",
+    text: "Ten years of arena scars later, the rulebook, the scoring stack and the people behind it become BotLeague — built by the competitors who never left the pit.",
+  },
 ];
 
-function ValueCard({ icon: Icon, label }: { icon: typeof Scale; label: string }) {
+interface Principle {
+  n: string;
+  title: string;
+  color: string;
+  body: string;
+}
+
+const PRINCIPLES: Principle[] = [
+  {
+    n: "01.",
+    title: "Standards Before Scale",
+    color: "#0162D1",
+    body: "A BotLeague badge means something because we never compromise on the rulebook. Growth only matters when the standard stays intact.",
+  },
+  {
+    n: "02.",
+    title: "Competitors Come First",
+    color: "#8C6CFF",
+    body: "Every arena spec, every scoring rule and every deadline is written by people who have stood in the pit at 2am fixing a burnt ESC. We build for the builder, not the spreadsheet.",
+  },
+  {
+    n: "03.",
+    title: "Built for the World Stage",
+    color: "#3983DC",
+    body: "A regional qualifier should feel like a dress rehearsal for the world championship. Same rigor, same fairness, same respect for the competitor — wherever the event is held.",
+  },
+  {
+    n: "04.",
+    title: "Proof, Not Promises",
+    color: "#3983DC",
+    body: "We publish our numbers — matches run, disputes resolved, teams returning. If we can't show the proof, we don't get to make the claim.",
+  },
+];
+
+const RESULTS = [
+  { value: "120+", label: "Events Hosted" },
+  { value: "48K+", label: "Competitors" },
+  { value: "9", label: "Countries" },
+  { value: "1,300+", label: "Bots Battled" },
+  { value: "99.2%", label: "Disputes Resolved" },
+  { value: "10 yrs", label: "Running Since" },
+  { value: "72", label: "Campus Chapters" },
+  { value: "4.8/5", label: "Competitor Rating" },
+  { value: "0", label: "Rules Bent" },
+];
+
+interface TeamMember {
+  name: string;
+  role: string;
+  initials: string;
+  quote: string;
+  img: string | null;
+}
+
+// No portrait assets exist for the team yet — everyone renders through the
+// initials-placeholder card until real photos are added.
+const TEAM: TeamMember[] = [
+  {
+    name: "Mohit Chaudhari",
+    role: "CFO",
+    initials: "MC",
+    quote: "Every rupee we spend traces back to a better arena for you.",
+    img: null,
+  },
+  {
+    name: "Akshay Joshi",
+    role: "CEO",
+    initials: "AJ",
+    quote: "Hello, I am Akshay — I've judged more matches than I can count, and I still show up early.",
+    img: null,
+  },
+  {
+    name: "Rahul Ishi",
+    role: "COO",
+    initials: "RI",
+    quote: "I make sure the schedule survives contact with reality on event day.",
+    img: null,
+  },
+];
+
+const SLOT_CLASS = ["cc-slot-left", "cc-slot-center", "cc-slot-right"];
+
+function useScrollProgress(ref: RefObject<HTMLElement | null>) {
+  const [progress, setProgress] = useState(0);
+
+  const handle = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    const total = rect.height + vh * 0.6;
+    const covered = vh * 0.85 - rect.top;
+    let p = covered / total;
+    p = Math.max(0, Math.min(1, p));
+    setProgress(p);
+  }, [ref]);
+
+  useEffect(() => {
+    handle();
+    window.addEventListener("scroll", handle, { passive: true });
+    window.addEventListener("resize", handle);
+    return () => {
+      window.removeEventListener("scroll", handle);
+      window.removeEventListener("resize", handle);
+    };
+  }, [handle]);
+
+  return progress;
+}
+
+function Hero() {
   return (
-    <div className="flex flex-col items-center gap-3 rounded-[15px] border border-black/5 bg-white p-7 text-center shadow-[0_10px_25px_rgba(0,0,0,0.05)] transition hover:-translate-y-0.5">
-      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-br from-[#0162D1] to-[#8C6CFF]">
-        <Icon size={24} color="#fff" />
-      </span>
-      <p className="font-display text-[16px] font-bold text-[#161616]">{label}</p>
-    </div>
+    <header className="bl-hero text-center px-4">
+      <div className="mx-auto max-w-[900px] py-16 md:py-20">
+        <h1 className="bl-hero-title">
+          Built by competitors.
+          <br />
+          For competitors.
+        </h1>
+        <p className="bl-hero-sub mx-auto">
+          BotLeague was built by the people who spent more than 10 years running robotics
+          competitions at IIT Bombay Techfest, BITS Pilani, IIT Roorkee, and more. Every rule,
+          arena spec, and tool comes from what actually happens at real events with real
+          competitors.
+        </p>
+      </div>
+    </header>
+  );
+}
+
+function OurStory() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const progress = useScrollProgress(sectionRef);
+  const n = STORY_STEPS.length;
+  const pos = Math.max(0, Math.min(n - 1, progress * (n - 1) * 1.15));
+  const clampedActive = Math.max(1, Math.min(n, Math.floor(pos + 0.001) + 1));
+
+  return (
+    <section ref={sectionRef} className="py-16 md:py-20">
+      <div className="mx-auto max-w-[1180px] px-4">
+        <h2 className="bl-section-title text-center mb-10">Our Story</h2>
+
+        <div className="bl-story-track">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 justify-center">
+            {STORY_STEPS.map((step, i) => {
+              const visible = i < clampedActive;
+              return (
+                <div
+                  key={step.n}
+                  className={`bl-story-card ${visible ? "bl-story-card-visible" : ""}`}
+                  style={{ transitionDelay: `${i * 80}ms` }}
+                >
+                  <div className="bl-story-n">{step.n}</div>
+                  <div className="bl-story-year">{step.year}</div>
+                  <h3 className="bl-story-card-title">{step.title}</h3>
+                  <p className="bl-story-card-text">{step.text}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="bl-story-connector hidden md:block">
+            {STORY_STEPS.map((step, i) => {
+              const nodeReached = pos >= i - 0.001;
+              const leftPct = ((2 * i + 1) / (n * 2)) * 100;
+              const segFill = i < n - 1 ? Math.max(0, Math.min(1, pos - i)) * 100 : 0;
+              return (
+                <Fragment key={step.n}>
+                  <span
+                    className={`bl-story-node ${nodeReached ? "bl-story-node-active" : ""}`}
+                    style={{ left: `${leftPct}%` }}
+                  />
+                  {i < n - 1 && (
+                    <span className="bl-story-segment" style={{ left: `${leftPct}%`, width: `${100 / n}%` }}>
+                      <span className="bl-story-segment-fill" style={{ width: `${segFill}%` }} />
+                    </span>
+                  )}
+                </Fragment>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Principles() {
+  const [active, setActive] = useState(0);
+  const current = PRINCIPLES[active];
+
+  return (
+    <section className="bl-principles py-16 md:py-20">
+      <div className="mx-auto max-w-[1180px] px-4">
+        <h2 className="bl-section-title text-center mb-10">The Principles We Compete By.</h2>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+          <div className="lg:col-span-4">
+            <div className="bl-principle-tabs">
+              {PRINCIPLES.map((p, i) => (
+                <button
+                  key={p.n}
+                  type="button"
+                  onClick={() => setActive(i)}
+                  className={`bl-principle-tab ${active === i ? "bl-principle-tab-active" : ""}`}
+                  style={active === i ? { background: p.color } : undefined}
+                >
+                  <span className="bl-principle-tab-n">{p.n}</span>
+                  <span className="bl-principle-tab-title">{p.title}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="lg:col-span-8">
+            <div className="bl-principle-panel">
+              <span className="bl-principle-ghost">B</span>
+              <div key={active} className="bl-principle-content">
+                <span className="bl-principle-big-n" style={{ color: current.color }}>
+                  {current.n}
+                </span>
+                <h3 className="bl-principle-title">{current.title}</h3>
+                <p className="bl-principle-body">{current.body}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Results() {
+  return (
+    <section className="bl-results py-16 md:py-20">
+      <div className="mx-auto max-w-[1180px] px-4">
+        <h2 className="bl-section-title text-center mb-10">Built On Results.</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {RESULTS.map((r) => (
+            <div className="bl-result-card" key={r.label}>
+              <div className="bl-result-value">{r.value}</div>
+              <div className="bl-result-label">{r.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---- "Built By The Competitors" — image-based sliding carousel ----
+function Competitors() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const [order, setOrder] = useState([0, 1, 2]); // indices into TEAM
+  const [bubbleOn, setBubbleOn] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  const transitioning = useRef(false);
+  const autoplayRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const bubbleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      setRevealed(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setRevealed(true);
+            io.disconnect();
+          }
+        });
+      },
+      { threshold: 0.25 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    setBubbleOn(false);
+    if (bubbleTimer.current) clearTimeout(bubbleTimer.current);
+    bubbleTimer.current = setTimeout(() => setBubbleOn(true), 550);
+    return () => {
+      if (bubbleTimer.current) clearTimeout(bubbleTimer.current);
+    };
+  }, [order]);
+
+  const rotateNext = () => {
+    if (transitioning.current) return;
+    transitioning.current = true;
+    setOrder((o) => [o[1], o[2], o[0]]);
+    setTimeout(() => (transitioning.current = false), 1000);
+  };
+
+  const rotatePrev = () => {
+    if (transitioning.current) return;
+    transitioning.current = true;
+    setOrder((o) => [o[2], o[0], o[1]]);
+    setTimeout(() => (transitioning.current = false), 1000);
+  };
+
+  const startAutoplay = () => {
+    stopAutoplay();
+    autoplayRef.current = setInterval(rotateNext, 4200);
+  };
+  const stopAutoplay = () => {
+    if (autoplayRef.current) clearInterval(autoplayRef.current);
+  };
+
+  useEffect(() => {
+    startAutoplay();
+    return stopAutoplay;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const centerMember = TEAM[order[1]];
+
+  return (
+    <section ref={sectionRef} className="bl-team py-16 md:py-20">
+      <div className="mx-auto max-w-[1180px] px-4 text-center">
+        <h2 className="bl-section-title mb-10">Built By The Competitors.</h2>
+
+        <div
+          className={`cc-stage mx-auto ${revealed ? "cc-stage-in" : ""}`}
+          onMouseEnter={stopAutoplay}
+          onMouseLeave={startAutoplay}
+        >
+          <div
+            className="cc-arrow cc-arrow-left"
+            onClick={() => {
+              rotatePrev();
+              startAutoplay();
+            }}
+            role="button"
+            aria-label="Previous team member"
+          >
+            &#10094;
+          </div>
+          <div
+            className="cc-arrow cc-arrow-right"
+            onClick={() => {
+              rotateNext();
+              startAutoplay();
+            }}
+            role="button"
+            aria-label="Next team member"
+          >
+            &#10095;
+          </div>
+
+          {order.map((memberIdx, slot) => {
+            const member = TEAM[memberIdx];
+            return (
+              <div
+                key={member.name}
+                className={`cc-character ${SLOT_CLASS[slot]}`}
+                onClick={() => {
+                  if (slot === 0) rotatePrev();
+                  if (slot === 2) rotateNext();
+                }}
+              >
+                <div className="cc-glow" />
+                {member.img ? (
+                  <img src={member.img} alt={member.name} />
+                ) : (
+                  <div className="cc-placeholder">{member.initials}</div>
+                )}
+                <div className="cc-shadow-ellipse" />
+              </div>
+            );
+          })}
+
+          <div className={`cc-bubble ${bubbleOn ? "cc-bubble-show" : ""}`}>
+            <strong>{centerMember.name}</strong>
+            <span className="cc-bubble-role">{centerMember.role}</span>
+            <p>{centerMember.quote}</p>
+          </div>
+
+          <div className="cc-dots">
+            {TEAM.map((m, i) => (
+              <button
+                type="button"
+                key={m.name}
+                className={`cc-dot ${order[1] === i ? "cc-dot-active" : ""}`}
+                onClick={() => setOrder([(i + 2) % 3, i, (i + 1) % 3])}
+                aria-label={`Show ${m.name}`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Newsletter() {
+  const [email, setEmail] = useState("");
+  return (
+    <section className="bl-newsletter">
+      <div className="mx-auto max-w-[1180px] px-4 flex flex-col md:flex-row items-center justify-between gap-3 py-8">
+        <span className="bl-newsletter-title">Let&apos;s find harmony together.</span>
+        <form className="bl-newsletter-form flex" onSubmit={(e) => e.preventDefault()}>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter email id"
+            className="bl-newsletter-input"
+          />
+          <button type="submit" className="bl-newsletter-btn">
+            Submit
+          </button>
+        </form>
+      </div>
+    </section>
   );
 }
 
 export default function AboutUs() {
-  const navigate = useNavigate();
-
   return (
-    <div className="bg-white">
+    <div className="bl-about">
       <PublicNavbar showLeagues />
-
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-[#0a0a14] px-6 py-24 text-center md:py-32">
-        <img
-          src={heroImg}
-          alt="BotLeague team celebrating a win at Techfest"
-          className="absolute inset-x-0 bottom-0 top-6 w-full object-cover opacity-70"
-        />
-        <div className="absolute inset-0 bg-linear-to-b from-[#0a0a14]/15 via-[#0a0a14]/55 to-[#0a0a14]" />
-
-        <div className="relative">
-          <span className="font-body inline-block rounded-[10px] border border-white/20 bg-white/[0.06] px-6 py-1.5 text-[12px] font-semibold text-white/80 md:text-[15px]">
-            Our Story
-          </span>
-
-          <h1 className="font-display mx-auto mt-5 max-w-[900px] text-[clamp(20px,4vw,38px)] font-medium leading-[0.95] text-[#0162D1]">
-            ABOUT US
-          </h1>
-
-          <p className="font-body mx-auto mt-4 max-w-[680px] text-[16px] font-semibold leading-snug text-white/70 md:text-[20px]">
-            One national rulebook. One ranking. One league — built for every robotics builder in India.
-          </p>
-        </div>
-      </section>
-
-      {/* Story */}
-      <section className="relative z-10 px-4 py-16 md:py-20">
-        <div className="mx-auto grid max-w-[1180px] grid-cols-1 items-center gap-10 md:grid-cols-2 md:gap-16">
-          <div className="flex flex-col gap-5 text-left">
-            <p className="font-body text-[15px] leading-relaxed text-[#3C3C3C] md:text-[17px]">
-              India has always had strong technical talent and passion for robotics. However, competitions have
-              remained fragmented — with different rules, inconsistent judging standards, safety gaps, and no
-              clear progression path for participants. BotLeague was built to solve this.
-            </p>
-            <p className="font-body text-[15px] leading-relaxed text-[#3C3C3C] md:text-[17px]">
-              By introducing a single national rulebook, league-based competition structure, and professionally
-              managed arenas, BotLeague ensures that every participant competes on a transparent, safe, and equal
-              platform, regardless of location.
-            </p>
-          </div>
-
-          <div className="overflow-hidden rounded-[15px] shadow-[0_20px_50px_rgba(1,98,209,0.15)]">
-            <img src={arenaImg} alt="Robotics competition arena" className="h-[320px] w-full object-cover md:h-[400px]" />
-          </div>
-        </div>
-
-        <p className="font-display mx-auto mt-14 max-w-[900px] bg-linear-to-r from-[#0162D1] to-[#8C6CFF] bg-clip-text text-center text-[26px] font-bold leading-tight text-transparent md:text-[42px]">
-          This is not just an event platform. This is a league.
-        </p>
-      </section>
-
-      {/* Vision & Mission */}
-      <section className="relative z-10 overflow-hidden bg-linear-to-br from-[#1a1035] via-[#2b1760] to-[#0f3f9e] px-4 py-16 text-center md:py-20">
-        <div className="mx-auto grid max-w-[1100px] grid-cols-1 gap-12 md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-10">
-          <div className="flex flex-col gap-3">
-            <h3 className="font-display text-[26px] font-extrabold uppercase tracking-wide text-white md:text-[32px]">Vision</h3>
-            <p className="font-body mx-auto max-w-[420px] text-[14px] leading-relaxed text-white/70 md:text-[16px]">
-              To build India's most trusted and unified robotics competition ecosystem, enabling innovation, skill
-              development, and global exposure through structured competitive pathways.
-            </p>
-          </div>
-
-          <div className="mx-auto h-px w-32 bg-linear-to-r from-transparent via-white/30 to-transparent md:h-32 md:w-px md:bg-linear-to-b" />
-
-          <div className="flex flex-col gap-3">
-            <h3 className="font-display text-[26px] font-extrabold uppercase tracking-wide text-white md:text-[32px]">Mission</h3>
-            <p className="font-body mx-auto max-w-[420px] text-[14px] leading-relaxed text-white/70 md:text-[16px]">
-              To create age-wise and skill-wise competition categories, ensure fair play, safety, and transparent
-              judging, and connect Indian robotics talent with national and global opportunities.
-            </p>
-          </div>
-        </div>
-
-        <button
-          onClick={() => navigate("/")}
-          className="font-body mt-12 rounded-[15px] bg-white px-10 py-4 text-[15px] font-semibold text-[#0a0a14] transition hover:brightness-95 md:text-[17px]"
-        >
-          Explore More
-        </button>
-      </section>
-
-      {/* What BotLeague Represents */}
-      <section className="relative z-10 bg-[#faf9fb] px-4 py-16 text-center md:py-20">
-        <h3 className="font-body text-[16px] font-semibold uppercase tracking-wide text-[#161616] md:text-[20px]">
-          Our Values
-        </h3>
-        <p className="font-display mx-auto mt-2 bg-linear-to-r from-[#0162D1] to-[#8C6CFF] bg-clip-text text-[28px] font-bold text-transparent md:text-[50px]">
-          What BotLeague Represents
-        </p>
-
-        <div className="mx-auto mt-10 grid max-w-[1180px] grid-cols-1 items-center gap-10 md:grid-cols-[400px_1fr] md:gap-14">
-          <div className="overflow-hidden rounded-[15px] shadow-[0_20px_50px_rgba(1,98,209,0.12)]">
-            <img src={representImg} alt="Students building robots" className="hidden h-[360px] w-full object-cover md:block" />
-            <img src={representImgMobile} alt="Students building robots" className="h-[280px] w-full object-cover md:hidden" />
-          </div>
-
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            {VALUES.map((v) => (
-              <ValueCard key={v.label} icon={v.icon} label={v.label} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Closing CTA cards */}
-      <section className="relative z-10 flex flex-col gap-6 px-4 py-16 md:mx-auto md:max-w-[1180px] md:flex-row md:gap-8">
-        <div className="flex-1 rounded-[15px] bg-[#f3f3f5] p-8 md:p-10">
-          <p className="font-display text-[22px] font-semibold text-black md:text-[28px]">Ready to compete?</p>
-          <p className="font-body mt-2 text-[14px] text-[#393939] md:text-[17px]">
-            Your ranking starts at your first affiliated event. Free to register.
-          </p>
-          <button
-            onClick={() => navigate("/register")}
-            className="font-body mt-8 flex w-full items-center justify-center rounded-[15px] bg-linear-to-r from-[#0162D1] to-[#8C6CFF] px-6 py-4 text-[15px] font-semibold text-white transition hover:brightness-110 md:w-auto md:px-10"
-          >
-            Start competing — free
-          </button>
-        </div>
-        <div className="flex-1 rounded-[15px] bg-[#f3f3f5] p-8 md:p-10">
-          <p className="font-display text-[22px] font-semibold text-black md:text-[28px]">Find an event near you.</p>
-          <p className="font-body mt-2 text-[14px] text-[#393939] md:text-[17px]">
-            Browse all affiliated techfests filtered by city, sport, and date.
-          </p>
-          <button
-            onClick={() => navigate("/events")}
-            className="font-body mt-8 flex w-full items-center justify-center rounded-[15px] border-2 border-black px-6 py-4 text-[15px] font-semibold text-black transition hover:bg-black/5 md:w-auto md:px-10"
-          >
-            Browse events
-          </button>
-        </div>
-      </section>
+      <Hero />
+      <OurStory />
+      <Principles />
+      <Results />
+      <Competitors />
+      <Newsletter />
     </div>
   );
 }
