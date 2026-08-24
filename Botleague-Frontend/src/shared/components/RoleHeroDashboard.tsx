@@ -1,21 +1,19 @@
-import type { ReactNode } from "react";
-import { Award, Pencil, Scale, Share2, ShieldCheck, Swords } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { Award, Pencil, Scale, Share2, Swords } from "lucide-react";
 import bLogoWatermark from "../../assets/Dashboard/B_LOGO.png";
-import starDeco from "../../assets/Auth/Star-two.svg";
+import mascot from "../../assets/mascote.png";
 import "../../styles/roleHeroDashboard.css";
 
-function initials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase() || "?";
+function OutlineStar({ className = "" }: { className?: string }) {
+  return <span className={`rhd-outline-star ${className}`} aria-hidden="true" />;
 }
 
-function StatCard({ icon, value, label }: { icon: ReactNode; value: string | number; label: string }) {
+function StatRibbon({ icon, value, label }: { icon: ReactNode; value: string | number; label: string }) {
   return (
-    <div className="rhd-stat-card">
+    <div className="rhd-stat-ribbon">
       <span className="rhd-stat-icon">{icon}</span>
-      <span className="rhd-stat-num">{value}</span>
-      <span className="rhd-stat-label">{label}</span>
+      <strong>{value}</strong>
+      <span>{label}</span>
     </div>
   );
 }
@@ -91,56 +89,59 @@ export default function RoleHeroDashboard({
   achievement2Sublabel,
   achievement2Achieved = false,
 }: RoleHeroDashboardProps) {
+  const [photoErr, setPhotoErr] = useState(false);
+  const hasPhoto = !!photoUrl && !photoErr;
+
   return (
     <div className="rhd-root">
       <div className="rhd-welcome-row">
         <p className="rhd-welcome">Welcome back, {welcomeName}!</p>
       </div>
 
-      {/* ---------- profile card ---------- */}
+      {/* ---------- profile card — pixel-matches UserDashboard's dash-hero-card ---------- */}
       <section className="rhd-profile-card">
-        <img className="rhd-b-watermark" src={bLogoWatermark} alt="" aria-hidden="true" />
-        <img className="rhd-star-deco rhd-star-a" src={starDeco} alt="" aria-hidden="true" />
-        <img className="rhd-star-deco rhd-star-b" src={starDeco} alt="" aria-hidden="true" />
+        <OutlineStar className="rhd-card-star-a" />
+        <OutlineStar className="rhd-card-star-b" />
 
-        <div className="rhd-profile-left">
+        <div className="rhd-profile-copy">
           <div className="rhd-name-row">
-            <h2 className="rhd-name">{name}</h2>
-            <span className="rhd-active-badge">
-              <span className="rhd-active-dot" />
-              Active
+            <h2>{name}</h2>
+            <span className="rhd-active-pill">
+              <span /> Active
             </span>
           </div>
-          <p className="rhd-id-text">{idLabel} - {idValue}</p>
-          <p className="rhd-role-text">
-            <ShieldCheck size={16} />
-            {roleLabel}
-          </p>
+          <p>{idLabel} - {idValue}</p>
+          <p>{roleLabel}</p>
 
-          <div className="rhd-profile-actions">
+          <div className="rhd-actions">
             {onShare && (
-              <button type="button" className="rhd-btn-gradient" onClick={onShare}>
-                <Share2 size={12} />
-                <span>Share</span>
+              <button type="button" onClick={onShare}>
+                <Share2 size={16} />
+                Share
               </button>
             )}
             {onEdit && (
-              <button type="button" className="rhd-btn-gradient" onClick={onEdit}>
-                <Pencil size={12} />
-                <span>Edit</span>
+              <button type="button" onClick={onEdit}>
+                <Pencil size={16} />
+                Edit
               </button>
             )}
           </div>
         </div>
 
-        <div className="rhd-hero-photo">
-          {photoUrl ? <img alt={name} src={photoUrl} /> : <span className="rhd-hero-photo-initials">{initials(name)}</span>}
+        <div className="rhd-avatar-stage">
+          <img src={bLogoWatermark} alt="" aria-hidden="true" className="rhd-big-b" />
+          {hasPhoto ? (
+            <img src={photoUrl!} alt={name} className="rhd-avatar" onError={() => setPhotoErr(true)} />
+          ) : (
+            <img src={mascot} alt={name} className="rhd-avatar rhd-avatar-mascot" />
+          )}
         </div>
 
-        <div className="rhd-stats-col">
-          <StatCard icon={stat1Icon ?? <Scale size={20} />} value={stat1Value} label={stat1Label} />
-          <StatCard icon={stat2Icon ?? <Swords size={20} />} value={stat2Value} label={stat2Label} />
-          <StatCard icon={stat3Icon ?? <Award size={20} />} value={stat3Value} label={stat3Label} />
+        <div className="rhd-stats">
+          <StatRibbon icon={stat1Icon ?? <Scale size={35} />} value={stat1Value} label={stat1Label} />
+          <StatRibbon icon={stat2Icon ?? <Swords size={35} />} value={stat2Value} label={stat2Label} />
+          <StatRibbon icon={stat3Icon ?? <Award size={38} />} value={stat3Value} label={stat3Label} />
         </div>
       </section>
 

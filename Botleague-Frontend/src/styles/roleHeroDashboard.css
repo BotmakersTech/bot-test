@@ -26,213 +26,198 @@
     color: var(--rhd-blue);
 }
 
-/* ---------- profile card ---------- */
+/* ---------- profile card — ported 1:1 from dashboard.css's .dash-hero-card
+   (UserDashboard) so the Volunteer/Judge hero reads as the same card,
+   just under an "rhd-" prefix instead of "dash-". ---------- */
+
+.rhd-outline-star {
+    position: absolute;
+    width: 106px;
+    height: 106px;
+    pointer-events: none;
+}
+.rhd-outline-star::before,
+.rhd-outline-star::after {
+    content: "";
+    position: absolute;
+    clip-path: polygon(50% 0, 61% 34%, 98% 35%, 68% 56%, 79% 91%, 50% 70%, 21% 91%, 32% 56%, 2% 35%, 39% 34%);
+}
+.rhd-outline-star::before { inset: 0; background: rgba(74, 132, 230, 0.13); }
+.rhd-outline-star::after { inset: 7px; background: #ffffff; }
+
+.rhd-card-star-a { left: 430px; top: -20px; transform: rotate(14deg); }
+.rhd-card-star-b { right: 14px; top: -14px; transform: rotate(18deg); }
+
 .rhd-profile-card {
     position: relative;
-    display: flex;
-    flex-wrap: wrap;
+    border: 1.5px solid #4b86e8;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    overflow: visible;
+    min-height: 376px;
+    display: grid;
+    grid-template-columns: minmax(320px, 38%) minmax(280px, 30%) minmax(340px, 32%);
     align-items: center;
-    gap: 28px;
-    border: 1px solid var(--rhd-blue);
-    border-radius: 16px;
-    background: #ffffff;
-    padding: 28px 36px;
-    overflow: hidden;
+    padding: 48px 54px;
 }
 
-.rhd-b-watermark {
-    position: absolute;
-    right: -40px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 320px;
-    max-width: 40%;
-    opacity: 0.06;
-    pointer-events: none;
-}
-
-.rhd-star-deco {
-    position: absolute;
-    width: 46px;
-    opacity: 0.15;
-    pointer-events: none;
-}
-.rhd-star-a { left: 24px; top: 20px; }
-.rhd-star-b { left: 60px; bottom: 20px; width: 30px; }
-
-.rhd-profile-left {
+.rhd-profile-copy {
     position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    min-width: 220px;
-    flex: 1 1 260px;
+    z-index: 3;
+    align-self: end;
+    padding-bottom: 8px;
 }
 
 .rhd-name-row {
     display: flex;
     align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    gap: 20px;
 }
 
-.rhd-name {
+.rhd-name-row h2 {
     margin: 0;
+    color: #5b62ea;
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0;
     font-family: "Poppins", sans-serif;
-    font-weight: 600;
-    font-size: clamp(22px, 2.6vw, 30px);
-    text-transform: capitalize;
-    background: linear-gradient(180deg, var(--rhd-blue) 0%, var(--rhd-purple) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
 }
 
-.rhd-active-badge {
+.rhd-active-pill {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 10px 4px 8px;
-    border: 1.5px solid var(--rhd-blue);
-    border-radius: 10px;
-    color: var(--rhd-blue);
-    font-weight: 600;
+    gap: 5px;
+    border: 1px solid #5277ee;
+    border-radius: 999px;
+    padding: 4px 10px;
+    color: #2f66ca;
+    background: #ffffff;
     font-size: 12px;
-    white-space: nowrap;
+    font-weight: 600;
+    line-height: 1;
 }
 
-.rhd-active-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #22c55e;
-    flex-shrink: 0;
+.rhd-active-pill span {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: #2f66ca;
 }
 
-.rhd-id-text {
-    margin: 0;
-    font-weight: 500;
-    font-size: 15px;
-    color: #1b1b1b;
+.rhd-profile-copy p {
+    margin: 7px 0 0;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1;
 }
 
-.rhd-role-text {
-    margin: 0;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 700;
-    font-size: 14px;
-    color: #1b1b1b;
-}
-.rhd-role-text svg { color: var(--rhd-purple); flex-shrink: 0; }
-
-.rhd-profile-actions {
+.rhd-actions {
     display: flex;
-    gap: 10px;
-    margin-top: 6px;
+    gap: 12px;
+    margin-top: 62px;
 }
 
-.rhd-btn-gradient {
+.rhd-actions button {
     display: inline-flex;
+    min-width: 126px;
+    height: 36px;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    height: 34px;
-    padding: 0 16px;
-    border: none;
-    border-radius: 8px;
-    background: linear-gradient(180deg, rgba(1, 98, 209, 0.85) 0%, rgba(140, 108, 255, 0.85) 100%);
+    gap: 10px;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: 700;
+    border: 0;
     color: #ffffff;
-    font-family: "Poppins", sans-serif;
-    font-weight: 500;
-    font-size: 13px;
+    background: linear-gradient(135deg, #4c8ee7, #8c6cff);
+    box-shadow: 0 3px 4px rgba(82, 71, 159, 0.28);
     cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
-}
-
-.rhd-btn-gradient:hover {
-    filter: brightness(1.1);
-    transform: translateY(-1px);
-    box-shadow: 0px 6px 14px rgba(1, 98, 209, 0.3);
 }
 
 /* ---------- hero photo ---------- */
-.rhd-hero-photo {
+.rhd-avatar-stage {
     position: relative;
-    z-index: 1;
-    flex-shrink: 0;
-    width: 150px;
-    height: 190px;
-    border-radius: 16px;
-    overflow: hidden;
-    background: linear-gradient(180deg, var(--rhd-blue) 0%, var(--rhd-purple) 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    z-index: 2;
+    align-self: stretch;
+    min-height: 276px;
 }
 
-.rhd-hero-photo img {
-    width: 100%;
-    height: 100%;
+.rhd-big-b {
+    position: absolute;
+    left: -24px;
+    top: 2px;
+    width: 390px;
+    height: 334px;
+    object-fit: contain;
+    object-position: center;
+    opacity: 0.5;
+}
+
+.rhd-avatar {
+    position: absolute;
+    left: 10px;
+    bottom: -50px;
+    width: 270px;
+    height: 420px;
     object-fit: cover;
+    object-position: top center;
+    filter: drop-shadow(0 8px 9px rgba(0, 0, 0, 0.22));
 }
 
-.rhd-hero-photo-initials {
-    font-family: "Orbitron", sans-serif;
-    font-weight: 600;
-    font-size: 44px;
-    color: rgba(255, 255, 255, 0.92);
+.rhd-avatar-mascot {
+    width: 260px;
+    height: 360px;
+    object-fit: contain;
+    bottom: -28px;
 }
 
-/* ---------- stat cards (right column) ---------- */
-.rhd-stats-col {
+/* ---------- stat ribbons ---------- */
+.rhd-stats {
     position: relative;
-    z-index: 1;
+    z-index: 3;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    flex: 1 1 240px;
-    min-width: 220px;
+    gap: 34px;
+    align-items: stretch;
 }
 
-.rhd-stat-card {
-    display: flex;
+.rhd-stat-ribbon {
+    position: relative;
+    display: grid;
+    grid-template-columns: 46px auto 1fr;
     align-items: center;
-    gap: 12px;
-    height: 48px;
-    padding: 0 30px 0 16px;
+    gap: 15px;
+    height: 62px;
+    min-width: 380px;
+    padding: 0 26px 0 78px;
+    color: #080808;
     background: #ffffff;
-    border: 1.5px solid var(--rhd-blue);
-    clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%);
+    clip-path: polygon(0.24% 0.9%, 91.85% 0.9%, 99.79% 50.9%, 91.85% 99.1%, 0.24% 99.1%, 4.38% 52.75%);
+}
+
+.rhd-stat-ribbon::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("../assets/Dashboard/stat-ribbon-frame.svg") center / 100% 100% no-repeat;
+    pointer-events: none;
 }
 
 .rhd-stat-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--rhd-blue);
-    flex-shrink: 0;
+    color: #3269d0;
 }
 
-.rhd-stat-num {
-    margin: 0;
-    font-family: "Orbitron", sans-serif;
+.rhd-stat-ribbon strong {
+    font-family: "Orbitron", "Inter", system-ui, sans-serif;
+    font-size: 36px;
     font-weight: 600;
-    font-size: 22px;
-    color: #000000;
-    white-space: nowrap;
+    line-height: 1;
 }
 
-.rhd-stat-label {
-    margin: 0;
+.rhd-stat-ribbon span:last-child {
+    font-size: 20px;
     font-weight: 500;
-    font-size: 14px;
-    color: #3f3f46;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 /* ---------- outlined info cards ---------- */
@@ -381,19 +366,32 @@
     color: #9ca3af;
 }
 
-/* ---------- responsive ---------- */
-@media (max-width: 900px) {
+/* ---------- responsive (matches dash-hero-card's own breakpoints) ---------- */
+@media (max-width: 1180px) {
     .rhd-bottom-grid { grid-template-columns: 1fr; }
-    .rhd-profile-card { padding: 22px; }
-    .rhd-hero-photo { width: 110px; height: 140px; }
+
+    .rhd-profile-card {
+        grid-template-columns: 1fr;
+        gap: 22px;
+        padding: 82px 32px 32px;
+    }
+    .rhd-profile-copy { align-self: auto; }
+    .rhd-avatar-stage { min-height: 260px; }
+    .rhd-avatar,
+    .rhd-avatar-mascot { left: 50%; transform: translateX(-50%); }
+    .rhd-big-b { left: 50%; transform: translateX(-50%); }
+    .rhd-stat-ribbon { min-width: 0; }
 }
 
-@media (max-width: 600px) {
-    .rhd-profile-card { flex-direction: column; align-items: stretch; text-align: center; }
-    .rhd-profile-left { align-items: center; }
-    .rhd-name-row { justify-content: center; }
-    .rhd-role-text { justify-content: center; }
-    .rhd-hero-photo { align-self: center; }
-    .rhd-stats-col { width: 100%; }
-    .rhd-b-watermark { display: none; }
+@media (max-width: 720px) {
+    .rhd-name-row { align-items: flex-start; flex-direction: column; gap: 10px; }
+    .rhd-name-row h2 { font-size: 30px; }
+
+    .rhd-stat-ribbon {
+        grid-template-columns: 34px auto 1fr;
+        height: 58px;
+        padding-left: 46px;
+    }
+    .rhd-stat-ribbon strong { font-size: 30px; }
+    .rhd-stat-ribbon span:last-child { font-size: 17px; }
 }
