@@ -27,6 +27,8 @@ import { fetchChatRooms, setActiveRoom } from "../../Chat/store/chatSlice"
 import { ORG } from "../theme/organizerTheme"
 import PageWrapper from "../components/PageWrapper"
 import { ChangeFieldDiff } from "../../../shared/components/EventDashboard/ChangeRequestDiff"
+import MobileSportDetail from "../../../shared/components/EventDashboard/MobileSportDetail"
+import "../../../shared/components/EventDashboard/MobileSportDetail.css"
 import "../styles/sportDetail.css"
 
 // ─────────────────────────────────────────────────────────────
@@ -1135,6 +1137,7 @@ export default function OrganizerSportDetailPage() {
 
   const { eventId, sportId } = useParams<{ eventId: string; sportId: string }>()
   const navigate = useNavigate()
+  const dispatch = useAppDispatch()
 
   const user = useSelector((state: RootState) => state.auth.user)
   const userRoles = user?.allRoles ?? (user?.role ? [user.role] : [])
@@ -1229,6 +1232,19 @@ export default function OrganizerSportDetailPage() {
     }
   }
 
+  // ── message a registered team (mobile team card action) ──
+  const handleMessageTeam = async (teamId: string) => {
+    if (!eventId) return
+    try {
+      const roomId = await ensureTeamChatRoom(eventId, teamId)
+      await dispatch(fetchChatRooms())
+      dispatch(setActiveRoom(roomId))
+      navigate("/messages")
+    } catch {
+      // no console noise in production — the button simply stays available to retry
+    }
+  }
+
   // ── LOADING ──
   if (loading) {
     return (
@@ -1262,6 +1278,7 @@ export default function OrganizerSportDetailPage() {
   }
 
   return (
+    <>
     <PageWrapper>
 
       {/* ── EDIT SPORT MODAL ── */}
@@ -1281,6 +1298,55 @@ export default function OrganizerSportDetailPage() {
           onMediaChange={refetch}
         />
       )}
+
+      {/* SEND ANNOUNCEMENT — inline, one-way organiser -> sport participants.
+          Rendered once here (shared by desktop + mobile "Send Announcement"
+          buttons below) so it doesn't double-mount under both view toggles. */}
+      {showAnnounceForm && eventId && sportId && (
+        <SportAnnouncementForm
+          eventId={eventId}
+          sportId={sportId}
+          teams={registrations
+            .filter(t => t.teamId)
+            .map(t => ({ teamId: t.teamId as string, teamName: t.teamName, robotName: t.robotName }))}
+          onClose={() => setShowAnnounceForm(false)}
+          onSent={() => {}}
+        />
+      )}
+
+      {/* save-result feedback (applied vs held for approval) */}
+      {saveResultMsg && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: "8px",
+          padding: "10px 16px",
+          background: saveResultMsg.pending ? "rgba(161,98,7,0.08)" : "rgba(31,169,82,0.08)",
+          border: `1px solid ${saveResultMsg.pending ? "rgba(161,98,7,0.28)" : "rgba(31,169,82,0.25)"}`,
+          borderRadius: "10px",
+          fontSize: "0.84rem",
+          fontWeight: 600,
+          color: saveResultMsg.pending ? WARNING : SUCCESS,
+          marginBottom: "20px",
+        }}>
+          {saveResultMsg.pending ? <Clock size={15} /> : <CheckCircle2 size={15} />}
+          {saveResultMsg.text}
+        </div>
+      )}
+
+      {/* pending sport-edit change requests awaiting review */}
+      {eventId && sportId && (
+        <PendingChangeRequestPanel
+          key={pendingPanelKey}
+          eventId={eventId}
+          sportId={sportId}
+          sport={sport}
+          currentUserId={user?.id}
+          canReviewSportHeadTier={canReviewSportHeadTier}
+          canReviewManagerTier={canReviewManagerTier}
+          onResolved={refetch}
+        />
+      )}
+
+      <div className="ssd-desktop-only">
 
       {/* ── BACK ── */}
       <button onClick={() => navigate(-1)} className="sdt-back-btn" style={{ marginBottom: "24px" }}>
@@ -1356,51 +1422,6 @@ export default function OrganizerSportDetailPage() {
           </p>
         )}
       </div>
-
-      {/* SEND ANNOUNCEMENT — inline, one-way organiser -> sport participants */}
-      {showAnnounceForm && eventId && sportId && (
-        <SportAnnouncementForm
-          eventId={eventId}
-          sportId={sportId}
-          teams={registrations
-            .filter(t => t.teamId)
-            .map(t => ({ teamId: t.teamId as string, teamName: t.teamName, robotName: t.robotName }))}
-          onClose={() => setShowAnnounceForm(false)}
-          onSent={() => {}}
-        />
-      )}
-
-      {/* save-result feedback (applied vs held for approval) */}
-      {saveResultMsg && (
-        <div style={{
-          display: "flex", alignItems: "center", gap: "8px",
-          padding: "10px 16px",
-          background: saveResultMsg.pending ? "rgba(161,98,7,0.08)" : "rgba(31,169,82,0.08)",
-          border: `1px solid ${saveResultMsg.pending ? "rgba(161,98,7,0.28)" : "rgba(31,169,82,0.25)"}`,
-          borderRadius: "10px",
-          fontSize: "0.84rem",
-          fontWeight: 600,
-          color: saveResultMsg.pending ? WARNING : SUCCESS,
-          marginBottom: "20px",
-        }}>
-          {saveResultMsg.pending ? <Clock size={15} /> : <CheckCircle2 size={15} />}
-          {saveResultMsg.text}
-        </div>
-      )}
-
-      {/* pending sport-edit change requests awaiting review */}
-      {eventId && sportId && (
-        <PendingChangeRequestPanel
-          key={pendingPanelKey}
-          eventId={eventId}
-          sportId={sportId}
-          sport={sport}
-          currentUserId={user?.id}
-          canReviewSportHeadTier={canReviewSportHeadTier}
-          canReviewManagerTier={canReviewManagerTier}
-          onResolved={refetch}
-        />
-      )}
 
       {/* ── STAT BOXES ── */}
       <div className="sdt-stat-row">
@@ -1565,6 +1586,62 @@ export default function OrganizerSportDetailPage() {
         </div>
       </div>
 
+      </div>
     </PageWrapper>
+
+    <div className="ssd-mobile-only">
+      <MobileSportDetail
+        eventName={event?.eventName}
+        sportName={toLabel(sport.sport)}
+        statusLabel={toLabel(sport.status)}
+        isOpen={isOpen}
+        onBack={() => navigate(-1)}
+        onEditSport={() => setShowEditSport(true)}
+        onToggleRegistration={handleToggleRegistration}
+        registrationLoading={registrationLoading}
+        extraTitleActions={
+          <button type="button" className="ssd-m-btn-outline-gradient" onClick={() => setShowAnnounceForm(v => !v)}>
+            <Megaphone size={12} /> Announce
+          </button>
+        }
+        publishMsg={finalizeMsg}
+        publishOk={finalizeOk}
+        totalTeams={totalTeams}
+        totalPlayers={totalPlayers}
+        maxTeams={sport.maxTeams ?? null}
+        entryFee={sport.entryFee ?? null}
+        prizeMoney={sport.prizeMoney ?? null}
+        ageGroup={sport.ageGroup ?? null}
+        competitionType={sport.competitionType ?? null}
+        formatType={sport.formatType ?? null}
+        controlType={sport.controlType ?? null}
+        weightClass={sport.weightClass ?? null}
+        weightLimitKg={sport.weightLimitKg ?? null}
+        maxBotsPerTeam={sport.maxBotsPerTeam ?? null}
+        teamSizeLabel={sport.minTeamSize != null && sport.maxTeamSize != null ? `${sport.minTeamSize} – ${sport.maxTeamSize} players` : null}
+        registrationStartDate={sport.registrationStartDate ?? null}
+        registrationEndDate={sport.registrationEndDate ?? null}
+        matchActions={[
+          { label: "Create Match / Manage Bracket", onClick: () => navigate(`${location.pathname}/create-match`), variant: "solid" },
+        ]}
+        onCertificates={() => navigate(`/organizer/certificates?eventSportId=${sportId}`)}
+        showPublish={isAdmin}
+        onPublish={handleFinalize}
+        publishing={finalizing}
+        teams={registrations.map(t => ({
+          id: t.id,
+          teamId: t.teamId ?? null,
+          teamName: t.teamName,
+          teamLogoUrl: t.teamLogoUrl ?? null,
+          robotName: t.robotName ?? null,
+          status: t.status ?? null,
+          lineup: t.lineup,
+        }))}
+        regActionError={regActionError}
+        onTeamStatusChange={handleRegistrationStatusChange}
+        onMessageTeam={handleMessageTeam}
+      />
+    </div>
+    </>
   )
 }

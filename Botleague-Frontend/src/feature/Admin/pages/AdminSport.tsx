@@ -16,6 +16,8 @@ import { ORG } from "../../Organizer/theme/organizerTheme"
 import PageWrapper from "../../Organizer/components/PageWrapper"
 import { useAppDispatch } from "../../../app/hooks"
 import { fetchChatRooms, setActiveRoom } from "../../Chat/store/chatSlice"
+import MobileSportDetail from "../../../shared/components/EventDashboard/MobileSportDetail"
+import "../../../shared/components/EventDashboard/MobileSportDetail.css"
 import "../../Organizer/styles/sportDetail.css"
 
 // ─────────────────────────────────────────────────────────────
@@ -955,6 +957,7 @@ export default function AdminSport() {
 
   const { eventId, sportId } = useParams<{ eventId: string; sportId: string }>()
   const navigate = useNavigate()
+  const dispatch = useAppDispatch()
 
   const [registrationLoading, setRegistrationLoading] = React.useState(false)
   const [showEditSport,       setShowEditSport]       = React.useState(false)
@@ -1034,6 +1037,19 @@ export default function AdminSport() {
     }
   }
 
+  // ── message a registered team (mobile team card action) ──
+  const handleMessageTeam = async (teamId: string) => {
+    if (!eventId) return
+    try {
+      const roomId = await ensureTeamChatRoom(eventId, teamId)
+      await dispatch(fetchChatRooms())
+      dispatch(setActiveRoom(roomId))
+      navigate("/messages")
+    } catch {
+      // no console noise in production — the button simply stays available to retry
+    }
+  }
+
   // ── LOADING ──
   if (loading) {
     return (
@@ -1067,6 +1083,7 @@ export default function AdminSport() {
   }
 
   return (
+    <>
     <PageWrapper>
 
       {/* ── EDIT SPORT MODAL ── */}
@@ -1087,6 +1104,8 @@ export default function AdminSport() {
       )}
 
       <style>{`@keyframes admin-sport-spin { to { transform: rotate(360deg); } }`}</style>
+
+      <div className="ssd-desktop-only">
 
       {/* ── BACK ── */}
       <button onClick={() => navigate(-1)} className="sdt-back-btn" style={{ marginBottom: "24px" }}>
@@ -1322,6 +1341,59 @@ export default function AdminSport() {
         </div>
       </div>
 
+      </div>
     </PageWrapper>
+
+    <div className="ssd-mobile-only">
+      <MobileSportDetail
+        eventName={event?.eventName}
+        sportName={toLabel(sport.sport)}
+        statusLabel={toLabel(sport.status)}
+        isOpen={isOpen}
+        onBack={() => navigate(-1)}
+        onEditSport={() => setShowEditSport(true)}
+        onToggleRegistration={handleToggleRegistration}
+        registrationLoading={registrationLoading}
+        publishMsg={finalizeMsg}
+        publishOk={finalizeMsg?.startsWith("✓")}
+        totalTeams={totalTeams}
+        totalPlayers={totalPlayers}
+        maxTeams={sport.maxTeams ?? null}
+        entryFee={sport.entryFee ?? null}
+        prizeMoney={sport.prizeMoney ?? null}
+        ageGroup={sport.ageGroup ?? null}
+        competitionType={sport.competitionType ?? null}
+        formatType={sport.formatType ?? null}
+        controlType={sport.controlType ?? null}
+        weightClass={sport.weightClass ?? null}
+        weightLimitKg={sport.weightLimitKg ?? null}
+        maxBotsPerTeam={sport.maxBotsPerTeam ?? null}
+        teamSizeLabel={sport.minTeamSize != null && sport.maxTeamSize != null ? `${sport.minTeamSize} – ${sport.maxTeamSize} players` : null}
+        registrationStartDate={sport.registrationStartDate ?? null}
+        registrationEndDate={sport.registrationEndDate ?? null}
+        matchActions={[
+          { label: "Create Match", onClick: () => navigate(`${location.pathname}/create-match`), variant: "solid" },
+          { label: "Update Score", onClick: () => navigate(`${location.pathname}/update-score`), variant: "outline" },
+          { label: "Ranking", onClick: () => navigate(`${location.pathname}/ranking`), variant: "solid" },
+        ]}
+        onCertificates={() => navigate(`/admin/certificates?eventSportId=${sportId}`)}
+        showPublish
+        onPublish={handleFinalize}
+        publishing={finalizing}
+        teams={registrations.map(t => ({
+          id: t.id,
+          teamId: t.teamId ?? null,
+          teamName: t.teamName,
+          teamLogoUrl: t.teamLogoUrl ?? null,
+          robotName: t.robotName ?? null,
+          status: t.status ?? null,
+          lineup: t.lineup,
+        }))}
+        regActionError={regActionError}
+        onTeamStatusChange={handleRegistrationStatusChange}
+        onMessageTeam={handleMessageTeam}
+      />
+    </div>
+    </>
   )
 }
