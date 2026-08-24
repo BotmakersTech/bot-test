@@ -1,10 +1,14 @@
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600&family=Poppins:wght@500;600&family=Inter:wght@500;600;700&display=swap");
 
-/* Volunteer/Judge "hero" dashboard header — real, ordinary responsive flow
-   (flex/grid), not a fixed-size Figma canvas scaled via JS transform. Every
-   number/list row rendered through this component comes from a prop the
-   caller computed from real API data — this file has no baked-in copy or
-   placeholder content of its own. */
+/* Volunteer/Judge "hero" dashboard header. Desktop/tablet (>950px) is an
+   ordinary responsive flex/grid layout; <=950px swaps to
+   MobileRoleHeroDashboard, the same fixed-canvas-scaled-via-JS-transform
+   technique as UserDashboard's MobileDashboard.tsx (see
+   .dash-desktop-only/.dash-mobile-only in dashboard.css — this is that same
+   toggle, same 950px breakpoint, under the rhd- prefix). Every number/list
+   row rendered through either version comes from a prop the caller computed
+   from real API data — this file has no baked-in copy or placeholder
+   content of its own. */
 
 :root {
     --rhd-blue: #0162d1;
@@ -16,6 +20,13 @@
     flex-direction: column;
     gap: 20px;
     font-family: "Inter", sans-serif;
+}
+
+.rhd-mobile-only { display: none; }
+
+@media (max-width: 950px) {
+    .rhd-desktop-only { display: none; }
+    .rhd-mobile-only { display: block; }
 }
 
 .rhd-welcome {
@@ -383,15 +394,6 @@
     .rhd-stat-ribbon { min-width: 0; }
 }
 
-@media (max-width: 720px) {
-    .rhd-name-row { align-items: flex-start; flex-direction: column; gap: 10px; }
-    .rhd-name-row h2 { font-size: 30px; }
-
-    .rhd-stat-ribbon {
-        grid-template-columns: 34px auto 1fr;
-        height: 58px;
-        padding-left: 46px;
-    }
-    .rhd-stat-ribbon strong { font-size: 30px; }
-    .rhd-stat-ribbon span:last-child { font-size: 17px; }
-}
+/* No <=720px block — .rhd-desktop-only is already hidden at <=950px
+   (MobileRoleHeroDashboard takes over), so a second narrower breakpoint on
+   the desktop layout would never actually run. */

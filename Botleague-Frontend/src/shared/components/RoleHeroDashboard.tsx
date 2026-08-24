@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Award, Pencil, Scale, Share2, Swords } from "lucide-react";
 import bLogoWatermark from "../../assets/Dashboard/B_LOGO.png";
 import mascot from "../../assets/mascote.png";
+import MobileRoleHeroDashboard from "./MobileRoleHeroDashboard";
 import "../../styles/roleHeroDashboard.css";
 
 function OutlineStar({ className = "" }: { className?: string }) {
@@ -60,40 +61,42 @@ export interface RoleHeroDashboardProps {
   achievement2Achieved?: boolean;
 }
 
-export default function RoleHeroDashboard({
-  welcomeName,
-  name,
-  photoUrl,
-  idLabel,
-  idValue,
-  roleLabel,
-  onShare,
-  onEdit,
-  stat1Value,
-  stat1Label,
-  stat1Icon,
-  stat2Value,
-  stat2Label,
-  stat2Icon,
-  stat3Value,
-  stat3Label,
-  stat3Icon,
-  recentItemsTitle,
-  recentItems,
-  recentItemsEmptyText,
-  recentItemsHref,
-  achievement1Label,
-  achievement1Sublabel,
-  achievement1Achieved = false,
-  achievement2Label,
-  achievement2Sublabel,
-  achievement2Achieved = false,
-}: RoleHeroDashboardProps) {
+export default function RoleHeroDashboard(props: RoleHeroDashboardProps) {
+  const {
+    welcomeName,
+    name,
+    photoUrl,
+    idLabel,
+    idValue,
+    roleLabel,
+    onShare,
+    onEdit,
+    stat1Value,
+    stat1Label,
+    stat1Icon,
+    stat2Value,
+    stat2Label,
+    stat2Icon,
+    stat3Value,
+    stat3Label,
+    stat3Icon,
+    recentItemsTitle,
+    recentItems,
+    recentItemsEmptyText,
+    recentItemsHref,
+    achievement1Label,
+    achievement1Sublabel,
+    achievement1Achieved = false,
+    achievement2Label,
+    achievement2Sublabel,
+    achievement2Achieved = false,
+  } = props;
   const [photoErr, setPhotoErr] = useState(false);
   const hasPhoto = !!photoUrl && !photoErr;
 
   return (
-    <div className="rhd-root">
+    <>
+    <div className="rhd-root rhd-desktop-only">
       <div className="rhd-welcome-row">
         <p className="rhd-welcome">Welcome back, {welcomeName}!</p>
       </div>
@@ -201,5 +204,10 @@ export default function RoleHeroDashboard({
         </section>
       </div>
     </div>
+
+    <div className="rhd-mobile-only">
+      <MobileRoleHeroDashboard {...props} />
+    </div>
+    </>
   );
 }

@@ -37,14 +37,12 @@ function fmt(d?: string) {
 export default function JudgeDashboard() {
   const navigate = useNavigate()
   const [matches, setMatches] = useState<AssignedMatch[]>([])
-  const [loading, setLoading] = useState(true)
   const user = useSelector((state: RootState) => state.auth.user)
 
   useEffect(() => {
     api.get("/v1/matches/my")
       .then(r => setMatches(r.data ?? []))
       .catch(() => setMatches([]))
-      .finally(() => setLoading(false))
   }, [])
 
   const live      = matches.filter(m => m.status === "LIVE")
@@ -99,21 +97,6 @@ export default function JudgeDashboard() {
         achievement2Achieved={completed.length >= 20}
       />
 
-      {/* Quick links */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {[
-          { label: "Assigned Matches", href: "/judge/matches", icon: "🥊" },
-          { label: "Score Entry",      href: "/judge/scores",  icon: "⚡" },
-          { label: "Certificates",     href: "/certificates",  icon: "🏅" },
-        ].map(l => (
-          <Link key={l.label} to={l.href}
-            className="flex items-center gap-3 rounded-xl border border-[#4b86e8]/20 bg-white px-4 py-3 hover:border-[#0162D1]/40 hover:bg-[#0162D1]/3 transition-colors">
-            <span className="text-xl">{l.icon}</span>
-            <span className="text-sm text-[#374151] font-medium">{l.label}</span>
-          </Link>
-        ))}
-      </div>
-
       {/* Live matches */}
       {live.length > 0 && (
         <section>
@@ -160,11 +143,6 @@ export default function JudgeDashboard() {
         </section>
       )}
 
-      {!loading && matches.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-[#4b86e8]/30 py-16 text-center">
-          <p className="text-[#6b7280] text-sm">No matches assigned yet.</p>
-        </div>
-      )}
     </div>
   )
 }

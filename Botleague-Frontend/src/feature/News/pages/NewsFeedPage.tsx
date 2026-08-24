@@ -34,7 +34,7 @@ export default function NewsFeedPage() {
 
   return (
     <div className="mx-auto p-4 sm:p-6 lg:p-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-1">News</h1>
+      <h1 className="font-display text-[clamp(20px,4vw,38px)] font-medium text-[#0162D1] mb-1">News</h1>
       <p className="text-sm text-gray-500 mb-6">Updates from BotLeague, curated for you.</p>
 
       {error && <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">{error}</div>}
