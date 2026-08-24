@@ -95,6 +95,14 @@ export default function UserSportDetail() {
   const event: EventResponse | undefined = events.find((e) => e.id === eventId);
   const sport: EventSportResponse | undefined = eventSports.find((s) => s.id === sportId);
 
+  // Public, shareable page — the browser tab and any link-preview card
+  // should name the sport and event, not just the app.
+  useEffect(() => {
+    if (!sport?.sport || !event?.eventName) return;
+    document.title = `${sport.sport.replace(/_/g, " ")} · ${event.eventName} · BotLeague`;
+    return () => { document.title = "BotLeague"; };
+  }, [sport?.sport, event?.eventName]);
+
   const existingRegs: EventRegistrationResponse[] = registrations.filter(
     (r) => r.eventSportId === sportId && r.teamId === teamId
   );
@@ -222,7 +230,12 @@ export default function UserSportDetail() {
   } else {
     body = (
       <div className="evd-page">
-        <Hero title={sport.sport?.replace(/_/g, " ") ?? "Sport"} imageUrl={sport.sportThumbnailUrl} />
+        <Hero
+          title={sport.sport?.replace(/_/g, " ") ?? "Sport"}
+          imageUrl={sport.sportThumbnailUrl}
+          backLabel={event.eventName}
+          onBack={() => navigate(`/events/${eventId}`)}
+        />
         <SportDetailsHeader sport={sport} contacts={contacts} />
 
         <TournamentTabs

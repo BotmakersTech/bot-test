@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Eye, AlertTriangle, Info, User, Lock, Ban, X, CheckCircle2, Zap, LogIn } from "lucide-react";
 import type { EventSportResponse, EventRegistrationResponse } from "../../api/event.api";
 import type { TeamMember } from "../../hook/useEvent";
 import useRobots from "../../../Robots/hooks/useRobots";
@@ -163,7 +164,7 @@ export default function RegistrationTab({
   if (!isLoggedIn) {
     return (
       <div className="register-page">
-        <div className="reg-banner info">Log in to register your team and robots for this sport.</div>
+        <div className="reg-banner info"><LogIn size={16} /><span>Log in to register your team and robots for this sport.</span></div>
         <button type="button" className="add-box" onClick={onRequireLogin} style={{ maxWidth: 260 }}>
           Log In to Register
         </button>
@@ -175,59 +176,78 @@ export default function RegistrationTab({
     <div className="register-page">
       <div className="register-wrapper">
         {!isCaptain && teamId && (
-          <div className="reg-banner info">👁 You're a Team Member. Only the Captain can register or manage operators.</div>
+          <div className="reg-banner info"><Eye size={16} /><span>You're a Team Member. Only the Captain can register or manage operators.</span></div>
         )}
 
         {!teamId && (
-          <div className="reg-banner warning">⚠️ Join or create a team to register for this event.</div>
+          <div className="reg-banner warning"><AlertTriangle size={16} /><span>Join or create a team to register for this event.</span></div>
         )}
 
         {eligBlocked && (
           <div className="reg-banner info">
-            ℹ️ {eligibility?.blockReason ?? "Your account isn't currently eligible to compete."} You can still
-            register robots and manage the lineup — this only means you personally can't be added as a lineup
-            member.
-            {eligibility?.requiresGuardian && !eligibility?.hasGuardian && (
-              <div style={{ marginTop: 6 }}>👤 To add yourself to a lineup you'll need a parent/guardian consent form on file. Complete it in Profile → Settings.</div>
-            )}
+            <Info size={16} />
+            <div>
+              <span>
+                {eligibility?.blockReason ?? "Your account isn't currently eligible to compete."} You can still
+                register robots and manage the lineup — this only means you personally can't be added as a lineup
+                member.
+              </span>
+              {eligibility?.requiresGuardian && !eligibility?.hasGuardian && (
+                <div style={{ marginTop: 6, display: "flex", alignItems: "flex-start", gap: 6 }}>
+                  <User size={14} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <span>To add yourself to a lineup you'll need a parent/guardian consent form on file. Complete it in Profile → Settings.</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         {!eligBlocked && categoryMismatch && eligibility && (
           <div className="reg-banner info">
-            ℹ️ This sport is open to {toLabel(sport.ageGroup)} participants. Your category is{" "}
-            {eligibility.categoryLabel ?? toLabel(eligibility.category)}
-            {eligibility.ageRange ? ` (age ${eligibility.ageRange})` : ""}, so you personally can't be added as a
-            lineup member — but you can still register robots and add other eligible teammates.
+            <Info size={16} />
+            <span>
+              This sport is open to {toLabel(sport.ageGroup)} participants. Your category is{" "}
+              {eligibility.categoryLabel ?? toLabel(eligibility.category)}
+              {eligibility.ageRange ? ` (age ${eligibility.ageRange})` : ""}, so you personally can't be added as a
+              lineup member — but you can still register robots and add other eligible teammates.
+            </span>
           </div>
         )}
 
-        {teamId && !isRegOpen && <div className="reg-banner warning">🔒 Registration is currently closed for this sport.</div>}
-        {teamId && isRegOpen && isFull && <div className="reg-banner error">🚫 No spots available. This sport is full.</div>}
+        {teamId && !isRegOpen && <div className="reg-banner warning"><Lock size={16} /><span>Registration is currently closed for this sport.</span></div>}
+        {teamId && isRegOpen && isFull && <div className="reg-banner error"><Ban size={16} /><span>No spots available. This sport is full.</span></div>}
 
         {regError && (
-          <div className="reg-banner error" style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-            <span>⚠️ {regError}</span>
-            <button type="button" onClick={onDismissError} style={{ background: "none", border: "none", cursor: "pointer", fontWeight: 700 }}>
-              ✕
+          <div className="reg-banner error" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+            <span style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+              <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+              {regError}
+            </span>
+            <button type="button" onClick={onDismissError} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center" }} aria-label="Dismiss">
+              <X size={16} />
             </button>
           </div>
         )}
 
         {existingRegs.length > 0 && (
           <div className="register-head" style={{ marginBottom: 20 }}>
-            <div>Your Registered Robots</div>
+            <h2>Your Registered Robots</h2>
           </div>
         )}
         {existingRegs.map((reg) => {
           const regId = reg.registrationId ?? reg.id ?? "";
           return (
             <div className="build-card" key={regId} style={{ justifyContent: "space-between", paddingRight: 16, marginBottom: 14, height: "auto", minHeight: 56 }}>
-              <span>
-                {reg.robotName} {reg.lineupLocked ? "🔒 Locked" : `· Operators: ${reg.lineupSize ?? 0}`}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                {reg.robotName}
+                {reg.lineupLocked ? (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Lock size={12} /> Locked</span>
+                ) : (
+                  `· Operators: ${reg.lineupSize ?? 0}`
+                )}
               </span>
               <span style={{ display: "flex", gap: 10 }}>
-                <button type="button" className="lineup-remove-btn" style={{ border: "1.5px solid #fff", background: "transparent", color: "#fff" }} onClick={() => onManageLineup(regId)}>
+                <button type="button" className="lineup-manage-btn" onClick={() => onManageLineup(regId)}>
                   {isCaptain ? "Manage Lineup →" : "View Lineup →"}
                 </button>
                 {isCaptain && !reg.lineupLocked && (
@@ -243,7 +263,7 @@ export default function RegistrationTab({
         {canAdd && (
           <div className="register-block">
             <div className="register-head">
-              <div>Register Another Robot</div>
+              <h2>Register Another Robot</h2>
             </div>
 
             {step === 1 ? (
@@ -252,11 +272,13 @@ export default function RegistrationTab({
                   <p>Loading your robots…</p>
                 ) : availableRobots.length === 0 ? (
                   <div className="reg-banner info">
-                    {robots.length === 0
-                      ? "⚠️ Your team has no robots yet. Add a robot from your team dashboard first."
-                      : eligibleRobots.length === 0
-                        ? `⚠️ None of your robots are eligible for this competition. Robots must be built for "${sport.sport?.replace(/_/g, " ")}" with matching weight class.`
-                        : "✅ All eligible robots are already registered in this sport."}
+                    {robots.length === 0 ? (
+                      <><AlertTriangle size={16} /><span>Your team has no robots yet. Add a robot from your team dashboard first.</span></>
+                    ) : eligibleRobots.length === 0 ? (
+                      <><AlertTriangle size={16} /><span>None of your robots are eligible for this competition. Robots must be built for "{sport.sport?.replace(/_/g, " ")}" with matching weight class.</span></>
+                    ) : (
+                      <><CheckCircle2 size={16} /><span>All eligible robots are already registered in this sport.</span></>
+                    )}
                   </div>
                 ) : (
                   <div className="register-row" style={{ gridTemplateColumns: "1fr" }}>
@@ -327,8 +349,8 @@ export default function RegistrationTab({
                       return (
                         <div key={entry.membershipId} className="build-card" style={{ justifyContent: "space-between", paddingRight: 16, marginBottom: 10, height: "auto", minHeight: 48 }}>
                           <span>{member?.userName ?? "Member"} — {roleLabel}</span>
-                          <button type="button" className="lineup-remove-btn" onClick={() => removeFromPending(entry.membershipId)}>
-                            ✕
+                          <button type="button" className="lineup-remove-btn" onClick={() => removeFromPending(entry.membershipId)} aria-label="Remove">
+                            <X size={14} />
                           </button>
                         </div>
                       );
@@ -347,7 +369,11 @@ export default function RegistrationTab({
                     disabled={busyReg || pendingLineup.length === 0}
                     onClick={handleConfirmRegistration}
                   >
-                    {busyReg ? "Registering…" : pendingLineup.length === 0 ? "Add at least one lineup member" : "⚡ Complete Registration"}
+                    {busyReg
+                      ? "Registering…"
+                      : pendingLineup.length === 0
+                        ? "Add at least one lineup member"
+                        : <><Zap size={14} /> Complete Registration</>}
                   </button>
                 </div>
               </>

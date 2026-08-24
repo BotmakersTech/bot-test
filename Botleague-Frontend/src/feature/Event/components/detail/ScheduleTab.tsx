@@ -15,7 +15,7 @@ export default function ScheduleTab({ matches, loading, error, sportLabel }: Sch
   return (
     <div className="schedule-page">
       <div className="schedule-title">
-        <h1>{sportLabel} Schedule</h1>
+        <h2>{sportLabel} Schedule</h2>
         <p>Full tournament bracket and results.</p>
       </div>
 

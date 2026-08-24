@@ -47,6 +47,13 @@ export default function VolunteerCTA({ eventId, eventName, volunteersNeeded }: V
       .finally(() => setLoaded(true));
   }, [eventId, volunteersNeeded, isAuthenticated, isVolunteerEligible]);
 
+  useEffect(() => {
+    if (!showForm) return;
+    const onKeyDown = (e: KeyboardEvent) => { if (e.key === "Escape") setShowForm(false); };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [showForm]);
+
   if (!volunteersNeeded) return null;
 
   const handleApply = async () => {
@@ -79,8 +86,8 @@ export default function VolunteerCTA({ eventId, eventName, volunteersNeeded }: V
 
       {showForm && (
         <div className="volunteer-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setShowForm(false); }}>
-          <div className="volunteer-modal">
-            <h4>Apply to volunteer</h4>
+          <div className="volunteer-modal" role="dialog" aria-modal="true" aria-labelledby="volunteer-modal-title">
+            <h4 id="volunteer-modal-title">Apply to volunteer</h4>
             <p className="volunteer-modal-sub">{eventName}</p>
 
             <label className="volunteer-field">

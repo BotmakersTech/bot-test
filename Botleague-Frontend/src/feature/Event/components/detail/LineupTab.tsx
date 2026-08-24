@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Lock, AlertTriangle, CheckCircle2, Check, LogIn } from "lucide-react";
 import type { EventSportResponse, EventRegistrationResponse, TeamLineUpResponse } from "../../api/event.api";
 import type { TeamMember } from "../../hook/useEvent";
 
@@ -57,7 +58,7 @@ export default function LineupTab({
   if (!isLoggedIn) {
     return (
       <div className="lineup-page">
-        <div className="reg-banner info">Log in to view and manage your team's lineup.</div>
+        <div className="reg-banner info"><LogIn size={16} /><span>Log in to view and manage your team's lineup.</span></div>
         <button type="button" className="add-box" onClick={onRequireLogin} style={{ maxWidth: 260 }}>
           Log In
         </button>
@@ -108,18 +109,23 @@ export default function LineupTab({
                   cursor: "pointer",
                 }}
               >
-                {reg.robotName} {reg.lineupLocked ? "🔒" : ""}
+                {reg.robotName} {reg.lineupLocked && <Lock size={12} style={{ verticalAlign: "middle", marginLeft: 4 }} />}
               </button>
             );
           })}
         </div>
       )}
 
-      {lineupError && <div className="reg-banner error">⚠️ {lineupError}</div>}
+      {lineupError && <div className="reg-banner error"><AlertTriangle size={16} /><span>{lineupError}</span></div>}
 
-      <div className="lineup-head">
-        {activeReg?.robotName} {activeReg?.lineupLocked && <span style={{ fontSize: 16, opacity: 0.7 }}>· 🔒 Lineup locked</span>}
-      </div>
+      <h2 className="lineup-head">
+        {activeReg?.robotName}{" "}
+        {activeReg?.lineupLocked && (
+          <span style={{ fontSize: 16, opacity: 0.7, display: "inline-flex", alignItems: "center", gap: 4 }}>
+            · <Lock size={14} /> Lineup locked
+          </span>
+        )}
+      </h2>
 
       {(maxSize !== Infinity || minSize > 0) && (
         <div style={{ marginBottom: 24 }}>
@@ -140,10 +146,14 @@ export default function LineupTab({
             {currentLineup.length} / {maxSize === Infinity ? "∞" : maxSize}
             {minSize > 0 ? ` (min ${minSize})` : ""}
           </p>
-          {atMax && <p style={{ fontSize: 13, color: SUCCESS, fontWeight: 600 }}>✅ Lineup complete — maximum players reached.</p>}
+          {atMax && (
+            <p style={{ fontSize: 13, color: SUCCESS, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+              <CheckCircle2 size={14} /> Lineup complete — maximum players reached.
+            </p>
+          )}
           {!atMax && belowMin && (
-            <p style={{ fontSize: 13, color: WARNING, fontWeight: 600 }}>
-              ⚠️ Add at least {minSize - currentLineup.length} more player{minSize - currentLineup.length !== 1 ? "s" : ""} to meet the minimum.
+            <p style={{ fontSize: 13, color: WARNING, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+              <AlertTriangle size={14} /> Add at least {minSize - currentLineup.length} more player{minSize - currentLineup.length !== 1 ? "s" : ""} to meet the minimum.
             </p>
           )}
         </div>
@@ -171,10 +181,10 @@ export default function LineupTab({
 
       {isCaptain && activeReg && !activeReg.lineupLocked && (
         <div style={{ marginTop: 30 }}>
-          <p className="lineup-head" style={{ fontSize: 20 }}>Assign Team Member</p>
+          <h3 className="lineup-head" style={{ fontSize: 20 }}>Assign Team Member</h3>
 
           {atMax ? (
-            <div className="reg-banner success">✅ Lineup is full ({maxSize}/{maxSize} players). Remove a player to make room.</div>
+            <div className="reg-banner success"><CheckCircle2 size={16} /><span>Lineup is full ({maxSize}/{maxSize} players). Remove a player to make room.</span></div>
           ) : (
             <>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 18 }}>
@@ -200,7 +210,10 @@ export default function LineupTab({
                         fontWeight: 600,
                       }}
                     >
-                      {m.userName} {isIn ? "✓ In lineup" : isOther ? "(In other robot)" : isInactive ? "(Inactive)" : ""}
+                      {m.userName}{" "}
+                      {isIn ? (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Check size={12} /> In lineup</span>
+                      ) : isOther ? "(In other robot)" : isInactive ? "(Inactive)" : ""}
                     </button>
                   );
                 })}

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { RefreshCw, Trophy } from "lucide-react";
+import { RefreshCw, Trophy, Medal } from "lucide-react";
 import type { PublicMatchView } from "../../../Matches/api/matches.api";
 
 // Read-only rendering of the same connected-bracket graph the admin
@@ -373,7 +373,9 @@ export default function BracketGraphView({ matches, loading, error }: BracketGra
                   )}
 
                   {champion?.matchId === match.matchId && (
-                    <text x={x + w / 2} y={y - 8} textAnchor="middle" fontSize={14}>🏆</text>
+                    <foreignObject x={x + w / 2 - 8} y={y - 22} width={16} height={16} style={{ overflow: "visible", pointerEvents: "none" }}>
+                      <Trophy size={16} color={T.gold} />
+                    </foreignObject>
                   )}
                 </g>
               );
@@ -382,24 +384,26 @@ export default function BracketGraphView({ matches, loading, error }: BracketGra
         </svg>
 
         <div className="bracket-graph-zoom">
-          <button type="button" onClick={() => setZoom((z) => Math.max(0.25, Math.round((z - 0.1) * 100) / 100))}>−</button>
+          <button type="button" aria-label="Zoom out" onClick={() => setZoom((z) => Math.max(0.25, Math.round((z - 0.1) * 100) / 100))}>−</button>
           <span>{Math.round(zoom * 100)}%</span>
-          <button type="button" onClick={() => setZoom((z) => Math.min(2.5, Math.round((z + 0.1) * 100) / 100))}>+</button>
-          <button type="button" onClick={resetView} title="Reset view"><RefreshCw size={12} /></button>
+          <button type="button" aria-label="Zoom in" onClick={() => setZoom((z) => Math.min(2.5, Math.round((z + 0.1) * 100) / 100))}>+</button>
+          <button type="button" onClick={resetView} title="Reset view" aria-label="Reset view"><RefreshCw size={12} /></button>
         </div>
       </div>
 
       {thirdPlaceMatch && (
         <div className="bracket-graph-third">
-          <div className="bracket-graph-third-label">🥉 3rd Place Match</div>
+          <div className="bracket-graph-third-label" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <Medal size={14} /> 3rd Place Match
+          </div>
           <div className="bracket-graph-third-card">
             {getTeams(thirdPlaceMatch).map((team, i, arr) => {
               const isWinner = !!thirdPlaceMatch.winnerRegistrationId && thirdPlaceMatch.winnerRegistrationId === team.id;
               const showScore = thirdPlaceMatch.status === "LIVE" || thirdPlaceMatch.status === "COMPLETED";
               return (
                 <div key={i} className="bracket-graph-third-row" style={{ borderBottom: i < arr.length - 1 ? "1px solid rgba(17,17,17,0.07)" : "none" }}>
-                  <span style={{ color: isWinner ? T.green : team.name ? T.text : T.textMuted, fontWeight: isWinner ? 700 : 400 }}>
-                    {isWinner ? "🥉 " : ""}{team.name || "TBD"}
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: isWinner ? T.green : team.name ? T.text : T.textMuted, fontWeight: isWinner ? 700 : 400 }}>
+                    {isWinner && <Medal size={13} />}{team.name || "TBD"}
                   </span>
                   {showScore && <strong style={{ color: isWinner ? T.green : T.textSub }}>{team.score ?? 0}</strong>}
                 </div>

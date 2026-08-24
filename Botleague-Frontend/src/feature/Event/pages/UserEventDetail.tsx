@@ -5,7 +5,7 @@
 // ======================================================
 
 import { useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEvent } from "../hook/useEvent";
 import { useEventRealtime } from "../../../shared/realtime/useEventRealtime";
 import PublicNavbar from "../../../shared/components/PublicNavbar";
@@ -18,6 +18,7 @@ import "../../../styles/eventDetail.css";
 
 export default function UserEventDetail() {
   const { eventId } = useParams<{ eventId: string }>();
+  const navigate = useNavigate();
 
   const { events, eventSports, loading, error, fetchLiveEvents, fetchEventSports } = useEvent();
 
@@ -37,6 +38,14 @@ export default function UserEventDetail() {
   }, [eventId, events.length, fetchEventSports, fetchLiveEvents]);
 
   const event = events.find((e) => e.id === eventId);
+
+  // Public, shareable page — the browser tab and any link-preview card
+  // should name the event, not just the app.
+  useEffect(() => {
+    if (!event?.eventName) return;
+    document.title = `${event.eventName} · BotLeague`;
+    return () => { document.title = "BotLeague"; };
+  }, [event?.eventName]);
 
   let body: React.ReactNode;
   if (loading && !event) {
@@ -60,7 +69,7 @@ export default function UserEventDetail() {
   } else {
     body = (
       <div className="evd-page">
-        <Hero title={event.eventName} />
+        <Hero title={event.eventName} backLabel="Events" onBack={() => navigate("/events")} />
         <Overview description={event.eventDescription} />
         <EventInfoGrid event={event} sportsCount={eventSports.length} />
         <VolunteerCTA eventId={event.id} eventName={event.eventName} volunteersNeeded={event.volunteersNeeded} />

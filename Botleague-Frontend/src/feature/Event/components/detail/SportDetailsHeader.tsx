@@ -1,6 +1,8 @@
 import { Users, Weight, Wallet, Trophy, GraduationCap, Layers } from "lucide-react";
 import type { ComponentType } from "react";
 import type { EventSportResponse, SupportContact } from "../../api/event.api";
+import plane from "../../../../assets/Auth/plane.svg";
+import star from "../../../../assets/Auth/Star-two.svg";
 
 interface SportDetailsHeaderProps {
   sport: EventSportResponse;
@@ -52,7 +54,13 @@ export default function SportDetailsHeader({ sport, contacts }: SportDetailsHead
   ];
 
   return (
-    <section className="event-details">
+    <section
+      className="event-details"
+      style={{
+        "--plane": `url(${plane})`,
+        "--star": `url(${star})`,
+      } as React.CSSProperties}
+    >
       <div className="contact-buttons">
         {contacts.length === 0 && (
           <p style={{ fontSize: 14, color: "#666" }}>Contact details will be published closer to the event.</p>

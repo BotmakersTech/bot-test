@@ -15,6 +15,11 @@
      — same fix, scoped under their real parents (`.match .team-slot`,
      `.team-row .team`). */
 
+/* Breakpoint scale used throughout this file — 9 values, shared across all
+   sections rather than invented per component: 360 / 420 / 480 / 640 / 768 /
+   900 / 992 / 1200 / 1400px. When adding a new responsive rule, reuse one of
+   these instead of picking a new max-width. */
+
 .evd-page * {
     margin: 0;
     padding: 0;
@@ -92,6 +97,42 @@
 }
 @media (max-width: 480px) {
     .evd-page .overlay h1 { font-size: 34px; }
+}
+
+/* Back navigation — mobile only (desktop hero is unchanged). Neither page
+   otherwise offers a way back to its parent (event list / event detail),
+   which matters most on a phone where there's no obvious "up a level" the
+   way a desktop reader might infer from a URL bar. White-on-frosted-black
+   reuses the hero's own existing dark-overlay palette, no new colour. */
+.evd-page .hero-back-btn { display: none; }
+@media (max-width: 900px) {
+    .evd-page .hero-back-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        z-index: 2;
+        height: 40px;
+        min-width: 40px;
+        padding: 0 14px 0 10px;
+        border-radius: 20px;
+        border: none;
+        background: rgba(0, 0, 0, .45);
+        backdrop-filter: blur(6px);
+        color: #fff;
+        font-family: Inter, sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .evd-page .hero-back-btn span {
+        max-width: 46vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 }
 
 /* OVERVIEW */
@@ -595,15 +636,63 @@
 /* EVENT DETAILS (used for both event-level and sport-level headers) */
 
 .evd-page .event-details {
+    position: relative;
     display: grid;
     grid-template-columns: 520px 1fr;
     gap: 70px;
     padding: 120px 80px;
     align-items: center;
+    overflow: visible;
+}
+
+/* Same plane/star decoration Overview already carries on the event page —
+   the sport page had none of it, a jarring tone drop the instant a visitor
+   taps from one to the other. Same assets, same technique (Overview.tsx),
+   same desktop-only rule: hidden below 900px, matching how Overview and
+   SportsSection both already treat this exact decoration on mobile. */
+.evd-page .event-details::before {
+    content: "";
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    width: 150px;
+    height: 150px;
+    background-image: var(--plane);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: 1;
+    z-index: 1;
+    pointer-events: none;
+}
+.evd-page .event-details::after {
+    content: "";
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    width: 130px;
+    height: 130px;
+    transform: rotate(-20deg);
+    background-image: var(--star);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: 1;
+    z-index: 1;
+    pointer-events: none;
+}
+@media (max-width: 900px) {
+    .evd-page .event-details::before,
+    .evd-page .event-details::after { display: none; }
 }
 
 .evd-page .event-image { background: #111; border-radius: 20px; padding: 25px; }
 .evd-page .event-image img { width: 100%; height: 520px; object-fit: cover; border-radius: 16px; }
+
+.evd-page .event-info {
+    position: relative;
+    z-index: 2;
+}
 
 .evd-page .event-info h2 {
     font-family: Orbitron;
@@ -616,7 +705,7 @@
 
 .evd-page .event-info p { font-size: 28px; line-height: 52px; color: #222; margin-bottom: 45px; }
 
-.evd-page .contact-buttons { display: flex; flex-direction: column; gap: 20px; margin-left: 120px; }
+.evd-page .contact-buttons { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 20px; margin-left: 120px; }
 
 .evd-page .contact-buttons button {
     width: 220px;
@@ -1008,7 +1097,7 @@
 .evd-page .schedule-page { background: white; }
 
 .evd-page .schedule-title { text-align: center; margin-bottom: 60px; }
-.evd-page .schedule-title h1 { font-family: Orbitron; font-size: 44px; color: #0162D1; }
+.evd-page .schedule-title h2 { font-family: Orbitron; font-size: 44px; color: #0162D1; }
 .evd-page .schedule-title p { font-size: 18px; color: #444; margin-top: 10px; }
 
 /* BRACKET GRAPH (connected-match view, see BracketGraphView.tsx — same
@@ -1100,17 +1189,17 @@
 }
 
 @media (max-width: 992px) {
-    .evd-page .schedule-title h1 { font-size: 42px; }
+    .evd-page .schedule-title h2 { font-size: 42px; }
     .evd-page .schedule-title p { font-size: 18px; }
 }
 @media (max-width: 768px) {
     .evd-page .schedule-title { margin-bottom: 40px; }
-    .evd-page .schedule-title h1 { font-size: 30px; line-height: 42px; }
+    .evd-page .schedule-title h2 { font-size: 30px; line-height: 42px; }
     .evd-page .schedule-title p { font-size: 15px; }
     .evd-page .bracket-graph-canvas { height: 55vh; border-radius: 12px; }
 }
 @media (max-width: 480px) {
-    .evd-page .schedule-title h1 { font-size: 26px; }
+    .evd-page .schedule-title h2 { font-size: 26px; }
     .evd-page .schedule-title p { font-size: 14px; }
     .evd-page .bracket-graph-canvas { height: 48vh; }
 }
@@ -1126,7 +1215,7 @@
     gap: 30px;
     margin-bottom: 50px;
 }
-.evd-page .register-head div { color: #0D7CFF; font-family: "Orbitron", sans-serif; font-size: 28px; font-weight: 600; }
+.evd-page .register-head h2 { color: #0D7CFF; font-family: "Orbitron", sans-serif; font-size: 28px; font-weight: 600; }
 
 .evd-page .register-block { margin-bottom: 30px; }
 .evd-page .register-row { display: grid; grid-template-columns: 2.2fr 1.4fr 1fr; gap: 30px; align-items: center; }
@@ -1217,6 +1306,9 @@
 /* Registration status banners — not in the original spec, needed for real
    eligibility/capacity/error states that have no visual language yet */
 .evd-page .reg-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
     border-radius: 14px;
     padding: 16px 20px;
     font-size: 15px;
@@ -1224,6 +1316,7 @@
     margin-bottom: 20px;
     line-height: 1.5;
 }
+.evd-page .reg-banner > svg { flex-shrink: 0; margin-top: 2px; }
 .evd-page .reg-banner.info    { background: rgba(1, 98, 209, .08);  color: #0162D1; }
 .evd-page .reg-banner.warning { background: rgba(251, 191, 36, .12); color: #92660a; }
 .evd-page .reg-banner.error   { background: rgba(239, 68, 68, .1);  color: #b91c1c; }
@@ -1232,12 +1325,12 @@
 @media (max-width: 1200px) {
     .evd-page .register-head, .evd-page .register-row { grid-template-columns: 1fr; gap: 18px; }
     .evd-page .register-head { margin-bottom: 20px; }
-    .evd-page .register-head div { font-size: 24px; }
+    .evd-page .register-head h2 { font-size: 24px; }
     .evd-page .gradient-select select, .evd-page .white-select select { height: 62px; font-size: 17px; }
     .evd-page .add-box { height: 62px; font-size: 20px; }
 }
 @media (max-width: 768px) {
-    .evd-page .register-head div { font-size: 20px; }
+    .evd-page .register-head h2 { font-size: 20px; }
     .evd-page .gradient-select select, .evd-page .white-select select { height: 56px; padding: 0 50px 0 16px; font-size: 15px; }
     .evd-page .add-box { height: 54px; font-size: 17px; }
     .evd-page .plus-circle { width: 26px; height: 26px; font-size: 20px; }
@@ -1304,6 +1397,31 @@
     cursor: pointer;
 }
 .evd-page .lineup-remove-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* Same shape as .lineup-remove-btn but for the neutral "Manage/View Lineup"
+   action — that button used to borrow the red danger class with an inline
+   colour override; this gives it its own name instead, using the same
+   white-on-gradient colours the inline override already used. */
+.evd-page .lineup-manage-btn {
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 10px;
+    border: 1.5px solid #fff;
+    background: transparent;
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+}
+.evd-page .lineup-manage-btn:hover { background: rgba(255, 255, 255, .12); }
+
+/* Bigger hit areas on touch screens — 40px is close but under the 44px
+   minimum tap target most mobile guidelines call for; bumped for mobile
+   only, sizing not typography. */
+@media (max-width: 992px) {
+    .evd-page .lineup-remove-btn,
+    .evd-page .lineup-manage-btn { height: 44px; padding: 0 18px; }
+}
 
 .evd-page .lineup-progress-track { height: 10px; border-radius: 999px; background: rgba(1,98,209,.1); overflow: hidden; margin: 6px 0 4px; }
 .evd-page .lineup-progress-fill { height: 100%; border-radius: 999px; transition: width .3s ease; }
