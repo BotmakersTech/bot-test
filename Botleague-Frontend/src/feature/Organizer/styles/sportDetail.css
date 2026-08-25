@@ -35,7 +35,6 @@
   margin: 0;
   font-family: "Orbitron", sans-serif;
   font-weight: 500;
-  font-style: italic;
   font-size: clamp(20px, 4vw, 38px);
   color: #0162d1;
 }
@@ -118,6 +117,18 @@
 
 .sdt-btn-ghost { border-color: rgba(1, 98, 209, 0.25); color: #6b7280; }
 .sdt-btn-ghost:hover:not(:disabled) { background: rgba(1, 98, 209, 0.06); }
+
+/* Actions row — separated from the title row so the heading never has to
+   share space (and wrap unpredictably) with Edit/Registration/Publish/
+   Announce. Desktop has room, so a wrapping flex row is enough here; the
+   mobile equivalent (MobileSportDetail.css) uses a real 2x2 grid instead. */
+.sdt-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
 
 /* ---------------- Feedback banners ---------------- */
 

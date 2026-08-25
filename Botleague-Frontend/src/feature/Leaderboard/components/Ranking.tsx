@@ -1,54 +1,35 @@
 // ======================================================
 // RankingsTab.tsx
-// Leaderboard / Rankings tab for UserSportDetail
-//
-// INTEGRATION (4 changes in UserSportDetail.tsx):
-//
-//  1. ADD IMPORTS at top:
-//     import useLeaderboard from "../../Matches/Hooks/useLeaderboard";
-//     import RankingsTab from "./RankingsTab";        // adjust path
-//
-//  2. ADD HOOK in UserSportDetail() body, next to useMatches:
-//     const {
-//       leaderboard,
-//       loading: lbLoading,
-//       error:   lbError,
-//       refetch: lbRefetch,
-//     } = useLeaderboard(eventId ?? "", sportId ?? "");
-//
-//  3. DELETE the old one-liner:
-//     function RankingsTab() { return <EmptyState ... />; }
-//
-//  4. UPDATE the JSX where RankingsTab is rendered:
-//     {tab === "rankings" && (
-//       <RankingsTab
-//         leaderboard={leaderboard}
-//         loading={lbLoading}
-//         error={lbError}
-//         onRefresh={lbRefetch}
-//       />
-//     )}
+// Leaderboard display + bonus-point awards for AdminSportRankingPage
+// (/admin/events/:eventId/sports/:sportId/ranking). Match score/result
+// editing lives in the sibling RankingMatchesPanel, not here.
 // ======================================================
 
-import type {
-  LeaderboardResponseDTO,
-  LeaderboardEntryDTO,
-  LeaderboardStatus,
+import { useState } from "react";
+import { Gift, X } from "lucide-react";
+import {
+  awardBonusPoints,
+  type LeaderboardResponseDTO,
+  type LeaderboardEntryDTO,
+  type LeaderboardStatus,
 } from "../../Leaderboard/api/leaderboard.api";
+import { ORG } from "../../Organizer/theme/organizerTheme";
 
-// ─── Design Tokens (mirrors UserSportDetail) ──────────
-const CARD   = "rgba(0,0,0,0.25)";
-const CARD2  = "rgba(0,0,0,0.35)";
-const BORDER = "rgba(255,255,255,0.08)";
-const ACCENT = "#fa4715";
-const TEXT   = "#ffffff";
-const MUTED  = "#9ca3af";
-const LABEL  = "#e5e7eb";
-const SUCCESS= "#4ade80";
-const DANGER = "#f87171";
-const BRONZE = "#cd7f32";
-const GOLD   = "#f59e0b";
-const SILVER = "#94a3b8";
+// ─── Design Tokens (matches ORG — the same light theme every
+// other admin/organizer page uses; this tab used to be dark with
+// an orange accent left over from an earlier design pass) ─────
+const CARD   = "#ffffff";
+const CARD2  = "#f8faff";
+const BORDER = "rgba(75,134,232,0.18)";
+const ACCENT = ORG.violet;
+const TEXT   = ORG.text;
+const MUTED  = ORG.muted;
+const LABEL  = "#374151";
+const SUCCESS= ORG.success;
+const DANGER = ORG.danger;
+const BRONZE = "#b3702f";
+const GOLD   = "#92660a";
+const SILVER = "#64748b";
 
 // ─── Helpers ──────────────────────────────────────────
 
@@ -77,8 +58,8 @@ function rankMedal(rank: number): string | null {
 
 const STATUS_CONFIG: Record<LeaderboardStatus, { bg: string; border: string; color: string; label: string; icon: string }> = {
   CHAMPION:   { bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.35)", color: GOLD,    label: "Champion",   icon: "🏆" },
-  ACTIVE:     { bg: "rgba(74,222,128,0.08)", border: "rgba(74,222,128,0.25)", color: SUCCESS, label: "Active",     icon: "⚡" },
-  ELIMINATED: { bg: "rgba(156,163,175,0.08)",border: "rgba(156,163,175,0.2)", color: MUTED,   label: "Eliminated", icon: "✕"  },
+  ACTIVE:     { bg: "rgba(31,169,82,0.08)",  border: "rgba(31,169,82,0.25)",  color: SUCCESS, label: "Active",     icon: "⚡" },
+  ELIMINATED: { bg: "rgba(93,93,93,0.08)",   border: "rgba(93,93,93,0.2)",    color: MUTED,   label: "Eliminated", icon: "✕"  },
 };
 
 // ─── Spinner (same as parent) ─────────────────────────
@@ -86,7 +67,7 @@ function Spinner({ size = 16, color = ACCENT }: { size?: number; color?: string 
   return (
     <span style={{
       display: "inline-block", width: size, height: size,
-      border: `2px solid rgba(255,255,255,0.12)`,
+      border: `2px solid rgba(75,134,232,0.15)`,
       borderTop: `2px solid ${color}`,
       borderRadius: "50%", animation: "spin 0.7s linear infinite", flexShrink: 0,
     }} />
@@ -97,8 +78,8 @@ function Spinner({ size = 16, color = ACCENT }: { size?: number; color?: string 
 function EmptyState({ icon, title, subtitle }: { icon: string; title: string; subtitle: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "64px 24px", textAlign: "center", gap: "14px" }}>
-      <div style={{ width: "80px", height: "80px", borderRadius: "18px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(250,71,21,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.2rem" }}>{icon}</div>
-      <div style={{ fontSize: "0.9rem", fontFamily: "'Sarpanch', sans-serif", color: LABEL, letterSpacing: "0.06em", fontWeight: 700 }}>{title}</div>
+      <div style={{ width: "80px", height: "80px", borderRadius: "18px", background: "rgba(140,108,255,0.06)", border: "1px solid rgba(140,108,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.2rem" }}>{icon}</div>
+      <div style={{ fontSize: "0.9rem", fontFamily: ORG.fontHeading, color: TEXT, letterSpacing: "0.06em", fontWeight: 700 }}>{title}</div>
       <div style={{ fontSize: "0.82rem", color: MUTED, maxWidth: "260px", lineHeight: 1.6 }}>{subtitle}</div>
     </div>
   );
@@ -106,6 +87,7 @@ function EmptyState({ icon, title, subtitle }: { icon: string; title: string; su
 
 // ─── Props ────────────────────────────────────────────
 interface RankingsTabProps {
+  sportId:     string;
   leaderboard: LeaderboardResponseDTO | null;
   loading:     boolean;
   error:       string | null;
@@ -114,11 +96,50 @@ interface RankingsTabProps {
 
 // ─── Component ────────────────────────────────────────
 export default function RankingsTab({
+  sportId,
   leaderboard,
   loading,
   error,
   onRefresh,
 }: RankingsTabProps) {
+  const [bonusTarget, setBonusTarget] = useState<LeaderboardEntryDTO | null>(null);
+  const [bonusPointsInput, setBonusPointsInput] = useState("");
+  const [bonusReason, setBonusReason] = useState("");
+  const [bonusSubmitting, setBonusSubmitting] = useState(false);
+  const [bonusError, setBonusError] = useState<string | null>(null);
+
+  const openBonusModal = (entry: LeaderboardEntryDTO) => {
+    setBonusTarget(entry);
+    setBonusPointsInput("");
+    setBonusReason("");
+    setBonusError(null);
+  };
+
+  const closeBonusModal = () => setBonusTarget(null);
+
+  const submitBonus = async () => {
+    if (!bonusTarget) return;
+    const points = Number(bonusPointsInput);
+    if (!bonusPointsInput || Number.isNaN(points) || points === 0) {
+      setBonusError("Enter a non-zero number of points");
+      return;
+    }
+    setBonusSubmitting(true);
+    setBonusError(null);
+    try {
+      await awardBonusPoints(sportId, {
+        registrationId: bonusTarget.registrationId,
+        points,
+        reason: bonusReason || undefined,
+      });
+      closeBonusModal();
+      onRefresh();
+    } catch (err: any) {
+      setBonusError(err?.response?.data?.message ?? err?.response?.data?.error ?? "Failed to award points");
+    } finally {
+      setBonusSubmitting(false);
+    }
+  };
 
   // ── Loading ──
   if (loading) {
@@ -138,7 +159,7 @@ export default function RankingsTab({
         <button
           onClick={onRefresh}
           style={{
-            background: "rgba(250,71,21,0.1)", border: `1px solid rgba(250,71,21,0.3)`,
+            background: "rgba(140,108,255,0.08)", border: `1px solid rgba(140,108,255,0.3)`,
             color: ACCENT, borderRadius: "8px", padding: "8px 18px",
             fontSize: "0.8rem", fontWeight: 700, cursor: "pointer",
           }}
@@ -170,7 +191,7 @@ export default function RankingsTab({
         <div style={{
           display: "flex", alignItems: "center", gap: "12px",
           padding: "14px 20px", borderRadius: "12px",
-          background: "rgba(245,158,11,0.1)",
+          background: "rgba(245,158,11,0.08)",
           border: "1px solid rgba(245,158,11,0.3)",
         }}>
           <span style={{ fontSize: "1.5rem" }}>🏆</span>
@@ -178,7 +199,7 @@ export default function RankingsTab({
             <div style={{ fontSize: "0.62rem", color: GOLD, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>
               Champion
             </div>
-            <div style={{ fontSize: "1.15rem", fontWeight: 800, color: GOLD, fontFamily: "'Sarpanch', sans-serif" }}>
+            <div style={{ fontSize: "1.15rem", fontWeight: 800, color: GOLD, fontFamily: ORG.fontHeading }}>
               {championRobotName || championTeamName}
             </div>
             {championRobotName && championTeamName && (
@@ -197,9 +218,9 @@ export default function RankingsTab({
       }}>
         {/* Final / Provisional badge */}
         <span style={{
-          background: isFinal ? "rgba(74,222,128,0.1)" : "rgba(96,165,250,0.1)",
-          border: `1px solid ${isFinal ? "rgba(74,222,128,0.3)" : "rgba(96,165,250,0.25)"}`,
-          color: isFinal ? SUCCESS : "#60a5fa",
+          background: isFinal ? "rgba(31,169,82,0.08)" : "rgba(75,134,232,0.08)",
+          border: `1px solid ${isFinal ? "rgba(31,169,82,0.3)" : "rgba(75,134,232,0.25)"}`,
+          color: isFinal ? SUCCESS : ORG.blueHeading,
           borderRadius: "999px", fontSize: "0.65rem", padding: "3px 10px", fontWeight: 700,
         }}>
           {isFinal ? "✅ Final Standings" : "⏳ Live — Provisional"}
@@ -207,7 +228,7 @@ export default function RankingsTab({
 
         {tournamentFormat && (
           <span style={{
-            background: "rgba(250,71,21,0.08)", border: "1px solid rgba(250,71,21,0.2)",
+            background: "rgba(140,108,255,0.08)", border: "1px solid rgba(140,108,255,0.2)",
             color: ACCENT, borderRadius: "999px", fontSize: "0.65rem", padding: "3px 10px", fontWeight: 700,
           }}>
             {toLabel(tournamentFormat)}
@@ -216,7 +237,7 @@ export default function RankingsTab({
 
         {matchType && (
           <span style={{
-            background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}`,
+            background: "rgba(75,134,232,0.05)", border: `1px solid ${BORDER}`,
             color: MUTED, borderRadius: "999px", fontSize: "0.65rem", padding: "3px 10px", fontWeight: 600,
           }}>
             {toLabel(matchType)}
@@ -231,7 +252,7 @@ export default function RankingsTab({
           onClick={onRefresh}
           title="Refresh rankings"
           style={{
-            background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`,
+            background: "rgba(75,134,232,0.06)", border: `1px solid ${BORDER}`,
             color: MUTED, borderRadius: "6px", padding: "4px 8px",
             fontSize: "0.72rem", cursor: "pointer", lineHeight: 1,
           }}
@@ -242,20 +263,20 @@ export default function RankingsTab({
 
       {/* ── Leaderboard table ──────────────────────── */}
       <div style={{
-        background: CARD2, border: `1px solid ${BORDER}`, borderRadius: "14px",
+        background: CARD, border: `1px solid ${BORDER}`, borderRadius: "14px",
         overflow: "hidden",
       }}>
         {/* Header row */}
         <div style={{
           display: "grid",
-          gridTemplateColumns: "52px 1fr 100px 72px 72px 72px 80px",
+          gridTemplateColumns: "52px 1fr 100px 72px 72px 72px 80px 34px",
           gap: "4px",
           padding: "10px 18px",
           borderBottom: `1px solid ${BORDER}`,
-          background: "rgba(250,71,21,0.03)",
+          background: CARD2,
         }}>
-          {["Rank", "Robot / Team", "Status", "W", "L", "P", "+/−"].map(h => (
-            <div key={h} style={{
+          {["Rank", "Robot / Team", "Status", "W", "L", "P", "+/−", ""].map((h, i) => (
+            <div key={i} style={{
               fontSize: "0.58rem", color: MUTED, fontWeight: 700,
               textTransform: "uppercase", letterSpacing: "0.1em",
             }}>
@@ -266,7 +287,7 @@ export default function RankingsTab({
 
         {/* Entry rows */}
         {entries.map((entry, i) => (
-          <EntryRow key={entry.registrationId} entry={entry} index={i} />
+          <EntryRow key={entry.registrationId} entry={entry} index={i} onAwardBonus={() => openBonusModal(entry)} />
         ))}
       </div>
 
@@ -282,12 +303,67 @@ export default function RankingsTab({
           ))}
         </div>
       )}
+
+      {/* ── Award Bonus modal ──────────────────────── */}
+      {bonusTarget && (
+        <div
+          style={{ position: "fixed", inset: 0, background: "rgba(8,8,8,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+          onClick={e => { if (e.target === e.currentTarget) closeBonusModal(); }}
+        >
+          <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: "16px", width: "100%", maxWidth: "380px", padding: "22px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+              <div style={{ fontSize: "1rem", fontWeight: 800, color: TEXT, fontFamily: ORG.fontHeading }}>Award Bonus Points</div>
+              <button type="button" onClick={closeBonusModal} style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, display: "flex" }}>
+                <X size={18} />
+              </button>
+            </div>
+            <div style={{ fontSize: "0.8rem", color: MUTED, marginBottom: "16px" }}>
+              {bonusTarget.robotName || bonusTarget.teamName || "—"}
+            </div>
+
+            <label style={{ display: "block", fontSize: "0.7rem", fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "6px" }}>
+              Points (negative to dock)
+            </label>
+            <input
+              type="number"
+              value={bonusPointsInput}
+              onChange={e => setBonusPointsInput(e.target.value)}
+              placeholder="e.g. 10 or -5"
+              style={{ width: "100%", boxSizing: "border-box", padding: "9px 12px", border: `1.5px solid ${BORDER}`, borderRadius: "8px", fontSize: "0.9rem", fontWeight: 700, color: TEXT, marginBottom: "14px" }}
+            />
+
+            <label style={{ display: "block", fontSize: "0.7rem", fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "6px" }}>
+              Reason (optional)
+            </label>
+            <input
+              type="text"
+              value={bonusReason}
+              onChange={e => setBonusReason(e.target.value)}
+              placeholder="e.g. Sportsmanship award"
+              style={{ width: "100%", boxSizing: "border-box", padding: "9px 12px", border: `1.5px solid ${BORDER}`, borderRadius: "8px", fontSize: "0.85rem", color: TEXT, marginBottom: "8px" }}
+            />
+
+            {bonusError && (
+              <div style={{ color: DANGER, fontSize: "0.75rem", fontWeight: 600, marginBottom: "8px" }}>{bonusError}</div>
+            )}
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
+              <button type="button" onClick={closeBonusModal} style={{ background: "transparent", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "8px", padding: "8px 16px", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}>
+                Cancel
+              </button>
+              <button type="button" onClick={submitBonus} disabled={bonusSubmitting} style={{ background: ORG.gradientCta, border: "none", color: "#fff", borderRadius: "8px", padding: "8px 18px", fontSize: "0.8rem", fontWeight: 700, cursor: bonusSubmitting ? "not-allowed" : "pointer", opacity: bonusSubmitting ? 0.7 : 1 }}>
+                {bonusSubmitting ? "Saving…" : "Award"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 // ─── Entry Row ────────────────────────────────────────
-function EntryRow({ entry, index }: { entry: LeaderboardEntryDTO; index: number }) {
+function EntryRow({ entry, index, onAwardBonus }: { entry: LeaderboardEntryDTO; index: number; onAwardBonus: () => void }) {
 
   const medal     = rankMedal(entry.rank);
   const sCfg      = STATUS_CONFIG[entry.status] ?? STATUS_CONFIG.ELIMINATED;
@@ -297,20 +373,20 @@ function EntryRow({ entry, index }: { entry: LeaderboardEntryDTO; index: number 
     ? "rgba(245,158,11,0.04)"
     : index % 2 === 0
       ? "transparent"
-      : "rgba(255,255,255,0.015)";
-  const rowBorder = isChamp ? "rgba(245,158,11,0.15)" : "transparent";
+      : "rgba(75,134,232,0.025)";
+  const rowBorder = isChamp ? "rgba(245,158,11,0.3)" : "transparent";
 
   return (
     <div style={{
       display: "grid",
-      gridTemplateColumns: "52px 1fr 100px 72px 72px 72px 80px",
+      gridTemplateColumns: "52px 1fr 100px 72px 72px 72px 80px 34px",
       gap: "4px",
       padding: "11px 18px",
       borderBottom: `1px solid ${BORDER}`,
       borderLeft: `2px solid ${rowBorder}`,
       background: rowBg,
       alignItems: "center",
-      opacity: isElim ? 0.7 : 1,
+      opacity: isElim ? 0.75 : 1,
       transition: "background 0.15s",
     }}>
       {/* Rank */}
@@ -320,7 +396,7 @@ function EntryRow({ entry, index }: { entry: LeaderboardEntryDTO; index: number 
         ) : (
           <span style={{
             fontSize: "0.95rem", fontWeight: 800, color: LABEL,
-            fontFamily: "'Sarpanch', sans-serif",
+            fontFamily: ORG.fontHeading,
           }}>
             {entry.rank}
           </span>
@@ -328,7 +404,7 @@ function EntryRow({ entry, index }: { entry: LeaderboardEntryDTO; index: number 
         {entry.tied && (
           <span style={{
             fontSize: "0.52rem", color: MUTED, fontWeight: 600,
-            background: "rgba(255,255,255,0.06)", borderRadius: "3px",
+            background: "rgba(75,134,232,0.08)", borderRadius: "3px",
             padding: "1px 4px", lineHeight: 1.3,
           }}>
             T
@@ -373,28 +449,50 @@ function EntryRow({ entry, index }: { entry: LeaderboardEntryDTO; index: number 
       </div>
 
       {/* Wins */}
-      <span style={{ fontSize: "0.88rem", fontWeight: 700, color: entry.wins > 0 ? SUCCESS : MUTED, fontFamily: "'Sarpanch', sans-serif" }}>
+      <span style={{ fontSize: "0.88rem", fontWeight: 700, color: entry.wins > 0 ? SUCCESS : MUTED, fontFamily: ORG.fontHeading }}>
         {entry.wins}
       </span>
 
       {/* Losses */}
-      <span style={{ fontSize: "0.88rem", fontWeight: 700, color: entry.losses > 0 ? DANGER : MUTED, fontFamily: "'Sarpanch', sans-serif" }}>
+      <span style={{ fontSize: "0.88rem", fontWeight: 700, color: entry.losses > 0 ? DANGER : MUTED, fontFamily: ORG.fontHeading }}>
         {entry.losses}
       </span>
 
       {/* Played */}
-      <span style={{ fontSize: "0.88rem", fontWeight: 600, color: LABEL, fontFamily: "'Sarpanch', sans-serif" }}>
+      <span style={{ fontSize: "0.88rem", fontWeight: 600, color: LABEL, fontFamily: ORG.fontHeading }}>
         {entry.played}
       </span>
 
-      {/* Point differential */}
-      <span style={{
-        fontSize: "0.88rem", fontWeight: 700,
-        color: diffColor(entry.pointDifferential),
-        fontFamily: "'Sarpanch', sans-serif",
-      }}>
-        {diffLabel(entry.pointDifferential)}
-      </span>
+      {/* Point differential (bonus, if any, shown as a small tag underneath —
+          it's already folded into this number, this is just transparency) */}
+      <div>
+        <span style={{
+          fontSize: "0.88rem", fontWeight: 700,
+          color: diffColor(entry.pointDifferential),
+          fontFamily: ORG.fontHeading,
+        }}>
+          {diffLabel(entry.pointDifferential)}
+        </span>
+        {entry.bonusPoints !== 0 && (
+          <div style={{ fontSize: "0.56rem", fontWeight: 700, color: entry.bonusPoints > 0 ? SUCCESS : DANGER }}>
+            {entry.bonusPoints > 0 ? `+${entry.bonusPoints}` : entry.bonusPoints} bonus
+          </div>
+        )}
+      </div>
+
+      {/* Award bonus points */}
+      <button
+        type="button"
+        onClick={onAwardBonus}
+        title="Award bonus points"
+        style={{
+          background: "rgba(140,108,255,0.08)", border: `1px solid rgba(140,108,255,0.25)`,
+          color: ORG.violetHeading, borderRadius: "6px", width: "28px", height: "28px",
+          display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+        }}
+      >
+        <Gift size={13} />
+      </button>
     </div>
   );
 }
@@ -412,6 +510,7 @@ function StatsCard({ entry }: { entry: LeaderboardEntryDTO }) {
       padding: "16px 18px",
       position: "relative",
       overflow: "hidden",
+      boxShadow: "0 1px 3px rgba(17,17,17,0.04)",
     }}>
       {/* Accent bar */}
       <div style={{
@@ -454,7 +553,7 @@ function StatsCard({ entry }: { entry: LeaderboardEntryDTO }) {
             <div style={{ fontSize: "0.54rem", color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "2px" }}>
               {s.label}
             </div>
-            <div style={{ fontSize: "0.85rem", fontWeight: 700, color: s.color, fontFamily: "'Sarpanch', sans-serif" }}>
+            <div style={{ fontSize: "0.85rem", fontWeight: 700, color: s.color, fontFamily: ORG.fontHeading }}>
               {s.value}
             </div>
           </div>

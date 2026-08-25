@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
+import { Plus, Edit2, Power, ListChecks, Award, Zap, RefreshCw, Ban, FileText, Check, X as XIcon, Minus, type LucideIcon } from "lucide-react";
 import {
   type CertificateTemplate,
   type CertificateType,
@@ -55,10 +56,15 @@ const emptyForm = (): CreateCertificateTypeRequest => ({
 const badgeColor = (status: string) =>
   status === "COMPLETED" ? ORG.success : status === "FAILED" ? ORG.danger : status === "PARTIAL" ? ORG.warning : ORG.blueHeading;
 
+const DELIVERY_ICON: Record<string, LucideIcon> = {
+  SENT: Check,
+  FAILED: XIcon,
+  SKIPPED: Minus,
+};
 const DELIVERY_LABEL: Record<string, string> = {
-  SENT: "✓ Delivered",
-  FAILED: "✕ Delivery failed",
-  SKIPPED: "— No email on file",
+  SENT: "Delivered",
+  FAILED: "Delivery failed",
+  SKIPPED: "No email on file",
   PENDING: "Sending…",
 };
 const deliveryColor = (status: string) =>
@@ -292,7 +298,7 @@ export default function CertificateTypeManager({
         <p className="text-sm" style={{ color: ORG.muted }}>
           Certificates unlock once this sport's rankings are finalized.
         </p>
-        <PrimaryButton onClick={openAdd} disabled={activeTemplates.length === 0}>+ New Certificate Type</PrimaryButton>
+        <PrimaryButton onClick={openAdd} disabled={activeTemplates.length === 0}><Plus size={14} /> New Certificate Type</PrimaryButton>
       </div>
       {activeTemplates.length === 0 && (
         <p className="text-xs" style={{ color: ORG.warning }}>Activate at least one template before configuring certificate types.</p>
@@ -329,12 +335,12 @@ export default function CertificateTypeManager({
                     {t.eligibilityRule === "RANK_EQUALS" ? ` (rank ${t.eligibilityRank})` : ""} · {t.issuedCount} issued
                   </p>
                 </div>
-                <button onClick={() => openEdit(t)} className="rounded-lg text-xs px-3 py-1.5" style={{ background: ORG.blue + "14", color: ORG.blueHeading }}>Edit</button>
-                <button onClick={() => toggleStatus(t)} className="rounded-lg text-xs px-3 py-1.5" style={{ background: ORG.muted + "1a", color: ORG.muted }}>
-                  {t.status === "ACTIVE" ? "Disable" : "Enable"}
+                <button onClick={() => openEdit(t)} className="flex items-center gap-1 rounded-lg text-xs px-3 py-1.5 font-semibold" style={{ background: ORG.blue + "14", color: ORG.blueHeading }}><Edit2 size={12} /> Edit</button>
+                <button onClick={() => toggleStatus(t)} className="flex items-center gap-1 rounded-lg text-xs px-3 py-1.5 font-semibold" style={{ background: ORG.muted + "1a", color: ORG.muted }}>
+                  <Power size={12} /> {t.status === "ACTIVE" ? "Disable" : "Enable"}
                 </button>
-                <button onClick={() => openPanel(t.id, "jobs")} className="rounded-lg text-xs px-3 py-1.5" style={{ background: ORG.violet + "14", color: ORG.violetHeading }}>Jobs</button>
-                <button onClick={() => openPanel(t.id, "issued")} className="rounded-lg text-xs px-3 py-1.5" style={{ background: ORG.violet + "14", color: ORG.violetHeading }}>Issued</button>
+                <button onClick={() => openPanel(t.id, "jobs")} className="flex items-center gap-1 rounded-lg text-xs px-3 py-1.5 font-semibold" style={{ background: ORG.violet + "14", color: ORG.violetHeading }}><ListChecks size={12} /> Jobs</button>
+                <button onClick={() => openPanel(t.id, "issued")} className="flex items-center gap-1 rounded-lg text-xs px-3 py-1.5 font-semibold" style={{ background: ORG.violet + "14", color: ORG.violetHeading }}><Award size={12} /> Issued</button>
               </div>
 
               {expandedTypeId === t.id && (
@@ -351,7 +357,7 @@ export default function CertificateTypeManager({
                       />
                     )}
                     <PrimaryButton onClick={() => handleGenerate(t)} disabled={generating || activeJob?.certificateTypeId === t.id || t.status !== "ACTIVE"}>
-                      {generating ? "Starting…" : activeJob?.certificateTypeId === t.id ? "Generating…" : "Generate"}
+                      <Zap size={13} /> {generating ? "Starting…" : activeJob?.certificateTypeId === t.id ? "Generating…" : "Generate"}
                     </PrimaryButton>
                   </div>
 
@@ -411,25 +417,26 @@ export default function CertificateTypeManager({
                             {c.status}
                           </span>
                           <span
-                            className="font-semibold"
+                            className="font-semibold flex items-center gap-1"
                             style={{ color: deliveryColor(c.deliveryStatus) }}
                             title={c.deliveryStatus === "FAILED" ? c.lastDeliveryError ?? undefined : c.recipientEmail ?? undefined}
                           >
+                            {DELIVERY_ICON[c.deliveryStatus] && (() => { const Icon = DELIVERY_ICON[c.deliveryStatus]; return <Icon size={11} />; })()}
                             {DELIVERY_LABEL[c.deliveryStatus] ?? c.deliveryStatus}
                           </span>
-                          <a href={c.pdfUrl} target="_blank" rel="noreferrer" className="underline" style={{ color: ORG.blueHeading }}>PDF</a>
+                          <a href={c.pdfUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1 underline" style={{ color: ORG.blueHeading }}><FileText size={11} /> PDF</a>
                           {c.status === "ACTIVE" && c.deliveryStatus !== "SKIPPED" && (
                             <button
                               onClick={() => handleResend(c)}
                               disabled={resendingId === c.id}
-                              className="px-2 py-0.5 rounded disabled:opacity-50"
+                              className="flex items-center gap-1 px-2 py-0.5 rounded font-semibold disabled:opacity-50"
                               style={{ background: ORG.blue + "14", color: ORG.blueHeading }}
                             >
-                              {resendingId === c.id ? "Sending…" : "Resend"}
+                              <RefreshCw size={11} /> {resendingId === c.id ? "Sending…" : "Resend"}
                             </button>
                           )}
                           {c.status === "ACTIVE" && (
-                            <button onClick={() => handleRevoke(c)} className="px-2 py-0.5 rounded" style={{ background: ORG.danger + "1a", color: ORG.danger }}>Revoke</button>
+                            <button onClick={() => handleRevoke(c)} className="flex items-center gap-1 px-2 py-0.5 rounded font-semibold" style={{ background: ORG.danger + "1a", color: ORG.danger }}><Ban size={11} /> Revoke</button>
                           )}
                         </div>
                       ))}

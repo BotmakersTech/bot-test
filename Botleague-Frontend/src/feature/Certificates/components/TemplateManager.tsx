@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Plus, Edit2, CheckCircle2, Archive as ArchiveIcon, Upload, Eye, ArrowLeft, Trash2 } from "lucide-react";
 import {
   type CertificateTemplate,
   type CreateCertificateTemplateRequest,
@@ -278,7 +279,7 @@ export default function TemplateManager({
         <p className="text-sm" style={{ color: ORG.muted }}>
           Background image + placeholder coordinates — the generation engine draws each recipient's data onto this template.
         </p>
-        <PrimaryButton onClick={openAdd}>+ New Template</PrimaryButton>
+        <PrimaryButton onClick={openAdd}><Plus size={14} /> New Template</PrimaryButton>
       </div>
 
       {templates.length === 0 ? (
@@ -308,17 +309,17 @@ export default function TemplateManager({
                 </div>
                 <p className="text-xs" style={{ color: ORG.muted }}>{t.placeholderMap?.length ?? 0} placeholders</p>
                 <div className="flex gap-2 pt-1">
-                  <button onClick={() => openEdit(t)} className="flex-1 rounded-lg text-xs py-1.5" style={{ background: ORG.blue + "14", color: ORG.blueHeading }}>
-                    Edit
+                  <button onClick={() => openEdit(t)} className="flex-1 flex items-center justify-center gap-1 rounded-lg text-xs py-1.5 font-semibold" style={{ background: ORG.blue + "14", color: ORG.blueHeading }}>
+                    <Edit2 size={12} /> Edit
                   </button>
                   {t.status !== "ACTIVE" && (
-                    <button onClick={() => handleActivate(t)} className="flex-1 rounded-lg text-xs py-1.5" style={{ background: ORG.success + "1a", color: ORG.success }}>
-                      Activate
+                    <button onClick={() => handleActivate(t)} className="flex-1 flex items-center justify-center gap-1 rounded-lg text-xs py-1.5 font-semibold" style={{ background: ORG.success + "1a", color: ORG.success }}>
+                      <CheckCircle2 size={12} /> Activate
                     </button>
                   )}
                   {t.status !== "ARCHIVED" && (
-                    <button onClick={() => handleArchive(t)} className="rounded-lg text-xs py-1.5 px-2" style={{ background: ORG.danger + "1a", color: ORG.danger }}>
-                      Archive
+                    <button onClick={() => handleArchive(t)} className="flex items-center justify-center gap-1 rounded-lg text-xs py-1.5 px-2 font-semibold" style={{ background: ORG.danger + "1a", color: ORG.danger }}>
+                      <ArchiveIcon size={12} /> Archive
                     </button>
                   )}
                 </div>
@@ -349,13 +350,20 @@ export default function TemplateManager({
             {!editing && (
               <div>
                 <label className="text-xs font-semibold mb-1 block" style={{ color: ORG.muted }}>Background image (PNG/JPEG) *</label>
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg"
-                  onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
-                  disabled={uploading}
-                />
-                {uploading && <p className="text-xs mt-1" style={{ color: ORG.muted }}>Uploading…</p>}
+                <label
+                  className="flex items-center justify-center gap-2 rounded-lg py-3 text-sm font-semibold cursor-pointer border border-dashed"
+                  style={{ borderColor: ORG.blue + "4d", color: uploading ? ORG.muted : ORG.blueHeading, background: ORG.blue + "08" }}
+                >
+                  <Upload size={15} />
+                  {uploading ? "Uploading…" : form.backgroundUrl ? "Choose a different image" : "Choose background image"}
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg"
+                    onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                </label>
               </div>
             )}
 
@@ -379,17 +387,17 @@ export default function TemplateManager({
                             <option key={k} value={k}>{PLACEHOLDER_LABELS[k]}</option>
                           ))}
                         </select>
-                        <button onClick={addPlaceholder} disabled={!addKey} className="rounded-lg text-xs px-3 py-1 disabled:opacity-50" style={{ background: ORG.blue + "1a", color: ORG.blueHeading }}>
-                          Add
+                        <button onClick={addPlaceholder} disabled={!addKey} className="flex items-center gap-1 rounded-lg text-xs px-3 py-1 font-semibold disabled:opacity-50" style={{ background: ORG.blue + "1a", color: ORG.blueHeading }}>
+                          <Plus size={12} /> Add
                         </button>
                       </>
                     )}
                     <button
                       onClick={previewOpen ? () => setPreviewOpen(false) : handlePreview}
-                      className="rounded-lg text-xs px-3 py-1 font-semibold"
+                      className="flex items-center gap-1 rounded-lg text-xs px-3 py-1 font-semibold"
                       style={{ background: ORG.violet + "1a", color: ORG.violetHeading }}
                     >
-                      {previewOpen ? "← Back to editing" : "👁 Preview with sample data"}
+                      {previewOpen ? <><ArrowLeft size={12} /> Back to editing</> : <><Eye size={13} /> Preview with sample data</>}
                     </button>
                   </div>
                 </div>
@@ -516,8 +524,8 @@ export default function TemplateManager({
                           </label>
                         </>
                       )}
-                      <button onClick={() => removePlaceholder(i)} className="ml-auto text-xs px-2 py-0.5 rounded" style={{ background: ORG.danger + "1a", color: ORG.danger }}>
-                        Remove
+                      <button onClick={() => removePlaceholder(i)} className="ml-auto flex items-center gap-1 text-xs px-2 py-0.5 rounded font-semibold" style={{ background: ORG.danger + "1a", color: ORG.danger }}>
+                        <Trash2 size={11} /> Remove
                       </button>
                     </div>
                     );

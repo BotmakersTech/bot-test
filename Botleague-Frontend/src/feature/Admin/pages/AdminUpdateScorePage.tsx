@@ -1,21 +1,21 @@
 import { useParams, useNavigate } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
-import useLeaderboard from "../../Leaderboard/hook/useLeaderboard"
-import RankingsTab from "../../Leaderboard/components/Ranking"
 import RankingMatchesPanel from "../components/RankingMatchesPanel"
 import "../../../styles/organizerTheme.css"
 
-const TEXT = "#111111"
 const MUTED = "#6b7280"
 
-export default function AdminSportRankingPage() {
+// The sport-detail page's "Update Score" button used to point at a route
+// that didn't exist. Reuses RankingMatchesPanel (built for the Ranking
+// page) rather than a third copy of score/result-editing UI — same
+// per-match Edit Score / Change Result actions, just without a leaderboard
+// above it since there's nothing to refresh here.
+export default function AdminUpdateScorePage() {
   const { eventId, sportId } = useParams<{ eventId: string; sportId: string }>()
   const navigate = useNavigate()
 
-  const { leaderboard, loading, error, refetch } = useLeaderboard(eventId ?? "", sportId ?? "")
-
   return (
-    <div className="org-page-bg p-8" style={{ minHeight: "100vh", color: TEXT }}>
+    <div className="org-page-bg p-8" style={{ minHeight: "100vh", color: "#111111" }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       <button
@@ -27,19 +27,10 @@ export default function AdminSportRankingPage() {
       </button>
 
       <h1 className="font-display mb-6 text-[clamp(20px,4vw,38px)] font-medium text-[#0162d1] tracking-wide">
-        Live Rankings
+        Update Score
       </h1>
 
-      <RankingsTab sportId={sportId ?? ""} leaderboard={leaderboard} loading={loading} error={error} onRefresh={refetch} />
-
-      {sportId && (
-        <div style={{ marginTop: "32px" }}>
-          <h2 className="font-display mb-4 text-[clamp(16px,3vw,24px)] font-medium text-[#0162d1] tracking-wide">
-            Matches
-          </h2>
-          <RankingMatchesPanel sportId={sportId} onChanged={refetch} />
-        </div>
-      )}
+      {sportId && <RankingMatchesPanel sportId={sportId} onChanged={() => {}} />}
     </div>
   )
 }

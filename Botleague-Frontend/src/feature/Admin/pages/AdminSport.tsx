@@ -5,6 +5,7 @@ import {
   Edit2, X, FileEdit, PlayCircle, RefreshCw, CheckCircle2, XCircle, Lock, Unlock, Globe, MessageCircle,
 } from "lucide-react"
 import { useAdminEvents } from "../hooks/UseAdminEvent"
+import { useMatches } from "../hooks/useMatches"
 import { type CreateEventSportRequest } from "../api/admin.api"
 import { getPublicLeagueSports, toWeightClasses, type LeagueSport } from "../../../shared/api/catalog.api"
 import { useLeagues, formatAgeRange, type PresentedLeague } from "../../../temp/pages/leagues/useLeagues"
@@ -975,6 +976,15 @@ export default function AdminSport() {
     updateEventSport,
   } = useAdminEvents(eventId, sportId)
 
+  // ── whether this sport already has a bracket — decides "Create Match" vs
+  // "Manage Matches" on the launch button so it never lies about what
+  // Creatematch.tsx (which already auto-detects this itself) will show ──
+  const { matches: sportMatches, fetchMatches: fetchSportMatches } = useMatches(sportId)
+  React.useEffect(() => {
+    if (sportId) fetchSportMatches(sportId).catch(() => { /* button just falls back to "Create Match" */ })
+  }, [sportId, fetchSportMatches])
+  const hasMatches = sportMatches.length > 0
+
   // ── derive the specific sport from event.sports ──
   const sport = event?.sports?.find((s: any) => s.id === sportId) as SportDetail | undefined
 
@@ -1118,7 +1128,7 @@ export default function AdminSport() {
       {/* ── HEADER ── */}
       <div style={{ marginBottom: "28px" }}>
 
-        {/* title row */}
+        {/* title row — heading only */}
         <div style={{
           display: "flex",
           alignItems: "center",
@@ -1129,7 +1139,10 @@ export default function AdminSport() {
           <h1 className="sdt-title">{toLabel(sport.sport)}</h1>
 
           <StatusPill status={sport.status} />
+        </div>
 
+        {/* actions row */}
+        <div className="sdt-actions-row">
           {/* EDIT SPORT BUTTON */}
           <button onClick={() => setShowEditSport(true)} className="sdt-btn sdt-btn-edit">
             <Edit2 size={13} /> Edit Sport
@@ -1290,7 +1303,7 @@ export default function AdminSport() {
         {!isOpen && (
           <>
             <button onClick={() => navigate(`${location.pathname}/create-match`)} className="sdt-action-btn sdt-action-create">
-              <Swords size={14} /> Create Match
+              <Swords size={14} /> {hasMatches ? "Manage Matches" : "Create Match"}
             </button>
             <button onClick={() => navigate(`${location.pathname}/update-score`)} className="sdt-action-btn sdt-action-update">
               <RefreshCw size={14} /> Update Score
@@ -1374,7 +1387,7 @@ export default function AdminSport() {
         registrationStartDate={sport.registrationStartDate ?? null}
         registrationEndDate={sport.registrationEndDate ?? null}
         matchActions={[
-          { label: "Create Match", onClick: () => navigate(`${location.pathname}/create-match`), variant: "solid" },
+          { label: hasMatches ? "Manage Matches" : "Create Match", onClick: () => navigate(`${location.pathname}/create-match`), variant: "solid" },
           { label: "Update Score", onClick: () => navigate(`${location.pathname}/update-score`), variant: "outline" },
           { label: "Ranking", onClick: () => navigate(`${location.pathname}/ranking`), variant: "solid" },
         ]}

@@ -14,17 +14,21 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 
+import com.botleague.backend.common.security.AuthorizationService;
 import com.botleague.backend.events.repository.SportRegistrationRepository;
 import com.botleague.backend.team.repository.TeamRepository;
+import com.botleague.backend.matches.dto.AwardBonusPointsRequest;
 import com.botleague.backend.matches.dto.LeaderboardEntryDTO;
 import com.botleague.backend.matches.dto.LeaderboardResponseDTO;
 import com.botleague.backend.matches.entity.Match;
+import com.botleague.backend.matches.entity.RankingBonusPoint;
 import com.botleague.backend.matches.enums.BracketSide;
 import com.botleague.backend.matches.enums.LeaderboardStatus;
 import com.botleague.backend.matches.enums.MatchStatus;
 import com.botleague.backend.matches.enums.MatchType;
 import com.botleague.backend.matches.enums.TournamentFormat;
 import com.botleague.backend.matches.repository.MatchRepository;
+import com.botleague.backend.matches.repository.RankingBonusPointRepository;
 
 /**
  * Builds the leaderboard for a single bracket (one event-sport).
@@ -69,15 +73,21 @@ public class LeaderboardService {
     private final MatchRepository matchRepository;
     private final SportRegistrationRepository eventRegistrationRepository;
     private final TeamRepository teamRepository;
+    private final RankingBonusPointRepository bonusPointRepository;
+    private final AuthorizationService authorizationService;
 
     public LeaderboardService(
             MatchRepository matchRepository,
             SportRegistrationRepository eventRegistrationRepository,
-            TeamRepository teamRepository
+            TeamRepository teamRepository,
+            RankingBonusPointRepository bonusPointRepository,
+            AuthorizationService authorizationService
     ) {
         this.matchRepository = matchRepository;
         this.eventRegistrationRepository = eventRegistrationRepository;
         this.teamRepository = teamRepository;
+        this.bonusPointRepository = bonusPointRepository;
+        this.authorizationService = authorizationService;
     }
 
     // =====================================================
@@ -117,6 +127,12 @@ public class LeaderboardService {
 
         // ── Aggregate stats from COMPLETED matches only ───────────────
         accumulateStats(matches, standings);
+
+        // ── Fold in discretionary bonus points (see RankingBonusPoint) ─
+        // Added to pointsFor (not a separate sort key) so it can break a
+        // tie via the pointDifferential tiebreak without ever letting a
+        // bonus vault a team over one that actually advanced further.
+        applyBonusPoints(eventSportId, standings);
 
         int totalRounds = 0;
         for (Match m : matches) {
@@ -211,6 +227,44 @@ public class LeaderboardService {
                 }
             }
         }
+    }
+
+    // =====================================================
+    // BONUS POINTS — see ranking_bonus_points / RankingBonusPoint
+    // =====================================================
+
+    private void applyBonusPoints(UUID eventSportId, Map<UUID, Standing> standings) {
+        for (Object[] row : bonusPointRepository.sumByRegistrationForSport(eventSportId)) {
+            UUID registrationId = (UUID) row[0];
+            long total = ((Number) row[1]).longValue();
+            Standing s = standings.get(registrationId);
+            if (s == null) continue; // bonus for a team no longer in this bracket — ignore
+            s.bonusPoints = (int) total;
+            s.pointsFor += (int) total;
+        }
+    }
+
+    /**
+     * Awards (or docks, if points is negative) discretionary points to a
+     * team's registration in this sport's leaderboard. Same authorization
+     * as any other sport-management action (MatchService's
+     * validateAdminOrOrganizerForSport uses the identical check).
+     */
+    public void awardBonusPoints(UUID eventSportId, AwardBonusPointsRequest request, UUID currentUserId) {
+        authorizationService.assertCanManageSport(currentUserId, eventSportId);
+
+        if (request.getRegistrationId() == null || request.getPoints() == null) {
+            throw com.botleague.backend.common.exception.ApiException.badRequest(
+                    "registrationId and points are required");
+        }
+
+        RankingBonusPoint bonus = new RankingBonusPoint();
+        bonus.setEventSportId(eventSportId);
+        bonus.setRegistrationId(request.getRegistrationId());
+        bonus.setPoints(request.getPoints());
+        bonus.setReason(request.getReason());
+        bonus.setAwardedBy(currentUserId);
+        bonusPointRepository.save(bonus);
     }
 
     // =====================================================
@@ -571,6 +625,7 @@ public class LeaderboardService {
         dto.setPointsFor(s.pointsFor);
         dto.setPointsAgainst(s.pointsAgainst);
         dto.setPointDifferential(s.pointDifferential());
+        dto.setBonusPoints(s.bonusPoints);
         return dto;
     }
 
@@ -731,6 +786,7 @@ public class LeaderboardService {
 
         private int pointsFor;
         private int pointsAgainst;
+        private int bonusPoints;
 
         private int[] sortKey = {1000, 0, 0};
 

@@ -25,9 +25,15 @@ import com.botleague.backend.matches.enums.LeaderboardStatus;
  *   played            — real matches contested (2+ teams actually present)
  *   wins / losses     — outcomes of those real matches
  *   byes              — auto-advance / walkover matches (1 team present)
- *   pointsFor         — sum of this team's own scores across real matches
+ *   pointsFor         — sum of this team's own match scores PLUS bonusPoints
+ *                       (see below) — bonus is folded in here so it
+ *                       participates in the pointDifferential tiebreak.
  *   pointsAgainst     — sum of every opponent's score in those same matches
  *   pointDifferential — pointsFor − pointsAgainst
+ *   bonusPoints       — discretionary points awarded outside of match play
+ *                       (see RankingBonusPoint), reported separately here
+ *                       for display even though it's already included in
+ *                       pointsFor above.
  */
 public class LeaderboardEntryDTO {
 
@@ -49,6 +55,7 @@ public class LeaderboardEntryDTO {
     private int pointsFor;
     private int pointsAgainst;
     private int pointDifferential;
+    private int bonusPoints;
 
     public LeaderboardEntryDTO() {
     }
@@ -168,5 +175,13 @@ public class LeaderboardEntryDTO {
 
     public void setPointDifferential(int pointDifferential) {
         this.pointDifferential = pointDifferential;
+    }
+
+    public int getBonusPoints() {
+        return bonusPoints;
+    }
+
+    public void setBonusPoints(int bonusPoints) {
+        this.bonusPoints = bonusPoints;
     }
 }

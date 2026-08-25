@@ -25,6 +25,7 @@ export interface LeaderboardEntryDTO {
   pointsFor:          number;
   pointsAgainst:      number;
   pointDifferential:  number;
+  bonusPoints:        number;
 }
 
 export interface LeaderboardResponseDTO {
@@ -39,7 +40,7 @@ export interface LeaderboardResponseDTO {
   entries:                 LeaderboardEntryDTO[];
 }
 
-// ─── API call ─────────────────────────────────────────
+// ─── API calls ────────────────────────────────────────
 
 export const getLeaderboard = async (
     _eventId: string,
@@ -47,6 +48,26 @@ export const getLeaderboard = async (
 ): Promise<LeaderboardResponseDTO> => {
   const response = await api.get<LeaderboardResponseDTO>(
     `/v1/leaderboard/event-sport/${sportId}`
+  );
+  return response.data;
+};
+
+export interface AwardBonusPointsRequest {
+  registrationId: string;
+  points: number;
+  reason?: string;
+}
+
+/** Awards (or docks, if points is negative) discretionary points to a
+ * team's registration in this sport's leaderboard. Returns the refreshed
+ * leaderboard so the caller doesn't need a separate re-fetch. */
+export const awardBonusPoints = async (
+    sportId: string,
+    req: AwardBonusPointsRequest
+): Promise<LeaderboardResponseDTO> => {
+  const response = await api.post<LeaderboardResponseDTO>(
+    `/v1/leaderboard/event-sport/${sportId}/bonus`,
+    req
   );
   return response.data;
 };

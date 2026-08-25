@@ -11,10 +11,10 @@ import "./MobileSportDetail.css"
 // same .ssd-desktop-only/.ssd-mobile-only toggle every dual-render page in
 // this codebase uses. Each page normalizes its own sport/team shape into the
 // props below and passes real, already-fetched data down. The mockup itself
-// only drew back/title/badge chrome, so the Edit Sport / Toggle Registration
-// (and organizer-only extras) pills were added on top of its visual language
-// to keep the page fully functional on mobile — same approach used for the
-// title-actions row in MobileEventDetail.tsx.
+// only drew back/title/badge chrome, so Edit Sport / Toggle Registration /
+// Publish / (organizer-only) Announce were added as a 2x2 button grid below
+// the heading, on top of its visual language, to keep the page fully
+// functional on mobile without crowding the title row.
 
 export interface MobileSportTeamItem {
   id: string
@@ -172,15 +172,6 @@ export default function MobileSportDetail({
         <button type="button" className="ssd-m-back-btn" onClick={onBack} aria-label="Back">
           <ArrowLeft size={20} />
         </button>
-        <div className="ssd-m-title-actions">
-          <button type="button" className="ssd-m-btn-outline-gradient" onClick={onEditSport}>
-            <Edit2 size={12} /> Edit
-          </button>
-          <button type="button" className="ssd-m-btn-outline-gradient" onClick={onToggleRegistration} disabled={registrationLoading}>
-            {isOpen ? <Lock size={12} /> : <Unlock size={12} />} {registrationLoading ? "…" : isOpen ? "Close Reg" : "Open Reg"}
-          </button>
-          {extraTitleActions}
-        </div>
       </div>
 
       <div className="ssd-m-title-row">
@@ -192,6 +183,23 @@ export default function MobileSportDetail({
       {errorBanner && <div className="ssd-m-banner error">⚠️ {errorBanner}</div>}
       {publishMsg && <div className={`ssd-m-banner ${publishOk ? "ok" : "error"}`}>{publishMsg}</div>}
       {topExtra}
+
+      {/* Edit / Registration / Publish / Announce — one 2x2 grid instead of
+          crowding the title row or a separate full-width button further down. */}
+      <div className="ssd-m-button-grid">
+        <button type="button" className="ssd-m-btn-outline-gradient" onClick={onEditSport}>
+          <Edit2 size={13} /> Edit Sport
+        </button>
+        <button type="button" className="ssd-m-btn-outline-gradient" onClick={onToggleRegistration} disabled={registrationLoading}>
+          {isOpen ? <Lock size={13} /> : <Unlock size={13} />} {registrationLoading ? "…" : isOpen ? "Close Reg" : "Open Reg"}
+        </button>
+        {showPublish && onPublish && (
+          <button type="button" className="ssd-m-btn-outline-gradient" onClick={onPublish} disabled={publishing}>
+            <Globe size={13} /> {publishing ? "…" : "Publish Rank"}
+          </button>
+        )}
+        {extraTitleActions}
+      </div>
 
       {/* Stat cards */}
       <div className="ssd-m-stats-scroll">
@@ -264,11 +272,6 @@ export default function MobileSportDetail({
           <Award size={13} /> Certificates
         </button>
       </div>
-      {showPublish && onPublish && (
-        <button type="button" className="ssd-m-btn-publish" onClick={onPublish} disabled={publishing}>
-          <Globe size={13} /> {publishing ? "Publishing…" : "Publish to Global Rankings"}
-        </button>
-      )}
 
       {/* Registered Teams */}
       <div className="ssd-m-registered-box">
