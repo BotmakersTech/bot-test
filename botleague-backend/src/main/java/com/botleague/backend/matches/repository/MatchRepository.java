@@ -119,4 +119,13 @@ public interface MatchRepository
         "m.teamCRegistrationId IN :regIds OR m.teamDRegistrationId IN :regIds)")
     List<Match> findByAnyRegistrationIdIn(
         @org.springframework.data.repository.query.Param("regIds") java.util.Collection<UUID> regIds);
+
+    // Matches whose reminder window has arrived (or passed, if a poll cycle
+    // was missed — better a late reminder than a silently skipped one) and
+    // that haven't been reminded yet. See MatchReminderScheduler.
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT m FROM Match m WHERE m.deletedAt IS NULL AND m.status = com.botleague.backend.matches.enums.MatchStatus.SCHEDULED " +
+        "AND m.reminderSent = false AND m.scheduledAt IS NOT NULL AND m.scheduledAt <= :cutoff")
+    List<Match> findDueForReminder(
+        @org.springframework.data.repository.query.Param("cutoff") java.time.LocalDateTime cutoff);
 }

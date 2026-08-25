@@ -2,6 +2,7 @@ package com.botleague.backend.notification.service;
 
 import com.botleague.backend.auth.entity.User;
 import com.botleague.backend.auth.repository.UserRepository;
+import com.botleague.backend.common.service.EmailService;
 import com.botleague.backend.events.entity.EventSports;
 import com.botleague.backend.events.entity.SportRegistration;
 import com.botleague.backend.events.enums.RegistrationStatus;
@@ -32,6 +33,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,6 +54,7 @@ public class NotificationService {
     private final SportRegistrationRepository sportRegistrationRepository;
     private final RealtimePublisher realtimePublisher;
     private final UserRoleRepository userRoleRepository;
+    private final EmailService emailService;
 
     private static final List<AccountType> PLATFORM_ADMIN_ROLES =
             List.of(AccountType.SUPER_ADMIN, AccountType.ADMIN);
@@ -69,7 +72,8 @@ public class NotificationService {
             RealtimePublisher realtimePublisher,
             UserRoleRepository userRoleRepository,
             EventVolunteerRepository eventVolunteerRepository,
-            EventJudgeRepository eventJudgeRepository) {
+            EventJudgeRepository eventJudgeRepository,
+            EmailService emailService) {
         this.notificationRepository = notificationRepository;
         this.recipientRepository = recipientRepository;
         this.userRepository = userRepository;
@@ -80,6 +84,34 @@ public class NotificationService {
         this.userRoleRepository = userRoleRepository;
         this.eventVolunteerRepository = eventVolunteerRepository;
         this.eventJudgeRepository = eventJudgeRepository;
+        this.emailService = emailService;
+    }
+
+    /**
+     * CRITICAL is the one priority that also reaches an inbox — everything
+     * else (HIGH/MEDIUM/LOW/IMPORTANT/ACHIEVEMENT) stays in-app + realtime
+     * only, by design, so this can never turn into "an email for everything."
+     * Fire-and-forget: EmailService already swallows SMTP failures itself,
+     * so one bad address can't affect the notifications that already saved.
+     * Not @Async itself — every caller here is either already running on the
+     * async executor (teamNotifyExcluding, or dispatch()/notifyUsers() when
+     * reached via the async systemNotify() wrapper the ~20+ business-logic
+     * call sites actually use) or a low-volume direct admin/news call where
+     * self-invocation would have silently skipped the annotation anyway.
+     */
+    public void maybeSendCriticalEmails(
+            NotificationPriority priority,
+            String title,
+            String message,
+            Collection<UUID> recipientIds
+    ) {
+        if (priority != NotificationPriority.CRITICAL || recipientIds.isEmpty()) return;
+        for (User u : userRepository.findAllById(recipientIds)) {
+            String email = u.getEmail();
+            if (email != null && !email.isBlank()) {
+                emailService.sendNotificationEmail(email, title, message);
+            }
+        }
     }
 
     /**
@@ -87,6 +119,7 @@ public class NotificationService {
      * Used for captain-initiated actions (robot management, role changes, etc.)
      * so that the actor does not receive their own notification.
      */
+    @Async("notificationExecutor")
     public void teamNotifyExcluding(
             UUID teamId,
             UUID actorUserId,
@@ -133,12 +166,21 @@ public class NotificationService {
         for (UUID userId : recipientIds) {
             realtimePublisher.pushNotification(userId, payload);
         }
+        maybeSendCriticalEmails(priority, title, message, recipientIds);
     }
 
     /**
      * Convenience method for system-generated (automatic) notifications.
      * createdBy is null — these are fired by the system, not a specific user.
+     *
+     * @Async — resolveEventRecipients/resolveSportRecipients (reached via
+     * dispatch() below) run a per-registration/team-member DB loop that
+     * shouldn't block whatever business action triggered this notification
+     * (see L10). dispatch() itself stays synchronous when called directly
+     * (AdminNotificationController needs its return value immediately);
+     * this wrapper is what the ~20+ business-logic call sites actually use.
      */
+    @Async("notificationExecutor")
     public void systemNotify(
             String title,
             String message,
@@ -205,6 +247,7 @@ public class NotificationService {
         for (UUID userId : uniqueIds) {
             realtimePublisher.pushNotification(userId, rtPayload);
         }
+        maybeSendCriticalEmails(saved.getPriority(), saved.getTitle(), saved.getMessage(), uniqueIds);
 
         // 5. Return NotificationResponse (no specific recipient context for the creator)
         return toResponseNoRecipient(saved);
@@ -261,6 +304,7 @@ public class NotificationService {
         for (UUID userId : uniqueIds) {
             realtimePublisher.pushNotification(userId, rtPayload);
         }
+        maybeSendCriticalEmails(priority, title, message, uniqueIds);
         return rtPayload;
     }
 

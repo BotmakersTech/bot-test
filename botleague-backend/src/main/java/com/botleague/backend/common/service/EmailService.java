@@ -69,6 +69,18 @@ public class EmailService {
         sendEmail(email, subject, body);
     }
 
+    // ================= NOTIFICATION FAN-OUT =================
+
+    /**
+     * Emails a CRITICAL-priority notification alongside its in-app/realtime
+     * delivery — see NotificationService.maybeSendCriticalEmails(). Every
+     * other priority stays in-app only, so this is deliberately the one
+     * notification path that reaches an inbox.
+     */
+    public void sendNotificationEmail(String email, String title, String message) {
+        sendEmail(email, title, message + "\n\n— BotLeague Team");
+    }
+
     // ================= GENERIC EMAIL =================
 
     /**

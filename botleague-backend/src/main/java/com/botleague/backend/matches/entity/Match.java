@@ -442,6 +442,12 @@ public class Match {
     @Column(name = "ended_at")
     private LocalDateTime endedAt;
 
+    // Set once the MATCH_REMINDER notification has actually been sent for
+    // this match, so MatchReminderScheduler's poll never double-sends it —
+    // see MatchReminderScheduler for the query that reads this.
+    @Column(name = "reminder_sent", nullable = false)
+    private Boolean reminderSent = false;
+
     // =====================================================
     // ADMIN / AUDIT
     // =====================================================
@@ -912,6 +918,14 @@ public class Match {
 
     public void setEndedAt(LocalDateTime endedAt) {
         this.endedAt = endedAt;
+    }
+
+    public Boolean getReminderSent() {
+        return reminderSent;
+    }
+
+    public void setReminderSent(Boolean reminderSent) {
+        this.reminderSent = reminderSent;
     }
 
     public UUID getCreatedBy() {
