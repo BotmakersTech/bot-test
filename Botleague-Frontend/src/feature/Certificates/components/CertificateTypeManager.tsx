@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import { Plus, Edit2, Power, ListChecks, Award, Zap, RefreshCw, Ban, FileText, Check, X as XIcon, Minus, type LucideIcon } from "lucide-react";
+import { Plus, Edit2, Power, ListChecks, Award, Zap, RefreshCw, Ban, FileText, Check, X as XIcon, Minus, PartyPopper, type LucideIcon } from "lucide-react";
 import {
   type CertificateTemplate,
   type CertificateType,
@@ -221,7 +221,9 @@ export default function CertificateTypeManager({
 
         if (latest.status === "COMPLETED") {
           toast.success(
-            `🎉 ${latest.succeededCount} certificate${latest.succeededCount === 1 ? "" : "s"} generated in ${took}s${deliveryNote}`,
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <PartyPopper size={15} /> {latest.succeededCount} certificate{latest.succeededCount === 1 ? "" : "s"} generated in {took}s{deliveryNote}
+            </span>,
             { id: job.id, duration: 5500 }
           );
         } else if (latest.status === "PARTIAL") {

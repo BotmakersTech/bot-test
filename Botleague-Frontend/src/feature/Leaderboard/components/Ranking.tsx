@@ -6,7 +6,10 @@
 // ======================================================
 
 import { useState } from "react";
-import { Gift, X } from "lucide-react";
+import {
+  Gift, X, Trophy, Medal, Zap, AlertTriangle, PartyPopper, CheckCircle2, Clock, RefreshCw,
+  type LucideIcon,
+} from "lucide-react";
 import {
   awardBonusPoints,
   type LeaderboardResponseDTO,
@@ -49,17 +52,17 @@ function diffLabel(diff: number): string {
   return `${diff}`;
 }
 
-function rankMedal(rank: number): string | null {
-  if (rank === 1) return "🥇";
-  if (rank === 2) return "🥈";
-  if (rank === 3) return "🥉";
+function rankMedal(rank: number): { Icon: LucideIcon; color: string } | null {
+  if (rank === 1) return { Icon: Trophy, color: GOLD };
+  if (rank === 2) return { Icon: Medal, color: SILVER };
+  if (rank === 3) return { Icon: Medal, color: BRONZE };
   return null;
 }
 
-const STATUS_CONFIG: Record<LeaderboardStatus, { bg: string; border: string; color: string; label: string; icon: string }> = {
-  CHAMPION:   { bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.35)", color: GOLD,    label: "Champion",   icon: "🏆" },
-  ACTIVE:     { bg: "rgba(31,169,82,0.08)",  border: "rgba(31,169,82,0.25)",  color: SUCCESS, label: "Active",     icon: "⚡" },
-  ELIMINATED: { bg: "rgba(93,93,93,0.08)",   border: "rgba(93,93,93,0.2)",    color: MUTED,   label: "Eliminated", icon: "✕"  },
+const STATUS_CONFIG: Record<LeaderboardStatus, { bg: string; border: string; color: string; label: string; icon: LucideIcon }> = {
+  CHAMPION:   { bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.35)", color: GOLD,    label: "Champion",   icon: Trophy },
+  ACTIVE:     { bg: "rgba(31,169,82,0.08)",  border: "rgba(31,169,82,0.25)",  color: SUCCESS, label: "Active",     icon: Zap },
+  ELIMINATED: { bg: "rgba(93,93,93,0.08)",   border: "rgba(93,93,93,0.2)",    color: MUTED,   label: "Eliminated", icon: X    },
 };
 
 // ─── Spinner (same as parent) ─────────────────────────
@@ -75,10 +78,12 @@ function Spinner({ size = 16, color = ACCENT }: { size?: number; color?: string 
 }
 
 // ─── Empty State ──────────────────────────────────────
-function EmptyState({ icon, title, subtitle }: { icon: string; title: string; subtitle: string }) {
+function EmptyState({ icon: Icon, title, subtitle }: { icon: LucideIcon; title: string; subtitle: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "64px 24px", textAlign: "center", gap: "14px" }}>
-      <div style={{ width: "80px", height: "80px", borderRadius: "18px", background: "rgba(140,108,255,0.06)", border: "1px solid rgba(140,108,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.2rem" }}>{icon}</div>
+      <div style={{ width: "80px", height: "80px", borderRadius: "18px", background: "rgba(140,108,255,0.06)", border: "1px solid rgba(140,108,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center", color: ACCENT }}>
+        <Icon size={34} />
+      </div>
       <div style={{ fontSize: "0.9rem", fontFamily: ORG.fontHeading, color: TEXT, letterSpacing: "0.06em", fontWeight: 700 }}>{title}</div>
       <div style={{ fontSize: "0.82rem", color: MUTED, maxWidth: "260px", lineHeight: 1.6 }}>{subtitle}</div>
     </div>
@@ -155,16 +160,17 @@ export default function RankingsTab({
   if (error) {
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", padding: "48px 24px" }}>
-        <EmptyState icon="⚠️" title="RANKINGS UNAVAILABLE" subtitle={error} />
+        <EmptyState icon={AlertTriangle} title="RANKINGS UNAVAILABLE" subtitle={error} />
         <button
           onClick={onRefresh}
           style={{
+            display: "inline-flex", alignItems: "center", gap: "6px",
             background: "rgba(140,108,255,0.08)", border: `1px solid rgba(140,108,255,0.3)`,
             color: ACCENT, borderRadius: "8px", padding: "8px 18px",
             fontSize: "0.8rem", fontWeight: 700, cursor: "pointer",
           }}
         >
-          ↻ Retry
+          <RefreshCw size={13} /> Retry
         </button>
       </div>
     );
@@ -174,7 +180,7 @@ export default function RankingsTab({
   if (!leaderboard || leaderboard.entries.length === 0) {
     return (
       <EmptyState
-        icon="🏆"
+        icon={Trophy}
         title="NO RANKINGS YET"
         subtitle="Rankings will appear here once matches are played and results are submitted."
       />
@@ -194,7 +200,7 @@ export default function RankingsTab({
           background: "rgba(245,158,11,0.08)",
           border: "1px solid rgba(245,158,11,0.3)",
         }}>
-          <span style={{ fontSize: "1.5rem" }}>🏆</span>
+          <Trophy size={24} color={GOLD} style={{ flexShrink: 0 }} />
           <div>
             <div style={{ fontSize: "0.62rem", color: GOLD, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>
               Champion
@@ -206,7 +212,7 @@ export default function RankingsTab({
               <div style={{ fontSize: "0.72rem", color: MUTED, marginTop: "1px" }}>{championTeamName}</div>
             )}
           </div>
-          <span style={{ marginLeft: "auto", fontSize: "1.3rem" }}>🎉</span>
+          <PartyPopper size={20} color={GOLD} style={{ marginLeft: "auto", flexShrink: 0 }} />
         </div>
       )}
 
@@ -218,12 +224,13 @@ export default function RankingsTab({
       }}>
         {/* Final / Provisional badge */}
         <span style={{
+          display: "inline-flex", alignItems: "center", gap: "5px",
           background: isFinal ? "rgba(31,169,82,0.08)" : "rgba(75,134,232,0.08)",
           border: `1px solid ${isFinal ? "rgba(31,169,82,0.3)" : "rgba(75,134,232,0.25)"}`,
           color: isFinal ? SUCCESS : ORG.blueHeading,
           borderRadius: "999px", fontSize: "0.65rem", padding: "3px 10px", fontWeight: 700,
         }}>
-          {isFinal ? "✅ Final Standings" : "⏳ Live — Provisional"}
+          {isFinal ? <><CheckCircle2 size={12} /> Final Standings</> : <><Clock size={12} /> Live — Provisional</>}
         </span>
 
         {tournamentFormat && (
@@ -252,12 +259,13 @@ export default function RankingsTab({
           onClick={onRefresh}
           title="Refresh rankings"
           style={{
+            display: "inline-flex", alignItems: "center",
             background: "rgba(75,134,232,0.06)", border: `1px solid ${BORDER}`,
             color: MUTED, borderRadius: "6px", padding: "4px 8px",
-            fontSize: "0.72rem", cursor: "pointer", lineHeight: 1,
+            cursor: "pointer", lineHeight: 1,
           }}
         >
-          ↻
+          <RefreshCw size={13} />
         </button>
       </div>
 
@@ -392,7 +400,7 @@ function EntryRow({ entry, index, onAwardBonus }: { entry: LeaderboardEntryDTO; 
       {/* Rank */}
       <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
         {medal ? (
-          <span style={{ fontSize: "1.1rem", lineHeight: 1 }}>{medal}</span>
+          <medal.Icon size={18} color={medal.color} />
         ) : (
           <span style={{
             fontSize: "0.95rem", fontWeight: 800, color: LABEL,
@@ -443,7 +451,7 @@ function EntryRow({ entry, index, onAwardBonus }: { entry: LeaderboardEntryDTO; 
           fontSize: "0.6rem", padding: "2px 8px", fontWeight: 700,
           whiteSpace: "nowrap",
         }}>
-          <span style={{ fontSize: "0.55rem" }}>{sCfg.icon}</span>
+          <sCfg.icon size={10} />
           {sCfg.label}
         </span>
       </div>
@@ -520,7 +528,7 @@ function StatsCard({ entry }: { entry: LeaderboardEntryDTO }) {
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
-        {medal && <span style={{ fontSize: "1.3rem" }}>{medal}</span>}
+        {medal && <medal.Icon size={22} color={medal.color} />}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
             fontWeight: 700, color: TEXT, fontSize: "0.9rem",

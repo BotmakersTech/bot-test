@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { Clock, Calendar, Circle, Zap, CheckCircle2, Trophy, Search, X, AlertTriangle, Swords, Play, type LucideIcon } from "lucide-react";
 import {
   fetchAllMatches,
   selectAllMatches,
@@ -24,12 +25,12 @@ const STATUS_ORDER: Record<string, number> = {
   LIVE: 0, ONGOING: 1, UPCOMING: 2, SCHEDULED: 3, COMPLETED: 4,
 };
 
-const STATUS: Record<string, { color: string; bg: string; border: string; label: string; icon: string }> = {
-  UPCOMING:  { color: "#60a5fa", bg: "rgba(96,165,250,0.1)",  border: "rgba(96,165,250,0.28)",  label: "Upcoming",  icon: "🕐" },
-  SCHEDULED: { color: "#60a5fa", bg: "rgba(96,165,250,0.1)",  border: "rgba(96,165,250,0.28)",  label: "Scheduled", icon: "📅" },
-  LIVE:      { color: "#4ade80", bg: "rgba(74,222,128,0.1)",  border: "rgba(74,222,128,0.28)",  label: "Live",      icon: "🟢" },
-  ONGOING:   { color: "#4ade80", bg: "rgba(74,222,128,0.1)",  border: "rgba(74,222,128,0.28)",  label: "Ongoing",   icon: "⚡" },
-  COMPLETED: { color: "#9ca3af", bg: "rgba(156,163,175,0.1)", border: "rgba(156,163,175,0.22)", label: "Done",      icon: "✅" },
+const STATUS: Record<string, { color: string; bg: string; border: string; label: string; icon: LucideIcon }> = {
+  UPCOMING:  { color: "#60a5fa", bg: "rgba(96,165,250,0.1)",  border: "rgba(96,165,250,0.28)",  label: "Upcoming",  icon: Clock },
+  SCHEDULED: { color: "#60a5fa", bg: "rgba(96,165,250,0.1)",  border: "rgba(96,165,250,0.28)",  label: "Scheduled", icon: Calendar },
+  LIVE:      { color: "#4ade80", bg: "rgba(74,222,128,0.1)",  border: "rgba(74,222,128,0.28)",  label: "Live",      icon: Circle },
+  ONGOING:   { color: "#4ade80", bg: "rgba(74,222,128,0.1)",  border: "rgba(74,222,128,0.28)",  label: "Ongoing",   icon: Zap },
+  COMPLETED: { color: "#9ca3af", bg: "rgba(156,163,175,0.1)", border: "rgba(156,163,175,0.22)", label: "Done",      icon: CheckCircle2 },
 };
 
 function fmt(val?: string | null) {
@@ -107,8 +108,9 @@ function MatchCard({ match, onClick }: { match: PublicMatchView; onClick: () => 
         <span style={{
           background: st.bg, border: `1px solid ${st.border}`, color: st.color,
           borderRadius: "999px", fontSize: "0.62rem", padding: "2px 9px", fontWeight: 700,
+          display: "inline-flex", alignItems: "center", gap: "4px",
         }}>
-          {st.icon} {st.label}
+          <st.icon size={10} fill={st.icon === Circle ? "currentColor" : "none"} /> {st.label}
         </span>
       </div>
 
@@ -121,7 +123,7 @@ function MatchCard({ match, onClick }: { match: PublicMatchView; onClick: () => 
             color: won(match.teamARegistrationId) ? "#4ade80" : TEXT,
             display: "flex", alignItems: "center", gap: "5px",
           }}>
-            {won(match.teamARegistrationId) && <span style={{ fontSize: "0.65rem" }}>🏆</span>}
+            {won(match.teamARegistrationId) && <Trophy size={11} style={{ flexShrink: 0 }} />}
             {match.teamARobotName || match.teamAName || "TBD"}
           </div>
           {match.teamAName && (
@@ -153,7 +155,7 @@ function MatchCard({ match, onClick }: { match: PublicMatchView; onClick: () => 
             display: "flex", alignItems: "center", gap: "5px", justifyContent: "flex-end",
           }}>
             {match.teamBRobotName || match.teamBName || "TBD"}
-            {won(match.teamBRegistrationId) && <span style={{ fontSize: "0.65rem" }}>🏆</span>}
+            {won(match.teamBRegistrationId) && <Trophy size={11} style={{ flexShrink: 0 }} />}
           </div>
           {match.teamBName && (
             <div style={{ fontSize: "0.68rem", color: MUTED, marginTop: "2px", textAlign: "right" }}>
@@ -166,11 +168,11 @@ function MatchCard({ match, onClick }: { match: PublicMatchView; onClick: () => 
       {/* Footer: time */}
       {(match.scheduledAt || match.startedAt || match.endedAt) && (
         <div style={{ marginTop: "10px", paddingTop: "8px", borderTop: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "4px" }}>
-          <span style={{ color: MUTED, fontSize: "0.67rem" }}>
+          <span style={{ color: MUTED, fontSize: "0.67rem", display: "inline-flex", alignItems: "center", gap: "4px" }}>
             {match.scheduledAt
-              ? `🕐 ${fmt(match.scheduledAt)}`
+              ? <><Clock size={10} /> {fmt(match.scheduledAt)}</>
               : match.startedAt
-              ? `▶ ${fmt(match.startedAt)}`
+              ? <><Play size={10} fill="currentColor" /> {fmt(match.startedAt)}</>
               : ""}
           </span>
           {match.endedAt && (
@@ -234,18 +236,18 @@ function SportGroup({
           </span>
           <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
             {live > 0 && (
-              <span style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.28)", color: "#4ade80", borderRadius: "999px", fontSize: "0.6rem", padding: "2px 8px", fontWeight: 700 }}>
-                🟢 {live} Live
+              <span style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.28)", color: "#4ade80", borderRadius: "999px", fontSize: "0.6rem", padding: "2px 8px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                <Circle size={8} fill="currentColor" /> {live} Live
               </span>
             )}
             {upcoming > 0 && (
-              <span style={{ background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.25)", color: "#60a5fa", borderRadius: "999px", fontSize: "0.6rem", padding: "2px 8px", fontWeight: 700 }}>
-                🕐 {upcoming} Upcoming
+              <span style={{ background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.25)", color: "#60a5fa", borderRadius: "999px", fontSize: "0.6rem", padding: "2px 8px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                <Clock size={10} /> {upcoming} Upcoming
               </span>
             )}
             {completed > 0 && (
-              <span style={{ background: "rgba(156,163,175,0.1)", border: "1px solid rgba(156,163,175,0.2)", color: MUTED, borderRadius: "999px", fontSize: "0.6rem", padding: "2px 8px", fontWeight: 600 }}>
-                ✅ {completed} Done
+              <span style={{ background: "rgba(156,163,175,0.1)", border: "1px solid rgba(156,163,175,0.2)", color: MUTED, borderRadius: "999px", fontSize: "0.6rem", padding: "2px 8px", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                <CheckCircle2 size={10} /> {completed} Done
               </span>
             )}
           </div>
@@ -386,7 +388,7 @@ export default function SearchMatches() {
         {/* SEARCH + FILTER */}
         <div style={{ display: "flex", gap: "10px", marginBottom: "26px", flexWrap: "wrap" }}>
           <div ref={dropdownRef} style={{ position: "relative", flex: 1, minWidth: "200px" }}>
-            <span style={{ position: "absolute", left: "13px", top: "50%", transform: "translateY(-50%)", fontSize: "0.85rem", pointerEvents: "none" }}>🔍</span>
+            <Search size={14} style={{ position: "absolute", left: "13px", top: "50%", transform: "translateY(-50%)", color: MUTED, pointerEvents: "none" }} />
             <input
               type="text"
               value={search}
@@ -424,19 +426,19 @@ export default function SearchMatches() {
             style={{ background: "rgba(0,0,0,0.3)", border: `1px solid ${BORDER}`, borderRadius: "10px", padding: "10px 13px", color: selectedStatus ? TEXT : MUTED, fontSize: "0.82rem", outline: "none", cursor: "pointer" }}
           >
             <option value="">All Status</option>
-            <option value="LIVE">🟢 Live</option>
-            <option value="ONGOING">⚡ Ongoing</option>
-            <option value="UPCOMING">🕐 Upcoming</option>
-            <option value="SCHEDULED">📅 Scheduled</option>
-            <option value="COMPLETED">✅ Completed</option>
+            <option value="LIVE">Live</option>
+            <option value="ONGOING">Ongoing</option>
+            <option value="UPCOMING">Upcoming</option>
+            <option value="SCHEDULED">Scheduled</option>
+            <option value="COMPLETED">Completed</option>
           </select>
 
           {(search || selectedStatus) && (
             <button
               onClick={() => { setSearch(""); setSelectedStatus(""); }}
-              style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "10px", padding: "10px 14px", fontSize: "0.78rem", cursor: "pointer", fontWeight: 600 }}
+              style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "10px", padding: "10px 14px", fontSize: "0.78rem", cursor: "pointer", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "5px" }}
             >
-              ✕ Clear
+              <X size={13} /> Clear
             </button>
           )}
         </div>
@@ -449,8 +451,8 @@ export default function SearchMatches() {
         )}
 
         {showError && (
-          <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "12px", padding: "16px 22px", color: "#f87171", fontSize: "0.85rem", fontWeight: 600 }}>
-            ⚠️ {error}
+          <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "12px", padding: "16px 22px", color: "#f87171", fontSize: "0.85rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }}>
+            <AlertTriangle size={16} /> {error}
           </div>
         )}
 
@@ -459,7 +461,7 @@ export default function SearchMatches() {
           <>
             {sortedSportIds.length === 0 ? (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "60px 24px", gap: "12px", textAlign: "center" }}>
-                <div style={{ fontSize: "2.4rem" }}>⚔️</div>
+                <Swords size={38} style={{ color: MUTED }} />
                 <div style={{ fontFamily: "'Sarpanch', sans-serif", fontWeight: 700, fontSize: "0.88rem", letterSpacing: "0.08em", color: "#e5e7eb" }}>NO MATCHES FOUND</div>
                 <div style={{ color: MUTED, fontSize: "0.78rem" }}>Try adjusting your search or filters.</div>
               </div>

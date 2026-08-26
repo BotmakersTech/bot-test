@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react"
-import { X, ChevronDown, Info, Calendar, Plus, ArrowLeft, Check, Sparkles, Cpu, Brain } from "lucide-react"
+import { X, ChevronDown, Info, Calendar, Plus, ArrowLeft, Check, Sparkles, Cpu, Brain, AlertTriangle } from "lucide-react"
 import { getPublicLeagueSports, toWeightClasses, type LeagueSport } from "../../api/catalog.api"
 import { useLeagues, formatAgeRange } from "../../../temp/pages/leagues/useLeagues"
 import type { CreateEventSportRequest } from "../../../feature/Admin/api/admin.api"
@@ -352,15 +352,15 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
                   <FormField label="End Date" required><input type="date" className="asm-date" value={config.registrationEndDate} min={config.registrationStartDate || undefined} onChange={e => setCfg("registrationEndDate", e.target.value)} /></FormField>
                 </div>
                 {config.registrationStartDate && config.registrationEndDate && (
-                  <div className="asm-reg-confirm">
-                    ✅ Open from <strong>{new Date(config.registrationStartDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</strong> to <strong>{new Date(config.registrationEndDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</strong>
+                  <div className="asm-reg-confirm" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <Check size={14} /> Open from <strong>{new Date(config.registrationStartDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</strong> to <strong>{new Date(config.registrationEndDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</strong>
                   </div>
                 )}
               </div>
             </div>
           )}
 
-          {error && <div className="asm-error">⚠️ {error}</div>}
+          {error && <div className="asm-error" style={{ display: "flex", alignItems: "center", gap: 6 }}><AlertTriangle size={14} /> {error}</div>}
         </div>
 
         <div className="asm-footer">

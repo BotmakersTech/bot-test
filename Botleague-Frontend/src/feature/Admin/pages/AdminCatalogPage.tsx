@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { X } from "lucide-react";
 import { ORG } from "../../Organizer/theme/organizerTheme";
 import "../../../styles/organizerTheme.css";
 import {
@@ -59,7 +60,7 @@ function Overlay({ title, onClose, children }: { title: string; onClose: () => v
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f8f9ff] text-gray-500 hover:bg-[#eef2ff]"
           >
-            ✕
+            <X size={16} />
           </button>
         </div>
         {children}
@@ -743,7 +744,7 @@ function PairingFormOverlay({
               onChange={(e) => updateWeightClass(i, "weightKg", e.target.value)}
             />
             <button onClick={() => removeWeightClass(i)} className="px-2 text-red-500">
-              ✕
+              <X size={14} />
             </button>
           </div>
         ))}
@@ -761,7 +762,7 @@ function PairingFormOverlay({
             <input className={inputCls} placeholder="Key (e.g. diameterCm)" value={k} onChange={(e) => updateExtraSpec(i, 0, e.target.value)} />
             <input className={inputCls} placeholder="Value" value={v} onChange={(e) => updateExtraSpec(i, 1, e.target.value)} />
             <button onClick={() => removeExtraSpec(i)} className="px-2 text-red-500">
-              ✕
+              <X size={14} />
             </button>
           </div>
         ))}

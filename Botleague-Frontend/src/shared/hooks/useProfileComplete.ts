@@ -1,4 +1,5 @@
 import { useSelector } from "react-redux";
+import { User, Cake, Tag, Camera } from "lucide-react";
 import type { RootState } from "../../app/store";
 import type { MissingField } from "../components/ProfileIncompleteModal";
 
@@ -15,16 +16,16 @@ export function useProfileComplete(): {
   const missingFields: MissingField[] = [];
 
   if (!user?.firstName?.trim() || !user?.lastName?.trim()) {
-    missingFields.push({ key: "name",         label: "Full Name (First & Last)",  icon: "👤" });
+    missingFields.push({ key: "name",         label: "Full Name (First & Last)",  icon: User });
   }
   if (!user?.dateOfBirth) {
-    missingFields.push({ key: "dob",          label: "Date of Birth",             icon: "🎂" });
+    missingFields.push({ key: "dob",          label: "Date of Birth",             icon: Cake });
   }
   if (!user?.userName?.trim()) {
-    missingFields.push({ key: "username",     label: "Username",                  icon: "🏷️" });
+    missingFields.push({ key: "username",     label: "Username",                  icon: Tag });
   }
   if (!user?.profilePhotoUrl) {
-    missingFields.push({ key: "photo",        label: "Profile Picture",           icon: "📸" });
+    missingFields.push({ key: "photo",        label: "Profile Picture",           icon: Camera });
   }
 
   return {
@@ -47,10 +48,10 @@ export function useMinimalProfileComplete(): {
   const missingFields: MissingField[] = [];
 
   if (!user?.userName?.trim()) {
-    missingFields.push({ key: "username", label: "Username",       icon: "🏷️" });
+    missingFields.push({ key: "username", label: "Username",       icon: Tag });
   }
   if (!user?.dateOfBirth) {
-    missingFields.push({ key: "dob",      label: "Date of Birth",  icon: "🎂" });
+    missingFields.push({ key: "dob",      label: "Date of Birth",  icon: Cake });
   }
 
   return {

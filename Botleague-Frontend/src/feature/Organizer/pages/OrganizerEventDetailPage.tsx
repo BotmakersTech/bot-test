@@ -1,7 +1,7 @@
 ﻿import React, { useCallback, useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
-import { X } from "lucide-react"
+import { X, AlertTriangle } from "lucide-react"
 import {
   getMyEventById, updateEventInfo, changeEventStatus, createEventSport, submitSportForApproval,
   getEventChangeRequests,
@@ -172,7 +172,7 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange }: {
               style={{ width: "18px", height: "18px", accentColor: ACCENT, flexShrink: 0 }} />
           </label>
 
-          {error && <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "8px", padding: "10px 14px", color: DANGER, fontSize: "0.8rem", fontWeight: 600 }}>⚠️ {error}</div>}
+          {error && <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "8px", padding: "10px 14px", color: DANGER, fontSize: "0.8rem", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}><AlertTriangle size={14} /> {error}</div>}
         </div>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", padding: "14px 22px 20px", borderTop: `1px solid ${BORDER}` }}>
           <button type="button" onClick={onClose} disabled={saving} style={{ background: "rgba(75,134,232,0.05)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "8px", padding: "9px 18px", fontSize: "0.82rem", fontWeight: 600, cursor: saving ? "not-allowed" : "pointer" }}>Cancel</button>
@@ -330,7 +330,7 @@ export default function OrganizerEventDetailPage() {
   if (error) {
     return (
       <PageWrapper>
-        <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "10px", padding: "16px 20px", color: DANGER, fontSize: "0.85rem", fontWeight: 600 }}>⚠️ {error}</div>
+        <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "10px", padding: "16px 20px", color: DANGER, fontSize: "0.85rem", fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}><AlertTriangle size={16} /> {error}</div>
       </PageWrapper>
     )
   }

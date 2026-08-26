@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react"
 import { useParams, useNavigate } from "react-router-dom"
+import { Check } from "lucide-react"
 import {
   getAdminRobotDetail,
   updateAdminRobot,
@@ -300,7 +301,7 @@ export default function AdminRobotDetailPage() {
                     style={{ padding: "10px 20px", fontSize: 14 }}
                   >
                     {s.charAt(0) + s.slice(1).toLowerCase()}
-                    {robot.status === s && " ✓"}
+                    {robot.status === s && <Check size={13} style={{ marginLeft: 4, display: "inline", verticalAlign: "middle" }} />}
                   </button>
                 ))}
               </div>

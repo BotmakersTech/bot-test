@@ -1,7 +1,7 @@
 import { useState } from "react"
 import {
   ArrowLeft, Plus, Trophy, Users, MapPin, UserCog,
-  Calendar, ArrowRight, Check, Ban, CheckCircle2, Trash2,
+  Calendar, ArrowRight, Check, Ban, CheckCircle2, Trash2, AlertTriangle,
 } from "lucide-react"
 import type { EventDashboardEvent, EventDashboardSport, StatusTransition } from "./EventDashboard"
 
@@ -91,7 +91,7 @@ export default function MobileEventDetail({
         )}
       </div>
 
-      {errorBanner && <div className="ed-m-error-banner">⚠️ {errorBanner}</div>}
+      {errorBanner && <div className="ed-m-error-banner" style={{ display: "flex", alignItems: "center", gap: "6px" }}><AlertTriangle size={13} /> {errorBanner}</div>}
 
       {/* Pending-approval banner — real Review action, not a blind accept/decline */}
       {canManageEvent && pendingApprovalCount > 0 && (

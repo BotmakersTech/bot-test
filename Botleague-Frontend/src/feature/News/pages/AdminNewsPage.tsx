@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { Globe, Target } from "lucide-react";
 import {
   createNews,
   listNewsAdmin,
@@ -359,8 +360,10 @@ export default function AdminNewsPage() {
                   <span className="an-eyebrow">
                     {featured.isPinned ? "Pinned · " : "Latest · "}{formatDate(featured.publishedAt)}
                   </span>
-                  <span className="an-hero-global">
-                    {featured.targetAgeCategories.length === 0 && featured.targetSports.length === 0 ? "🌐 Global" : "🎯 Targeted"}
+                  <span className="an-hero-global" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    {featured.targetAgeCategories.length === 0 && featured.targetSports.length === 0
+                      ? <><Globe size={14} /> Global</>
+                      : <><Target size={14} /> Targeted</>}
                     <span className="an-stars">✦✦✦</span>
                   </span>
                 </div>

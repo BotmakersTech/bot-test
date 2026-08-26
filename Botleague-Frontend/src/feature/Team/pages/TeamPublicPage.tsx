@@ -4,6 +4,7 @@ import { getPublicTeamProfile, getPublicTeamProfileByCode, type PublicTeamProfil
 import ShareButton from "../../../shared/components/ShareButton";
 import TeamLogo from "../../../shared/components/TeamLogo";
 import PublicNavbar from "../../../shared/components/PublicNavbar";
+import { Bot, MapPin, Medal, Award } from "lucide-react";
 
 // ── Design tokens (matching the dark esports aesthetic) ───────────────────────
 const BG      = "#0d0d0f";
@@ -81,8 +82,12 @@ function StatCard({ icon, label, value }: {
 function PositionCell({ rank }: { rank: number | null }) {
   if (rank === null) return <span style={{ color: MUTED }}>—</span>;
   const colors = rank === 1 ? GOLD : rank === 2 ? "#d1d5db" : rank === 3 ? "#b45309" : MUTED;
-  const prefix = rank === 1 ? "🥇 " : rank === 2 ? "🥈 " : rank === 3 ? "🥉 " : "";
-  return <span style={{ color: colors, fontWeight: 700 }}>{prefix}{ordinal(rank)}</span>;
+  return (
+    <span style={{ color: colors, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}>
+      {rank <= 3 && <Medal size={14} />}
+      {ordinal(rank)}
+    </span>
+  );
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -123,7 +128,7 @@ export default function TeamPublicPage() {
     <>
       <PublicNavbar />
       <div style={{ minHeight: "100vh", background: BG, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, color: MUTED }}>
-        <div style={{ fontSize: "3rem" }}>🤖</div>
+        <Bot size={48} />
         <p style={{ color: TEXT, fontWeight: 700, fontSize: "1rem" }}>{error ?? "Team not found"}</p>
         <button onClick={() => navigate(-1)} style={{ background: GOLD, border: "none", color: "#000", borderRadius: 8, padding: "10px 24px", fontWeight: 800, cursor: "pointer", fontSize: "0.88rem" }}>← Go Back</button>
       </div>
@@ -185,8 +190,8 @@ export default function TeamPublicPage() {
             {/* Location + code */}
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 32 }}>
               {[profile.institutionName, profile.city, profile.state].filter(Boolean).join(", ") && (
-                <span style={{ fontSize: "0.82rem", color: MUTED }}>
-                  📍 {[profile.institutionName, profile.city, profile.state].filter(Boolean).join(", ")}
+                <span style={{ fontSize: "0.82rem", color: MUTED, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  <MapPin size={13} /> {[profile.institutionName, profile.city, profile.state].filter(Boolean).join(", ")}
                 </span>
               )}
               <span style={{ fontSize: "0.78rem", color: MUTED, fontFamily: "monospace", background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, borderRadius: 5, padding: "1px 8px" }}>
@@ -208,9 +213,9 @@ export default function TeamPublicPage() {
             {/* Medals row */}
             {(profile.goldMedals + profile.silverMedals + profile.bronzeMedals) > 0 && (
               <div style={{ display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap" }}>
-                {profile.goldMedals   > 0 && <span style={{ fontSize: "0.8rem", fontWeight: 700, color: GOLD }}> 🥇 {profile.goldMedals}×  Gold</span>}
-                {profile.silverMedals > 0 && <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#d1d5db" }}>🥈 {profile.silverMedals}×  Silver</span>}
-                {profile.bronzeMedals > 0 && <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#b45309" }}>🥉 {profile.bronzeMedals}×  Bronze</span>}
+                {profile.goldMedals   > 0 && <span style={{ fontSize: "0.8rem", fontWeight: 700, color: GOLD, display: "inline-flex", alignItems: "center", gap: 4 }}><Medal size={14} /> {profile.goldMedals}×  Gold</span>}
+                {profile.silverMedals > 0 && <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#d1d5db", display: "inline-flex", alignItems: "center", gap: 4 }}><Medal size={14} /> {profile.silverMedals}×  Silver</span>}
+                {profile.bronzeMedals > 0 && <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#b45309", display: "inline-flex", alignItems: "center", gap: 4 }}><Medal size={14} /> {profile.bronzeMedals}×  Bronze</span>}
               </div>
             )}
           </div>
@@ -233,7 +238,7 @@ export default function TeamPublicPage() {
 
           {profile.eventRecords.length === 0 ? (
             <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "60px 24px", textAlign: "center" }}>
-              <div style={{ fontSize: "2.5rem", marginBottom: 12 }}>🏅</div>
+              <Award size={40} style={{ marginBottom: 12 }} />
               <p style={{ margin: 0, color: MUTED, fontSize: "0.9rem" }}>No tournament records yet.</p>
             </div>
           ) : (
@@ -273,8 +278,8 @@ export default function TeamPublicPage() {
                       {rec.eventName ?? "Unknown Event"}
                     </p>
                     {rec.robotName && (
-                      <p style={{ margin: "0 0 4px", fontSize: "0.72rem", color: GOLD2 }}>
-                        🤖 {rec.robotName}
+                      <p style={{ margin: "0 0 4px", fontSize: "0.72rem", color: GOLD2, display: "flex", alignItems: "center", gap: 4 }}>
+                        <Bot size={12} /> {rec.robotName}
                       </p>
                     )}
                     <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>

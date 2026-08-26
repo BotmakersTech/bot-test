@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 
 import LOGO_URL from "../../../assets/BrandLogo/BotLeagu-black.png";
 import PasswordSection from "./PasswordSection";
@@ -165,7 +165,7 @@ export default function MobileForgotPassword(fp: ReturnType<typeof useForgotPass
                 onClick={fp.handleVerifyOtp}
                 disabled={fp.isOtpBusy || !fp.otpSent || fp.otpVerified}
               >
-                {fp.otpVerified ? "Verified ✔" : "Verify"}
+                {fp.otpVerified ? <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>Verified <Check size={14} /></span> : "Verify"}
               </button>
             </div>
 

@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { Check } from "lucide-react";
 
 const TIERS = [
   {
@@ -29,8 +30,8 @@ export default function TiersSection() {
               <p className="text-sm text-[#222] font-medium mb-1.5">{tier.tagline}</p>
               <ul className="flex flex-col gap-1.5 mb-4">
                 {tier.features.map((f) => (
-                  <li key={f} className="text-[13px] text-[#333] flex gap-2">
-                    <span className="text-[#6d4ff0] font-bold">✓</span>{f}
+                  <li key={f} className="text-[13px] text-[#333] flex gap-2 items-start">
+                    <Check size={14} className="text-[#6d4ff0] shrink-0 mt-0.5" strokeWidth={3} />{f}
                   </li>
                 ))}
               </ul>

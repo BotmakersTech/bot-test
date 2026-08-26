@@ -1,4 +1,4 @@
-import { ArrowLeft, Edit2, Plus, Calendar, Trophy, Users, CheckCircle2, Check, Ban, UserCog, Trash2 } from "lucide-react"
+import { ArrowLeft, Edit2, Plus, Calendar, Trophy, Users, CheckCircle2, Check, Ban, UserCog, Trash2, AlertTriangle, Building2, Award } from "lucide-react"
 import MobileEventDetail from "./MobileEventDetail"
 import "./EventDashboard.css"
 
@@ -125,7 +125,7 @@ export default function EventDashboard({
           <ArrowLeft size={14} /> {backLabel}
         </button>
 
-        {errorBanner && <div className="ed-error-banner">⚠️ {errorBanner}</div>}
+        {errorBanner && <div className="ed-error-banner" style={{ display: "flex", alignItems: "center", gap: "8px" }}><AlertTriangle size={15} /> {errorBanner}</div>}
 
         {canManageEvent && pendingApprovalCount > 0 && (
           <div className="ed-banner">
@@ -173,7 +173,7 @@ export default function EventDashboard({
           <span className="ed-status-pill" style={{ borderColor: statusColor, color: statusColor }}>
             {toLabel(event.status)}
           </span>
-          {event.organizationName && <span className="ed-org-chip">🏛 {event.organizationName}</span>}
+          {event.organizationName && <span className="ed-org-chip" style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}><Building2 size={12} /> {event.organizationName}</span>}
         </div>
 
         <p className="ed-desc">{event.eventDescription}</p>
@@ -235,7 +235,7 @@ export default function EventDashboard({
 
           {sports.length === 0 ? (
             <div className="ed-empty-state">
-              <div style={{ fontSize: "2.2rem" }}>🏅</div>
+              <Award size={36} style={{ opacity: 0.6 }} />
               <div style={{ fontWeight: 600 }}>No sports added yet</div>
             </div>
           ) : (

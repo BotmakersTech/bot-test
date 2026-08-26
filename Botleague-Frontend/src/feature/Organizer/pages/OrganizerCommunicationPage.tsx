@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { Pin } from "lucide-react";
 import {
   getMyEvents,
   broadcastAnnouncement,
@@ -250,7 +251,7 @@ export default function OrganizerCommunicationPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      {a.isPinned && <span className="text-xs">📌</span>}
+                      {a.isPinned && <Pin size={12} />}
                       <span className="font-medium text-sm text-[#111111]">{a.title}</span>
                     </div>
                     <p className="mt-1 text-xs text-[#5d5d5d]">{a.body}</p>

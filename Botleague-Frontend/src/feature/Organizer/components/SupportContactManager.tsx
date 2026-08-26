@@ -102,7 +102,7 @@ function ContactRow({ contact, onEdit, onDelete, deleting }: {
       <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
         <button onClick={() => onEdit(contact)} style={{ background: "rgba(0,0,0,0.04)", border: `1px solid ${BORDER}`, color: TEXT, borderRadius: "6px", padding: "5px 10px", fontSize: "0.72rem", cursor: "pointer" }}>Edit</button>
         <button onClick={() => onDelete(contact.id)} disabled={deleting} style={{ background: "rgba(224,75,75,0.08)", border: "1px solid rgba(224,75,75,0.22)", color: DANGER, borderRadius: "6px", padding: "5px 8px", fontSize: "0.72rem", cursor: deleting ? "not-allowed" : "pointer" }}>
-          {deleting ? "…" : "✕"}
+          {deleting ? "…" : <X size={11} />}
         </button>
       </div>
     </div>
@@ -200,7 +200,7 @@ export default function SupportContactManager({
   return (
     <div style={{ background: "#fff", border: `1.5px solid ${BORDER}`, borderRadius: "16px", overflow: "hidden", marginTop: "24px" }}>
       <div style={{ padding: "12px 18px", borderBottom: `1px solid ${BORDER}`, background: "rgba(109,91,208,0.04)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ fontWeight: 700, letterSpacing: "0.05em", fontSize: "0.85rem", color: TEXT }}>📞 {headingText.toUpperCase()}</div>
+        <div style={{ fontWeight: 700, letterSpacing: "0.05em", fontSize: "0.85rem", color: TEXT, display: "flex", alignItems: "center", gap: 6 }}><Phone size={14} /> {headingText.toUpperCase()}</div>
         <button
           onClick={() => { setActionErr(null); setAddOpen(true) }}
           style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(109,91,208,0.1)", border: "1px solid rgba(109,91,208,0.3)", color: ACCENT, borderRadius: "8px", padding: "7px 14px", fontSize: "0.76rem", fontWeight: 700, cursor: "pointer" }}

@@ -1,7 +1,7 @@
 import { useState } from "react"
 import {
   ArrowLeft, Trophy, Users, Tag, DollarSign, Award, Calendar, ArrowRight,
-  Edit2, Lock, Unlock, Globe, MessageCircle, Check, Ban, Bot,
+  Edit2, Lock, Unlock, Globe, MessageCircle, Check, Ban, Bot, AlertTriangle, CheckCircle2,
 } from "lucide-react"
 import "./MobileSportDetail.css"
 
@@ -180,8 +180,12 @@ export default function MobileSportDetail({
       </div>
       {eventName && <p className="ssd-m-subtitle">Event- {eventName}</p>}
 
-      {errorBanner && <div className="ssd-m-banner error">⚠️ {errorBanner}</div>}
-      {publishMsg && <div className={`ssd-m-banner ${publishOk ? "ok" : "error"}`}>{publishMsg}</div>}
+      {errorBanner && <div className="ssd-m-banner error"><AlertTriangle size={13} /> {errorBanner}</div>}
+      {publishMsg && (
+        <div className={`ssd-m-banner ${publishOk ? "ok" : "error"}`}>
+          {publishOk ? <CheckCircle2 size={13} /> : <AlertTriangle size={13} />} {publishMsg}
+        </div>
+      )}
       {topExtra}
 
       {/* Edit / Registration / Publish / Announce — one 2x2 grid instead of

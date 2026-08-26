@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Lock, AlertTriangle, Check, MailCheck } from "lucide-react";
 import useContactInfo from "../hooks/useContactInfo";
 import { sendOtp, changePhoneWithOtp, changePassword } from "../../Auth/api/auth.api";
 
@@ -63,12 +64,12 @@ function SecurityTab() {
   return (
     <div style={{ background: "#404040", borderRadius: "12px", padding: "20px", border: "1px solid rgba(255,255,255,0.06)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-        <span style={{ fontSize: "1.2rem" }}>🔒</span>
+        <Lock size={19} />
         <h2 style={{ margin: 0, fontSize: "1rem", fontWeight: 700 }}>Change Password</h2>
       </div>
       {ok ? (
-        <div style={{ padding: "14px 16px", background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.22)", borderRadius: "8px", color: "#4ade80", fontSize: "0.85rem", fontWeight: 600 }}>
-          ✓ Password changed successfully! All other sessions have been logged out.
+        <div style={{ padding: "14px 16px", background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.22)", borderRadius: "8px", color: "#4ade80", fontSize: "0.85rem", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+          <Check size={16} /> Password changed successfully! All other sessions have been logged out.
         </div>
       ) : (
         <form onSubmit={handleChange} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
@@ -92,7 +93,7 @@ function SecurityTab() {
             {confirm && confirm !== pw && <span style={{ fontSize: "0.75rem", color: "#f87171" }}>Passwords do not match</span>}
           </div>
           {err && (
-            <div style={{ padding: "10px 14px", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", borderRadius: "8px", fontSize: "0.82rem", color: "#f87171" }}>⚠️ {err}</div>
+            <div style={{ padding: "10px 14px", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", borderRadius: "8px", fontSize: "0.82rem", color: "#f87171", display: "flex", alignItems: "center", gap: 6 }}><AlertTriangle size={14} /> {err}</div>
           )}
           <button
             type="submit"
@@ -418,8 +419,8 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              {phoneError && <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: "#f87171" }}>⚠️ {phoneError}</p>}
-              {phoneSuccess && <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: "#4ade80" }}>✓ {phoneSuccess}</p>}
+              {phoneError && <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: "#f87171", display: "flex", alignItems: "center", gap: 5 }}><AlertTriangle size={13} /> {phoneError}</p>}
+              {phoneSuccess && <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: "#4ade80", display: "flex", alignItems: "center", gap: 5 }}><Check size={13} /> {phoneSuccess}</p>}
             </div>
 
             {/* Email */}
@@ -493,7 +494,7 @@ export default function SettingsPage() {
                   fontSize: "0.82rem",
                   color: "#fbbf24",
                 }}>
-                  ✉️ Verification link sent to <strong>{ci.pendingEmail}</strong>. Click it to confirm.
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><MailCheck size={14} /> Verification link sent to <strong>{ci.pendingEmail}</strong>. Click it to confirm.</span>
                 </div>
               )}
 
@@ -511,7 +512,7 @@ export default function SettingsPage() {
                   fontSize: "0.82rem",
                   color: "#4ade80",
                 }}>
-                  ✓ Verification email sent successfully!
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Check size={14} /> Verification email sent successfully!</span>
                 </div>
               )}
             </div>

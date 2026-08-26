@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { Edit3, Flag, Lock, X } from "lucide-react"
+import { Edit3, Flag, Lock, X, AlertTriangle, Trophy } from "lucide-react"
 import { useMatches } from "../hooks/useMatches"
 import type { MatchDTO, MatchResultType, SubmitMatchResultDTO, UpdateMatchScoreDTO } from "../api/adminMatches.api"
 import { ORG } from "../../Organizer/theme/organizerTheme"
@@ -159,7 +159,7 @@ export default function RankingMatchesPanel({ sportId, onChanged }: RankingMatch
   }
 
   if (error && matches.length === 0) {
-    return <div style={{ padding: "24px", color: DANGER, fontSize: "0.85rem", fontWeight: 600 }}>⚠️ {error}</div>
+    return <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "24px", color: DANGER, fontSize: "0.85rem", fontWeight: 600 }}><AlertTriangle size={15} /> {error}</div>
   }
 
   if (matches.length === 0) {
@@ -217,12 +217,14 @@ export default function RankingMatchesPanel({ sportId, onChanged }: RankingMatch
                     {teams.map(t => (
                       <div key={t.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
                         <span style={{
+                          display: "flex", alignItems: "center", gap: "5px", minWidth: 0,
                           fontSize: "0.85rem", fontWeight: m.winnerRegistrationId === t.id ? 700 : 500,
                           color: m.winnerRegistrationId === t.id ? ORG.success : TEXT,
-                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                         }}>
-                          {t.name}{t.robotName ? ` — ${t.robotName}` : ""}
-                          {m.winnerRegistrationId === t.id && " 🏆"}
+                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {t.name}{t.robotName ? ` — ${t.robotName}` : ""}
+                          </span>
+                          {m.winnerRegistrationId === t.id && <Trophy size={12} style={{ flexShrink: 0 }} />}
                         </span>
                         {scoreEditing ? (
                           <input

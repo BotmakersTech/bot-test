@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
-import { X, Check, Ban, Clock, UserPlus, Search } from "lucide-react"
+import { X, Check, Ban, Clock, UserPlus, Search, AlertTriangle } from "lucide-react"
 import {
   getEventAssignments, assignEventHead, unassignEventHead,
   getSportAssignments, assignSportHead, unassignSportHead,
@@ -281,7 +281,7 @@ function AssignmentsTab({ eventId, isAdmin, sports, onResolved }: {
                           <div style={{ fontWeight: 700, fontSize: "0.83rem" }}>{u.firstName} {u.lastName} <span style={{ color: "var(--ed-ink-mute)", fontWeight: 500 }}>· {u.botleagueId}</span></div>
                           <div style={{ color: "var(--ed-ink-mute)", fontSize: "0.7rem" }}>{u.phone || u.email}</div>
                         </div>
-                        {already ? <span style={{ color: "var(--ed-success)", fontSize: "0.7rem", fontWeight: 700 }}>✓ Assigned</span>
+                        {already ? <span style={{ color: "var(--ed-success)", fontSize: "0.7rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "3px" }}><Check size={11} /> Assigned</span>
                           : assigning === u.id ? <Spinner /> : <span style={{ color: "var(--ed-purple)", fontSize: "0.7rem", fontWeight: 700 }}>+ Assign</span>}
                       </button>
                     )
@@ -298,7 +298,7 @@ function AssignmentsTab({ eventId, isAdmin, sports, onResolved }: {
                 {fetchingCode ? <Spinner /> : <Search size={14} />} Fetch
               </button>
             </div>
-            {codeError && <div style={{ color: "var(--ed-danger)", fontSize: "0.78rem", fontWeight: 600 }}>⚠️ {codeError}</div>}
+            {codeError && <div style={{ color: "var(--ed-danger)", fontSize: "0.78rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "5px" }}><AlertTriangle size={13} /> {codeError}</div>}
             {fetchedUser && (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", background: "#fff", border: "1px solid var(--ed-border-light)", borderRadius: "9px", padding: "10px 14px" }}>
                 <div>
@@ -309,7 +309,7 @@ function AssignmentsTab({ eventId, isAdmin, sports, onResolved }: {
                   <div style={{ color: "var(--ed-ink-mute)", fontSize: "0.7rem" }}>{fetchedUser.city || fetchedUser.country || ""}</div>
                 </div>
                 {assignedUserIds.has(fetchedUser.userId) ? (
-                  <span style={{ color: "var(--ed-success)", fontSize: "0.7rem", fontWeight: 700 }}>✓ Assigned</span>
+                  <span style={{ color: "var(--ed-success)", fontSize: "0.7rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "3px" }}><Check size={11} /> Assigned</span>
                 ) : (
                   <button type="button" className="ed-btn-primary-sm" onClick={() => doAssign(fetchedUser.userId)} disabled={assigning === fetchedUser.userId}>
                     {assigning === fetchedUser.userId ? <Spinner color="#fff" /> : "+ Assign"}
@@ -321,7 +321,7 @@ function AssignmentsTab({ eventId, isAdmin, sports, onResolved }: {
         )}
       </div>
 
-      {error && <div style={{ color: "var(--ed-danger)", fontSize: "0.78rem", fontWeight: 600 }}>⚠️ {error}</div>}
+      {error && <div style={{ color: "var(--ed-danger)", fontSize: "0.78rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "5px" }}><AlertTriangle size={13} /> {error}</div>}
 
       {loading ? (
         <div style={{ color: "var(--ed-ink-mute)", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "8px" }}><Spinner />Loading…</div>
@@ -433,7 +433,7 @@ function ChangesTab({ eventId, sports, currentUserId, canReviewSportHeadTier, ca
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-      {error && <div style={{ color: "var(--ed-danger)", fontSize: "0.78rem", fontWeight: 600 }}>⚠️ {error}</div>}
+      {error && <div style={{ color: "var(--ed-danger)", fontSize: "0.78rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "5px" }}><AlertTriangle size={13} /> {error}</div>}
       {requests.map(req => {
         const sport = sports.find(s => s.id === req.eventSportId)
         const isOwn = currentUserId != null && req.requestedBy === currentUserId

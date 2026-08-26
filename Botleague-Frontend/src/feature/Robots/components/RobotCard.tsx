@@ -1,4 +1,5 @@
 import type { Robot } from "../types/types";
+import { Tag, Weight, Gamepad2, Calendar } from "lucide-react";
 import {
   truncateText,
   formatDate,
@@ -125,18 +126,20 @@ maxWidth: "90%" }}>
                   {/* Spec pills */}
                   <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                     {[
-                      { label: "Code", value: robot.robotCode, icon: "🔖" },
-                      { label: "Weight", value: robot.weightClass, icon: "⚖️" },
-                      { label: "Control", value: controlTypeLabel[robot.controlType], icon: "🕹️" },
-                      { label: "Added", value: formatDate(robot.createdAt), icon: "📅" },
-                    ].map(({ label, value, icon }) => (
+                      { label: "Code", value: robot.robotCode, Icon: Tag },
+                      { label: "Weight", value: robot.weightClass, Icon: Weight },
+                      { label: "Control", value: controlTypeLabel[robot.controlType], Icon: Gamepad2 },
+                      { label: "Added", value: formatDate(robot.createdAt), Icon: Calendar },
+                    ].map(({ label, value, Icon }) => (
                       <div key={label} style={{
                         background: "rgba(255,255,255,0.05)",
                         border: "1px solid rgba(255,255,255,0.09)",
                         borderRadius: "14px", padding: "10px 14px",
-                        fontSize: "0.75rem", color: "#d1d5db"
+                        fontSize: "0.75rem", color: "#d1d5db",
+                        display: "flex", alignItems: "center", gap: "6px",
                       }}>
-                        <span style={{ opacity: 0.7 }}>{icon} {label}: </span>
+                        <Icon size={13} style={{ opacity: 0.7, flexShrink: 0 }} />
+                        <span style={{ opacity: 0.7 }}>{label}: </span>
                         <span style={{ color: THEME.text, fontWeight: 600 }}>{value}</span>
                       </div>
                     ))}

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { X, Sparkles } from "lucide-react";
+import { X, Sparkles, PartyPopper } from "lucide-react";
 import type { RootState } from "../../app/store";
 import "../../styles/onboarding.css";
 
@@ -46,8 +46,8 @@ export default function WelcomeModal({ onTakeTour }: Props) {
           <div className="onb-icon-badge" style={{ margin: "0 auto 16px", width: 68, height: 68 }}>
             <Sparkles size={30} />
           </div>
-          <h2 className="onb-title" style={{ fontSize: "1.3rem", margin: 0 }}>
-            You made it, {user.firstName || user.userName || "Champion"}! 🎉
+          <h2 className="onb-title" style={{ fontSize: "1.3rem", margin: 0, display: "inline-flex", alignItems: "center", gap: 8, justifyContent: "center" }}>
+            You made it, {user.firstName || user.userName || "Champion"}! <PartyPopper size={20} />
           </h2>
           <p className="onb-subtitle" style={{ margin: "10px 0 0", fontSize: "0.9rem" }}>
             Welcome to BotLeague.{" "}

@@ -1,12 +1,12 @@
 import { useNavigate } from "react-router-dom";
-import { X, Zap } from "lucide-react";
+import { X, Zap, type LucideIcon } from "lucide-react";
 import "../../styles/onboarding.css";
 
 // ── Required profile fields the user must complete ────────────────────────────
 export interface MissingField {
   key:   string;
   label: string;
-  icon:  string;
+  icon:  LucideIcon;
 }
 
 interface Props {
@@ -49,7 +49,7 @@ export default function ProfileIncompleteModal({ missingFields, action, onClose 
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {missingFields.map((f) => (
               <div key={f.key} className="onb-field-row">
-                <span style={{ fontSize: "1.1rem", flexShrink: 0 }}>{f.icon}</span>
+                <f.icon size={18} style={{ flexShrink: 0 }} />
                 <span style={{ fontSize: "0.87rem", fontWeight: 600, color: "#374151", fontFamily: "Poppins, sans-serif" }}>{f.label}</span>
                 <span className="onb-field-required">REQUIRED</span>
               </div>
