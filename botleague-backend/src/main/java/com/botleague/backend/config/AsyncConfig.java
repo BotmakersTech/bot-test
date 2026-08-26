@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -39,7 +40,15 @@ public class AsyncConfig implements AsyncConfigurer {
 
     private final AuditLogService auditLogService;
 
-    public AsyncConfig(AuditLogService auditLogService) {
+    // @Lazy: breaks the entityManagerFactory <-> asyncConfig circular
+    // dependency (Spring's Hibernate auto-config resolves AsyncConfig early
+    // to discover its ThreadPoolTaskExecutor beans, before the JPA layer
+    // AuditLogService -> AuditLogRepository needs is ready). Injects a
+    // proxy instead of the real bean, so nothing here has to exist yet at
+    // AsyncConfig construction time — the proxy only resolves the real
+    // AuditLogService the first time getAsyncUncaughtExceptionHandler()'s
+    // lambda actually calls it, long after the context has fully started.
+    public AsyncConfig(@Lazy AuditLogService auditLogService) {
         this.auditLogService = auditLogService;
     }
 
