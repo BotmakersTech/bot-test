@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { Check } from "lucide-react";
 
 const OTP_LENGTH = 4;
 
@@ -151,7 +152,7 @@ export default function OtpSection({
             disabled={isLoading || !otpSent || otpVerified}
             className="cna-register-row-btn"
           >
-            {otpVerified ? "Verified ✔" : "Verify"}
+            {otpVerified ? <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>Verified <Check size={14} /></span> : "Verify"}
           </button>
         </div>
       </div>

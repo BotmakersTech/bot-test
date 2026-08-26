@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import {
   ArrowLeft, Users, Trophy, Calendar, CalendarRange, Tag, Swords, DollarSign, Award, Bot,
   Edit2, X, FileEdit, PlayCircle, RefreshCw, CheckCircle2, XCircle, Lock, Unlock, Globe, MessageCircle,
+  AlertTriangle, ChevronUp, ChevronDown,
 } from "lucide-react"
 import { useAdminEvents } from "../hooks/UseAdminEvent"
 import { useMatches } from "../hooks/useMatches"
@@ -304,9 +305,12 @@ function TeamCard({
               border: `1px solid ${BORDER}`,
               borderRadius: "5px",
               padding: "2px 8px",
-              fontWeight: 600
+              fontWeight: 600,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "3px",
             }}>
-              {open ? "▲ hide" : "▼ lineup"}
+              {open ? <><ChevronUp size={11} /> hide</> : <><ChevronDown size={11} /> lineup</>}
             </span>
           )}
         </div>
@@ -964,6 +968,7 @@ export default function AdminSport() {
   const [showEditSport,       setShowEditSport]       = React.useState(false)
   const [finalizing,          setFinalizing]          = React.useState(false)
   const [finalizeMsg,         setFinalizeMsg]         = React.useState<string | null>(null)
+  const [finalizeOk,          setFinalizeOk]          = React.useState(false)
   const [regActionError,      setRegActionError]      = React.useState<string | null>(null)
 
   const {
@@ -1025,9 +1030,11 @@ export default function AdminSport() {
     setFinalizeMsg(null)
     try {
       await pushToGlobalRankings(sportId)
-      setFinalizeMsg("✓ Global rankings updated successfully!")
+      setFinalizeOk(true)
+      setFinalizeMsg("Global rankings updated successfully!")
     } catch (e: any) {
-      setFinalizeMsg("⚠️ " + (e?.response?.data?.message ?? e?.response?.data?.error ?? "Publish failed"))
+      setFinalizeOk(false)
+      setFinalizeMsg(e?.response?.data?.message ?? e?.response?.data?.error ?? "Publish failed")
     } finally {
       setFinalizing(false)
     }
@@ -1076,8 +1083,8 @@ export default function AdminSport() {
   if (error) {
     return (
       <PageWrapper>
-        <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "10px", padding: "16px 20px", color: DANGER, fontSize: "0.85rem", fontWeight: 600 }}>
-          ⚠️ {error}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.22)", borderRadius: "10px", padding: "16px 20px", color: DANGER, fontSize: "0.85rem", fontWeight: 600 }}>
+          <AlertTriangle size={16} /> {error}
         </div>
       </PageWrapper>
     )
@@ -1173,7 +1180,8 @@ export default function AdminSport() {
 
         {/* finalize feedback */}
         {finalizeMsg && (
-          <div className={`sdt-banner ${finalizeMsg.startsWith("✓") ? "ok" : "error"}`}>
+          <div className={`sdt-banner ${finalizeOk ? "ok" : "error"}`}>
+            {finalizeOk ? <CheckCircle2 size={15} /> : <AlertTriangle size={15} />}
             {finalizeMsg}
           </div>
         )}
@@ -1370,7 +1378,7 @@ export default function AdminSport() {
         onToggleRegistration={handleToggleRegistration}
         registrationLoading={registrationLoading}
         publishMsg={finalizeMsg}
-        publishOk={finalizeMsg?.startsWith("✓")}
+        publishOk={finalizeOk}
         totalTeams={totalTeams}
         totalPlayers={totalPlayers}
         maxTeams={sport.maxTeams ?? null}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { useSelector } from "react-redux"
-import { Clock } from "lucide-react"
+import { Clock, ClipboardList, Award, type LucideIcon } from "lucide-react"
 import type { RootState } from "../../../app/store"
 import RoleHeroDashboard, { type RoleHeroRecentItem } from "../../../shared/components/RoleHeroDashboard"
 import { getMyVolunteerAssignments, type VolunteerAssignment } from "../../Event/api/volunteerApplication.api"
@@ -100,12 +100,12 @@ export default function VolunteerDashboard() {
       {/* Quick links */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
         {[
-          { label: "My Event",        href: "/volunteer/event", icon: "📋" },
-          { label: "Certificates",    href: "/certificates",    icon: "🏅" },
-        ].map(l => (
+          { label: "My Event",        href: "/volunteer/event", icon: ClipboardList },
+          { label: "Certificates",    href: "/certificates",    icon: Award },
+        ].map((l: { label: string; href: string; icon: LucideIcon }) => (
           <Link key={l.label} to={l.href}
             className="flex items-center gap-3 rounded-xl border border-[#4b86e8]/20 bg-white px-4 py-3 hover:border-[#0162D1]/40 hover:bg-[#0162D1]/3 transition-colors">
-            <span className="text-xl">{l.icon}</span>
+            <l.icon size={20} className="text-[#0162D1]" />
             <span className="text-sm text-[#374151] font-medium">{l.label}</span>
           </Link>
         ))}

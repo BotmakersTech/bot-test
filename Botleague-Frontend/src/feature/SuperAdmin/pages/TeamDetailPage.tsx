@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react"
 import { useParams, useNavigate } from "react-router-dom"
+import { Check } from "lucide-react"
 import {
   getAdminTeamDetail,
   changeAdminTeamStatus,
@@ -271,7 +272,7 @@ export default function TeamDetailPage() {
                     style={{ padding: "10px 20px", fontSize: 14 }}
                   >
                     {s === "ACTIVE" ? "Approve" : s === "PENDING" ? "Set Pending" : "Reject"}
-                    {team.status === s && " ✓"}
+                    {team.status === s && <Check size={13} style={{ marginLeft: 4, display: "inline", verticalAlign: "middle" }} />}
                   </button>
                 ))}
               </div>

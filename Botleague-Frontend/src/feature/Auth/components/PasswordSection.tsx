@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Check } from "lucide-react";
 
 const inputClass =
   "cna-register-field-input cna-has-eye " +
@@ -114,8 +114,8 @@ export default function PasswordSection({
         )}
 
         {confirmPassword && match && (
-          <p className="text-green-600 text-[10px] md:text-[12px] font-inter">
-            Passwords match ✔
+          <p className="text-green-600 text-[10px] md:text-[12px] font-inter inline-flex items-center gap-1">
+            Passwords match <Check size={11} />
           </p>
         )}
       </div>

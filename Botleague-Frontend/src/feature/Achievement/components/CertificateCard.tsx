@@ -1,8 +1,9 @@
 import { useState } from "react"
-import { Award, Download, ShieldCheck } from "lucide-react"
+import { Award, Download, ShieldCheck, Medal } from "lucide-react"
 import { CATEGORY_LABELS, type IssuedCertificate } from "../../Certificates/api/certificate.api"
 
-const POSITION_LABEL: Record<number, string> = { 1: "🥇 1st Place", 2: "🥈 2nd Place", 3: "🥉 3rd Place" }
+const POSITION_COLOR: Record<number, string> = { 1: "#eab308", 2: "#9ca3af", 3: "#b45309" }
+const POSITION_LABEL: Record<number, string> = { 1: "1st Place", 2: "2nd Place", 3: "3rd Place" }
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
@@ -23,7 +24,10 @@ export default function CertificateCard({ certificate: c }: { certificate: Issue
           <div className="bl-card-image-fallback"><Award size={48} /></div>
         )}
         {badgeText && (
-          <span className={"bl-card-badge" + (c.category === "WINNER" ? " bl-badge-winner" : "")}>{badgeText}</span>
+          <span className={"bl-card-badge" + (c.category === "WINNER" ? " bl-badge-winner" : "")} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+            {c.positionSnapshot && POSITION_COLOR[c.positionSnapshot] && <Medal size={12} color={POSITION_COLOR[c.positionSnapshot]} />}
+            {badgeText}
+          </span>
         )}
       </div>
 

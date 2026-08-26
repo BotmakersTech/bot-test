@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
+import { Clock, MapPin, Trophy, Play, Check } from "lucide-react";
 import {
   getMyEvents,
   getMyEventById,
@@ -276,9 +277,9 @@ function MatchCard({
 
       {/* Meta */}
       <div className="flex flex-wrap gap-3 text-xs text-[#5d5d5d] mb-3">
-        {match.scheduledAt && <span>🕐 {fmt(match.scheduledAt)}</span>}
-        {match.arenaName && <span>📍 {match.arenaName}</span>}
-        {winner && <span className="text-[#a16207]">🏆 {winner}</span>}
+        {match.scheduledAt && <span className="inline-flex items-center gap-1"><Clock size={12} /> {fmt(match.scheduledAt)}</span>}
+        {match.arenaName && <span className="inline-flex items-center gap-1"><MapPin size={12} /> {match.arenaName}</span>}
+        {winner && <span className="text-[#a16207] inline-flex items-center gap-1"><Trophy size={12} /> {winner}</span>}
         {match.winMethod && <span>via {match.winMethod.replace(/_/g, " ")}</span>}
       </div>
 
@@ -321,9 +322,9 @@ function MatchCard({
             <button
               disabled={working}
               onClick={() => call(() => startMatch(match.matchId))}
-              className="rounded-lg bg-[#1fa952] px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50 transition-opacity"
+              className="rounded-lg bg-[#1fa952] px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50 transition-opacity inline-flex items-center gap-1"
             >
-              {working ? "…" : "▶ Start Match"}
+              {working ? "…" : <><Play size={12} fill="currentColor" /> Start Match</>}
             </button>
           )}
 
@@ -372,9 +373,9 @@ function MatchCard({
                       setErr(e?.response?.data?.message ?? e?.message ?? "Failed");
                     } finally { setWorking(false); }
                   }}
-                  className="rounded-lg bg-linear-to-br from-[#4c8ee7] to-[#8c6cff] px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50 transition-opacity"
+                  className="rounded-lg bg-linear-to-br from-[#4c8ee7] to-[#8c6cff] px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50 transition-opacity inline-flex items-center gap-1"
                 >
-                  {working ? "…" : "✓ End Match"}
+                  {working ? "…" : <><Check size={12} /> End Match</>}
                 </button>
                 <button
                   disabled={working}

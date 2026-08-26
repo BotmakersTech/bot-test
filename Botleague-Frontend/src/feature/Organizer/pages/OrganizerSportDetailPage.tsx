@@ -4,7 +4,7 @@ import { useSelector } from "react-redux"
 import {
   ArrowLeft, Users, Trophy, Calendar, CalendarRange, Tag, Swords, DollarSign, Award, Bot,
   Edit2, X, Megaphone, FileEdit, PlayCircle, RefreshCw, CheckCircle2, XCircle, Lock, Unlock, Globe,
-  AlertTriangle, MessageCircle, Check, Ban, Clock,
+  AlertTriangle, MessageCircle, Check, Ban, Clock, ChevronUp, ChevronDown,
 } from "lucide-react"
 import { useOrganizerSportDetail } from "../hooks/useOrganizerSportDetail"
 import { useMatches } from "../../Admin/hooks/useMatches"
@@ -329,9 +329,12 @@ function TeamCard({
               border: `1px solid ${BORDER}`,
               borderRadius: "5px",
               padding: "2px 8px",
-              fontWeight: 600
+              fontWeight: 600,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "3px",
             }}>
-              {open ? "▲ hide" : "▼ lineup"}
+              {open ? <><ChevronUp size={11} /> hide</> : <><ChevronDown size={11} /> lineup</>}
             </span>
           )}
         </div>

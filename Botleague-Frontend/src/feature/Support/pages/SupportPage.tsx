@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Trophy, Bot, Users, Globe2, ChevronDown } from "lucide-react"
+import { Trophy, Bot, Users, Globe2, ChevronDown, CheckCircle2 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import starDecor from "../../../assets/Auth/Star-two.svg"
 import planeDecor from "../../../assets/Auth/plane.svg"
@@ -182,7 +182,7 @@ export default function SupportPage() {
 
           {submitted ? (
             <div className="support-success-card">
-              <div className="text-4xl mb-3">✅</div>
+              <CheckCircle2 size={36} className="mx-auto mb-3 text-green-500" />
               <h3 className="support-success-title">Message Sent</h3>
               <p className="support-success-text">
                 Your email client should have opened. We'll reply to you within 1–2 business days.

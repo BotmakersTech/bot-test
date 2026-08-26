@@ -1,4 +1,5 @@
 import React from "react";
+import { X } from "lucide-react";
 
 
 // ======================================================
@@ -118,8 +119,6 @@ export default function Modal({
 
               cursor: "pointer",
 
-              fontSize: "1.1rem",
-
               display: "flex",
 
               alignItems: "center",
@@ -127,7 +126,7 @@ export default function Modal({
               justifyContent: "center",
             }}
           >
-            ✕
+            <X size={18} />
           </button>
 
         </div>

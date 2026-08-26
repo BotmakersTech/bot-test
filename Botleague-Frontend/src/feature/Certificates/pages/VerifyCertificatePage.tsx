@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { Check, X, HelpCircle, type LucideIcon } from "lucide-react";
 import { verifyCertificate, type PublicVerificationResponse } from "../api/certificate.api";
 import PublicNavbar from "../../../shared/components/PublicNavbar";
 
@@ -8,10 +9,10 @@ function formatDate(iso?: string) {
   return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 }
 
-const RESULT_COPY: Record<string, { title: string; color: string; icon: string }> = {
-  VALID: { title: "Certificate Verified", color: "#1fa952", icon: "✓" },
-  REVOKED: { title: "Certificate Revoked", color: "#e04b4b", icon: "✕" },
-  NOT_FOUND: { title: "Certificate Not Found", color: "#e04b4b", icon: "?" },
+const RESULT_COPY: Record<string, { title: string; color: string; icon: LucideIcon }> = {
+  VALID: { title: "Certificate Verified", color: "#1fa952", icon: Check },
+  REVOKED: { title: "Certificate Revoked", color: "#e04b4b", icon: X },
+  NOT_FOUND: { title: "Certificate Not Found", color: "#e04b4b", icon: HelpCircle },
 };
 
 export default function VerifyCertificatePage() {
@@ -78,10 +79,10 @@ export default function VerifyCertificatePage() {
           <div className="rounded-2xl border p-6" style={{ borderColor: copy.color + "40", background: copy.color + "0d" }}>
             <div className="flex items-center gap-3 mb-4">
               <div
-                className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold shrink-0"
+                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
                 style={{ background: copy.color + "22", color: copy.color }}
               >
-                {copy.icon}
+                <copy.icon size={20} strokeWidth={2.5} />
               </div>
               <div>
                 <h2 className="text-lg font-bold" style={{ color: copy.color }}>{copy.title}</h2>

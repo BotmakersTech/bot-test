@@ -11,7 +11,7 @@ import {
   Clock, Swords, Shuffle, ChevronRight,
   AlertTriangle, RefreshCw, Calendar,
   BarChart2, Hand, Scale, Flag, Ban,
-  Lock, Unlock
+  Lock, Unlock, PartyPopper, Medal
 } from "lucide-react"
 import type {
   MatchDTO,
@@ -951,7 +951,7 @@ export default function OrganizerBracketPage() {
           <span style={styles.championText}>
             Champion: {resolveWinnerName(champion) ?? "—"}
           </span>
-          🎉
+          <PartyPopper size={18} color={T.gold} />
         </div>
       )}
 
@@ -1143,7 +1143,10 @@ export default function OrganizerBracketPage() {
                   )}
 
                   {champion?.matchId === match.matchId && (
-                    <text x={x + w / 2} y={y - 8} textAnchor="middle" fontSize={14}>🏆</text>
+                    <svg x={x + w / 2 - 7} y={y - 21} width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M6 9H3V4h3M18 9h3V4h-3M6 4h12v9a6 6 0 01-12 0V4z" />
+                      <path d="M12 19v3M8 22h8" />
+                    </svg>
                   )}
                 </g>
               )
@@ -1173,7 +1176,7 @@ export default function OrganizerBracketPage() {
       {/* ── 3RD PLACE MATCH (below bracket SVG) ── */}
       {thirdPlaceMatch && (
         <div style={styles.thirdPlaceWrap}>
-          <div style={styles.thirdPlaceLabel}>🥉 3rd Place Match</div>
+          <div style={{ ...styles.thirdPlaceLabel, display: "flex", alignItems: "center", gap: 5 }}><Medal size={13} /> 3rd Place Match</div>
 
           <div
             onClick={() => { setActionError(null); setSelectedMatchId(thirdPlaceMatch.matchId) }}
@@ -1227,7 +1230,7 @@ export default function OrganizerBracketPage() {
                       background: isWinner ? "rgba(31,169,82,0.14)" : "rgba(75,134,232,0.07)",
                       color: isWinner ? T.green : T.textMuted,
                     }}>
-                      {isWinner ? "🥉" : String.fromCharCode(64 + team.slot)}
+                      {isWinner ? <Medal size={12} /> : String.fromCharCode(64 + team.slot)}
                     </div>
                     <span style={{
                       fontSize: 11, fontWeight: isWinner ? 700 : 400,
@@ -1267,8 +1270,8 @@ export default function OrganizerBracketPage() {
               && !thirdPlaceMatch.teamBRegistrationId
               && <span style={{ color: T.textMuted, marginLeft: 4 }}>· Waiting for semi-finals</span>}
             {thirdPlaceMatch.status === "COMPLETED" && thirdPlaceMatch.winnerRegistrationId && (
-              <span style={{ color: T.purple, marginLeft: 6, fontWeight: 700 }}>
-                🥉 {resolveWinnerName(thirdPlaceMatch)} takes 3rd
+              <span style={{ color: T.purple, marginLeft: 6, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                <Medal size={12} /> {resolveWinnerName(thirdPlaceMatch)} takes 3rd
               </span>
             )}
           </div>
@@ -1303,13 +1306,13 @@ export default function OrganizerBracketPage() {
                   </span>
                 )}
                 {selectedMatch.leaderboardPosition === 1 && (
-                  <span style={{ ...styles.byeTag, background: "rgba(161,98,7,0.12)", color: T.gold, borderColor: "rgba(161,98,7,0.3)" }}>
-                    🏆 Grand Final
+                  <span style={{ ...styles.byeTag, background: "rgba(161,98,7,0.12)", color: T.gold, borderColor: "rgba(161,98,7,0.3)", display: "flex", alignItems: "center", gap: 4 }}>
+                    <Trophy size={11} /> Grand Final
                   </span>
                 )}
                 {selectedMatch.leaderboardPosition === 3 && (
-                  <span style={{ ...styles.byeTag, background: "rgba(140,108,255,0.12)", color: T.purple, borderColor: "rgba(140,108,255,0.3)" }}>
-                    🥉 3rd Place
+                  <span style={{ ...styles.byeTag, background: "rgba(140,108,255,0.12)", color: T.purple, borderColor: "rgba(140,108,255,0.3)", display: "flex", alignItems: "center", gap: 4 }}>
+                    <Medal size={11} /> 3rd Place
                   </span>
                 )}
                 {selectedMatch.isBracketReset && (
@@ -1382,7 +1385,7 @@ export default function OrganizerBracketPage() {
                         color: isWinner ? T.green : T.textMuted,
                       }}>
                         {isWinner
-                          ? (selectedMatch.leaderboardPosition === 3 ? "🥉" : "🏆")
+                          ? (selectedMatch.leaderboardPosition === 3 ? <Medal size={13} /> : <Trophy size={13} />)
                           : String.fromCharCode(64 + team.slot)}
                       </div>
                       <span style={{
@@ -1629,13 +1632,15 @@ export default function OrganizerBracketPage() {
                   <div style={{ ...styles.scoreSectionLabel, color: T.purple }}>Finish Positions</div>
                   <div style={styles.scoreGrid}>
                     {[
-                      { medal: "🥇", label: "1st Place", val: pos1, set: setPos1 },
-                      { medal: "🥈", label: "2nd Place", val: pos2, set: setPos2 },
-                      { medal: "🥉", label: "3rd Place", val: pos3, set: setPos3 },
-                      ...(isFatalFour ? [{ medal: "4️⃣", label: "4th Place", val: pos4, set: setPos4 }] : []),
-                    ].map(({ medal, label, val, set }) => (
+                      { color: "#eab308", label: "1st Place", val: pos1, set: setPos1 },
+                      { color: "#9ca3af", label: "2nd Place", val: pos2, set: setPos2 },
+                      { color: "#b45309", label: "3rd Place", val: pos3, set: setPos3 },
+                      ...(isFatalFour ? [{ color: undefined, label: "4th Place", val: pos4, set: setPos4 }] : []),
+                    ].map(({ color, label, val, set }) => (
                       <div key={label} style={styles.scoreInputWrap}>
-                        <div style={styles.scoreInputLabel}>{medal} {label}</div>
+                        <div style={{ ...styles.scoreInputLabel, display: "flex", alignItems: "center", gap: 4 }}>
+                          {color && <Medal size={12} color={color} />} {label}
+                        </div>
                         <select value={val} onChange={e => set(e.target.value)} style={styles.positionSelect}>
                           <option value="">— Select —</option>
                           {getTeams(selectedMatch).map(t => (
@@ -1724,7 +1729,7 @@ export default function OrganizerBracketPage() {
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   {selectedMatch.leaderboardPosition === 3
-                    ? <span style={{ fontSize: "1rem" }}>🥉</span>
+                    ? <Medal size={16} color="#b45309" />
                     : <Trophy size={16} color={T.gold} />
                   }
                   <span style={{

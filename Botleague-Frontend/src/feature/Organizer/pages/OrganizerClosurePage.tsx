@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { Check as CheckIcon, Circle } from "lucide-react";
 import {
   getMyEvents,
   getMatchesForSport,
@@ -20,7 +21,7 @@ function Check({ ok, label }: { ok: boolean; label: string }) {
   return (
     <div className={`flex items-center gap-3 rounded-lg p-3 ${ok ? "bg-[#1fa952]/8" : "bg-[#4b86e8]/5"}`}>
       <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm ${ok ? "bg-[#1fa952]/20 text-[#1fa952]" : "bg-[#4b86e8]/10 text-[#7c7c7c]"}`}>
-        {ok ? "✓" : "○"}
+        {ok ? <CheckIcon size={13} /> : <Circle size={10} />}
       </span>
       <span className={`text-sm ${ok ? "text-[#1fa952]" : "text-[#5d5d5d]"}`}>{label}</span>
     </div>

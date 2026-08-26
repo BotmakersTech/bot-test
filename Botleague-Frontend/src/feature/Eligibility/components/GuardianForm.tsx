@@ -211,7 +211,9 @@ export default function GuardianForm({ onSaved }: GuardianFormProps) {
           </div>
         )}
         {error && (
-          <div style={{ color: DANGER, fontSize: "0.82rem", fontWeight: 600 }}>⚠ {error}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", color: DANGER, fontSize: "0.82rem", fontWeight: 600 }}>
+            <AlertCircle size={15} /> {error}
+          </div>
         )}
 
         {/* Save */}

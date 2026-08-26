@@ -3,6 +3,7 @@
 //         <SponsorManager mode="sport"  entityId={sportId} title="Sport Sponsors" />
 
 import { useRef, useState, useEffect, useCallback } from "react";
+import { X, Upload, AlertTriangle, Handshake } from "lucide-react";
 import {
   EVENT_SPORT_SPONSOR_TYPES,
   type EventSponsor,
@@ -92,14 +93,14 @@ function LogoUploader({ mode, entityId, value, onChange }: LogoUploadProps) {
               type="button"
               onClick={() => { setPreview(""); onChange(""); }}
               style={{ position: "absolute", top: "-6px", right: "-6px", background: "rgba(220,38,38,0.9)", border: "none", color: "#fff", borderRadius: "50%", width: "16px", height: "16px", fontSize: "9px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-            >✕</button>
+            ><X size={10} /></button>
           </div>
         ) : (
           <div
             onClick={() => !uploading && inputRef.current?.click()}
             style={{ width: "90px", height: "52px", border: `1px dashed ${uploading ? ACCENT : BORDER}`, borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", cursor: uploading ? "wait" : "pointer", background: "rgba(75,134,232,0.06)", fontSize: "0.65rem", color: MUTED, flexDirection: "column", gap: "3px" }}
           >
-            {uploading ? <span style={{ fontSize: "0.6rem", color: ACCENT }}>Uploading…</span> : <><span style={{ fontSize: "1rem" }}>📁</span><span>Upload</span></>}
+            {uploading ? <span style={{ fontSize: "0.6rem", color: ACCENT }}>Uploading…</span> : <><Upload size={15} /><span>Upload</span></>}
           </div>
         )}
         <input ref={inputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }} />
@@ -154,7 +155,7 @@ function SponsorFormModal({ mode, entityId, title, initial, busy, error, onSave,
       <div style={{ background: "#ffffff", border: `1px solid rgba(75,134,232,0.3)`, borderRadius: "16px", width: "100%", maxWidth: "460px", maxHeight: "90vh", overflow: "auto", padding: "24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
           <div style={{ fontWeight: 700, fontSize: "1rem", color: TEXT }}>{title}</div>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: MUTED, cursor: "pointer", fontSize: "18px" }}>✕</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: MUTED, cursor: "pointer", display: "flex" }}><X size={18} /></button>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
@@ -185,8 +186,8 @@ function SponsorFormModal({ mode, entityId, title, initial, busy, error, onSave,
         </div>
 
         {error && (
-          <div style={{ background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.25)", borderRadius: "8px", padding: "10px 12px", color: DANGER, fontSize: "0.78rem", fontWeight: 600, marginTop: "16px" }}>
-            ⚠️ {error}
+          <div style={{ background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.25)", borderRadius: "8px", padding: "10px 12px", color: DANGER, fontSize: "0.78rem", fontWeight: 600, marginTop: "16px", display: "flex", alignItems: "center", gap: 6 }}>
+            <AlertTriangle size={14} /> {error}
           </div>
         )}
 
@@ -233,7 +234,7 @@ function SponsorRow({ sponsor, onEdit, onDelete, deleting }: SponsorRowProps) {
       <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
         <button onClick={() => onEdit(sponsor)} style={{ background: "rgba(75,134,232,0.08)", border: `1px solid ${BORDER}`, color: LABEL, borderRadius: "6px", padding: "5px 10px", fontSize: "0.72rem", cursor: "pointer" }}>Edit</button>
         <button onClick={() => onDelete(sponsor.id)} disabled={deleting} style={{ background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.25)", color: DANGER, borderRadius: "6px", padding: "5px 8px", fontSize: "0.72rem", cursor: deleting ? "not-allowed" : "pointer" }}>
-          {deleting ? "…" : "✕"}
+          {deleting ? "…" : <X size={11} />}
         </button>
       </div>
     </div>
@@ -355,7 +356,7 @@ export default function SponsorManager({ mode, entityId, title }: SponsorManager
   return (
     <div style={{ background: CARD2, border: "1px solid rgba(75,134,232,0.15)", borderRadius: "14px", overflow: "hidden", marginTop: "24px" }}>
       <div style={{ padding: "12px 18px", borderBottom: `1px solid ${BORDER}`, background: "rgba(75,134,232,0.04)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ fontWeight: 700, letterSpacing: "0.06em", fontSize: "0.85rem" }}>🤝 {headingText.toUpperCase()}</div>
+        <div style={{ fontWeight: 700, letterSpacing: "0.06em", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: 6 }}><Handshake size={15} /> {headingText.toUpperCase()}</div>
         <button
           onClick={() => { setActionErr(null); setAddOpen(true); }}
           style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(75,134,232,0.1)", border: "1px solid rgba(75,134,232,0.3)", color: ACCENT, borderRadius: "8px", padding: "7px 14px", fontSize: "0.77rem", fontWeight: 700, cursor: "pointer" }}
@@ -364,7 +365,7 @@ export default function SponsorManager({ mode, entityId, title }: SponsorManager
 
       <div style={{ padding: "16px 18px" }}>
         {loading && <div style={{ color: MUTED, fontSize: "0.83rem", padding: "12px 0" }}>Loading…</div>}
-        {err && <div style={{ color: DANGER, fontSize: "0.83rem", marginBottom: "10px" }}>⚠️ {err}</div>}
+        {err && <div style={{ color: DANGER, fontSize: "0.83rem", marginBottom: "10px", display: "flex", alignItems: "center", gap: 6 }}><AlertTriangle size={13} /> {err}</div>}
 
         {!loading && sponsors.length === 0 && (
           <div style={{ textAlign: "center", padding: "24px 0", color: MUTED, fontSize: "0.83rem" }}>
@@ -373,7 +374,7 @@ export default function SponsorManager({ mode, entityId, title }: SponsorManager
         )}
 
         {actionErr && (
-          <div style={{ background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.25)", borderRadius: "8px", padding: "8px 12px", color: DANGER, fontSize: "0.78rem", marginBottom: "12px" }}>⚠️ {actionErr}</div>
+          <div style={{ background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.25)", borderRadius: "8px", padding: "8px 12px", color: DANGER, fontSize: "0.78rem", marginBottom: "12px", display: "flex", alignItems: "center", gap: 6 }}><AlertTriangle size={13} /> {actionErr}</div>
         )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>

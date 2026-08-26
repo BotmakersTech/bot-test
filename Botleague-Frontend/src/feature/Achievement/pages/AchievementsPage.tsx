@@ -1,23 +1,24 @@
 import { useEffect, useState } from "react"
+import { Flag, Trophy, Medal, Crown, Zap, Handshake, Bot, Target, Award, Star, type LucideIcon } from "lucide-react"
 import { getMyAchievements, type AchievementDTO } from "../api/achievement.api"
 
-const ACHIEVEMENT_META: Record<string, { label: string; desc: string; icon: string; color: string }> = {
-  FIRST_REGISTRATION:  { label: "First Registration",  desc: "Registered for your first event",       icon: "🏁", color: "text-blue-400" },
-  FIRST_WIN:           { label: "First Victory",        desc: "Won your very first match",             icon: "🏆", color: "text-yellow-400" },
-  PODIUM_FINISH:       { label: "Podium Finish",        desc: "Placed top 3 in an event",             icon: "🥉", color: "text-orange-400" },
-  CHAMPION:            { label: "Champion",             desc: "Won first place in an event",           icon: "👑", color: "text-yellow-500" },
-  UNDEFEATED:          { label: "Undefeated",           desc: "Completed an event without losing",    icon: "⚡", color: "text-purple-400" },
-  TEAM_PLAYER:         { label: "Team Player",          desc: "Competed as part of a team",           icon: "🤝", color: "text-green-400" },
-  ROBOT_BUILDER:       { label: "Robot Builder",        desc: "Registered a robot for competition",   icon: "🤖", color: "text-cyan-400" },
-  MULTI_SPORT:         { label: "Multi-Sport",          desc: "Competed in multiple sport categories", icon: "🎯", color: "text-pink-400" },
-  VETERAN:             { label: "Veteran",              desc: "Participated in 5+ events",            icon: "🎖️", color: "text-amber-400" },
+const ACHIEVEMENT_META: Record<string, { label: string; desc: string; icon: LucideIcon; color: string }> = {
+  FIRST_REGISTRATION:  { label: "First Registration",  desc: "Registered for your first event",       icon: Flag, color: "text-blue-400" },
+  FIRST_WIN:           { label: "First Victory",        desc: "Won your very first match",             icon: Trophy, color: "text-yellow-400" },
+  PODIUM_FINISH:       { label: "Podium Finish",        desc: "Placed top 3 in an event",             icon: Medal, color: "text-orange-400" },
+  CHAMPION:            { label: "Champion",             desc: "Won first place in an event",           icon: Crown, color: "text-yellow-500" },
+  UNDEFEATED:          { label: "Undefeated",           desc: "Completed an event without losing",    icon: Zap, color: "text-purple-400" },
+  TEAM_PLAYER:         { label: "Team Player",          desc: "Competed as part of a team",           icon: Handshake, color: "text-green-400" },
+  ROBOT_BUILDER:       { label: "Robot Builder",        desc: "Registered a robot for competition",   icon: Bot, color: "text-cyan-400" },
+  MULTI_SPORT:         { label: "Multi-Sport",          desc: "Competed in multiple sport categories", icon: Target, color: "text-pink-400" },
+  VETERAN:             { label: "Veteran",              desc: "Participated in 5+ events",            icon: Award, color: "text-amber-400" },
 }
 
 function fallbackMeta(type: string) {
   return {
     label: type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
     desc: "Achievement unlocked",
-    icon: "⭐",
+    icon: Star,
     color: "text-gray-400",
   }
 }
@@ -49,7 +50,7 @@ export default function AchievementsPage() {
         <div className="flex items-center justify-center py-20 text-gray-400">Loading achievements…</div>
       ) : achievements.length === 0 ? (
         <div className="rounded-2xl bg-white/5 border border-white/10 p-12 text-center">
-          <div className="text-5xl mb-4">🏅</div>
+          <Award size={44} className="mx-auto mb-4 text-gray-500" />
           <h2 className="text-lg font-semibold text-white mb-2">No achievements yet</h2>
           <p className="text-gray-400 text-sm max-w-xs mx-auto">
             Register for events, compete in matches, and win to earn achievements.
@@ -66,7 +67,7 @@ export default function AchievementsPage() {
                   key={a.id}
                   className="rounded-2xl bg-white/5 border border-white/10 p-5 flex items-start gap-4 hover:bg-white/8 transition-colors"
                 >
-                  <div className="text-3xl shrink-0">{meta.icon}</div>
+                  <meta.icon size={30} className={`shrink-0 ${meta.color}`} />
                   <div className="min-w-0">
                     <p className={`font-semibold ${meta.color}`}>{meta.label}</p>
                     <p className="text-xs text-gray-400 mt-0.5">{meta.desc}</p>
@@ -93,7 +94,7 @@ export default function AchievementsPage() {
                   key={type}
                   className="rounded-xl bg-white/3 border border-white/5 p-4 flex items-start gap-3 opacity-50"
                 >
-                  <div className="text-2xl grayscale shrink-0">{meta.icon}</div>
+                  <meta.icon size={22} className="grayscale shrink-0 text-gray-400" />
                   <div>
                     <p className="text-sm font-medium text-gray-400">{meta.label}</p>
                     <p className="text-xs text-gray-600 mt-0.5">{meta.desc}</p>

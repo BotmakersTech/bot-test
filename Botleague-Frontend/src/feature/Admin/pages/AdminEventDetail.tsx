@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { X, Trash2, Edit2 } from "lucide-react"
+import { X, Trash2, Edit2, AlertTriangle } from "lucide-react"
 import { useSelector } from "react-redux"
 import { useAdminEvents } from "../hooks/UseAdminEvent"
 import { useEventRealtime } from "../../../shared/realtime/useEventRealtime"
@@ -163,8 +163,8 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange, limited
         {/* body */}
         <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "18px" }}>
           {limitedEdit && (
-            <div style={{ background: "rgba(161,98,7,0.08)", border: "1px solid rgba(161,98,7,0.25)", borderRadius: "8px", padding: "9px 13px", color: "#a16207", fontSize: "0.78rem", fontWeight: 600 }}>
-              ✏️ Published events — only name, description, logo and organisation name can be changed.
+            <div style={{ background: "rgba(161,98,7,0.08)", border: "1px solid rgba(161,98,7,0.25)", borderRadius: "8px", padding: "9px 13px", color: "#a16207", fontSize: "0.78rem", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+              <Edit2 size={13} /> Published events — only name, description, logo and organisation name can be changed.
             </div>
           )}
           <div style={evGroupStyle}>
@@ -237,7 +237,7 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange, limited
               style={{ width: "18px", height: "18px", accentColor: ORG.violet, flexShrink: 0 }} />
           </label>
 
-          {error && <div style={{ background: "rgba(224,75,75,0.08)", border: "1px solid rgba(224,75,75,0.25)", borderRadius: "8px", padding: "10px 14px", color: ORG.danger, fontSize: "0.8rem", fontWeight: 600 }}>⚠️ {error}</div>}
+          {error && <div style={{ background: "rgba(224,75,75,0.08)", border: "1px solid rgba(224,75,75,0.25)", borderRadius: "8px", padding: "10px 14px", color: ORG.danger, fontSize: "0.8rem", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}><AlertTriangle size={14} /> {error}</div>}
         </div>
         {/* footer */}
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", padding: "16px 24px 20px", borderTop: "1px solid rgba(75,134,232,0.15)" }}>
@@ -412,7 +412,7 @@ export default function AdminEventPage() {
   if (error) {
     return (
       <PageWrapper>
-        <div style={{ background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.22)", borderRadius: "10px", padding: "16px 20px", color: DANGER, fontSize: "0.85rem", fontWeight: 600 }}>⚠️ {error}</div>
+        <div style={{ background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.22)", borderRadius: "10px", padding: "16px 20px", color: DANGER, fontSize: "0.85rem", fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}><AlertTriangle size={16} /> {error}</div>
       </PageWrapper>
     )
   }
@@ -448,12 +448,12 @@ export default function AdminEventPage() {
         <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}
              onClick={e => { if (e.target === e.currentTarget) setShowDeleteConfirm(false) }}>
           <div style={{ background: "#ffffff", border: "1px solid rgba(220,38,38,0.3)", borderRadius: "16px", padding: "28px 28px 24px", width: "100%", maxWidth: "420px", boxShadow: "0 24px 60px rgba(15,23,42,0.25)" }}>
-            <div style={{ fontSize: "1.6rem", marginBottom: "12px" }}>🗑️</div>
+            <Trash2 size={26} color={DANGER} style={{ marginBottom: "12px" }} />
             <h2 style={{ margin: "0 0 8px", fontFamily: "'Sarpanch', sans-serif", fontSize: "1rem", fontWeight: 700, color: DANGER }}>Delete Event?</h2>
             <p style={{ margin: "0 0 20px", color: MUTED, fontSize: "0.82rem", lineHeight: 1.6 }}>
               <strong style={{ color: TEXT }}>{event.eventName}</strong> will be permanently removed. This cannot be undone.
             </p>
-            {actionError && <div style={{ background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.22)", borderRadius: "8px", padding: "8px 12px", color: DANGER, fontSize: "0.78rem", fontWeight: 600, marginBottom: "14px" }}>⚠️ {actionError}</div>}
+            {actionError && <div style={{ background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.22)", borderRadius: "8px", padding: "8px 12px", color: DANGER, fontSize: "0.78rem", fontWeight: 600, marginBottom: "14px", display: "flex", alignItems: "center", gap: 6 }}><AlertTriangle size={13} /> {actionError}</div>}
             <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
               <button onClick={() => setShowDeleteConfirm(false)} disabled={actionLoading} style={{ background: "rgba(75,134,232,0.06)", border: `1px solid ${BORDER}`, color: MUTED, borderRadius: "8px", padding: "9px 18px", fontSize: "0.82rem", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
               <button onClick={handleDeleteEvent} disabled={actionLoading} style={{ background: actionLoading ? "rgba(220,38,38,0.3)" : DANGER, border: "none", color: "#fff", borderRadius: "8px", padding: "9px 22px", fontSize: "0.82rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>

@@ -5,6 +5,7 @@ import ShareButton from "../../../shared/components/ShareButton";
 import TeamLogo from "../../../shared/components/TeamLogo";
 import PublicNavbar from "../../../shared/components/PublicNavbar";
 import { resolveAvatarSrc } from "../constants/avatars";
+import { User, MapPin } from "lucide-react";
 
 const BG   = "#0d0d0f";
 const CARD = "#161618";
@@ -70,7 +71,7 @@ export default function UserPublicPage() {
     <>
       <PublicNavbar />
       <div style={{ minHeight: "100vh", background: BG, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, color: MUTED }}>
-        <div style={{ fontSize: "3rem" }}>👤</div>
+        <User size={48} />
         <p style={{ color: TEXT, fontWeight: 700 }}>{error ?? "User not found"}</p>
         <button onClick={() => navigate(-1)} style={{ background: GOLD, border: "none", color: "#000", borderRadius: 8, padding: "10px 24px", fontWeight: 800, cursor: "pointer" }}>← Go Back</button>
       </div>
@@ -128,7 +129,7 @@ export default function UserPublicPage() {
               )}
             </div>
             {location && (
-              <p style={{ margin: 0, fontSize: "0.82rem", color: MUTED }}>📍 {location}</p>
+              <p style={{ margin: 0, fontSize: "0.82rem", color: MUTED, display: "flex", alignItems: "center", gap: 4 }}><MapPin size={13} /> {location}</p>
             )}
             {profile.memberSince && (
               <p style={{ margin: "4px 0 0", fontSize: "0.75rem", color: MUTED }}>

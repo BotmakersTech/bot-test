@@ -113,7 +113,7 @@ export default function CertificatesPage() {
           <div className="bl-state-card">Loading certificates…</div>
         ) : certificates.length === 0 ? (
           <div className="bl-state-card bl-state-empty">
-            <div className="bl-state-icon">📜</div>
+            <div className="bl-state-icon"><Award size={32} /></div>
             <div className="bl-state-title">No certificates yet</div>
             <p>Certificates appear here once an event organizer generates them after results are finalized.</p>
           </div>
