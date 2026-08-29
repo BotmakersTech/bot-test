@@ -178,6 +178,11 @@ public class SportRegistrationService {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Event sport not found: " + eventSportId));
 
+        // The ONLY physical spec(s) this (league, sport) actually enforces —
+        // e.g. RoboWar = weight only, so its row's dimension limits are ignored.
+        java.util.Set<com.botleague.backend.events.enums.SpecConstraint> specConstraints =
+                SportSpecPolicy.constraintsFor(eventSport.getAgeGroup(), eventSport.getSport());
+
         // See AuthorizationService.assertEventActiveForSport javadoc — B-16.
         authorizationService.assertEventActiveForSport(eventSportId);
 
@@ -340,7 +345,7 @@ public class SportRegistrationService {
             existing.setControlMode(robot.getControlMode());
             existing.setStatus(RegistrationStatus.REGISTERED);
 
-            existing.validateAgainst(eventSport);
+            existing.validateAgainst(eventSport, specConstraints);
             SportRegistration reactivated = sportRegistrationRepository.save(existing);
 
             int reactivatedCount = eventSport.getRegisteredTeamsCount() == null
@@ -435,16 +440,14 @@ public class SportRegistrationService {
 
         // =================================================
         // 10. PHYSICAL SPEC VALIDATION
-        //     SportRegistration.validateAgainst() checks:
-        //       weightKg  <= EventSports.weightLimitKg
-        //       lengthCm  <= EventSports.maxLengthCm
-        //       widthCm   <= EventSports.maxWidthCm
-        //       heightCm  <= EventSports.maxHeightCm
-        //       controlType matches (skipped if competition allows ANY / null)
+        //     SportRegistration.validateAgainst() checks ONLY the specs this
+        //     (league, sport) enforces (SportSpecPolicy): weight ceiling and/or
+        //     dimension limits, plus control type. A value the robot didn't
+        //     provide never blocks — only a present value over the limit does.
         //     Throws IllegalArgumentException with a descriptive message on failure.
         // =================================================
 
-        registration.validateAgainst(eventSport);
+        registration.validateAgainst(eventSport, specConstraints);
 
         // =================================================
         // 11. SAVE

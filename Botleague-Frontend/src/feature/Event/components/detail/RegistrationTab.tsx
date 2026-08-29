@@ -6,6 +6,8 @@ import useRobots from "../../../Robots/hooks/useRobots";
 import type { Robot } from "../../../Robots/types/types";
 import type { EligibilityResponse } from "../../../Eligibility/api/eligibility.api";
 import { ageGroupLabel } from "../../../../shared/utils/ageGroup";
+import { weightClassToKg } from "../../../Robots/constants/weightClasses";
+import { constraintsFor } from "../../utils/specPolicy";
 
 // Age groups that mean "open to all" — no category restriction
 const OPEN_AGE_GROUPS = new Set(["OPEN", "ALL", "ALL_AGES", "UNRESTRICTED", ""]);
@@ -90,14 +92,25 @@ export default function RegistrationTab({
     [existingRegs]
   );
 
+  const specs = useMemo(() => constraintsFor(sport.ageGroup, sport.sport), [sport.ageGroup, sport.sport]);
+
   const eligibleRobots = useMemo(
     () =>
       robots.filter((robot: Robot) => {
         if (robot.status !== "ACTIVE") return false;
-        if (sport.weightLimitKg != null && robot.weightKg != null && robot.weightKg > sport.weightLimitKg) return false;
-        if (sport.maxLengthCm != null && robot.lengthCm != null && robot.lengthCm > sport.maxLengthCm) return false;
-        if (sport.maxWidthCm != null && robot.widthCm != null && robot.widthCm > sport.maxWidthCm) return false;
-        if (sport.maxHeightCm != null && robot.heightCm != null && robot.heightCm > sport.maxHeightCm) return false;
+        // Only the spec(s) this (league, sport) actually enforces — e.g. RoboWar
+        // is weight-only, so its dimension limits never gate a robot. Within an
+        // applicable spec, a value the robot didn't record never excludes it —
+        // only a present value over the limit does.
+        if (specs.weight) {
+          const weightCeiling = sport.weightLimitKg ?? weightClassToKg(sport.weightClass);
+          if (weightCeiling != null && robot.weightKg != null && robot.weightKg > weightCeiling) return false;
+        }
+        if (specs.dimension) {
+          if (sport.maxLengthCm != null && robot.lengthCm != null && robot.lengthCm > sport.maxLengthCm) return false;
+          if (sport.maxWidthCm != null && robot.widthCm != null && robot.widthCm > sport.maxWidthCm) return false;
+          if (sport.maxHeightCm != null && robot.heightCm != null && robot.heightCm > sport.maxHeightCm) return false;
+        }
         if (sport.ageGroup && robot.eligibleCategories?.length && !robot.eligibleCategories.includes(sport.ageGroup as Robot["eligibleCategories"][number])) return false;
         if (robot.sport && sport.sport) {
           const allowed = ROBOT_TO_EVENT_SPORT[normSport(robot.sport)];
@@ -112,7 +125,7 @@ export default function RegistrationTab({
         }
         return true;
       }),
-    [robots, sport]
+    [robots, sport, specs]
   );
   const availableRobots = eligibleRobots.filter((r) => !registeredBotIds.has(r.id));
   const selectedRobot = availableRobots.find((r) => r.id === selectedRobotId) ?? null;
