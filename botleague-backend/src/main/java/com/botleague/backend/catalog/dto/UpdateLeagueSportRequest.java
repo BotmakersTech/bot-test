@@ -3,14 +3,22 @@ package com.botleague.backend.catalog.dto;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+
 /** All fields optional — only non-null fields are applied (PATCH semantics). */
 public class UpdateLeagueSportRequest {
 
+    @DecimalMin(value = "0.0", message = "weightLimitKg cannot be negative")
     private Double weightLimitKg;
+    @DecimalMin(value = "0.0", message = "maxLengthCm cannot be negative")
     private Double maxLengthCm;
+    @DecimalMin(value = "0.0", message = "maxWidthCm cannot be negative")
     private Double maxWidthCm;
+    @DecimalMin(value = "0.0", message = "maxHeightCm cannot be negative")
     private Double maxHeightCm;
     private String controlType;
+    @Min(value = 1, message = "maxBotsPerTeam must be positive")
     private Integer maxBotsPerTeam;
     private List<WeightClassDTO> weightClasses;
     private Map<String, String> extraSpecs;

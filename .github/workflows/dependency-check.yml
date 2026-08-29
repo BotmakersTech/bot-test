@@ -1,0 +1,47 @@
+name: Dependency Vulnerability Scan
+
+# Deliberately separate from deploy.yml — a newly-disclosed CVE in a
+# transitive dependency must never be able to block a production deploy on
+# its own. This only reports; nothing here gates deploy.yml's build-check job.
+on:
+  schedule:
+    - cron: "0 6 * * 1" # weekly, Monday 06:00 UTC
+  workflow_dispatch: {}
+  pull_request:
+    paths:
+      - "botleague-backend/pom.xml"
+
+jobs:
+  scan:
+    name: OWASP Dependency-Check (backend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      # NVD_API_KEY is optional but strongly recommended — without one, NVD's
+      # unauthenticated rate limit makes the first run (building the local
+      # CVE database) painfully slow. Get one free at
+      # https://nvd.nist.gov/developers/request-an-api-key and add it as a
+      # repo secret named NVD_API_KEY.
+      - name: Run dependency-check
+        working-directory: botleague-backend
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          mvn -B org.owasp:dependency-check-maven:check \
+            ${NVD_API_KEY:+-DnvdApiKey=$NVD_API_KEY}
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: botleague-backend/target/dependency-check-report.html
+          retention-days: 30

@@ -13,6 +13,7 @@ import com.botleague.backend.catalog.service.LeagueEligibilityService;
 import com.botleague.backend.common.security.SecurityUtils;
 import com.botleague.backend.common.utils.EligibilityUtils;
 import com.botleague.backend.eligibility.dto.EligibilityResponse;
+import com.botleague.backend.guardian.enums.GuardianVerificationStatus;
 import com.botleague.backend.guardian.repository.GuardianRepository;
 
 import java.util.Optional;
@@ -55,7 +56,10 @@ public class EligibilityController {
         int age              = EligibilityUtils.calculateAge(user.getDateOfBirth());
         Optional<League> league = leagueEligibilityService.findLeagueForAge(age);
         boolean reqGuardian  = EligibilityUtils.requiresGuardian(user.getDateOfBirth());
-        boolean hasGuardian  = guardianRepository.existsByUserId(userId);
+        // hasGuardian means CONFIRMED — a submitted-but-unverified guardian
+        // record does not satisfy the eligibility gate (see GuardianService).
+        boolean hasGuardian  = guardianRepository.existsByUserIdAndStatus(userId, GuardianVerificationStatus.CONFIRMED);
+        boolean guardianPending = !hasGuardian && guardianRepository.existsByUserId(userId);
 
         EligibilityResponse r = new EligibilityResponse();
         r.setAge(age);
@@ -72,6 +76,7 @@ public class EligibilityController {
 
         r.setRequiresGuardian(reqGuardian);
         r.setHasGuardian(hasGuardian);
+        r.setGuardianPending(guardianPending);
 
         boolean canRegister = r.isEligible() && (!reqGuardian || hasGuardian);
         r.setCanRegister(canRegister);
@@ -81,6 +86,8 @@ public class EligibilityController {
             r.setBlockReason(age < minEligibleAge
                     ? "Minimum age for competition is " + minEligibleAge + " years."
                     : "Age not within a valid competition category.");
+        } else if (reqGuardian && guardianPending) {
+            r.setBlockReason("Your guardian's phone hasn't confirmed yet — ask them for the OTP sent to their number.");
         } else if (reqGuardian && !hasGuardian) {
             r.setBlockReason("Participants under 18 must add a guardian profile before registering.");
         }

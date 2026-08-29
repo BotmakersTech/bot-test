@@ -3,12 +3,20 @@ package com.botleague.backend.catalog.dto;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+
 public class CreateLeagueRequest {
 
+    @NotBlank(message = "slug is required")
     private String slug;
+    @NotBlank(message = "ageGroupCode is required")
     private String ageGroupCode;
+    @NotBlank(message = "name is required")
     private String name;
+    @Min(value = 0, message = "minAge cannot be negative")
     private Integer minAge;
+    @Min(value = 0, message = "maxAge cannot be negative")
     private Integer maxAge;
     private String tagline;
     private String description;

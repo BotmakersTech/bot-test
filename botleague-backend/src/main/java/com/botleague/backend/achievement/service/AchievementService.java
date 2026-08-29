@@ -55,15 +55,18 @@ public class AchievementService {
         }
         AchievementResponseDTO response = mapToDTO(saved);
 
-        notificationService.systemNotify(
-            "Achievement Unlocked: " + type.name(),
-            "You have unlocked the " + type.name().replace("_", " ") + " achievement!",
-            NotificationType.ACHIEVEMENT_UNLOCKED,
-            NotificationPriority.HIGH,
-            NotificationTargetType.USER,
-            userId,
-            null
-        );
+        try {
+            notificationService.systemNotify(
+                "Achievement Unlocked: " + type.name(),
+                "You have unlocked the " + type.name().replace("_", " ") + " achievement!",
+                NotificationType.ACHIEVEMENT_UNLOCKED,
+                NotificationPriority.HIGH,
+                NotificationTargetType.USER,
+                userId,
+                null
+            );
+        } catch (Exception ignored) {
+        }
 
         realtimePublisher.toUser(userId.toString(), RealtimeEventType.ACHIEVEMENT_UNLOCKED, response);
     }

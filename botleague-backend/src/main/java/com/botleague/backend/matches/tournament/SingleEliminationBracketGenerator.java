@@ -310,13 +310,18 @@ public class SingleEliminationBracketGenerator {
     // Created only when totalRounds >= 2 (there are at
     // least semi-finals).
     //
-    // For ONE_VS_ONE:    source = semiFinalA, semiFinalB (1 match each → 1 runner-up each)
-    // For TRIPLE_THREAT: source = last round before final's first 2 matches
-    //                    (3rd place match is itself a TRIPLE_THREAT — 2 known runner-ups
-    //                     plus potentially a 3rd slot that remains TBD / null)
-    // For FATAL_FOUR:    source = semiFinalA + semiFinalB (same pattern)
+    // The round before the final always has exactly slotsPerMatch matches
+    // (each round's match count is divided by slotsPerMatch — see
+    // buildRounds/matchesInRound), since the final needs that many
+    // participants, one per semifinal winner. The 3rd-place match carries
+    // the same matchType (and slot count) as the bracket, so EVERY
+    // semifinal's runner-up has a real slot to advance into here — not
+    // just the first two:
     //
-    // In all cases the 3rd-place match carries the same matchType as the bracket.
+    // For ONE_VS_ONE:    2 semifinals → source = semiFinalA, semiFinalB
+    // For TRIPLE_THREAT: 3 semifinals → source = semiFinalA, B, C
+    // For FATAL_FOUR:    4 semifinals → source = semiFinalA, B, C, D
+    //
     // Team slots are left null (TBD) and filled when semi-final results are submitted.
     // =====================================================
 
@@ -330,12 +335,7 @@ public class SingleEliminationBracketGenerator {
         if (totalRounds < 2) return null;
 
         List<Match> semiFinalRound = rounds.get(totalRounds - 2);
-
-        // We use the first two semi-final matches as sources
         if (semiFinalRound.size() < 2) return null;
-
-        Match semiFinalA = semiFinalRound.get(0);
-        Match semiFinalB = semiFinalRound.get(1);
 
         Match thirdPlace = new Match();
         thirdPlace.setId(UUID.randomUUID());
@@ -354,9 +354,15 @@ public class SingleEliminationBracketGenerator {
         thirdPlace.setAutoAdvanced(false);
         thirdPlace.setLeaderboardPosition(3);
 
-        // Source matches: winners (runners-up) fed from semi-finals
-        thirdPlace.setSourceMatchAId(semiFinalA.getId());
-        thirdPlace.setSourceMatchBId(semiFinalB.getId());
+        // Source matches: every semifinal's runner-up feeds a real slot here.
+        thirdPlace.setSourceMatchAId(semiFinalRound.get(0).getId());
+        thirdPlace.setSourceMatchBId(semiFinalRound.get(1).getId());
+        if (semiFinalRound.size() >= 3) {
+            thirdPlace.setSourceMatchCId(semiFinalRound.get(2).getId());
+        }
+        if (semiFinalRound.size() >= 4) {
+            thirdPlace.setSourceMatchDId(semiFinalRound.get(3).getId());
+        }
 
         // Teams TBD (filled by service when submitting semi-final results)
         thirdPlace.setTeamARegistrationId(null);

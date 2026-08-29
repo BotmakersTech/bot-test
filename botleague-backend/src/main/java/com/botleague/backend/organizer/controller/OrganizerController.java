@@ -11,6 +11,7 @@ import com.botleague.backend.organizer.dto.OrganizerDTOs.*;
 import com.botleague.backend.organizer.dto.UpdateEventInfoDTO;
 import com.botleague.backend.organizer.dto.UpdateRegistrationStatusRequest;
 import com.botleague.backend.organizer.service.*;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -87,7 +88,7 @@ public class OrganizerController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<CreateEventResponseDTO> updateEventInfo(
             @PathVariable UUID eventId,
-            @RequestBody UpdateEventInfoDTO request,
+            @Valid @RequestBody UpdateEventInfoDTO request,
             Authentication auth) {
         return ResponseEntity.ok(
             organizerService.updateEventInfo(eventId, extractUserId(auth), extractRoles(auth), request));
@@ -134,14 +135,14 @@ public class OrganizerController {
     @PostMapping("/events/{eventId}/arenas")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<ArenaResponse> createArena(
-            @PathVariable UUID eventId, @RequestBody ArenaRequest req) {
+            @PathVariable UUID eventId, @Valid @RequestBody ArenaRequest req) {
         return ResponseEntity.ok(peopleService.createArena(eventId, req));
     }
 
     @PutMapping("/events/{eventId}/arenas/{arenaId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<ArenaResponse> updateArena(
-            @PathVariable UUID eventId, @PathVariable UUID arenaId, @RequestBody ArenaRequest req) {
+            @PathVariable UUID eventId, @PathVariable UUID arenaId, @Valid @RequestBody ArenaRequest req) {
         return ResponseEntity.ok(peopleService.updateArena(arenaId, req));
     }
 
@@ -166,7 +167,7 @@ public class OrganizerController {
     @PostMapping("/events/{eventId}/volunteers")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<VolunteerResponse> createVolunteer(
-            @PathVariable UUID eventId, @RequestBody VolunteerRequest req) {
+            @PathVariable UUID eventId, @Valid @RequestBody VolunteerRequest req) {
         return ResponseEntity.ok(peopleService.createVolunteer(eventId, req));
     }
 
@@ -175,7 +176,7 @@ public class OrganizerController {
     public ResponseEntity<VolunteerResponse> updateVolunteer(
             @PathVariable UUID eventId,
             @PathVariable UUID volunteerId,
-            @RequestBody VolunteerRequest req) {
+            @Valid @RequestBody VolunteerRequest req) {
         return ResponseEntity.ok(peopleService.updateVolunteer(volunteerId, req));
     }
 
@@ -207,7 +208,7 @@ public class OrganizerController {
     public ResponseEntity<VolunteerResponse> decideVolunteerApplication(
             @PathVariable UUID eventId,
             @PathVariable UUID volunteerId,
-            @RequestBody com.botleague.backend.organizer.dto.OrganizerDTOs.VolunteerDecisionRequest req,
+            @Valid @RequestBody com.botleague.backend.organizer.dto.OrganizerDTOs.VolunteerDecisionRequest req,
             Authentication auth) {
         com.botleague.backend.organizer.enums.VolunteerStatus decision;
         try {
@@ -231,7 +232,7 @@ public class OrganizerController {
     @PostMapping("/events/{eventId}/judges")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<JudgeResponse> createJudge(
-            @PathVariable UUID eventId, @RequestBody JudgeRequest req) {
+            @PathVariable UUID eventId, @Valid @RequestBody JudgeRequest req) {
         return ResponseEntity.ok(peopleService.createJudge(eventId, req));
     }
 
@@ -240,7 +241,7 @@ public class OrganizerController {
     public ResponseEntity<JudgeResponse> updateJudge(
             @PathVariable UUID eventId,
             @PathVariable UUID judgeId,
-            @RequestBody JudgeRequest req) {
+            @Valid @RequestBody JudgeRequest req) {
         return ResponseEntity.ok(peopleService.updateJudge(judgeId, req));
     }
 
@@ -265,7 +266,7 @@ public class OrganizerController {
     @PostMapping("/events/{eventId}/staff")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<StaffResponse> createStaff(
-            @PathVariable UUID eventId, @RequestBody StaffRequest req) {
+            @PathVariable UUID eventId, @Valid @RequestBody StaffRequest req) {
         return ResponseEntity.ok(peopleService.createStaff(eventId, req));
     }
 
@@ -274,7 +275,7 @@ public class OrganizerController {
     public ResponseEntity<StaffResponse> updateStaff(
             @PathVariable UUID eventId,
             @PathVariable UUID staffId,
-            @RequestBody StaffRequest req) {
+            @Valid @RequestBody StaffRequest req) {
         return ResponseEntity.ok(peopleService.updateStaff(staffId, req));
     }
 
@@ -314,7 +315,7 @@ public class OrganizerController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<AnnouncementResponse> createAnnouncement(
             @PathVariable UUID eventId,
-            @RequestBody AnnouncementRequest req,
+            @Valid @RequestBody AnnouncementRequest req,
             Authentication auth) {
         return ResponseEntity.ok(
             communicationService.createAnnouncement(eventId, extractUserId(auth), req));
@@ -325,7 +326,7 @@ public class OrganizerController {
     public ResponseEntity<AnnouncementResponse> updateAnnouncement(
             @PathVariable UUID eventId,
             @PathVariable UUID announcementId,
-            @RequestBody AnnouncementRequest req) {
+            @Valid @RequestBody AnnouncementRequest req) {
         return ResponseEntity.ok(communicationService.updateAnnouncement(announcementId, req));
     }
 
@@ -351,7 +352,7 @@ public class OrganizerController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<IncidentResponse> createIncident(
             @PathVariable UUID eventId,
-            @RequestBody IncidentRequest req,
+            @Valid @RequestBody IncidentRequest req,
             Authentication auth) {
         return ResponseEntity.ok(
             communicationService.createIncident(eventId, extractUserId(auth), req));
@@ -362,7 +363,7 @@ public class OrganizerController {
     public ResponseEntity<IncidentResponse> updateIncident(
             @PathVariable UUID eventId,
             @PathVariable UUID incidentId,
-            @RequestBody IncidentUpdateRequest req) {
+            @Valid @RequestBody IncidentUpdateRequest req) {
         return ResponseEntity.ok(communicationService.updateIncident(incidentId, req));
     }
 
@@ -402,7 +403,7 @@ public class OrganizerController {
             Authentication authentication,
             @PathVariable UUID eventId,
             @PathVariable UUID registrationId,
-            @RequestBody UpdateRegistrationStatusRequest req) {
+            @Valid @RequestBody UpdateRegistrationStatusRequest req) {
         UUID callerId = extractUserId(authentication);
         // Sport-scoped check (a strict superset of the event-scoped one —
         // canManageSport() already falls back to canManageEvent() first) so
@@ -468,7 +469,7 @@ public class OrganizerController {
     public ResponseEntity<SupportContactResponse> createSupportContact(
             Authentication authentication,
             @PathVariable UUID eventId,
-            @RequestBody SupportContactRequest req) {
+            @Valid @RequestBody SupportContactRequest req) {
         UUID callerId = extractUserId(authentication);
         if (req.eventSportId != null) authorizationService.assertCanManageSport(callerId, req.eventSportId);
         else authorizationService.assertCanManageEvent(callerId, eventId);
@@ -481,7 +482,7 @@ public class OrganizerController {
             Authentication authentication,
             @PathVariable UUID eventId,
             @PathVariable UUID contactId,
-            @RequestBody SupportContactRequest req) {
+            @Valid @RequestBody SupportContactRequest req) {
         UUID callerId = extractUserId(authentication);
         assertCanManageContact(callerId, eventId, communicationService.getSupportContactEventSportId(contactId));
         return ResponseEntity.ok(communicationService.updateSupportContact(contactId, req));
@@ -517,7 +518,7 @@ public class OrganizerController {
     @PutMapping("/events/{eventId}/venue")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<VenueDetailResponse> upsertVenueDetail(
-            @PathVariable UUID eventId, @RequestBody VenueDetailRequest req) {
+            @PathVariable UUID eventId, @Valid @RequestBody VenueDetailRequest req) {
         return ResponseEntity.ok(venueAndCertService.upsertVenueDetail(eventId, req));
     }
 
@@ -534,14 +535,14 @@ public class OrganizerController {
     @PostMapping("/events/{eventId}/certificates")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<CertificateResponse> issueCertificate(
-            @PathVariable UUID eventId, @RequestBody CertificateRequest req) {
+            @PathVariable UUID eventId, @Valid @RequestBody CertificateRequest req) {
         return ResponseEntity.ok(venueAndCertService.issueCertificate(eventId, req));
     }
 
     @PutMapping("/events/{eventId}/certificates/{certId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<CertificateResponse> updateCertificate(
-            @PathVariable UUID eventId, @PathVariable UUID certId, @RequestBody CertificateRequest req) {
+            @PathVariable UUID eventId, @PathVariable UUID certId, @Valid @RequestBody CertificateRequest req) {
         return ResponseEntity.ok(venueAndCertService.updateCertificate(certId, req));
     }
 

@@ -1,6 +1,7 @@
 package com.botleague.backend.guardian.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class GuardianRequest {
@@ -13,8 +14,11 @@ public class GuardianRequest {
     @Size(max = 60)
     private String relationship;
 
+    // A real OTP is sent to this number (see OtpService) — must match the
+    // same 10-digit convention used for the account holder's own phone
+    // (VerifyPhoneRequestDTO).
     @NotBlank(message = "Mobile number is required")
-    @Size(max = 20)
+    @Pattern(regexp = "^[0-9]{10}$", message = "Mobile number must be 10 digits")
     private String mobileNumber;
 
     @Size(max = 150)

@@ -3,15 +3,11 @@ import type { EventSportResponse } from "../../api/event.api";
 import EventCard from "./EventCard";
 import star from "../../../../assets/Auth/Star-two.svg";
 import { formatWeightClass } from "../../../Robots/constants/weightClasses";
+import { ageGroupLabel } from "../../../../shared/utils/ageGroup";
 
 interface SportsSectionProps {
   eventId: string;
   eventSports: EventSportResponse[];
-}
-
-function titleCase(val?: string | null): string {
-  if (!val) return "";
-  return val.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 // Same weight formatting SportDetailsHeader uses for its own "Weight" spec
@@ -53,7 +49,7 @@ export default function SportsSection({ eventId, eventSports }: SportsSectionPro
             image={sport.sportThumbnailUrl}
             title={sport.sport?.replace(/_/g, " ") ?? "Sport"}
             category={weightLabel(sport)}
-            eligibleLeague={titleCase(sport.ageGroup)}
+            eligibleLeague={ageGroupLabel(sport.ageGroup)}
             description={sport.sportsDescription}
             onExplore={() => navigate(`/events/${eventId}/sports/${sport.id}`)}
           />

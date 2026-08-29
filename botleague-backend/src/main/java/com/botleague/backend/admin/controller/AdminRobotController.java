@@ -50,7 +50,10 @@ public class AdminRobotController {
         RobotStatus robotStatus = null;
         if (status != null && !status.isBlank()) {
             try { robotStatus = RobotStatus.valueOf(status.toUpperCase()); }
-            catch (IllegalArgumentException ignored) {}
+            catch (IllegalArgumentException e) {
+                throw com.botleague.backend.common.exception.ApiException.badRequest(
+                        "Invalid status filter: " + status);
+            }
         }
 
         return ResponseEntity.ok(robotService.getAllRobotsAdmin(q, sport, robotStatus, page, size));

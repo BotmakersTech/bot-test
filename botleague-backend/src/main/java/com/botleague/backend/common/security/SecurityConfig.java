@@ -38,9 +38,13 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtFilter;
+    private final List<String> allowedOrigins;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtFilter) {
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtFilter,
+            @Value("${app.cors.allowed-origins:https://test.botleague.in,http://localhost:5173}") String allowedOrigins) {
         this.jwtFilter = jwtFilter;
+        this.allowedOrigins = List.of(allowedOrigins.split(","));
     }
 
     @Bean
@@ -51,6 +55,14 @@ public class SecurityConfig {
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**", "/api/profile/verify-email", "/error").permitAll()
+                // Deploy/orchestration health probe (docker-compose, deploy.sh, deploy.yml) —
+                // must be reachable with no token before the app can be confirmed up.
+                // /actuator/metrics + /actuator/prometheus are also public here, but that's
+                // safe: the backend port is bound to loopback only (see docker-compose.prod.yml,
+                // "Bind to loopback only — Nginx proxies from outside"), so these are only ever
+                // reachable from the same host a scraper would already be trusted to run on.
+                .requestMatchers(org.springframework.http.HttpMethod.GET,
+                        "/actuator/health", "/actuator/metrics/**", "/actuator/prometheus").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/teams/public/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/robots/public/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/profile/public/**").permitAll()
@@ -106,7 +118,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("https://test.botleague.in", "http://localhost:5173"));
+        config.setAllowedOrigins(allowedOrigins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

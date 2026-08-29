@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { getAllEvents, type AdminEventResponse } from "../api/admin.api"
+import { ageGroupLabel } from "../../../shared/utils/ageGroup"
 import "../../../styles/organizerTheme.css"
 
 function toLabel(raw?: string | null) {
@@ -154,7 +155,7 @@ export default function AdminReportsPage() {
                           <div key={sp.id} className="flex items-center gap-3">
                             <span className="text-xs text-gray-600 w-36 shrink-0 truncate">
                               {toLabel(sp.sport)}
-                              {sp.ageGroup ? ` · ${toLabel(sp.ageGroup)}` : ""}
+                              {sp.ageGroup ? ` · ${ageGroupLabel(sp.ageGroup)}` : ""}
                             </span>
                             <div className="flex-1">
                               <ProgressBar value={sp.registeredTeamsCount ?? 0} max={sp.maxTeams ?? (sp.registeredTeamsCount ?? 0)} />

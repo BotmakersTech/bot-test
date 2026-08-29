@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { getAllEvents, type AdminEventResponse, type AdminEventSportResponse } from "../api/admin.api"
 import { ORG } from "../../Organizer/theme/organizerTheme"
 import { formatWeightClass } from "../../Robots/constants/weightClasses"
+import { ageGroupLabel } from "../../../shared/utils/ageGroup"
 import "../../../styles/organizerTheme.css"
 
 interface FlatSport extends AdminEventSportResponse {
@@ -171,7 +172,7 @@ export default function AdminAllSportsPage() {
 
                   {/* Age Group */}
                   <td className="px-4 py-3 text-gray-500 hidden md:table-cell">
-                    {toLabel(sp.ageGroup)}
+                    {ageGroupLabel(sp.ageGroup)}
                   </td>
 
                   {/* Weight Class */}

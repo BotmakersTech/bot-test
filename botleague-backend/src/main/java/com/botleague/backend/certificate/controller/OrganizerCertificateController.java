@@ -11,6 +11,7 @@ import com.botleague.backend.common.security.AuthorizationService;
 import com.botleague.backend.common.service.UploadService;
 import com.botleague.backend.profile.dto.UploadResponse;
 import com.botleague.backend.profile.service.FileKeyService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -68,7 +69,7 @@ public class OrganizerCertificateController {
 
     @PostMapping("/templates")
     public ResponseEntity<CertificateTemplateResponse> createTemplate(
-            @RequestBody CreateCertificateTemplateRequest req, Authentication auth) {
+            @Valid @RequestBody CreateCertificateTemplateRequest req, Authentication auth) {
         UUID callerId = extractUserId(auth);
         return ResponseEntity.ok(templateService.create(CertificateTemplate.PROVIDER_ORGANISER, callerId, req, callerId));
     }
@@ -86,7 +87,7 @@ public class OrganizerCertificateController {
 
     @PatchMapping("/templates/{templateId}")
     public ResponseEntity<CertificateTemplateResponse> updateTemplate(
-            @PathVariable UUID templateId, @RequestBody UpdateCertificateTemplateRequest req, Authentication auth) {
+            @PathVariable UUID templateId, @Valid @RequestBody UpdateCertificateTemplateRequest req, Authentication auth) {
         UUID callerId = extractUserId(auth);
         return ResponseEntity.ok(templateService.update(templateId, CertificateTemplate.PROVIDER_ORGANISER, callerId, req, callerId));
     }
@@ -98,7 +99,7 @@ public class OrganizerCertificateController {
     }
 
     @PostMapping("/templates/preview")
-    public ResponseEntity<TemplatePreviewResponse> previewTemplate(@RequestBody PreviewTemplateRequest req) {
+    public ResponseEntity<TemplatePreviewResponse> previewTemplate(@Valid @RequestBody PreviewTemplateRequest req) {
         return ResponseEntity.ok(templateService.preview(req));
     }
 
@@ -106,7 +107,7 @@ public class OrganizerCertificateController {
 
     @PostMapping("/sports/{eventSportId}/types")
     public ResponseEntity<CertificateTypeResponse> createType(
-            @PathVariable UUID eventSportId, @RequestBody CreateCertificateTypeRequest req, Authentication auth) {
+            @PathVariable UUID eventSportId, @Valid @RequestBody CreateCertificateTypeRequest req, Authentication auth) {
         UUID callerId = extractUserId(auth);
         authorizationService.assertCanManageSport(callerId, eventSportId);
         return ResponseEntity.ok(typeService.create(CertificateType.PROVIDER_ORGANISER, eventSportId, req, callerId));
@@ -129,7 +130,7 @@ public class OrganizerCertificateController {
 
     @PatchMapping("/types/{typeId}")
     public ResponseEntity<CertificateTypeResponse> updateType(
-            @PathVariable UUID typeId, @RequestBody UpdateCertificateTypeRequest req, Authentication auth) {
+            @PathVariable UUID typeId, @Valid @RequestBody UpdateCertificateTypeRequest req, Authentication auth) {
         UUID callerId = extractUserId(auth);
         CertificateType type = typeService.getEntity(typeId);
         authorizationService.assertCanManageSport(callerId, type.getEventSportId());
@@ -140,7 +141,7 @@ public class OrganizerCertificateController {
 
     @PostMapping("/types/{typeId}/generate")
     public ResponseEntity<CertificateGenerationJobResponse> triggerGeneration(
-            @PathVariable UUID typeId, @RequestBody(required = false) TriggerGenerationRequest req, Authentication auth) {
+            @PathVariable UUID typeId, @Valid @RequestBody(required = false) TriggerGenerationRequest req, Authentication auth) {
         UUID callerId = extractUserId(auth);
         CertificateType type = typeService.getEntity(typeId);
         authorizationService.assertCanManageSport(callerId, type.getEventSportId());
@@ -176,7 +177,7 @@ public class OrganizerCertificateController {
 
     @PostMapping("/issued/{issuedCertificateId}/revoke")
     public ResponseEntity<String> revoke(
-            @PathVariable UUID issuedCertificateId, @RequestBody RevokeCertificateRequest req, Authentication auth) {
+            @PathVariable UUID issuedCertificateId, @Valid @RequestBody RevokeCertificateRequest req, Authentication auth) {
         // CertificateVerificationService.revoke() itself calls assertCanManageSport
         // against the certificate's own eventSportId — no need to duplicate here.
         verificationService.revoke(issuedCertificateId, req.getReason(), extractUserId(auth));

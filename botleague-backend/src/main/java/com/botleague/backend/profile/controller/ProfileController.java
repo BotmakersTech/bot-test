@@ -7,7 +7,6 @@ import org.apache.coyote.BadRequestException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.botleague.backend.common.exception.ApiException;
 import com.botleague.backend.common.service.UploadService;
@@ -73,15 +72,6 @@ public class ProfileController {
 
         return userProfileService.getMyProfile(authentication);
     }
-    
-//    @PostMapping("/photo")
-//    public ResponseEntity<String> uploadProfilePhoto(
-//            Authentication auth,
-//            @RequestParam("file") MultipartFile file) {
-//
-//        String url = userProfileService.updateProfilePhoto(auth, file);
-//        return ResponseEntity.ok(url);
-//    }
 
     // =========================
     // Update profile

@@ -28,6 +28,9 @@ public interface TeamInviteRepository
     List<TeamInvite> findByTeamIdAndInvitedUserId(
             UUID teamId, UUID invitedUserId);
 
+    List<TeamInvite> findByTeamIdAndStatus(
+            UUID teamId, TeamInviteStatus status);
+
     List<TeamInvite> findByTeamIdAndInvitedByAndStatus(
             UUID teamId, UUID invitedBy, TeamInviteStatus status);
 

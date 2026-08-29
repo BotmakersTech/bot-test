@@ -1,5 +1,7 @@
 package com.botleague.backend.matches.dto;
 
+import jakarta.validation.constraints.Min;
+
 public class UpdateMatchScoreDTO {
 
     // =====================================================
@@ -9,12 +11,16 @@ public class UpdateMatchScoreDTO {
     // TRIPLE_THREAT and FATAL_FOUR match types
     // =====================================================
 
+    @Min(value = 0, message = "teamAScore cannot be negative")
     private Integer teamAScore;
 
+    @Min(value = 0, message = "teamBScore cannot be negative")
     private Integer teamBScore;
 
+    @Min(value = 0, message = "teamCScore cannot be negative")
     private Integer teamCScore;
 
+    @Min(value = 0, message = "teamDScore cannot be negative")
     private Integer teamDScore;
 
     // =====================================================

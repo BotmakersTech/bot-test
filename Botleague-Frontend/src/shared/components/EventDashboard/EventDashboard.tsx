@@ -2,6 +2,7 @@ import { ArrowLeft, Edit2, Plus, Calendar, Trophy, Users, CheckCircle2, Check, B
 import MobileEventDetail from "./MobileEventDetail"
 import "./EventDashboard.css"
 import { formatWeightClass } from "../../../feature/Robots/constants/weightClasses"
+import { ageGroupLabel } from "../../utils/ageGroup"
 
 export interface EventDashboardSport {
   id: string
@@ -253,7 +254,7 @@ export default function EventDashboard({
                       <div>
                         <div className="ed-sport-name">{toLabel(sport.sport)}</div>
                         <div className="ed-sport-tags">
-                          {sport.ageGroup && <span className="ed-sport-tag">{toLabel(sport.ageGroup)}</span>}
+                          {sport.ageGroup && <span className="ed-sport-tag">{ageGroupLabel(sport.ageGroup)}</span>}
                           {sport.weightClass && <span className="ed-sport-tag">{formatWeightClass(sport.weightClass)}</span>}
                           {sport.formatType && <span className="ed-sport-tag">{toLabel(sport.formatType)}</span>}
                         </div>

@@ -31,6 +31,8 @@ public class CreateEventRequestDTO {
 
     private String venueAddress;
 
+    private String mapUrl;
+
     private String city;
 
     private String state;
@@ -124,6 +126,14 @@ public class CreateEventRequestDTO {
 
     public void setVenueAddress(String venueAddress) {
         this.venueAddress = venueAddress;
+    }
+
+    public String getMapUrl() {
+        return mapUrl;
+    }
+
+    public void setMapUrl(String mapUrl) {
+        this.mapUrl = mapUrl;
     }
 
     public String getCity() {

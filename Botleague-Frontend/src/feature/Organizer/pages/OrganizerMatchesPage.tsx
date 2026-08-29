@@ -7,6 +7,7 @@ import {
 } from "../api/organizer.api"
 import { ORG } from "../theme/organizerTheme"
 import { useSportMatchRealtime, mergeMatchUpdate } from "../../../shared/realtime/useMatchRealtime"
+import { ageGroupLabel } from "../../../shared/utils/ageGroup"
 
 // ── theme ─────────────────────────────────────────────────────────────────────
 const P      = "#8c6cff"
@@ -183,7 +184,7 @@ export default function OrganizerMatchesPage() {
         <select value={selectedSportId} onChange={e => setSelectedSportId(e.target.value)}
           style={{ height: "40px", background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "10px", color: TEXT, fontSize: "0.85rem", padding: "0 14px", outline: "none", cursor: "pointer" }}>
           <option value="">— Select Sport —</option>
-          {sportsList.map(sp => <option key={sp.id} value={sp.id}>{toLabel(sp.sport)}{sp.ageGroup ? ` · ${toLabel(sp.ageGroup)}` : ""}</option>)}
+          {sportsList.map(sp => <option key={sp.id} value={sp.id}>{toLabel(sp.sport)}{sp.ageGroup ? ` · ${ageGroupLabel(sp.ageGroup)}` : ""}</option>)}
         </select>
         <div style={{ flex: 1, minWidth: "200px", position: "relative" }}>
           <Search size={14} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: MUTED, pointerEvents: "none" }} />

@@ -131,13 +131,16 @@ public class RobotService {
 
         Robot saved = robotRepository.save(robot);
 
-        notificationService.teamNotifyExcluding(
-                teamId, userId,
-                "New Robot Registered",
-                "\"" + saved.getRobotName() + "\" has been added to the team's robot roster.",
-                NotificationType.ROBOT_ADDED,
-                NotificationPriority.MEDIUM,
-                "/robots");
+        try {
+            notificationService.teamNotifyExcluding(
+                    teamId, userId,
+                    "New Robot Registered",
+                    "\"" + saved.getRobotName() + "\" has been added to the team's robot roster.",
+                    NotificationType.ROBOT_ADDED,
+                    NotificationPriority.MEDIUM,
+                    "/robots");
+        } catch (Exception ignored) {
+        }
 
         CreateRobotResponseDTO response = new CreateRobotResponseDTO();
         response.setId(saved.getId());
@@ -220,13 +223,16 @@ public class RobotService {
 
         Robot updated = robotRepository.save(robot);
 
-        notificationService.teamNotifyExcluding(
-                updated.getTeamId(), userId,
-                "Robot Updated",
-                "\"" + updated.getRobotName() + "\" specifications have been updated.",
-                NotificationType.ROBOT_UPDATED,
-                NotificationPriority.LOW,
-                "/robots");
+        try {
+            notificationService.teamNotifyExcluding(
+                    updated.getTeamId(), userId,
+                    "Robot Updated",
+                    "\"" + updated.getRobotName() + "\" specifications have been updated.",
+                    NotificationType.ROBOT_UPDATED,
+                    NotificationPriority.LOW,
+                    "/robots");
+        } catch (Exception ignored) {
+        }
 
         return mapRobot(updated);
     }
@@ -284,13 +290,16 @@ public class RobotService {
         robot.setStatus(RobotStatus.INACTIVE);
         robotRepository.save(robot);
 
-        notificationService.teamNotifyExcluding(
-                teamId, userId,
-                "Robot Removed",
-                "\"" + robotName + "\" has been removed from the team's robot roster.",
-                NotificationType.ROBOT_DELETED,
-                NotificationPriority.MEDIUM,
-                "/robots");
+        try {
+            notificationService.teamNotifyExcluding(
+                    teamId, userId,
+                    "Robot Removed",
+                    "\"" + robotName + "\" has been removed from the team's robot roster.",
+                    NotificationType.ROBOT_DELETED,
+                    NotificationPriority.MEDIUM,
+                    "/robots");
+        } catch (Exception ignored) {
+        }
 
         return "Robot deleted successfully";
     }

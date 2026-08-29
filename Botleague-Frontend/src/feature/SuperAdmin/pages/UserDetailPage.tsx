@@ -24,6 +24,7 @@ import {
 } from "../store/userManagementSlice"
 import { AppRole } from "../../../shared/constants/roles"
 import { formatWeightClass } from "../../Robots/constants/weightClasses"
+import { ageGroupLabel } from "../../../shared/utils/ageGroup"
 import "../../../shared/styles/adminDetailPage.css"
 
 const ALL_ROLES = Object.values(AppRole)
@@ -415,7 +416,7 @@ export default function UserDetailPage() {
                         .filter((s) => !user.assignedSports?.some((a) => a.eventSportId === s.id))
                         .map((s) => (
                           <option key={s.id} value={s.id}>
-                            {s.sport}{s.ageGroup ? ` · ${s.ageGroup}` : ""}{s.weightClass ? ` (${formatWeightClass(s.weightClass)})` : ""}
+                            {s.sport}{s.ageGroup ? ` · ${ageGroupLabel(s.ageGroup)}` : ""}{s.weightClass ? ` (${formatWeightClass(s.weightClass)})` : ""}
                           </option>
                         ))}
                     </select>

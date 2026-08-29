@@ -3,6 +3,8 @@ package com.botleague.backend.matches.dto;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import jakarta.validation.constraints.Min;
+
 import com.botleague.backend.matches.enums.MatchResultType;
 
 public class SubmitMatchResultDTO {
@@ -14,12 +16,16 @@ public class SubmitMatchResultDTO {
     // TRIPLE_THREAT and FATAL_FOUR match types
     // =====================================================
 
+    @Min(value = 0, message = "teamAScore cannot be negative")
     private Integer teamAScore;
 
+    @Min(value = 0, message = "teamBScore cannot be negative")
     private Integer teamBScore;
 
+    @Min(value = 0, message = "teamCScore cannot be negative")
     private Integer teamCScore;
 
+    @Min(value = 0, message = "teamDScore cannot be negative")
     private Integer teamDScore;
 
     // =====================================================

@@ -23,6 +23,7 @@ interface FormData {
     organizationUrl: string
     venueName: string
     venueAddress: string
+    mapUrl: string
     city: string
     state: string
     country: string
@@ -107,6 +108,7 @@ function CreateEvent() {
         organizationUrl: "",
         venueName: "",
         venueAddress: "",
+        mapUrl: "",
         city: "",
         state: "",
         country: "India",
@@ -149,6 +151,7 @@ function CreateEvent() {
                 organizationUrl: formData.organizationUrl,
                 venueName: formData.venueName,
                 venueAddress: formData.venueAddress,
+                mapUrl: formData.mapUrl || undefined,
                 city: formData.city,
                 state: formData.state,
                 country: formData.country,
@@ -268,6 +271,10 @@ function CreateEvent() {
 
                     <Field label="Venue Address">
                         <input type="text" name="venueAddress" value={formData.venueAddress} onChange={handleChange} style={inputStyle} />
+                    </Field>
+
+                    <Field label="Location / Google Maps link">
+                        <input type="url" name="mapUrl" value={formData.mapUrl} onChange={handleChange} placeholder="https://maps.app.goo.gl/…" style={inputStyle} />
                     </Field>
 
                     <LocationSelects

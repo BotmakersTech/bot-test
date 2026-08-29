@@ -11,6 +11,7 @@ public class UpdateEventRequest {
     private String organizationUrl;
     private String venueName;
     private String venueAddress;
+    private String mapUrl;
     private String city;
     private String state;
     private String country;
@@ -32,6 +33,8 @@ public class UpdateEventRequest {
     public void setVenueName(String v)              { this.venueName = v; }
     public String getVenueAddress()                 { return venueAddress; }
     public void setVenueAddress(String v)           { this.venueAddress = v; }
+    public String getMapUrl()                       { return mapUrl; }
+    public void setMapUrl(String v)                 { this.mapUrl = v; }
     public String getCity()                         { return city; }
     public void setCity(String v)                   { this.city = v; }
     public String getState()                        { return state; }

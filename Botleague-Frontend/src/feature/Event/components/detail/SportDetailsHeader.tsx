@@ -1,9 +1,11 @@
-import { Users, Weight, Wallet, Trophy, GraduationCap, Layers } from "lucide-react";
+import { Users, Weight, Wallet, Trophy, GraduationCap, Layers, MapPin } from "lucide-react";
+import { formatPrizePosition } from "../../../../shared/utils/prize";
 import type { ComponentType } from "react";
 import type { EventSportResponse, SupportContact } from "../../api/event.api";
 import plane from "../../../../assets/Auth/plane.svg";
 import star from "../../../../assets/Auth/Star-two.svg";
 import { formatWeightClass } from "../../../Robots/constants/weightClasses";
+import { ageGroupLabel } from "../../../../shared/utils/ageGroup";
 
 interface SportDetailsHeaderProps {
   sport: EventSportResponse;
@@ -36,7 +38,7 @@ export default function SportDetailsHeader({ sport, contacts }: SportDetailsHead
   // disappears (or renders blank) when data is missing reads as broken; a
   // "—" placeholder reads as "not set yet" and keeps the row's layout stable.
   const specs: SpecItem[] = [
-    { icon: GraduationCap, label: "Age Group", value: titleCase(sport.ageGroup) },
+    { icon: GraduationCap, label: "League", value: ageGroupLabel(sport.ageGroup) },
     {
       icon: Users,
       label: "Teams",
@@ -85,6 +87,24 @@ export default function SportDetailsHeader({ sport, contacts }: SportDetailsHead
       <div className="event-info">
         <h2>{sport.sport?.replace(/_/g, " ") ?? "Sport"}</h2>
         <p>{sport.sportsDescription || "Details for this competition will be published soon."}</p>
+
+        {sport.mapUrl && (
+          <p style={{ margin: "4px 0 10px" }}>
+            <a href={sport.mapUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#0162D1", fontWeight: 600 }}>
+              <MapPin size={15} /> View location on map
+            </a>
+          </p>
+        )}
+
+        {sport.prizeDistribution && sport.prizeDistribution.length > 0 && (
+          <div style={{ margin: "0 0 12px", display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {sport.prizeDistribution.map((p, i) => (
+              <span key={i} style={{ fontSize: 13, fontWeight: 600, background: "rgba(1,98,209,0.08)", border: "1px solid rgba(1,98,209,0.2)", borderRadius: 999, padding: "3px 10px" }}>
+                {formatPrizePosition(p)}
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="sport-stats">
           {specs.map((spec) => (

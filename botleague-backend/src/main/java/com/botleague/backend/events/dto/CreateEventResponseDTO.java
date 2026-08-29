@@ -27,6 +27,8 @@ public class CreateEventResponseDTO {
 
     private String venueName;
 
+    private String mapUrl;
+
     private String city;
 
     private String state;
@@ -125,6 +127,14 @@ public class CreateEventResponseDTO {
 
     public void setVenueName(String venueName) {
         this.venueName = venueName;
+    }
+
+    public String getMapUrl() {
+        return mapUrl;
+    }
+
+    public void setMapUrl(String mapUrl) {
+        this.mapUrl = mapUrl;
     }
 
     public String getCity() {

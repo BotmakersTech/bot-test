@@ -15,6 +15,7 @@ export interface OrganizerEvent {
   organizationUrl?: string | null;
   venueName: string | null;
   venueAddress?: string | null;
+  mapUrl?: string | null;
   city: string | null;
   state: string | null;
   country: string | null;
@@ -32,6 +33,7 @@ export interface OrganizerSport {
   sport: string;
   ageGroup: string | null;
   weightClass: string | null;
+  mapUrl?: string | null;
   status: string;
   bracketGenerated: boolean;
   rejectionReason?: string | null;
@@ -41,6 +43,7 @@ export interface OrganizerSport {
   registrationEndDate?: string;
   entryFee?: number;
   prizeMoney?: number;
+  prizeDistribution?: import("../../../shared/utils/prize").PrizePosition[];
   formatType?: string;
   registrations?: OrganizerTeamRegistration[];
 
@@ -137,6 +140,7 @@ export interface CreateEventRequest {
   organizationUrl?: string;
   venueName: string;
   venueAddress: string;
+  mapUrl?: string;
   city: string;
   state: string;
   country: string;
@@ -190,6 +194,7 @@ export interface UpdateEventInfoRequest {
   organizationUrl?: string;
   venueName?: string;
   venueAddress?: string;
+  mapUrl?: string;
   city?: string;
   state?: string;
   country?: string;
@@ -736,6 +741,7 @@ export interface CreateEventSportRequest {
   controlType?: string;
   maxBotsPerTeam?: number;
   extraRules?: Record<string, string>;
+  mapUrl?: string;
 
   minTeamSize?: number;
   maxTeamSize?: number;
@@ -743,6 +749,7 @@ export interface CreateEventSportRequest {
 
   entryFee?: number;
   prizeMoney?: number;
+  prizeDistribution?: import("../../../shared/utils/prize").PrizePosition[];
 
   formatType?: string;
   registrationStartDate?: string;

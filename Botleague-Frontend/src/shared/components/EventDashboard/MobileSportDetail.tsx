@@ -1,10 +1,12 @@
 import { useState } from "react"
 import {
-  ArrowLeft, Trophy, Users, Tag, DollarSign, Award, Calendar, ArrowRight,
+  ArrowLeft, Trophy, Users, Tag, IndianRupee, Award, Calendar, ArrowRight,
   Edit2, Lock, Unlock, Globe, MessageCircle, Check, Ban, Bot, AlertTriangle, CheckCircle2,
 } from "lucide-react"
 import "./MobileSportDetail.css"
 import { formatWeightClass } from "../../../feature/Robots/constants/weightClasses"
+import { ageGroupLabel } from "../../utils/ageGroup"
+import { formatPrizePosition, type PrizePosition } from "../../utils/prize"
 
 // Mobile view of the single-sport management page (mockup: "Sportmanagementdashboard.jsx").
 // Shared by AdminSport.tsx (/admin/events/:eventId/sports/:sportId) and
@@ -61,6 +63,8 @@ interface MobileSportDetailProps {
   weightClass?: string | null
   weightLimitKg?: number | null
   teamSizeLabel?: string | null
+  mapUrl?: string | null
+  prizeDistribution?: PrizePosition[] | null
 
   registrationStartDate?: string | null
   registrationEndDate?: string | null
@@ -157,7 +161,7 @@ export default function MobileSportDetail({
   onEditSport, onToggleRegistration, registrationLoading, extraTitleActions,
   errorBanner, publishMsg, publishOk, topExtra,
   totalTeams, totalPlayers, maxTeams, entryFee, prizeMoney,
-  ageGroup, formatType, weightClass, weightLimitKg, teamSizeLabel,
+  ageGroup, formatType, weightClass, weightLimitKg, teamSizeLabel, mapUrl, prizeDistribution,
   registrationStartDate, registrationEndDate,
   matchActions, onCertificates, showPublish, onPublish, publishing,
   teams, regActionError, onTeamStatusChange, onMessageTeam,
@@ -221,7 +225,7 @@ export default function MobileSportDetail({
         )}
         {entryFee != null && (
           <div className="ssd-m-stat-card">
-            <div className="ssd-m-stat-icon"><DollarSign size={16} /></div>
+            <div className="ssd-m-stat-icon"><IndianRupee size={16} /></div>
             <div><div className="ssd-m-stat-value">{formatCurrency(entryFee)}</div><div className="ssd-m-stat-label">Entry Fee</div></div>
           </div>
         )}
@@ -238,12 +242,26 @@ export default function MobileSportDetail({
       <hr className="ssd-m-section-line" />
       <div className="ssd-m-details-box">
         <div className="ssd-m-details-grid">
-          <div className="ssd-m-detail-cell"><div className="label">Age Group</div><div className="value">{toLabel(ageGroup)}</div></div>
+          <div className="ssd-m-detail-cell"><div className="label">League</div><div className="value">{ageGroupLabel(ageGroup)}</div></div>
           <div className="ssd-m-detail-cell"><div className="label">Format</div><div className="value">{toLabel(formatType)}</div></div>
           <div className="ssd-m-detail-cell"><div className="label">Weight Class</div><div className="value">{formatWeightClass(weightClass) || "—"}</div></div>
           <div className="ssd-m-detail-cell"><div className="label">Weight Limit</div><div className="value">{weightLimitKg != null ? `${weightLimitKg} KG` : "—"}</div></div>
           <div className="ssd-m-detail-cell"><div className="label">Team Size</div><div className="value">{teamSizeLabel || "—"}</div></div>
+          {mapUrl && (
+            <div className="ssd-m-detail-cell"><div className="label">Location</div><div className="value"><a href={mapUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#0162D1" }}>View on map</a></div></div>
+          )}
         </div>
+
+        {prizeDistribution && prizeDistribution.length > 0 && (
+          <div style={{ marginTop: 10 }}>
+            <div className="ssd-m-section-title" style={{ fontSize: 12 }}>Prize Distribution</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 4 }}>
+              {prizeDistribution.map((p, i) => (
+                <div key={i} style={{ fontSize: 13 }}>{formatPrizePosition(p)}</div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {hasRegWindow && (
           <div className="ssd-m-reg-window">

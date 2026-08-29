@@ -22,9 +22,26 @@ public interface TeamRepository extends JpaRepository<Team, UUID> {
 
     Optional<Team> findByTeamCode(String teamCode);
 
+    // Soft-deleted teams don't hold their name/code (see the partial unique
+    // indexes in V32) — these are what collision checks on create/rename
+    // must actually use, or a deleted team's old name would be wrongly
+    // reported as taken.
+    boolean existsByTeamNameAndDeletedAtIsNull(String teamName);
+    boolean existsByTeamNameAndIdNotAndDeletedAtIsNull(String teamName, UUID id);
+
+    Optional<Team> findByIdAndDeletedAtIsNull(UUID id);
+
+    Page<Team> findAllByDeletedAtIsNull(Pageable pageable);
+
     @Query("SELECT t FROM Team t WHERE " +
            "LOWER(t.teamName) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
            "LOWER(t.teamCode) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
            "LOWER(t.institutionName) LIKE LOWER(CONCAT('%', :q, '%'))")
     Page<Team> searchTeams(@Param("q") String query, Pageable pageable);
+
+    @Query("SELECT t FROM Team t WHERE t.deletedAt IS NULL AND (" +
+           "LOWER(t.teamName) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
+           "LOWER(t.teamCode) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
+           "LOWER(t.institutionName) LIKE LOWER(CONCAT('%', :q, '%')))")
+    Page<Team> searchActiveTeams(@Param("q") String query, Pageable pageable);
 }

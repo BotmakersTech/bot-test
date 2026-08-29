@@ -25,6 +25,7 @@ services:
       dockerfile: Dockerfile
     container_name: botleague_backend
     environment:
+      SPRING_PROFILES_ACTIVE: prod
       # Database
       SPRING_DATASOURCE_URL:      jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
@@ -57,9 +58,7 @@ services:
     networks: [app_net]
     restart: unless-stopped
     healthcheck:
-      # /api/auth/me returns 401 (unauthorised) when the app is up — that's fine.
-      # curl exit code 22 = HTTP error (4xx/5xx) which means the server IS responding.
-      test: ["CMD-SHELL", "curl -sf http://localhost:8081/api/auth/me || [ $? -eq 22 ]"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:8081/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3

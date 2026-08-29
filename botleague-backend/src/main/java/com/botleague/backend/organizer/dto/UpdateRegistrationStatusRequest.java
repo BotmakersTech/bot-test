@@ -1,7 +1,10 @@
 package com.botleague.backend.organizer.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class UpdateRegistrationStatusRequest {
 
+    @NotBlank(message = "status is required")
     private String status;
     private String reason;
 

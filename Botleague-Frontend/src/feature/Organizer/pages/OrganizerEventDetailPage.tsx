@@ -97,6 +97,7 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange }: {
     organizationUrl:  event.organizationUrl   ?? "",
     venueName:        event.venueName         ?? "",
     venueAddress:     event.venueAddress      ?? "",
+    mapUrl:           event.mapUrl            ?? "",
     city:             event.city              ?? "",
     state:            event.state             ?? "",
     country:          event.country           ?? "",
@@ -151,6 +152,9 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange }: {
           </FormField>
           <FormField label="Venue Address">
             <input style={inputStyle} value={form.venueAddress} onChange={e => set("venueAddress", e.target.value)} />
+          </FormField>
+          <FormField label="Location / Google Maps link">
+            <input style={inputStyle} placeholder="https://maps.app.goo.gl/…" value={form.mapUrl ?? ""} onChange={e => set("mapUrl", e.target.value)} />
           </FormField>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
             <FormField label="City"><input style={inputStyle} value={form.city} onChange={e => set("city", e.target.value)} /></FormField>

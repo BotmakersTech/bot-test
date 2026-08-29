@@ -3,6 +3,7 @@ package com.botleague.backend.admin.controller;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -96,7 +97,7 @@ public class AdminController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<AdminAllEventResponse> updateEvent(
             @PathVariable UUID eventId,
-            @RequestBody UpdateEventRequest request
+            @Valid @RequestBody UpdateEventRequest request
     ) {
         return ResponseEntity.ok(adminService.updateEvent(eventId, request));
     }
@@ -109,7 +110,7 @@ public class AdminController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','ORGANISER','EVENT_HEAD')")
     public ResponseEntity<AdminAllEventResponse> changeEventStatus(
             @PathVariable UUID eventId,
-            @RequestBody ChangeEventStatusRequest request
+            @Valid @RequestBody ChangeEventStatusRequest request
     ) {
         return ResponseEntity.ok(adminService.changeEventStatus(eventId, request));
     }

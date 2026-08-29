@@ -8,7 +8,8 @@ public class EligibilityResponse {
     private String ageRange;       // "8–11 yrs" | "12–17 yrs" | "18+ yrs" | null
     private boolean eligible;      // age >= 8 and category != null
     private boolean requiresGuardian;
-    private boolean hasGuardian;
+    private boolean hasGuardian;   // a CONFIRMED guardian record — see GuardianService.isGuardianConfirmed
+    private boolean guardianPending; // a guardian record exists but the OTP hasn't been confirmed yet
     private boolean canRegister;   // eligible && (!requiresGuardian || hasGuardian)
     private String blockReason;    // human-readable block reason when canRegister=false
 
@@ -18,6 +19,7 @@ public class EligibilityResponse {
         r.eligible = false;
         r.requiresGuardian = false;
         r.hasGuardian = false;
+        r.guardianPending = false;
         r.canRegister = false;
         r.blockReason = "Date of birth not set. Please complete your profile.";
         return r;
@@ -45,6 +47,9 @@ public class EligibilityResponse {
 
     public boolean isHasGuardian() { return hasGuardian; }
     public void setHasGuardian(boolean hasGuardian) { this.hasGuardian = hasGuardian; }
+
+    public boolean isGuardianPending() { return guardianPending; }
+    public void setGuardianPending(boolean guardianPending) { this.guardianPending = guardianPending; }
 
     public boolean isCanRegister() { return canRegister; }
     public void setCanRegister(boolean canRegister) { this.canRegister = canRegister; }

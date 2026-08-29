@@ -1,6 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react"
 import { X, ChevronDown, Info, Calendar, Plus, ArrowLeft, Check, Sparkles, Cpu, Brain, AlertTriangle } from "lucide-react"
 import { getPublicLeagueSports, toWeightClasses, type LeagueSport } from "../../api/catalog.api"
+import PrizeDistributionEditor from "../PrizeDistributionEditor"
+import { prizeDistributionBalanced, sumPrizeMoney, formatINR, type PrizePosition } from "../../utils/prize"
 import { useLeagues, formatAgeRange } from "../../../temp/pages/leagues/useLeagues"
 import type { CreateEventSportRequest } from "../../../feature/Admin/api/admin.api"
 import "../EventDashboard/EventDashboard.css"
@@ -27,6 +29,8 @@ interface ConfigState {
   maxTeams: number
   entryFee: number
   prizeMoney: number
+  prizeDistribution: PrizePosition[]
+  mapUrl: string
   registrationStartDate: string
   registrationEndDate: string
 }
@@ -39,6 +43,8 @@ const INITIAL_CONFIG: ConfigState = {
   maxTeams: 16,
   entryFee: 0,
   prizeMoney: 0,
+  prizeDistribution: [],
+  mapUrl: "",
   registrationStartDate: "",
   registrationEndDate: "",
 }
@@ -114,7 +120,7 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
   const busy = submitting || bulkProgress !== null
   const sportsNeedingWeightClass = selectedSports.filter(s => toWeightClasses(s).length > 1)
 
-  const setCfg = (key: keyof ConfigState, value: string | number) => setConfig(c => ({ ...c, [key]: value }))
+  const setCfg = <K extends keyof ConfigState>(key: K, value: ConfigState[K]) => setConfig(c => ({ ...c, [key]: value }))
 
   useEffect(() => {
     if (!selectedAg) { setLeagueSports([]); return }
@@ -165,6 +171,8 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
     maxTeams: config.maxTeams,
     entryFee: config.entryFee,
     prizeMoney: config.prizeMoney,
+    prizeDistribution: config.prizeDistribution,
+    mapUrl: config.mapUrl || undefined,
     registrationStartDate: config.registrationStartDate,
     registrationEndDate: config.registrationEndDate,
   })
@@ -178,6 +186,12 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
     if (!config.registrationEndDate) { setError("Please set a registration end date."); return }
     if (config.registrationStartDate > config.registrationEndDate) { setError("Registration start date must be before end date."); return }
     if (config.minTeamSize > config.maxTeamSize) { setError("Min team size cannot exceed max team size."); return }
+    {
+      const dist = config.prizeDistribution.filter(p => p.type === "GOODIES" ? (p.description ?? "").trim() !== "" : p.amount != null)
+      if (dist.length > 0 && !prizeDistributionBalanced(config.prizeMoney, dist)) {
+        setError(`Prize distribution money (${formatINR(sumPrizeMoney(dist))}) must equal the Prize Money pool (${formatINR(config.prizeMoney)}).`); return
+      }
+    }
 
     setError(null)
     const results: SubmitResult[] = []
@@ -344,6 +358,18 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
                 <FormField label="Entry Fee (₹)" required><input type="number" min={0} step={50} className="asm-input" value={config.entryFee} onChange={e => setCfg("entryFee", parseFloat(e.target.value) || 0)} /></FormField>
                 <FormField label="Prize Money (₹)" required><input type="number" min={0} step={1000} className="asm-input" value={config.prizeMoney} onChange={e => setCfg("prizeMoney", parseFloat(e.target.value) || 0)} /></FormField>
               </div>
+
+              <FormField label="Prize Distribution">
+                <PrizeDistributionEditor
+                  poolAmount={config.prizeMoney}
+                  positions={config.prizeDistribution}
+                  onChange={next => setCfg("prizeDistribution", next)}
+                />
+              </FormField>
+
+              <FormField label="Location / Google Maps link">
+                <input type="url" className="asm-input" placeholder="https://maps.app.goo.gl/…" value={config.mapUrl} onChange={e => setCfg("mapUrl", e.target.value)} />
+              </FormField>
 
               <div className="asm-reg-box">
                 <div className="asm-reg-label"><Calendar size={13} />Registration Window</div>

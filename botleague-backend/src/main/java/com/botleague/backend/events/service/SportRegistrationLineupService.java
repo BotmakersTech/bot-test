@@ -22,6 +22,7 @@ import com.botleague.backend.events.repository.EventRegistrationLineupRepository
 import com.botleague.backend.events.repository.EventRepository;
 import com.botleague.backend.events.repository.EventSportsRepository;
 import com.botleague.backend.events.repository.SportRegistrationRepository;
+import com.botleague.backend.guardian.enums.GuardianVerificationStatus;
 import com.botleague.backend.guardian.repository.GuardianRepository;
 import com.botleague.backend.team.entity.Robot;
 import com.botleague.backend.team.entity.TeamMembership;
@@ -247,10 +248,10 @@ public class SportRegistrationLineupService {
         }
 
         if (EligibilityUtils.requiresGuardian(member.getDateOfBirth())
-                && !guardianRepository.existsByUserId(member.getId())) {
+                && !guardianRepository.existsByUserIdAndStatus(member.getId(), GuardianVerificationStatus.CONFIRMED)) {
             throw new IllegalStateException(
-                    "This member is under 18 and needs a guardian profile on file " +
-                    "before joining a lineup.");
+                    "This member is under 18 and needs a guardian profile on file, " +
+                    "confirmed by the guardian via OTP, before joining a lineup.");
         }
 
         // =================================================

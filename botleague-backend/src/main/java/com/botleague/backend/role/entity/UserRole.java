@@ -37,7 +37,10 @@ public class UserRole {
 
     @Column(name = "approved_by")
     private UUID approvedBy;
-    
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
 //    @Column(name = "account_type", nullable = false)
 //    private String accountType;
 //
@@ -107,10 +110,18 @@ public class UserRole {
 		this.approvedBy = approvedBy;
 	}
 
+	public LocalDateTime getUpdatedAt() {
+			return updatedAt;
+		}
+
 	@PrePersist
     protected void onCreate() {
         assignedAt = LocalDateTime.now();
+        updatedAt = assignedAt;
     }
 
-    
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

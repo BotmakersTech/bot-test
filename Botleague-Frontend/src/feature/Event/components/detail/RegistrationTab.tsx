@@ -5,6 +5,7 @@ import type { TeamMember } from "../../hook/useEvent";
 import useRobots from "../../../Robots/hooks/useRobots";
 import type { Robot } from "../../../Robots/types/types";
 import type { EligibilityResponse } from "../../../Eligibility/api/eligibility.api";
+import { ageGroupLabel } from "../../../../shared/utils/ageGroup";
 
 // Age groups that mean "open to all" — no category restriction
 const OPEN_AGE_GROUPS = new Set(["OPEN", "ALL", "ALL_AGES", "UNRESTRICTED", ""]);
@@ -40,11 +41,6 @@ const REG_ROLES = [
   { value: "SECONDARY_DRIVER", label: "Secondary Driver" },
   { value: "BUILD_HEAD", label: "Build Head" },
 ];
-
-function toLabel(raw?: string | null): string {
-  if (!raw) return "—";
-  return raw.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-}
 
 interface RegistrationTabProps {
   sport: EventSportResponse;
@@ -213,8 +209,8 @@ export default function RegistrationTab({
           <div className="reg-banner info">
             <Info size={16} />
             <span>
-              This sport is open to {toLabel(sport.ageGroup)} participants. Your category is{" "}
-              {eligibility.categoryLabel ?? toLabel(eligibility.category)}
+              This sport is open to {ageGroupLabel(sport.ageGroup)} participants. Your category is{" "}
+              {eligibility.categoryLabel ?? ageGroupLabel(eligibility.category)}
               {eligibility.ageRange ? ` (age ${eligibility.ageRange})` : ""}, so you personally can't be added as a
               lineup member — but you can still register robots and add other eligible teammates.
             </span>

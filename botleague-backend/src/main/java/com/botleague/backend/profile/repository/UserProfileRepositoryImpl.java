@@ -23,16 +23,17 @@ public class UserProfileRepositoryImpl implements UserProfileRepository {
         // 1. BASIC INFO + TEAM
         // =========================
         Object[] basic = (Object[]) em.createNativeQuery("""
-            SELECT 
+            SELECT
                 u.id,
-                u.full_name,
+                u.first_name,
+                u.last_name,
                 u.profile_photo_url,
                 t.team_name,
-                t.team_logo_url
+                t.logo_url
             FROM users u
-            LEFT JOIN team_memberships tm 
+            LEFT JOIN team_memberships tm
                 ON tm.user_id = u.id AND tm.status = 'ACTIVE'
-            LEFT JOIN teams t 
+            LEFT JOIN teams t
                 ON t.id = tm.team_id
             WHERE u.id = :userId
         """)
@@ -40,20 +41,23 @@ public class UserProfileRepositoryImpl implements UserProfileRepository {
         .getSingleResult();
 
         dto.setUserId((UUID) basic[0]);
-        dto.setName((String) basic[1]);
-        dto.setProfileImageUrl((String) basic[2]);
-        dto.setTeamName((String) basic[3]);
-        dto.setTeamLogoUrl((String) basic[4]);
+        String firstName = (String) basic[1];
+        String lastName = (String) basic[2];
+        dto.setName(joinName(firstName, lastName));
+        dto.setProfileImageUrl((String) basic[3]);
+        dto.setTeamName((String) basic[4]);
+        dto.setTeamLogoUrl((String) basic[5]);
 
         // =========================
-        // 2. TEAM ROLE (Driver / Programmer)
+        // 2. TEAM ROLE (Driver / Build Head / ...)
+        // — most recently assigned active lineup role for this person.
         // =========================
         List<?> roleResult = em.createNativeQuery("""
-            SELECT ls.role_in_event
-            FROM lineup_snapshots ls
-            JOIN registrations r ON r.id = ls.registration_id
-            WHERE ls.user_id = :userId
-            ORDER BY r.created_at DESC
+            SELECT erl.lineup_role
+            FROM event_registration_lineups erl
+            JOIN team_memberships tm ON tm.id = erl.team_membership_id
+            WHERE tm.user_id = :userId AND erl.is_active = true
+            ORDER BY erl.created_at DESC
             LIMIT 1
         """)
         .setParameter("userId", userId)
@@ -65,11 +69,12 @@ public class UserProfileRepositoryImpl implements UserProfileRepository {
 
         // =========================
         // 3. TOURNAMENTS PLAYED
+        // — distinct events any of this person's teams registered a robot into.
         // =========================
         Number tournaments = (Number) em.createNativeQuery("""
-            SELECT COUNT(DISTINCT r.competition_id)
-            FROM registrations r
-            JOIN team_memberships tm ON tm.team_id = r.team_id
+            SELECT COUNT(DISTINCT sr.event_id)
+            FROM sport_registrations sr
+            JOIN team_memberships tm ON tm.team_id = sr.team_id
             WHERE tm.user_id = :userId
         """)
         .setParameter("userId", userId)
@@ -79,13 +84,21 @@ public class UserProfileRepositoryImpl implements UserProfileRepository {
 
         // =========================
         // 4. MATCHES PLAYED
+        // — completed matches involving a registration owned by any of this
+        // person's teams. A registration id can sit in any of the four
+        // team-slot columns depending on match type (1v1 / triple threat /
+        // fatal four).
         // =========================
         Number matches = (Number) em.createNativeQuery("""
             SELECT COUNT(*)
-            FROM match_participants mp
-            JOIN registrations r ON r.id = mp.registration_id
+            FROM matches m
+            JOIN sport_registrations r
+                ON r.id IN (m.team_a_registration_id, m.team_b_registration_id,
+                             m.team_c_registration_id, m.team_d_registration_id)
             JOIN team_memberships tm ON tm.team_id = r.team_id
             WHERE tm.user_id = :userId
+              AND m.deleted_at IS NULL
+              AND m.status = 'COMPLETED'
         """)
         .setParameter("userId", userId)
         .getSingleResult();
@@ -95,20 +108,22 @@ public class UserProfileRepositoryImpl implements UserProfileRepository {
 
         // =========================
         // 5. WINS / LOSSES
+        // — winner_registration_id is set on match completion; null means a
+        // genuine tie / no-winner outcome, which counts as neither.
         // =========================
         Object[] wl = (Object[]) em.createNativeQuery("""
-            SELECT 
-                SUM(CASE WHEN fms.aggregated_score = winner.max_score THEN 1 ELSE 0 END),
-                SUM(CASE WHEN fms.aggregated_score < winner.max_score THEN 1 ELSE 0 END)
-            FROM final_match_scores fms
-            JOIN (
-                SELECT match_id, MAX(aggregated_score) AS max_score
-                FROM final_match_scores
-                GROUP BY match_id
-            ) winner ON winner.match_id = fms.match_id
-            JOIN registrations r ON r.id = fms.registration_id
+            SELECT
+                SUM(CASE WHEN m.winner_registration_id = r.id THEN 1 ELSE 0 END),
+                SUM(CASE WHEN m.winner_registration_id IS NOT NULL
+                          AND m.winner_registration_id <> r.id THEN 1 ELSE 0 END)
+            FROM matches m
+            JOIN sport_registrations r
+                ON r.id IN (m.team_a_registration_id, m.team_b_registration_id,
+                             m.team_c_registration_id, m.team_d_registration_id)
             JOIN team_memberships tm ON tm.team_id = r.team_id
             WHERE tm.user_id = :userId
+              AND m.deleted_at IS NULL
+              AND m.status = 'COMPLETED'
         """)
         .setParameter("userId", userId)
         .getSingleResult();
@@ -126,23 +141,26 @@ public class UserProfileRepositoryImpl implements UserProfileRepository {
 
         // =========================
         // 7. PLAYER HISTORY
+        // — anchored on this person's own lineup entries (person + robot +
+        // competition), so the leaderboard rank joined in is THIS robot's
+        // rank, not an ambiguous pick among a team's several robots.
         // =========================
         List<Object[]> rows = em.createNativeQuery("""
-            SELECT 
-                c.name,
+            SELECT
+                e.event_name,
                 t.team_name,
-                ls.role_in_event,
-                cs.age_group,
-                lb.rank
-            FROM registrations r
-            JOIN competitions c ON c.id = r.competition_id
-            JOIN teams t ON t.id = r.team_id
-            JOIN lineup_snapshots ls 
-                ON ls.registration_id = r.id AND ls.user_id = :userId
-            JOIN competition_sports cs ON cs.id = r.competition_sport_id
-            LEFT JOIN leaderboard lb 
-                ON lb.team_id = t.id AND lb.competition_id = c.id
-            ORDER BY c.start_date DESC
+                erl.lineup_role,
+                es.age_group,
+                lb.event_rank
+            FROM event_registration_lineups erl
+            JOIN team_memberships tm ON tm.id = erl.team_membership_id
+            JOIN events e ON e.id = erl.event_id
+            JOIN teams t ON t.id = erl.team_id
+            JOIN event_sports es ON es.id = erl.event_sport_id
+            LEFT JOIN event_leaderboard_entries lb
+                ON lb.event_sport_id = erl.event_sport_id AND lb.robot_id = erl.robot_id
+            WHERE tm.user_id = :userId AND erl.is_active = true
+            ORDER BY e.start_date DESC
         """)
         .setParameter("userId", userId)
         .getResultList();
@@ -173,5 +191,12 @@ public class UserProfileRepositoryImpl implements UserProfileRepository {
         dto.setPlayerHistory(historyList);
 
         return dto;
+    }
+
+    private static String joinName(String firstName, String lastName) {
+        String first = firstName == null ? "" : firstName.trim();
+        String last = lastName == null ? "" : lastName.trim();
+        String full = (first + " " + last).trim();
+        return full.isEmpty() ? null : full;
     }
 }

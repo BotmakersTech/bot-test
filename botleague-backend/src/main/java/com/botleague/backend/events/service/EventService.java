@@ -48,6 +48,7 @@ public class EventService {
     private final ChatService chatService;
     private final AuthorizationService authorizationService;
     private final com.botleague.backend.common.service.GetFileService getFileService;
+    private final com.botleague.backend.common.service.UploadService uploadService;
 
     // =====================================================
     // CONSTRUCTOR
@@ -61,7 +62,8 @@ public class EventService {
             AuditLogService auditLogService,
             ChatService chatService,
             AuthorizationService authorizationService,
-            com.botleague.backend.common.service.GetFileService getFileService
+            com.botleague.backend.common.service.GetFileService getFileService,
+            com.botleague.backend.common.service.UploadService uploadService
     ) {
 
         this.eventRepository = eventRepository;
@@ -72,6 +74,7 @@ public class EventService {
         this.chatService = chatService;
         this.authorizationService = authorizationService;
         this.getFileService = getFileService;
+        this.uploadService = uploadService;
     }
 
     // =====================================================
@@ -145,6 +148,10 @@ public class EventService {
 
         event.setVenueAddress(
                 request.getVenueAddress()
+        );
+
+        event.setMapUrl(
+                request.getMapUrl()
         );
 
         event.setCity(
@@ -235,6 +242,8 @@ public class EventService {
                 .stream()
                 .filter(event ->
                         event.getDeletedAt() == null
+                        // ARCHIVED events are admin-only — never in a public list.
+                        && event.getStatus() != EventStatus.ARCHIVED
                 )
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -260,8 +269,10 @@ public class EventService {
 
     public List<CreateEventResponseDTO> getCompletedEvents() {
         return eventRepository
+                // ARCHIVED dropped — an archived event is admin-only, so it no
+                // longer appears in the public "previous events" listing.
                 .findByStatusInAndDeletedAtIsNull(
-                        List.of(EventStatus.COMPLETED, EventStatus.ARCHIVED)
+                        List.of(EventStatus.COMPLETED)
                 )
                 .stream()
                 .map(this::mapToResponse)
@@ -324,8 +335,15 @@ public class EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
 
+        String oldKey = currentEventSlotValue(event, slot);
         applyEventSlot(event, slot, key);
         eventRepository.save(event);
+
+        // Every generated media key is unique (see FileKeyService), so
+        // replacing this slot always orphans the previous object otherwise.
+        if (oldKey != null && !oldKey.equals(key)) {
+            uploadService.deleteObject(oldKey);
+        }
     }
 
     public void clearEventMediaSlot(UUID eventId, EventMediaSlot slot, Authentication authentication) {
@@ -334,8 +352,13 @@ public class EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
 
+        String oldKey = currentEventSlotValue(event, slot);
         applyEventSlot(event, slot, null);
         eventRepository.save(event);
+
+        if (oldKey != null) {
+            uploadService.deleteObject(oldKey);
+        }
     }
 
     private void applyEventSlot(Event event, EventMediaSlot slot, String key) {
@@ -344,6 +367,14 @@ public class EventService {
             case TEASER_1 -> event.setTeaserVideo1Url(key);
             case TEASER_2 -> event.setTeaserVideo2Url(key);
         }
+    }
+
+    private String currentEventSlotValue(Event event, EventMediaSlot slot) {
+        return switch (slot) {
+            case THUMBNAIL -> event.getEventThumbnailUrl();
+            case TEASER_1 -> event.getTeaserVideo1Url();
+            case TEASER_2 -> event.getTeaserVideo2Url();
+        };
     }
 
     private void validateSlotContentType(EventMediaSlot slot, String fileType) {
@@ -437,6 +468,10 @@ public class EventService {
 
         response.setVenueName(
                 event.getVenueName()
+        );
+
+        response.setMapUrl(
+                event.getMapUrl()
         );
 
         response.setCity(

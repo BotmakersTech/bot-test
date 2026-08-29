@@ -28,10 +28,14 @@ public class JwtService {
 
     private final SecretKey key;
     private final long accessTtlMillis;
+    private final String issuer;
+    private final String audience;
 
     public JwtService(
             @Value("${security.jwt.secret}") String secret,
-            @Value("${security.jwt.access-ttl-seconds:900}") long accessTtlSeconds) {
+            @Value("${security.jwt.access-ttl-seconds:900}") long accessTtlSeconds,
+            @Value("${security.jwt.issuer:botleague-backend}") String issuer,
+            @Value("${security.jwt.audience:botleague-api}") String audience) {
 
         // Secret is base64; must decode to >= 32 bytes for HS256.
         byte[] decoded = decode(secret);
@@ -40,6 +44,8 @@ public class JwtService {
         }
         this.key = Keys.hmacShaKeyFor(decoded);
         this.accessTtlMillis = accessTtlSeconds * 1000L;
+        this.issuer = issuer;
+        this.audience = audience;
     }
 
     public String generateAccessToken(String userId) {
@@ -51,6 +57,8 @@ public class JwtService {
         return Jwts.builder()
                 .subject(userId)
                 .claim("roles", roles)
+                .issuer(issuer)
+                .audience().add(audience).and()
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + accessTtlMillis))
                 .signWith(key)
@@ -74,6 +82,11 @@ public class JwtService {
         return parse(token).getPayload().getSubject();
     }
 
+    public java.time.Instant extractIssuedAt(String token) {
+        Date issuedAt = parse(token).getPayload().getIssuedAt();
+        return issuedAt != null ? issuedAt.toInstant() : java.time.Instant.EPOCH;
+    }
+
     @SuppressWarnings("unchecked")
     public List<String> extractRoles(String token) {
         Object roles = parse(token).getPayload().get("roles");
@@ -84,7 +97,12 @@ public class JwtService {
     }
 
     private io.jsonwebtoken.Jws<Claims> parse(String token) {
-        return Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
+        return Jwts.parser()
+                .verifyWith(key)
+                .requireIssuer(issuer)
+                .requireAudience(audience)
+                .build()
+                .parseSignedClaims(token);
     }
 
     private static byte[] decode(String secret) {

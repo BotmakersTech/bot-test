@@ -1,5 +1,6 @@
 package com.botleague.backend.chat.config;
 
+import com.botleague.backend.chat.repository.ChatParticipantRepository;
 import com.botleague.backend.common.security.JwtService;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -13,9 +14,11 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final JwtService jwtService;
+    private final ChatParticipantRepository chatParticipantRepository;
 
-    public WebSocketConfig(JwtService jwtService) {
+    public WebSocketConfig(JwtService jwtService, ChatParticipantRepository chatParticipantRepository) {
         this.jwtService = jwtService;
+        this.chatParticipantRepository = chatParticipantRepository;
     }
 
     @Override
@@ -44,6 +47,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(new WebSocketAuthInterceptor(jwtService));
+        registration.interceptors(new WebSocketAuthInterceptor(jwtService, chatParticipantRepository));
     }
 }

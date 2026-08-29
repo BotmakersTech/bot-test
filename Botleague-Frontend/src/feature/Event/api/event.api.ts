@@ -4,6 +4,8 @@
 // ======================================================
 
 import api from "../../../shared/api/Base";
+import type { PrizePosition } from "../../../shared/utils/prize";
+export type { PrizePosition } from "../../../shared/utils/prize";
 
 // ======================================================
 // EVENT TYPES
@@ -20,6 +22,7 @@ export interface EventResponse {
   teaserVideo2Url?: string;
   organizationName?: string;
   venueName?: string;
+  mapUrl?: string;
   city?: string;
   state?: string;
   country?: string;
@@ -53,6 +56,7 @@ export interface EventSportResponse {
   controlType?: string;
   maxBotsPerTeam?: number;
   extraRules?: Record<string, string>;
+  mapUrl?: string;
 
   minTeamSize: number;
   maxTeamSize: number;
@@ -61,6 +65,7 @@ export interface EventSportResponse {
 
   entryFee: number;
   prizeMoney: number;
+  prizeDistribution?: PrizePosition[];
 
   formatType: string;
   registrationStartDate: string;
