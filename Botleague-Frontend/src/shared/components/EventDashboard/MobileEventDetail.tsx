@@ -4,6 +4,7 @@ import {
   Calendar, ArrowRight, Check, Ban, CheckCircle2, Trash2, AlertTriangle,
 } from "lucide-react"
 import type { EventDashboardEvent, EventDashboardSport, StatusTransition } from "./EventDashboard"
+import { formatWeightClass } from "../../../feature/Robots/constants/weightClasses"
 
 // Mobile view of the single-event management page (mockup: "Eventmanagementdashboard.jsx").
 // Rendered inside EventDashboard.tsx via .ed-mobile-only/.ed-desktop-only at
@@ -194,7 +195,7 @@ export default function MobileEventDetail({
                 </div>
                 <div className="ed-m-sport-meta">
                   {sport.ageGroup && <span>{toLabel(sport.ageGroup)}</span>}
-                  {sport.weightClass && <><span className="sep">|</span><span>{toLabel(sport.weightClass)}</span></>}
+                  {sport.weightClass && <><span className="sep">|</span><span>{formatWeightClass(sport.weightClass)}</span></>}
                   {sport.formatType && <><span className="sep">|</span><span>{toLabel(sport.formatType)}</span></>}
                 </div>
 

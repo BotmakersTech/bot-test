@@ -14,6 +14,7 @@ import { getEventSponsors, type EventSponsor } from "../api/eventSponsor.api";
 import { getSportSponsors, type SportSponsor } from "../api/sportSponsor.api";
 import { getEventSupportContacts, type SupportContact } from "../api/event.api";
 import SponsorStrip from "../../../shared/components/SponsorStrip";
+import { formatWeightClass } from "../../Robots/constants/weightClasses";
 
 import type {
   EventRegistrationResponse,
@@ -322,7 +323,7 @@ function SportCard({
       </div>
       <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center", marginBottom: "12px" }}>
         {sport.ageGroup    && <CategoryBadge category={sport.ageGroup} size="xs" showAgeRange />}
-        {sport.weightClass && <span style={chip()}>⚖️ {sport.weightClass}</span>}
+        {sport.weightClass && <span style={chip()}>⚖️ {formatWeightClass(sport.weightClass)}</span>}
         {categoryMismatch && (
           <span style={{ fontSize: "0.63rem", color: "#f87171", fontWeight: 600, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)", borderRadius: "6px", padding: "2px 7px" }}>
             Not eligible for your category

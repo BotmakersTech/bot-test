@@ -4,6 +4,7 @@ import {
   Edit2, Lock, Unlock, Globe, MessageCircle, Check, Ban, Bot, AlertTriangle, CheckCircle2,
 } from "lucide-react"
 import "./MobileSportDetail.css"
+import { formatWeightClass } from "../../../feature/Robots/constants/weightClasses"
 
 // Mobile view of the single-sport management page (mockup: "Sportmanagementdashboard.jsx").
 // Shared by AdminSport.tsx (/admin/events/:eventId/sports/:sportId) and
@@ -239,8 +240,8 @@ export default function MobileSportDetail({
         <div className="ssd-m-details-grid">
           <div className="ssd-m-detail-cell"><div className="label">Age Group</div><div className="value">{toLabel(ageGroup)}</div></div>
           <div className="ssd-m-detail-cell"><div className="label">Format</div><div className="value">{toLabel(formatType)}</div></div>
-          <div className="ssd-m-detail-cell"><div className="label">Weight Class</div><div className="value">{toLabel(weightClass)}</div></div>
-          <div className="ssd-m-detail-cell"><div className="label">Weight Limit</div><div className="value">{weightLimitKg != null ? `${weightLimitKg} kg` : "—"}</div></div>
+          <div className="ssd-m-detail-cell"><div className="label">Weight Class</div><div className="value">{formatWeightClass(weightClass) || "—"}</div></div>
+          <div className="ssd-m-detail-cell"><div className="label">Weight Limit</div><div className="value">{weightLimitKg != null ? `${weightLimitKg} KG` : "—"}</div></div>
           <div className="ssd-m-detail-cell"><div className="label">Team Size</div><div className="value">{teamSizeLabel || "—"}</div></div>
         </div>
 

@@ -3,6 +3,7 @@ import type { ComponentType } from "react";
 import type { EventSportResponse, SupportContact } from "../../api/event.api";
 import plane from "../../../../assets/Auth/plane.svg";
 import star from "../../../../assets/Auth/Star-two.svg";
+import { formatWeightClass } from "../../../Robots/constants/weightClasses";
 
 interface SportDetailsHeaderProps {
   sport: EventSportResponse;
@@ -46,7 +47,7 @@ export default function SportDetailsHeader({ sport, contacts }: SportDetailsHead
     {
       icon: Weight,
       label: "Weight",
-      value: sport.weightLimitKg != null ? `${sport.weightLimitKg} Kg` : titleCase(sport.weightClass),
+      value: sport.weightLimitKg != null ? `${sport.weightLimitKg} KG` : (formatWeightClass(sport.weightClass) || "—"),
     },
     { icon: Layers, label: "Format", value: titleCase(sport.formatType) },
     { icon: Wallet, label: "Entry Fee", value: formatCurrency(sport.entryFee) },

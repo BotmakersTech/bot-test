@@ -11,6 +11,7 @@ import MobileRobotBuild from "../components/MobileRobotBuild";
 import MobileRobotEmptyState from "../components/MobileRobotEmptyState";
 import useRobots from "../hooks/useRobots";
 import type { Robot } from "../types/types";
+import { formatWeightClass } from "../constants/weightClasses";
 import robotFallback from "../../../assets/robot.png";
 import robotEmptyState from "../../../assets/robot-empty-state.png";
 import mascotRobot from "../../../assets/mascote.png";
@@ -41,8 +42,8 @@ export function getRobotImage(robot?: Robot) {
 }
 
 export function getWeight(robot: Robot) {
-  if (robot.weightKg != null) return `${robot.weightKg} Kg`;
-  if (robot.weightClass) return toLabel(robot.weightClass);
+  if (robot.weightKg != null) return `${robot.weightKg} KG`;
+  if (robot.weightClass) return formatWeightClass(robot.weightClass);
   return "-";
 }
 

@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import type { EventSportResponse } from "../../api/event.api";
 import EventCard from "./EventCard";
 import star from "../../../../assets/Auth/Star-two.svg";
+import { formatWeightClass } from "../../../Robots/constants/weightClasses";
 
 interface SportsSectionProps {
   eventId: string;
@@ -19,8 +20,8 @@ function titleCase(val?: string | null): string {
 // weight subdivisions, e.g. Drone Racing) — not a meaningful class to call
 // out on the card, so it's treated the same as no class at all.
 function weightLabel(sport: EventSportResponse): string {
-  if (sport.weightLimitKg != null) return `${sport.weightLimitKg}kg`;
-  const cls = titleCase(sport.weightClass);
+  if (sport.weightLimitKg != null) return `${sport.weightLimitKg} KG`;
+  const cls = formatWeightClass(sport.weightClass);
   return cls.toUpperCase() === "OPEN" ? "" : cls;
 }
 

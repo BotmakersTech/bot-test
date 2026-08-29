@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getPublicTeamProfile, getPublicTeamProfileByCode, type PublicTeamProfile } from "../api/teamPublic.api";
+import { formatWeightClass } from "../../Robots/constants/weightClasses";
 import ShareButton from "../../../shared/components/ShareButton";
 import TeamLogo from "../../../shared/components/TeamLogo";
 import PublicNavbar from "../../../shared/components/PublicNavbar";
@@ -293,7 +294,7 @@ export default function TeamPublicPage() {
                       )}
                       {rec.weightClass && (
                         <span style={{ fontSize: "0.6rem", color: MUTED, background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}`, borderRadius: 4, padding: "1px 7px" }}>
-                          {toLabel(rec.weightClass)}
+                          {formatWeightClass(rec.weightClass)}
                         </span>
                       )}
                       {!rec.isFinalized && (

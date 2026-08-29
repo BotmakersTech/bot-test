@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getMySports, type OrganizerSport } from "../../Organizer/api/organizer.api";
+import { formatWeightClass } from "../../Robots/constants/weightClasses";
 import "../../../styles/organizerTheme.css";
 
 export default function SubOrganizerSportsPage() {
@@ -48,7 +49,7 @@ export default function SubOrganizerSportsPage() {
                 <p className="mt-1 text-xs text-gray-400">Age group: {s.ageGroup}</p>
               )}
               {s.weightClass && (
-                <p className="mt-0.5 text-xs text-gray-400">Weight: {s.weightClass}</p>
+                <p className="mt-0.5 text-xs text-gray-400">Weight: {formatWeightClass(s.weightClass)}</p>
               )}
               <div className="mt-3">
                 <span className={[
