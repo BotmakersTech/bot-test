@@ -8,7 +8,7 @@ import {
   deleteAdminRobot,
   type AdminRobotDetail,
 } from "../../SuperAdmin/api/robotManagement.api"
-import { getWeightClassOptions, weightClassLabel } from "../../Robots/constants/weightClasses"
+import { getWeightClassOptions, weightClassLabel, formatWeightClass } from "../../Robots/constants/weightClasses"
 import "../../../shared/styles/adminDetailPage.css"
 
 type Tab = "info" | "specs" | "actions"
@@ -195,7 +195,7 @@ export default function AdminRobotDetailPage() {
               {robot.weightClass && (
                 <div className="adp-stat">
                   <h4>Weight Class</h4>
-                  <span style={{ fontSize: 15 }}>{robot.weightClass}</span>
+                  <span style={{ fontSize: 15 }}>{formatWeightClass(robot.weightClass)}</span>
                 </div>
               )}
             </div>
@@ -261,8 +261,8 @@ export default function AdminRobotDetailPage() {
               <Field label="Sport"        value={robot.sport?.replace(/_/g, " ")} />
               <Field label="Control Type" value={robot.controlType} />
               <Field label="Control Mode" value={robot.controlMode} />
-              <Field label="Weight Class" value={robot.weightClass} />
-              <Field label="Weight"       value={robot.weightKg ? `${robot.weightKg} kg` : undefined} />
+              <Field label="Weight Class" value={formatWeightClass(robot.weightClass) || undefined} />
+              <Field label="Weight"       value={robot.weightKg ? `${robot.weightKg} KG` : undefined} />
               <Field label="Length"       value={robot.lengthCm ? `${robot.lengthCm} cm` : undefined} />
               <Field label="Width"        value={robot.widthCm  ? `${robot.widthCm} cm`  : undefined} />
               <Field label="Height"       value={robot.heightCm ? `${robot.heightCm} cm` : undefined} />

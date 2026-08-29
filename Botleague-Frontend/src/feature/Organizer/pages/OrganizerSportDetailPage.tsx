@@ -15,6 +15,7 @@ import {
   updateRegistrationStatus,
 } from "../api/organizer.api"
 import { getPublicLeagueSports, toWeightClasses, type LeagueSport } from "../../../shared/api/catalog.api"
+import { formatWeightClass } from "../../Robots/constants/weightClasses"
 import { useLeagues, formatAgeRange, type PresentedLeague } from "../../../temp/pages/leagues/useLeagues"
 import SportMediaField from "../components/SportMediaField"
 import SportAnnouncementForm from "../components/SportAnnouncementForm"
@@ -791,9 +792,9 @@ function EditSportModal({
                   <select style={inputStyle} value={form.weightClass ?? ""} onChange={e => set("weightClass", e.target.value || undefined)}>
                     <option value="">None</option>
                     {!currentInWc && form.weightClass && (
-                      <option value={form.weightClass}>{form.weightClass}</option>
+                      <option value={form.weightClass}>{formatWeightClass(form.weightClass)}</option>
                     )}
-                    {wcs.map(w => <option key={w.value} value={w.value}>{w.label}</option>)}
+                    {wcs.map(w => <option key={w.value} value={w.value}>{formatWeightClass(w.label)}</option>)}
                   </select>
                 )
               })()}
@@ -1454,8 +1455,8 @@ export default function OrganizerSportDetailPage() {
           <div className="sdt-fields-box">
             <Field label="Age Group" value={sport.ageGroup ? toLabel(sport.ageGroup) : null} />
             <Field label="Format" value={sport.formatType ? toLabel(sport.formatType) : null} />
-            <Field label="Weight Class" value={sport.weightClass ? toLabel(sport.weightClass) : null} />
-            <Field label="Weight Limit" value={sport.weightLimitKg != null ? `${sport.weightLimitKg} kg` : null} />
+            <Field label="Weight Class" value={sport.weightClass ? formatWeightClass(sport.weightClass) : null} />
+            <Field label="Weight Limit" value={sport.weightLimitKg != null ? `${sport.weightLimitKg} KG` : null} />
             <Field
               label="Dimensions (L×W×H)"
               value={

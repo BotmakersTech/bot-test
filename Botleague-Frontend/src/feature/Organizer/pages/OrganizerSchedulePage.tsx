@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Clock, MapPin, Trophy, Play, Check } from "lucide-react";
+import { formatWeightClass } from "../../Robots/constants/weightClasses";
 import {
   getMyEvents,
   getMyEventById,
@@ -644,7 +645,7 @@ export default function OrganizerSchedulePage() {
                   ].join(" ")}
                 >
                   {s.sport?.replace(/_/g, " ")}
-                  {s.weightClass ? ` (${s.weightClass})` : ""}
+                  {s.weightClass ? ` (${formatWeightClass(s.weightClass)})` : ""}
                   {s.bracketGenerated && (
                     <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-[#1fa952] align-middle" title="Bracket ready" />
                   )}

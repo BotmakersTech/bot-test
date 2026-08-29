@@ -27,6 +27,14 @@ const ROBOT_TO_EVENT_SPORT: Record<string, string[]> = {
 
 const normWc = (wc?: string | null) => (wc ?? "").toUpperCase().replace(/\./g, "_");
 
+// The event sport is stored as its catalog display name ("Robo War"), a robot
+// as a legacy key ("ROBOWAR_15KG"), and ROBOT_TO_EVENT_SPORT's values as
+// canonical tokens ("ROBO_WAR"). Fold all three to one shape before matching —
+// without this, `"Robo War".toUpperCase()` ("ROBO WAR") never equals the
+// "ROBO_WAR" token and every robot fails the sport-compatibility check.
+const normSport = (s?: string | null) =>
+  (s ?? "").toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+
 const REG_ROLES = [
   { value: "DRIVER", label: "Driver" },
   { value: "SECONDARY_DRIVER", label: "Secondary Driver" },
@@ -96,9 +104,8 @@ export default function RegistrationTab({
         if (sport.maxHeightCm != null && robot.heightCm != null && robot.heightCm > sport.maxHeightCm) return false;
         if (sport.ageGroup && robot.eligibleCategories?.length && !robot.eligibleCategories.includes(sport.ageGroup as Robot["eligibleCategories"][number])) return false;
         if (robot.sport && sport.sport) {
-          const robotSportKey = (robot.sport as string).toUpperCase();
-          const allowed = ROBOT_TO_EVENT_SPORT[robotSportKey];
-          if (allowed && !allowed.includes(sport.sport.toUpperCase())) return false;
+          const allowed = ROBOT_TO_EVENT_SPORT[normSport(robot.sport)];
+          if (allowed && !allowed.some((s) => normSport(s) === normSport(sport.sport))) return false;
         }
         if (robot.weightClass && sport.weightClass) {
           if (normWc(robot.weightClass) !== normWc(sport.weightClass)) return false;

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react"
 import { X, Check, Ban, Clock, UserPlus, Search, AlertTriangle } from "lucide-react"
+import { formatWeightClass } from "../../../feature/Robots/constants/weightClasses"
 import {
   getEventAssignments, assignEventHead, unassignEventHead,
   getSportAssignments, assignSportHead, unassignSportHead,
@@ -257,7 +258,7 @@ function AssignmentsTab({ eventId, isAdmin, sports, onResolved }: {
           <select className="ed-input" value={sportId} onChange={e => setSportId(e.target.value)}>
             <option value="">Select a sport…</option>
             {sports.map(s => (
-              <option key={s.id} value={s.id}>{s.sport}{s.weightClass ? ` (${s.weightClass})` : ""}</option>
+              <option key={s.id} value={s.id}>{s.sport}{s.weightClass ? ` (${formatWeightClass(s.weightClass)})` : ""}</option>
             ))}
           </select>
         )}

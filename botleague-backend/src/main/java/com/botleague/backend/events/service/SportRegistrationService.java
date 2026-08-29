@@ -262,10 +262,15 @@ public class SportRegistrationService {
 
         if (robot.getSport() != null && eventSport.getSport() != null) {
             Set<String> allowed = ROBOT_SPORT_TO_EVENT_SPORTS.get(
-                    robot.getSport().toUpperCase());
+                    normalizeSport(robot.getSport()));
             // If the robot sport is in our catalogue but doesn't match → reject.
             // If it's an unknown/custom sport key, skip the check.
-            if (allowed != null && !allowed.contains(eventSport.getSport().toUpperCase())) {
+            // Both sides are normalised: the event sport is stored as its catalog
+            // display name ("Robo War"), the map values are canonical tokens
+            // ("ROBO_WAR"), so a raw compare would reject every robot.
+            String eventSportNorm = normalizeSport(eventSport.getSport());
+            if (allowed != null
+                    && allowed.stream().noneMatch(a -> normalizeSport(a).equals(eventSportNorm))) {
                 throw new IllegalStateException(
                         "Sport mismatch: robot '" + robot.getRobotName()
                         + "' is configured for '" + robot.getSport() + "' "
@@ -886,6 +891,20 @@ public class SportRegistrationService {
     /** Normalise weight class strings so "1.5KG" == "1_5KG" == "1_5KG". */
     private static String normalizeWeightClass(String wc) {
         return wc.toUpperCase().replace('.', '_');
+    }
+
+    /**
+     * Fold a sport identifier to one shape: UPPER, every run of non-alphanumerics
+     * to a single '_', trimmed. The event sport is stored as its catalog display
+     * name ("Robo War"), a robot as a legacy key ("ROBOWAR_15KG"), and the
+     * ROBOT_SPORT_TO_EVENT_SPORTS values as canonical tokens ("ROBO_WAR"), so
+     * without this a robot could never match its own sport's competition.
+     */
+    private static String normalizeSport(String s) {
+        if (s == null) return "";
+        return s.toUpperCase()
+                .replaceAll("[^A-Z0-9]+", "_")
+                .replaceAll("^_+|_+$", "");
     }
 
     /**

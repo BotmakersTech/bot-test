@@ -8,7 +8,7 @@ import {
   type AdminRobotSummary,
   type TeamOption,
 } from "../../SuperAdmin/api/robotManagement.api"
-import { getWeightClassOptions, weightClassLabel } from "../../Robots/constants/weightClasses"
+import { getWeightClassOptions, weightClassLabel, formatWeightClass } from "../../Robots/constants/weightClasses"
 import { ORG } from "../../Organizer/theme/organizerTheme"
 import PrimaryButton from "../../Organizer/components/PrimaryButton"
 import MobileRobotManagement from "../components/MobileRobotManagement"
@@ -347,7 +347,7 @@ export default function AdminRobotsPage() {
                       )}
                     </td>
                     <td className="hidden px-5 py-3.5 text-gray-500 lg:table-cell">
-                      {robot.weightClass ?? (robot.weightKg ? `${robot.weightKg} kg` : "—")}
+                      {formatWeightClass(robot.weightClass) || (robot.weightKg ? `${robot.weightKg} KG` : "—")}
                     </td>
                     <td className="px-5 py-3.5 text-center">
                       <StatusBadge status={robot.status} />

@@ -6,6 +6,7 @@ import {
   type GlobalRankingPage,
 } from "../api/rankings.api";
 import { getPublicLeagueSports, type LeagueSport } from "../../../shared/api/catalog.api";
+import { formatWeightClass } from "../../Robots/constants/weightClasses";
 import { getDashboard } from "../../UserDashboard/api/userDashboard.api";
 import RankingRow from "../components/RankingRow";
 import { useLeagues, formatAgeRange } from "../../../temp/pages/leagues/useLeagues";
@@ -330,7 +331,7 @@ export default function GlobalRankingsPage() {
               value={draftWeightKg}
               onChange={setDraftWeightKg}
               disabled={!draftSportSlug || weightOptions.length === 0}
-              options={weightOptions.map((w) => ({ value: String(w.weightKg), label: w.label }))}
+              options={weightOptions.map((w) => ({ value: String(w.weightKg), label: formatWeightClass(w.label) }))}
             />
 
             <button

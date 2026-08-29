@@ -5,6 +5,7 @@ import {
   formatDate,
   getCategoryLabel,
 } from "../utils/robotUtils";
+import { formatWeightClass } from "../constants/weightClasses";
 
 interface RobotCardProps {
   robot: Robot;
@@ -127,7 +128,7 @@ maxWidth: "90%" }}>
                   <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                     {[
                       { label: "Code", value: robot.robotCode, Icon: Tag },
-                      { label: "Weight", value: robot.weightClass, Icon: Weight },
+                      { label: "Weight", value: formatWeightClass(robot.weightClass), Icon: Weight },
                       { label: "Control", value: controlTypeLabel[robot.controlType], Icon: Gamepad2 },
                       { label: "Added", value: formatDate(robot.createdAt), Icon: Calendar },
                     ].map(({ label, value, Icon }) => (

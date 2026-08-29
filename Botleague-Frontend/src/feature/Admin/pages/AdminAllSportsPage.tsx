@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { getAllEvents, type AdminEventResponse, type AdminEventSportResponse } from "../api/admin.api"
 import { ORG } from "../../Organizer/theme/organizerTheme"
+import { formatWeightClass } from "../../Robots/constants/weightClasses"
 import "../../../styles/organizerTheme.css"
 
 interface FlatSport extends AdminEventSportResponse {
@@ -175,7 +176,7 @@ export default function AdminAllSportsPage() {
 
                   {/* Weight Class */}
                   <td className="px-4 py-3 text-gray-500 hidden lg:table-cell">
-                    {toLabel(sp.weightClass)}
+                    {formatWeightClass(sp.weightClass)}
                   </td>
 
                   {/* Teams */}

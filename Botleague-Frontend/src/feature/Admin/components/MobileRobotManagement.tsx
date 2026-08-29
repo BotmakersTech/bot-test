@@ -1,5 +1,6 @@
 import { Search, Plus, ChevronLeft, ChevronRight, Bot as BotIcon } from "lucide-react";
 import type { AdminRobotSummary } from "../../SuperAdmin/api/robotManagement.api";
+import { formatWeightClass } from "../../Robots/constants/weightClasses";
 
 /* ============================================================================
    MobileRobotManagement — mobile (<=950px) companion to AdminRobotsPage.tsx,
@@ -143,7 +144,7 @@ export default function MobileRobotManagement({
               <span className="mrm-field mrm-field-type">{robot.robotType?.replace(/_/g, " ") ?? "—"}</span>
               <span className="mrm-field mrm-field-dot mrm-field-weight">·</span>
               <span className="mrm-field mrm-field-weight">
-                {robot.weightClass ?? (robot.weightKg ? `${robot.weightKg} kg` : "—")}
+                {formatWeightClass(robot.weightClass) || (robot.weightKg ? `${robot.weightKg} KG` : "—")}
               </span>
               <span
                 className="mrm-status-badge"

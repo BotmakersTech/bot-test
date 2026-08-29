@@ -4,14 +4,14 @@
 // weight class(es) that sport is actually allowed to compete at.
 
 export const WEIGHT_CLASS_LABELS: Record<string, string> = {
-  "1KG":   "1 kg",
-  "1_5KG": "1.5 kg",
-  "3KG":   "3 kg",
-  "5KG":   "5 kg",
-  "8KG":   "8 kg",
-  "15KG":  "15 kg",
-  "30KG":  "30 kg",
-  "60KG":  "60 kg",
+  "1KG":   "1 KG",
+  "1_5KG": "1.5 KG",
+  "3KG":   "3 KG",
+  "5KG":   "5 KG",
+  "8KG":   "8 KG",
+  "15KG":  "15 KG",
+  "30KG":  "30 KG",
+  "60KG":  "60 KG",
 };
 
 // Empty array = this sport has no weight-class concept (e.g. drones, RC).
@@ -46,5 +46,31 @@ export function getWeightClassOptions(sport?: string | null): string[] {
 }
 
 export function weightClassLabel(code: string): string {
-  return WEIGHT_CLASS_LABELS[code] ?? code;
+  return WEIGHT_CLASS_LABELS[code] ?? formatWeightClass(code);
+}
+
+/**
+ * Render ANY stored weight-class string as a clean "N KG":
+ *   "1_5KG" | "1_5" | "1.5kg" | "1.5 kg"  ->  "1.5 KG"
+ *   "15KG"  | "15"                        ->  "15 KG"
+ *   "Featherweight" | "Open" | "" | null   ->  tidied text, no invented "KG"
+ *
+ * Robots persist their class via toWeightClassCode ("1_5KG") and catalog
+ * labels are free text, so every UI weight-class render funnels through this
+ * instead of ad-hoc toLabel()/titleCase() calls that leak "1_5" / "1 5KG".
+ */
+export function formatWeightClass(raw?: string | null): string {
+  if (raw == null) return "";
+  const s = String(raw).trim();
+  if (!s) return "";
+  // Whole string is just a number (with _ . or , as the decimal) + optional "kg".
+  if (/^[\d._,\s]*(?:kg)?$/i.test(s)) {
+    const m = s.match(/(\d+)(?:[._,](\d+))?/);
+    if (m) {
+      const n = Number(m[2] != null ? `${m[1]}.${m[2]}` : m[1]);
+      if (Number.isFinite(n)) return `${n} KG`;
+    }
+  }
+  // Named class ("Featherweight", "OPEN") — tidy separators + title-case only.
+  return s.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 }

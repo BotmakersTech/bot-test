@@ -15,6 +15,7 @@ import { useSponsors } from "../hooks/useSponsors";
 import { getTeamBestRank, type GlobalRankingEntry } from "../../Rankings/api/rankings.api";
 import useTeamMembership from "../TeamMembership/hooks/useTeamMembership";
 import { resolveAvatarSrc } from "../../Profile/constants/avatars";
+import { formatWeightClass } from "../../Robots/constants/weightClasses";
 import TeamLogo from "../../../shared/components/TeamLogo";
 import MyTeamEmptyState from "../components/MyTeamEmptyState";
 import MobileMyTeam from "../components/MobileMyTeam";
@@ -536,7 +537,7 @@ export default function MyTeam() {
                       <div className="teamdash-bb-sub">Victories</div>
                     </div>
                     <div className="teamdash-bb-col">
-                      <div className="teamdash-bb-num">{toLabel(primaryRobot.weightClass)}</div>
+                      <div className="teamdash-bb-num">{formatWeightClass(primaryRobot.weightClass)}</div>
                       <div className="teamdash-bb-sub">Class</div>
                     </div>
                   </div>
@@ -611,7 +612,7 @@ export default function MyTeam() {
           name: robot.robotName,
           category: toLabel(robot.category),
           statusLabel: toLabel(robot.status),
-          weightClassLabel: toLabel(robot.weightClass),
+          weightClassLabel: formatWeightClass(robot.weightClass),
         }))}
         wins={stats.wins}
         onViewAllRobots={() => navigate("/robots")}

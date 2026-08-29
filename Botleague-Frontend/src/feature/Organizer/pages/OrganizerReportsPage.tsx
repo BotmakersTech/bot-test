@@ -5,6 +5,7 @@ import {
   type OrganizerEvent, type OrganizerSport,
 } from "../api/organizer.api"
 import { ORG } from "../theme/organizerTheme"
+import { formatWeightClass } from "../../Robots/constants/weightClasses"
 
 // ── theme ─────────────────────────────────────────────────────────────────────
 const P      = "#8c6cff"
@@ -141,7 +142,7 @@ export default function OrganizerReportsPage() {
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}>
                   <td style={{ padding: "13px 14px" }}>
                     <p style={{ color: TEXT, fontWeight: 600, margin: 0 }}>{toLabel(r.sport)}</p>
-                    {r.weightClass && <p style={{ color: MUTED, fontSize: "0.72rem", margin: "2px 0 0" }}>{toLabel(r.weightClass)}</p>}
+                    {r.weightClass && <p style={{ color: MUTED, fontSize: "0.72rem", margin: "2px 0 0" }}>{formatWeightClass(r.weightClass)}</p>}
                   </td>
                   <td style={{ padding: "13px 14px", color: MUTED }}>{r.eventName}</td>
                   <td style={{ padding: "13px 14px", color: MUTED }}>{toLabel(r.ageGroup)}</td>
