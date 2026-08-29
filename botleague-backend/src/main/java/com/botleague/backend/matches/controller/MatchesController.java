@@ -3,6 +3,8 @@ package com.botleague.backend.matches.controller;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.validation.Valid;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -44,7 +46,7 @@ public class MatchesController {
     @PostMapping
     public ResponseEntity<MatchResponseDTO> createMatch(
             Authentication authentication,
-            @RequestBody CreateMatchRequestDTO request
+            @Valid @RequestBody CreateMatchRequestDTO request
     ) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -59,7 +61,7 @@ public class MatchesController {
     @PostMapping("/bulk")
     public ResponseEntity<List<MatchResponseDTO>> createTournamentBracket(
             Authentication authentication,
-            @RequestBody List<CreateMatchRequestDTO> requests
+            @Valid @RequestBody List<CreateMatchRequestDTO> requests
     ) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -74,7 +76,7 @@ public class MatchesController {
     @PostMapping("/generate")
     public ResponseEntity<List<MatchResponseDTO>> generateBracket(
             Authentication authentication,
-            @RequestBody GenerateBracketRequestDTO request
+            @Valid @RequestBody GenerateBracketRequestDTO request
     ) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -156,7 +158,7 @@ public class MatchesController {
     @PutMapping("/{matchId}")
     public ResponseEntity<MatchResponseDTO> updateMatch(
             @PathVariable UUID matchId,
-            @RequestBody UpdateMatchRequestDTO request,
+            @Valid @RequestBody UpdateMatchRequestDTO request,
             Authentication authentication
     ) {
         return ResponseEntity.ok(matchService.updateMatch(matchId, request, authentication));
@@ -170,7 +172,7 @@ public class MatchesController {
     @PatchMapping("/{matchId}/teams")
     public ResponseEntity<MatchResponseDTO> updateMatchTeams(
             @PathVariable UUID matchId,
-            @RequestBody UpdateMatchRequestDTO request,
+            @Valid @RequestBody UpdateMatchRequestDTO request,
             Authentication authentication
     ) {
         return ResponseEntity.ok(matchService.updateMatchTeams(matchId, request, authentication));
@@ -184,7 +186,7 @@ public class MatchesController {
     @PatchMapping("/{matchId}/schedule")
     public ResponseEntity<MatchResponseDTO> scheduleMatch(
             @PathVariable UUID matchId,
-            @RequestBody UpdateMatchRequestDTO request,
+            @Valid @RequestBody UpdateMatchRequestDTO request,
             Authentication authentication
     ) {
         return ResponseEntity.ok(matchService.scheduleMatch(matchId, request, authentication));
@@ -198,7 +200,7 @@ public class MatchesController {
     @PatchMapping("/{matchId}/score")
     public ResponseEntity<MatchResponseDTO> updateMatchScore(
             @PathVariable UUID matchId,
-            @RequestBody UpdateMatchScoreDTO request,
+            @Valid @RequestBody UpdateMatchScoreDTO request,
             Authentication authentication
     ) {
         return ResponseEntity.ok(matchService.updateMatchScore(matchId, request, authentication));
@@ -227,7 +229,7 @@ public class MatchesController {
     @PatchMapping("/{matchId}/result")
     public ResponseEntity<MatchResponseDTO> submitMatchResult(
             @PathVariable UUID matchId,
-            @RequestBody SubmitMatchResultDTO request,
+            @Valid @RequestBody SubmitMatchResultDTO request,
             Authentication authentication
     ) {
         return ResponseEntity.ok(matchService.submitMatchResult(matchId, request, authentication));
@@ -269,7 +271,7 @@ public class MatchesController {
     @PatchMapping("/{matchId}/reject")
     public ResponseEntity<MatchResponseDTO> rejectMatchResult(
             @PathVariable UUID matchId,
-            @RequestBody com.botleague.backend.matches.dto.RejectMatchResultDTO request,
+            @Valid @RequestBody com.botleague.backend.matches.dto.RejectMatchResultDTO request,
             Authentication authentication
     ) {
         return ResponseEntity.ok(matchService.rejectMatchResult(matchId, request.getReason(), authentication));
@@ -314,18 +316,20 @@ public class MatchesController {
     // STATUS — CORRECT RESULT
     // PATCH /api/v1/matches/{matchId}/correct
     //
-    // Reopens a COMPLETED match that was scored wrong: voids its already-
-    // awarded ranking points and returns it to PENDING_APPROVAL so it can
-    // go through submit-then-approve again with the right result.
+    // Reopens a COMPLETED match that was scored wrong: applies any corrected
+    // score/position/winner fields, voids its already-awarded ranking
+    // points, and returns it to PENDING_APPROVAL so it can go through
+    // approve again with the right result (which also re-triggers the
+    // global ranking recalculation — see MatchService.autoFinalizeIfLastMatch).
     // =====================================================
 
     @PatchMapping("/{matchId}/correct")
     public ResponseEntity<MatchResponseDTO> correctMatchResult(
             @PathVariable UUID matchId,
-            @RequestBody com.botleague.backend.matches.dto.RejectMatchResultDTO request,
+            @Valid @RequestBody com.botleague.backend.matches.dto.CorrectMatchResultDTO request,
             Authentication authentication
     ) {
-        return ResponseEntity.ok(matchService.correctMatchResult(matchId, request.getReason(), authentication));
+        return ResponseEntity.ok(matchService.correctMatchResult(matchId, request, authentication));
     }
 
     // =====================================================

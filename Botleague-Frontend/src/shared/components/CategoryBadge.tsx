@@ -1,4 +1,5 @@
 import { Bot, Zap, Trophy, type LucideIcon } from "lucide-react"
+import { ageGroupLabel } from "../utils/ageGroup"
 
 export type AgeCategory = "JUNIOR_INNOVATORS" | "YOUNG_ENGINEERS" | "ROBO_MINDS"
 
@@ -85,7 +86,7 @@ export default function CategoryBadge({
       {showIcon && (
         <cfg.icon size={s.iconPx} style={{ flexShrink: 0 }} />
       )}
-      {cfg.label}
+      {ageGroupLabel(category)}
       {showAgeRange && (
         <span style={{ opacity: 0.75, fontWeight: 500 }}>· {cfg.ageRange}</span>
       )}

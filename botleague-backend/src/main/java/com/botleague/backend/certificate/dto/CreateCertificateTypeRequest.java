@@ -2,10 +2,16 @@ package com.botleague.backend.certificate.dto;
 
 import java.util.UUID;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 public class CreateCertificateTypeRequest {
 
+    @NotNull(message = "eventSportId is required")
     private UUID eventSportId;
+    @NotBlank(message = "category is required")
     private String category;
+    @NotBlank(message = "label is required")
     private String label;
     private UUID templateId;
     private String eligibilityRule;

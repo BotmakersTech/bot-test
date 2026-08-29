@@ -1,6 +1,9 @@
 package com.botleague.backend.admin.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class ChangeTeamStatusRequest {
+    @NotBlank(message = "status is required")
     private String status;
 
     public String getStatus() { return status; }

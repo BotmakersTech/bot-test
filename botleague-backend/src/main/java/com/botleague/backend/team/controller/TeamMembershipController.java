@@ -3,14 +3,22 @@ package com.botleague.backend.team.controller;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import com.botleague.backend.team.enums.TeamRole;
 import com.botleague.backend.team.service.TeamMembershipService;
 
+// Every action here is scoped to the caller's own active team membership
+// inside TeamMembershipService (extractUserId(authentication) is what's
+// checked for captain/vice-captain status — the {userId} path variable is
+// only ever a target, never an authorization source). @PreAuthorize adds
+// method-level defense-in-depth on top of that, independent of whatever
+// SecurityConfig's filter-chain rules happen to say.
 @RestController
 @RequestMapping("/api/membership")
+@PreAuthorize("isAuthenticated()")
 public class TeamMembershipController {
 
     private final TeamMembershipService

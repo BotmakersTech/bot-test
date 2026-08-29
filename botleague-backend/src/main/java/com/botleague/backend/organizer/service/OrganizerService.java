@@ -58,7 +58,16 @@ public class OrganizerService {
         eventRepository.findAllByDeletedAtIsNull().stream()
                 .filter(e -> "ORGANISER".equals(e.getOwnerType()) && userId.equals(e.getOwnerId()))
                 .forEach(e -> ids.add(e.getId()));
+        // ARCHIVED events are visible to platform admins only — drop them from
+        // every organiser-scoped set (listings, detail, edit-permission checks).
+        ids.removeIf(this::isArchivedOrGoneEvent);
         return ids;
+    }
+
+    private boolean isArchivedOrGoneEvent(UUID eventId) {
+        return eventRepository.findById(eventId)
+                .map(e -> e.getDeletedAt() != null || e.getStatus() == EventStatus.ARCHIVED)
+                .orElse(true);
     }
 
     /**
@@ -75,6 +84,7 @@ public class OrganizerService {
                 .filter(java.util.Optional::isPresent)
                 .map(java.util.Optional::get)
                 .map(EventSports::getEventId)
+                .filter(eventId -> !isArchivedOrGoneEvent(eventId))
                 .collect(Collectors.toCollection(HashSet::new));
     }
 
@@ -121,6 +131,8 @@ public class OrganizerService {
                         && ResourceRoleAssignment.STATUS_APPROVED.equals(a.getStatus()))
                 .forEach(a -> sportIds.add(a.getScopeId()));
         return eventSportsRepository.findAllById(sportIds).stream()
+                // an individually-assigned sport can still hang off an archived event
+                .filter(s -> !isArchivedOrGoneEvent(s.getEventId()))
                 .map(this::toSportResponse)
                 .collect(Collectors.toList());
     }
@@ -169,6 +181,7 @@ public class OrganizerService {
         if (dto.getOrganizationUrl()  != null) event.setOrganizationUrl(dto.getOrganizationUrl());
         if (dto.getVenueName()        != null) event.setVenueName(dto.getVenueName());
         if (dto.getVenueAddress()     != null) event.setVenueAddress(dto.getVenueAddress());
+        if (dto.getMapUrl()           != null) event.setMapUrl(dto.getMapUrl());
         if (dto.getCity()             != null) event.setCity(dto.getCity());
         if (dto.getState()            != null) event.setState(dto.getState());
         if (dto.getCountry()          != null) event.setCountry(dto.getCountry());
@@ -209,6 +222,7 @@ public class OrganizerService {
         dto.setTeaserVideo2Url(getFileService.resolveEventImage(e.getTeaserVideo2Url()));
         dto.setOrganizationName(e.getOrganizationName());
         dto.setVenueName(e.getVenueName());
+        dto.setMapUrl(e.getMapUrl());
         dto.setCity(e.getCity());
         dto.setState(e.getState());
         dto.setCountry(e.getCountry());
@@ -233,6 +247,7 @@ public class OrganizerService {
         dto.setSportTeaserVideoUrl(es.getSportTeaserVideoUrl());
         dto.setAgeGroup(es.getAgeGroup());
         dto.setWeightClass(es.getWeightClass());
+        dto.setMapUrl(es.getMapUrl());
         dto.setStatus(es.getStatus() != null ? es.getStatus().name() : null);
         dto.setBracketGenerated(es.isBracketGenerated());
         dto.setRejectionReason(es.getRejectionReason());

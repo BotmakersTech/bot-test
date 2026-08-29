@@ -3,6 +3,8 @@ package com.botleague.backend.guardian.dto;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.botleague.backend.guardian.enums.GuardianVerificationStatus;
+
 public class GuardianResponse {
 
     private UUID id;
@@ -12,6 +14,8 @@ public class GuardianResponse {
     private String mobileNumber;
     private String email;
     private String emergencyContact;
+    private GuardianVerificationStatus status;
+    private LocalDateTime verifiedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -35,6 +39,12 @@ public class GuardianResponse {
 
     public String getEmergencyContact() { return emergencyContact; }
     public void setEmergencyContact(String emergencyContact) { this.emergencyContact = emergencyContact; }
+
+    public GuardianVerificationStatus getStatus() { return status; }
+    public void setStatus(GuardianVerificationStatus status) { this.status = status; }
+
+    public LocalDateTime getVerifiedAt() { return verifiedAt; }
+    public void setVerifiedAt(LocalDateTime verifiedAt) { this.verifiedAt = verifiedAt; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

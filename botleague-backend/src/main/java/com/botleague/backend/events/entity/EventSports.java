@@ -101,6 +101,16 @@ public class EventSports {
     @Column(name = "max_height_cm")
     private Double maxHeightCm;
 
+    // Per-sport Google Maps override (falls back to the parent event's map_url
+    // on the frontend when null).
+    @Column(name = "map_url", length = 2048)
+    private String mapUrl;
+
+    // JSON array of prize placings — see V39 migration. MONEY entries must sum
+    // to prizeMoney (validated in EventSportsService).
+    @Column(name = "prize_distribution_json", columnDefinition = "TEXT")
+    private String prizeDistributionJson;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "control_type", length = 20)
     private ControlMode controlType; // WIRED / WIRELESS / ANY (null = not applicable)
@@ -135,11 +145,11 @@ public class EventSports {
     // FINANCIALS
     // =========================
 
-    @Column(name = "entry_fee", nullable = false)
-    private Double entryFee = 0.0;
+    @Column(name = "entry_fee", nullable = false, precision = 12, scale = 2)
+    private java.math.BigDecimal entryFee = java.math.BigDecimal.ZERO;
 
-    @Column(name = "prize_money", nullable = false)
-    private Double prizeMoney = 0.0;
+    @Column(name = "prize_money", nullable = false, precision = 12, scale = 2)
+    private java.math.BigDecimal prizeMoney = java.math.BigDecimal.ZERO;
 
     // =========================
     // FORMAT
@@ -174,6 +184,17 @@ public class EventSports {
 
     @Column(name = "rejection_reason", length = 500)
     private String rejectionReason;
+
+    /**
+     * Tracks whether this event sport's leaderboard has ever been pushed to
+     * the cross-event global ranking pool. First push uses the additive
+     * RankingEngineService.pushToGlobalRankings; any subsequent re-finalize
+     * (e.g. after correctMatchResult reopens and re-approves a match) must
+     * instead use fullRecalculate — pushToGlobalRankings is not idempotent
+     * and would double-count on a second call for the same event sport.
+     */
+    @Column(name = "global_rankings_pushed", nullable = false, columnDefinition = "boolean DEFAULT false")
+    private boolean globalRankingsPushed = false;
 
     // =========================
     // AUDIT
@@ -221,7 +242,7 @@ public class EventSports {
         if (minTeamSize > maxTeamSize) {
             throw new IllegalArgumentException("Min team size cannot be greater than max team size");
         }
-        if (entryFee < 0 || prizeMoney < 0) {
+        if (entryFee.signum() < 0 || prizeMoney.signum() < 0) {
             throw new IllegalArgumentException("Financial values cannot be negative");
         }
         if (weightLimitKg != null && weightLimitKg < 0) {
@@ -300,6 +321,12 @@ public class EventSports {
     public Double getMaxHeightCm() { return maxHeightCm; }
     public void setMaxHeightCm(Double maxHeightCm) { this.maxHeightCm = maxHeightCm; }
 
+    public String getMapUrl() { return mapUrl; }
+    public void setMapUrl(String mapUrl) { this.mapUrl = mapUrl; }
+
+    public String getPrizeDistributionJson() { return prizeDistributionJson; }
+    public void setPrizeDistributionJson(String prizeDistributionJson) { this.prizeDistributionJson = prizeDistributionJson; }
+
     public ControlMode getControlType() { return controlType; }
     public void setControlType(ControlMode controlMode) { this.controlType = controlMode; }
 
@@ -318,11 +345,11 @@ public class EventSports {
     public Integer getMaxTeams() { return maxTeams; }
     public void setMaxTeams(Integer maxTeams) { this.maxTeams = maxTeams; }
 
-    public Double getEntryFee() { return entryFee; }
-    public void setEntryFee(Double entryFee) { this.entryFee = entryFee; }
+    public java.math.BigDecimal getEntryFee() { return entryFee; }
+    public void setEntryFee(java.math.BigDecimal entryFee) { this.entryFee = entryFee; }
 
-    public Double getPrizeMoney() { return prizeMoney; }
-    public void setPrizeMoney(Double prizeMoney) { this.prizeMoney = prizeMoney; }
+    public java.math.BigDecimal getPrizeMoney() { return prizeMoney; }
+    public void setPrizeMoney(java.math.BigDecimal prizeMoney) { this.prizeMoney = prizeMoney; }
 
     public String getFormatType() { return formatType; }
     public void setFormatType(String formatType) { this.formatType = formatType; }
@@ -343,6 +370,9 @@ public class EventSports {
 
     public boolean isBracketGenerated() { return bracketGenerated; }
     public void setBracketGenerated(boolean bracketGenerated) { this.bracketGenerated = bracketGenerated; }
+
+    public boolean isGlobalRankingsPushed() { return globalRankingsPushed; }
+    public void setGlobalRankingsPushed(boolean globalRankingsPushed) { this.globalRankingsPushed = globalRankingsPushed; }
 
     public String getRejectionReason() { return rejectionReason; }
     public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { getAllEvents, type AdminEventResponse, type AdminEventSportResponse } from "../api/admin.api"
 import { getRegistrationsForSport, type EventSportRegistration } from "../../Organizer/api/organizer.api"
 import { ORG } from "../../Organizer/theme/organizerTheme"
+import { ageGroupLabel } from "../../../shared/utils/ageGroup"
 import "../../../styles/organizerTheme.css"
 
 function toLabel(raw?: string | null) {
@@ -91,7 +92,7 @@ export default function AdminRegistrations() {
         <div className="rounded-xl bg-white border px-4 py-3" style={{ borderColor: "rgba(75,134,232,0.2)" }}>
           <p className="text-xs text-gray-400">Age Group</p>
           <p className="text-sm font-semibold mt-0.5 text-[#374151]">
-            {selectedSport?.ageGroup ? toLabel(selectedSport.ageGroup) : "—"}
+            {selectedSport?.ageGroup ? ageGroupLabel(selectedSport.ageGroup) : "—"}
           </p>
         </div>
         <div className="rounded-xl bg-white border px-4 py-3" style={{ borderColor: "rgba(75,134,232,0.2)" }}>
@@ -133,7 +134,7 @@ export default function AdminRegistrations() {
               ) : (
                 sports.map((sp) => (
                   <option key={sp.id} value={sp.id}>
-                    {toLabel(sp.sport)}{sp.ageGroup ? ` · ${toLabel(sp.ageGroup)}` : ""}
+                    {toLabel(sp.sport)}{sp.ageGroup ? ` · ${ageGroupLabel(sp.ageGroup)}` : ""}
                   </option>
                 ))
               )}

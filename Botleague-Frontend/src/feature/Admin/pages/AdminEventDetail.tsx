@@ -93,7 +93,7 @@ const STATUS_TRANSITIONS: Record<string, { value: string; label: string; color: 
 // ─────────────────────────────────────────────────────────────
 
 interface EditEventModalProps {
-  event: { id: string; eventName: string; eventDescription?: string; organizationName?: string; organizationUrl?: string; venueName?: string; city?: string; state?: string; country?: string; startDate?: string; endDate?: string; eventThumbnailUrl?: string; teaserVideo1Url?: string; teaserVideo2Url?: string; volunteersNeeded?: boolean }
+  event: { id: string; eventName: string; eventDescription?: string; organizationName?: string; organizationUrl?: string; venueName?: string; mapUrl?: string; city?: string; state?: string; country?: string; startDate?: string; endDate?: string; eventThumbnailUrl?: string; teaserVideo1Url?: string; teaserVideo2Url?: string; volunteersNeeded?: boolean }
   onSave: (req: UpdateEventRequest) => Promise<unknown>
   saving: boolean
   onClose: () => void
@@ -110,6 +110,7 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange, limited
     organizationName:event.organizationName ?? "",
     organizationUrl: event.organizationUrl  ?? "",
     venueName:       event.venueName        ?? "",
+    mapUrl:          event.mapUrl           ?? "",
     city:            event.city             ?? "",
     state:           event.state            ?? "",
     country:         event.country          ?? "",
@@ -201,6 +202,10 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange, limited
               <div style={evGroupStyle}>
                 <label style={evLabelStyle}>Venue Name</label>
                 <input style={evInputStyle} value={form.venueName} onChange={e => set("venueName", e.target.value)} />
+              </div>
+              <div style={evGroupStyle}>
+                <label style={evLabelStyle}>Location / Google Maps link</label>
+                <input style={evInputStyle} placeholder="https://maps.app.goo.gl/…" value={form.mapUrl ?? ""} onChange={e => set("mapUrl", e.target.value)} />
               </div>
               <LocationSelects
                 country={form.country ?? ""}

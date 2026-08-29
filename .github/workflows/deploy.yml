@@ -20,8 +20,8 @@ jobs:
           java-version: 25
           cache: maven
 
-      - name: Build backend (skip tests)
-        run: mvn package -DskipTests -B -q
+      - name: Build backend
+        run: mvn package -B -q
         working-directory: botleague-backend
 
       - name: Set up Node 20
@@ -68,7 +68,7 @@ jobs:
             echo "── Waiting for backend health ──"
             sleep 10
             for i in $(seq 1 12); do
-              if curl -sf http://localhost:8081/api/health > /dev/null 2>&1; then
+              if curl -sf http://localhost:8081/actuator/health > /dev/null 2>&1; then
                 echo "Backend is healthy"
                 break
               fi

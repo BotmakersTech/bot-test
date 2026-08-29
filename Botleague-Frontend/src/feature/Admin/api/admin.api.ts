@@ -12,6 +12,7 @@ export interface CreateEventRequest {
   organizationUrl?: string
   venueName: string
   venueAddress: string
+  mapUrl?: string
   city: string
   state: string
   country: string
@@ -128,6 +129,7 @@ export interface CreateEventSportRequest {
   controlType?: string
   maxBotsPerTeam?: number
   extraRules?: Record<string, string>
+  mapUrl?: string
 
   minTeamSize?: number
   maxTeamSize?: number
@@ -135,6 +137,7 @@ export interface CreateEventSportRequest {
 
   entryFee?: number
   prizeMoney?: number
+  prizeDistribution?: import("../../../shared/utils/prize").PrizePosition[]
 
   formatType?: string
   registrationStartDate?: string
@@ -164,6 +167,7 @@ export interface GetEventSportDTO {
   controlType?: string
   maxBotsPerTeam?: number
   extraRules?: Record<string, string>
+  mapUrl?: string
 
   minTeamSize?: number
   maxTeamSize?: number
@@ -172,6 +176,7 @@ export interface GetEventSportDTO {
 
   entryFee?: number
   prizeMoney?: number
+  prizeDistribution?: import("../../../shared/utils/prize").PrizePosition[]
 
   formatType?: string
   registrationStartDate?: string
@@ -193,6 +198,7 @@ export interface UpdateEventRequest {
   organizationUrl?: string
   venueName?: string
   venueAddress?: string
+  mapUrl?: string
   city?: string
   state?: string
   country?: string

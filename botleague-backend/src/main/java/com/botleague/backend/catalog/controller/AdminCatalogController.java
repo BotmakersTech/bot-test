@@ -3,6 +3,8 @@ package com.botleague.backend.catalog.controller;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -36,7 +38,7 @@ public class AdminCatalogController {
     // ── Leagues ──────────────────────────────────────────────────────────
 
     @PostMapping("/leagues")
-    public ResponseEntity<LeagueResponse> createLeague(@RequestBody CreateLeagueRequest req, Authentication auth) {
+    public ResponseEntity<LeagueResponse> createLeague(@Valid @RequestBody CreateLeagueRequest req, Authentication auth) {
         return ResponseEntity.ok(leagueService.create(req, extractUserId(auth)));
     }
 
@@ -51,14 +53,14 @@ public class AdminCatalogController {
     }
 
     @PatchMapping("/leagues/{id}")
-    public ResponseEntity<LeagueResponse> updateLeague(@PathVariable UUID id, @RequestBody UpdateLeagueRequest req) {
+    public ResponseEntity<LeagueResponse> updateLeague(@PathVariable UUID id, @Valid @RequestBody UpdateLeagueRequest req) {
         return ResponseEntity.ok(leagueService.update(id, req));
     }
 
     // ── Sports ───────────────────────────────────────────────────────────
 
     @PostMapping("/sports")
-    public ResponseEntity<SportResponse> createSport(@RequestBody CreateSportRequest req, Authentication auth) {
+    public ResponseEntity<SportResponse> createSport(@Valid @RequestBody CreateSportRequest req, Authentication auth) {
         return ResponseEntity.ok(sportService.create(req, extractUserId(auth)));
     }
 
@@ -73,14 +75,14 @@ public class AdminCatalogController {
     }
 
     @PatchMapping("/sports/{id}")
-    public ResponseEntity<SportResponse> updateSport(@PathVariable UUID id, @RequestBody UpdateSportRequest req) {
+    public ResponseEntity<SportResponse> updateSport(@PathVariable UUID id, @Valid @RequestBody UpdateSportRequest req) {
         return ResponseEntity.ok(sportService.update(id, req));
     }
 
     // ── League/Sport pairings ────────────────────────────────────────────
 
     @PostMapping("/league-sports")
-    public ResponseEntity<LeagueSportResponse> createLeagueSport(@RequestBody CreateLeagueSportRequest req, Authentication auth) {
+    public ResponseEntity<LeagueSportResponse> createLeagueSport(@Valid @RequestBody CreateLeagueSportRequest req, Authentication auth) {
         return ResponseEntity.ok(leagueSportService.create(req, extractUserId(auth)));
     }
 
@@ -95,7 +97,7 @@ public class AdminCatalogController {
     }
 
     @PatchMapping("/league-sports/{id}")
-    public ResponseEntity<LeagueSportResponse> updateLeagueSport(@PathVariable UUID id, @RequestBody UpdateLeagueSportRequest req) {
+    public ResponseEntity<LeagueSportResponse> updateLeagueSport(@PathVariable UUID id, @Valid @RequestBody UpdateLeagueSportRequest req) {
         return ResponseEntity.ok(leagueSportService.update(id, req));
     }
 

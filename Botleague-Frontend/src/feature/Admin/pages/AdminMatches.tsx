@@ -10,6 +10,7 @@ import {
 } from "../api/adminMatches.api"
 import { useSportMatchRealtime, mergeMatchUpdate } from "../../../shared/realtime/useMatchRealtime"
 import { ORG } from "../../Organizer/theme/organizerTheme"
+import { ageGroupLabel } from "../../../shared/utils/ageGroup"
 import "../../../styles/organizerTheme.css"
 
 function toLabel(raw?: string | null) {
@@ -184,7 +185,7 @@ export default function AdminMatches() {
           <option value="ALL">All Sports</option>
           {sports.map((sp) => (
             <option key={sp.id} value={sp.id}>
-              {toLabel(sp.sport)}{sp.ageGroup ? ` · ${toLabel(sp.ageGroup)}` : ""}
+              {toLabel(sp.sport)}{sp.ageGroup ? ` · ${ageGroupLabel(sp.ageGroup)}` : ""}
             </option>
           ))}
         </select>

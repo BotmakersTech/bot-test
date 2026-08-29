@@ -1,0 +1,21 @@
+version: 2
+updates:
+  # Backend — Maven (botleague-backend/pom.xml)
+  - package-ecosystem: "maven"
+    directory: "/botleague-backend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+
+  # Frontend — npm (Botleague-Frontend/package.json)
+  - package-ecosystem: "npm"
+    directory: "/Botleague-Frontend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+
+  # The deploy workflow's own actions (actions/checkout, actions/setup-java, ...)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

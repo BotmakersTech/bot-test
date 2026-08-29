@@ -40,6 +40,13 @@ public class TeamMembership {
     @Column(name = "left_at")
     private LocalDateTime leftAt;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
+
     public LocalDateTime getLeftAt() {
 		return leftAt;
 	}
@@ -57,9 +64,15 @@ public class TeamMembership {
     @PrePersist
     protected void onCreate() {
         joinedAt = LocalDateTime.now();
+        updatedAt = joinedAt;
         if (status == null) {
             status = TeamMembershipStatus.ACTIVE;
         }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 
     // getters and setters
@@ -102,5 +115,13 @@ public class TeamMembership {
 
     public LocalDateTime getJoinedAt() {
         return joinedAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 }

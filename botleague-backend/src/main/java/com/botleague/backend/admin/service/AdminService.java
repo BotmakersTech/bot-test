@@ -128,6 +128,13 @@ public class AdminService {
      */
     public AdminAllEventResponse getEventById(UUID eventId, UUID callerId, List<String> callerRoles) {
         authorizationService.assertCanViewEvent(callerId, eventId);
+        // An ARCHIVED event is visible to platform admins only — not to the
+        // organiser who owns it, nor to any assigned EVENT_HEAD / SPORT_HEAD.
+        Event event = eventRepository.findByIdAndDeletedAtIsNull(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+        if (event.getStatus() == EventStatus.ARCHIVED && !isAdminOrAbove()) {
+            throw new ResourceNotFoundException("Event not found");
+        }
         return getEventById(eventId);
     }
 
@@ -279,6 +286,7 @@ public class AdminService {
             if (request.getOrganizationUrl()  != null) event.setOrganizationUrl(request.getOrganizationUrl());
             if (request.getVenueName()        != null) event.setVenueName(request.getVenueName());
             if (request.getVenueAddress()     != null) event.setVenueAddress(request.getVenueAddress());
+            if (request.getMapUrl()           != null) event.setMapUrl(request.getMapUrl());
             if (request.getCity()             != null) event.setCity(request.getCity());
             if (request.getState()            != null) event.setState(request.getState());
             if (request.getCountry()          != null) event.setCountry(request.getCountry());
@@ -448,14 +456,14 @@ public class AdminService {
             case PUBLISHED -> notificationService.systemNotify(
                     event.getEventName() + " is now Published!",
                     "A new event has been published. Check it out and register your team!",
-                    NotificationType.EVENT_CREATED, NotificationPriority.HIGH,
+                    NotificationType.EVENT_PUBLISHED, NotificationPriority.HIGH,
                     NotificationTargetType.ALL_USERS, null,
                     "/events/" + event.getId()
             );
             case LIVE -> notificationService.systemNotify(
                     event.getEventName() + " is now LIVE!",
                     "The competition has started! Check the live leaderboard.",
-                    NotificationType.EVENT_CREATED, NotificationPriority.HIGH,
+                    NotificationType.EVENT_LIVE, NotificationPriority.HIGH,
                     NotificationTargetType.ALL_USERS, null,
                     "/events/" + event.getId()
             );
@@ -660,6 +668,20 @@ public class AdminService {
     // MAP SPORT
     // =====================================================
 
+    private static final com.fasterxml.jackson.databind.ObjectMapper PRIZE_JSON =
+            new com.fasterxml.jackson.databind.ObjectMapper();
+
+    private java.util.List<com.botleague.backend.events.dto.PrizePositionDTO> parsePrizeDistributionJson(String json) {
+        if (json == null || json.isBlank()) return null;
+        try {
+            return PRIZE_JSON.readValue(json,
+                    new com.fasterxml.jackson.core.type.TypeReference<
+                            java.util.List<com.botleague.backend.events.dto.PrizePositionDTO>>() {});
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private AdminEventSportResponse mapSport(EventSports sport) {
 
         AdminEventSportResponse dto = new AdminEventSportResponse();
@@ -679,6 +701,8 @@ public class AdminService {
         dto.setMaxTeamSize(sport.getMaxTeamSize());
         dto.setRegisteredTeamsCount(sport.getRegisteredTeamsCount());
         dto.setPrizeMoney(sport.getPrizeMoney());
+        dto.setMapUrl(sport.getMapUrl());
+        dto.setPrizeDistribution(parsePrizeDistributionJson(sport.getPrizeDistributionJson()));
         dto.setRegistrationStartDate(sport.getRegistrationStartDate());
         dto.setRegistrationEndDate(sport.getRegistrationEndDate());
         dto.setBracketGenerated(sport.isBracketGenerated());

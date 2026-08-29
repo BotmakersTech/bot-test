@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import com.botleague.backend.events.dto.PrizePositionDTO;
+
 public class AdminEventSportResponse {
 
     private UUID id;
@@ -25,7 +27,7 @@ public class AdminEventSportResponse {
 
     private String weightClass;
 
-    private Double entryFee;
+    private java.math.BigDecimal entryFee;
 
     private Integer maxTeams;
 
@@ -35,7 +37,11 @@ public class AdminEventSportResponse {
 
     private Integer registeredTeamsCount;
 
-    private Double prizeMoney;
+    private java.math.BigDecimal prizeMoney;
+
+    private java.util.List<PrizePositionDTO> prizeDistribution;
+
+    private String mapUrl;
 
     private LocalDate registrationStartDate;
 
@@ -131,12 +137,12 @@ public class AdminEventSportResponse {
 		this.weightClass = weightClass;
 	}
 
-	public Double getEntryFee() {
+	public java.math.BigDecimal getEntryFee() {
 		return entryFee;
 	}
 
-	public void setEntryFee(Double double1) {
-		this.entryFee = double1;
+	public void setEntryFee(java.math.BigDecimal entryFee) {
+		this.entryFee = entryFee;
 	}
 
 	public Integer getMaxTeams() {
@@ -171,12 +177,28 @@ public class AdminEventSportResponse {
 		this.registeredTeamsCount = registeredTeamsCount;
 	}
 
-	public Double getPrizeMoney() {
+	public java.math.BigDecimal getPrizeMoney() {
 		return prizeMoney;
 	}
 
-	public void setPrizeMoney(Double double1) {
-		this.prizeMoney = double1;
+	public void setPrizeMoney(java.math.BigDecimal prizeMoney) {
+		this.prizeMoney = prizeMoney;
+	}
+
+	public java.util.List<PrizePositionDTO> getPrizeDistribution() {
+		return prizeDistribution;
+	}
+
+	public void setPrizeDistribution(java.util.List<PrizePositionDTO> prizeDistribution) {
+		this.prizeDistribution = prizeDistribution;
+	}
+
+	public String getMapUrl() {
+		return mapUrl;
+	}
+
+	public void setMapUrl(String mapUrl) {
+		this.mapUrl = mapUrl;
 	}
 
 	public LocalDate getRegistrationStartDate() {

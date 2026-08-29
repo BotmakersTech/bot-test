@@ -10,9 +10,11 @@ import com.botleague.backend.auth.enums.AccountStatus;
 import com.botleague.backend.auth.enums.AccountType;
 import com.botleague.backend.auth.repository.UserRepository;
 import com.botleague.backend.admin.dto.CreateAdminUserRequest;
+import com.botleague.backend.audit.service.AuditLogService;
 import com.botleague.backend.common.exception.ApiException;
 import com.botleague.backend.common.service.BotleagueIdService;
 import com.botleague.backend.common.security.PasswordHasher;
+import com.botleague.backend.common.security.TokenInvalidationRegistry;
 import com.botleague.backend.events.entity.Event;
 import com.botleague.backend.team.enums.TeamMembershipStatus;
 import com.botleague.backend.team.repository.TeamMembershipRepository;
@@ -49,6 +51,8 @@ public class UserManagementService {
     private final BotleagueIdService botleagueIdService;
     private final PasswordHasher passwordHasher;
     private final TeamMembershipRepository teamMembershipRepository;
+    private final TokenInvalidationRegistry tokenInvalidationRegistry;
+    private final AuditLogService auditLogService;
 
     public UserManagementService(
             UserRepository userRepository,
@@ -58,6 +62,8 @@ public class UserManagementService {
             EventSportsRepository eventSportsRepository,
             BotleagueIdService botleagueIdService,
             PasswordHasher passwordHasher,
+            TokenInvalidationRegistry tokenInvalidationRegistry,
+            AuditLogService auditLogService,
             TeamMembershipRepository teamMembershipRepository) {
         this.userRepository = userRepository;
         this.userRoleRepository = userRoleRepository;
@@ -66,6 +72,8 @@ public class UserManagementService {
         this.eventSportsRepository = eventSportsRepository;
         this.botleagueIdService = botleagueIdService;
         this.passwordHasher = passwordHasher;
+        this.tokenInvalidationRegistry = tokenInvalidationRegistry;
+        this.auditLogService = auditLogService;
         this.teamMembershipRepository = teamMembershipRepository;
     }
 
@@ -126,6 +134,12 @@ public class UserManagementService {
         userRole.setStatus("APPROVED");
         userRole.setApprovedBy(assignedBy);
         userRoleRepository.save(userRole);
+
+        // A live access token still carries the OLD role list until its TTL
+        // expires — force re-authentication so the new role takes effect now.
+        tokenInvalidationRegistry.invalidateNow(targetUserId);
+        auditLogService.log("ROLE_GRANTED", "USER", targetUserId, targetUserId.toString(),
+                null, role.name());
     }
 
     // ── Remove role ───────────────────────────────────────────────────────
@@ -140,6 +154,10 @@ public class UserManagementService {
         }
         userRoleRepository.findByUserIdAndRoleType(targetUserId, role)
                 .ifPresent(userRoleRepository::delete);
+
+        tokenInvalidationRegistry.invalidateNow(targetUserId);
+        auditLogService.log("ROLE_REMOVED", "USER", targetUserId, targetUserId.toString(),
+                role.name(), null);
     }
 
     // ── Update user profile ───────────────────────────────────────────────
@@ -167,8 +185,15 @@ public class UserManagementService {
     public void updateAccountStatus(UUID targetUserId, AccountStatus newStatus) {
         User user = userRepository.findById(targetUserId)
                 .orElseThrow(() -> ApiException.notFound("User not found"));
+        AccountStatus oldStatus = user.getAccountStatus();
         user.setAccountStatus(newStatus);
         userRepository.save(user);
+
+        // A suspended/reactivated account shouldn't keep operating on an
+        // already-issued access token until it naturally expires.
+        tokenInvalidationRegistry.invalidateNow(targetUserId);
+        auditLogService.log("ACCOUNT_STATUS_CHANGED", "USER", targetUserId, targetUserId.toString(),
+                oldStatus != null ? oldStatus.name() : null, newStatus.name());
     }
 
     // ── Mapping helpers ───────────────────────────────────────────────────
@@ -308,6 +333,9 @@ public class UserManagementService {
         role.setRoleType(roleType);
         role.setStatus("APPROVED");
         userRoleRepository.save(role);
+
+        auditLogService.log("ADMIN_USER_CREATED", "USER", saved.getId(),
+                saved.getPhone(), null, roleType.name());
 
         return toSummary(saved, false);
     }

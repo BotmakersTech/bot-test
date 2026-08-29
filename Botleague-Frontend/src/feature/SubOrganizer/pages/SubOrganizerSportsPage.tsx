@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getMySports, type OrganizerSport } from "../../Organizer/api/organizer.api";
 import { formatWeightClass } from "../../Robots/constants/weightClasses";
+import { ageGroupLabel } from "../../../shared/utils/ageGroup";
 import "../../../styles/organizerTheme.css";
 
 export default function SubOrganizerSportsPage() {
@@ -46,7 +47,7 @@ export default function SubOrganizerSportsPage() {
             >
               <h2 className="font-semibold text-[#374151]">{s.sport}</h2>
               {s.ageGroup && (
-                <p className="mt-1 text-xs text-gray-400">Age group: {s.ageGroup}</p>
+                <p className="mt-1 text-xs text-gray-400">League: {ageGroupLabel(s.ageGroup)}</p>
               )}
               {s.weightClass && (
                 <p className="mt-0.5 text-xs text-gray-400">Weight: {formatWeightClass(s.weightClass)}</p>

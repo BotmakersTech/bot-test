@@ -110,7 +110,7 @@ public class TeamService {
             throw ApiException.conflict("User already associated with a team");
         }
 
-        if (teamRepository.existsByTeamName(request.getTeamName())) {
+        if (teamRepository.existsByTeamNameAndDeletedAtIsNull(request.getTeamName())) {
             throw ApiException.conflict("Team name already exists");
         }
 
@@ -168,13 +168,17 @@ public class TeamService {
                 .orElseThrow(() -> ApiException.notFound("Team not found"));
 
         if (request.getTeamName() != null) {
-            if (teamRepository.existsByTeamNameAndIdNot(request.getTeamName(), teamId)) {
+            if (teamRepository.existsByTeamNameAndIdNotAndDeletedAtIsNull(request.getTeamName(), teamId)) {
                 throw ApiException.conflict("Team name already exists");
             }
             team.setTeamName(request.getTeamName());
         }
         if (request.getLogo_Url() != null) {
+            String oldLogoUrl = team.getLogoUrl();
             team.setLogoUrl(request.getLogo_Url());
+            if (oldLogoUrl != null && !oldLogoUrl.equals(request.getLogo_Url())) {
+                uploadService.deleteObject(oldLogoUrl);
+            }
         }
         if (request.getDescription() != null) {
             team.setDescription(request.getDescription());
@@ -417,35 +421,6 @@ public class TeamService {
         return "User left successfully";
     }
 
-    // ================= KICK MEMBER =================
-
-    public void kickMember(Authentication authentication, UUID targetUserId) {
-
-        UUID captainId = extractUserId(authentication);
-
-        TeamMembership captainMembership = teamMembershipRepository
-                .findByUserIdAndStatus(captainId, TeamMembershipStatus.ACTIVE)
-                .orElseThrow(() -> ApiException.notFound("Captain not in a team"));
-
-        if (!TeamRole.CAPTAIN.equals(captainMembership.getRoleInTeam())) {
-            throw ApiException.forbidden("Only captain can remove members");
-        }
-
-        TeamMembership targetMembership = teamMembershipRepository
-                .findByUserIdAndStatus(targetUserId, TeamMembershipStatus.ACTIVE)
-                .orElseThrow(() -> ApiException.notFound("User not in team"));
-
-        if (!captainMembership.getTeamId().equals(targetMembership.getTeamId())) {
-            throw ApiException.forbidden("User is not part of your team");
-        }
-
-        if (TeamRole.CAPTAIN.equals(targetMembership.getRoleInTeam())) {
-            throw ApiException.badRequest("Captain cannot remove themselves");
-        }
-
-        targetMembership.setStatus(TeamMembershipStatus.LEFT);
-        teamMembershipRepository.save(targetMembership);
-    }
 
     // ================= HELPER =================
 

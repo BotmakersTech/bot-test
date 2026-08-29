@@ -115,15 +115,18 @@ public class TeamInviteService {
         // Notify the invited user
         User inviter = userRepository.findById(invitedByUserId).orElse(null);
         String inviterName = inviter != null ? buildDisplayName(inviter) : "Your captain";
-        notificationService.systemNotify(
-                "Team Invitation",
-                inviterName + " has invited you to join " + team.getTeamName() + ". You have 7 days to respond.",
-                NotificationType.TEAM_INVITE_RECEIVED,
-                NotificationPriority.HIGH,
-                NotificationTargetType.USER,
-                invitedUserId,
-                "/my-team"
-        );
+        try {
+            notificationService.systemNotify(
+                    "Team Invitation",
+                    inviterName + " has invited you to join " + team.getTeamName() + ". You have 7 days to respond.",
+                    NotificationType.TEAM_INVITE_RECEIVED,
+                    NotificationPriority.HIGH,
+                    NotificationTargetType.USER,
+                    invitedUserId,
+                    "/my-team"
+            );
+        } catch (Exception ignored) {
+        }
 
         return mapToResponse(saved, false);
     }
@@ -229,15 +232,18 @@ public class TeamInviteService {
         Team team = teamRepository.findById(teamId).orElse(null);
         String teamName = team != null ? team.getTeamName() : "your team";
 
-        notificationService.systemNotify(
-                isRejoin ? "Member Rejoined" : "New Member Joined",
-                joinerName + (isRejoin ? " has rejoined " : " has joined ") + teamName + "!",
-                NotificationType.TEAM_INVITE_ACCEPTED,
-                NotificationPriority.MEDIUM,
-                NotificationTargetType.USER,
-                invite.getInvitedBy(),
-                "/my-team"
-        );
+        try {
+            notificationService.systemNotify(
+                    isRejoin ? "Member Rejoined" : "New Member Joined",
+                    joinerName + (isRejoin ? " has rejoined " : " has joined ") + teamName + "!",
+                    NotificationType.TEAM_INVITE_ACCEPTED,
+                    NotificationPriority.MEDIUM,
+                    NotificationTargetType.USER,
+                    invite.getInvitedBy(),
+                    "/my-team"
+            );
+        } catch (Exception ignored) {
+        }
 
         return mapToResponse(invite, isRejoin);
     }
@@ -263,15 +269,18 @@ public class TeamInviteService {
         Team team = teamRepository.findById(invite.getTeamId()).orElse(null);
         String teamName = team != null ? team.getTeamName() : "your team";
 
-        notificationService.systemNotify(
-                "Invitation Declined",
-                rejecterName + " has declined the invitation to join " + teamName + ".",
-                NotificationType.TEAM_INVITE_REJECTED,
-                NotificationPriority.LOW,
-                NotificationTargetType.USER,
-                invite.getInvitedBy(),
-                "/my-team"
-        );
+        try {
+            notificationService.systemNotify(
+                    "Invitation Declined",
+                    rejecterName + " has declined the invitation to join " + teamName + ".",
+                    NotificationType.TEAM_INVITE_REJECTED,
+                    NotificationPriority.LOW,
+                    NotificationTargetType.USER,
+                    invite.getInvitedBy(),
+                    "/my-team"
+            );
+        } catch (Exception ignored) {
+        }
 
         return mapToResponse(invite, false);
     }
@@ -295,15 +304,18 @@ public class TeamInviteService {
         Team team = teamRepository.findById(invite.getTeamId()).orElse(null);
         String teamName = team != null ? team.getTeamName() : "a team";
 
-        notificationService.systemNotify(
-                "Invitation Revoked",
-                "Your invitation to join " + teamName + " has been cancelled.",
-                NotificationType.TEAM_INVITE_REVOKED,
-                NotificationPriority.LOW,
-                NotificationTargetType.USER,
-                invite.getInvitedUserId(),
-                null
-        );
+        try {
+            notificationService.systemNotify(
+                    "Invitation Revoked",
+                    "Your invitation to join " + teamName + " has been cancelled.",
+                    NotificationType.TEAM_INVITE_REVOKED,
+                    NotificationPriority.LOW,
+                    NotificationTargetType.USER,
+                    invite.getInvitedUserId(),
+                    null
+            );
+        } catch (Exception ignored) {
+        }
 
         return mapToResponse(invite, false);
     }
@@ -334,15 +346,18 @@ public class TeamInviteService {
                     // Notify the invited person that the invite was cancelled
                     Team team = teamRepository.findById(teamId).orElse(null);
                     String teamName = team != null ? team.getTeamName() : "a team";
-                    notificationService.systemNotify(
-                            "Invitation Cancelled",
-                            "Your invitation to join " + teamName + " has been cancelled because the sender left the team.",
-                            NotificationType.TEAM_INVITE_REVOKED,
-                            NotificationPriority.LOW,
-                            NotificationTargetType.USER,
-                            invite.getInvitedUserId(),
-                            null
-                    );
+                    try {
+                        notificationService.systemNotify(
+                                "Invitation Cancelled",
+                                "Your invitation to join " + teamName + " has been cancelled because the sender left the team.",
+                                NotificationType.TEAM_INVITE_REVOKED,
+                                NotificationPriority.LOW,
+                                NotificationTargetType.USER,
+                                invite.getInvitedUserId(),
+                                null
+                        );
+                    } catch (Exception ignored) {
+                    }
                 });
     }
 

@@ -1,7 +1,7 @@
 import React from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import {
-  ArrowLeft, Users, Trophy, Calendar, CalendarRange, Tag, Swords, DollarSign, Award, Bot,
+  ArrowLeft, Users, Trophy, Calendar, CalendarRange, Tag, Swords, IndianRupee, Award, Bot,
   Edit2, X, FileEdit, PlayCircle, RefreshCw, CheckCircle2, XCircle, Lock, Unlock, Globe, MessageCircle,
   AlertTriangle, ChevronUp, ChevronDown,
 } from "lucide-react"
@@ -10,6 +10,9 @@ import { useMatches } from "../hooks/useMatches"
 import { type CreateEventSportRequest } from "../api/admin.api"
 import { getPublicLeagueSports, toWeightClasses, type LeagueSport } from "../../../shared/api/catalog.api"
 import { formatWeightClass } from "../../Robots/constants/weightClasses"
+import { ageGroupLabel } from "../../../shared/utils/ageGroup"
+import PrizeDistributionEditor from "../../../shared/components/PrizeDistributionEditor"
+import { formatPrizePosition, prizeDistributionBalanced, sumPrizeMoney, formatINR, type PrizePosition } from "../../../shared/utils/prize"
 import { useLeagues, formatAgeRange, type PresentedLeague } from "../../../temp/pages/leagues/useLeagues"
 import { ensureTeamChatRoom, updateRegistrationStatus } from "../../Organizer/api/organizer.api"
 import SportMediaField from "../../Organizer/components/SportMediaField"
@@ -77,6 +80,7 @@ interface SportDetail {
   controlType?: string | null
   maxBotsPerTeam?: number | null
   extraRules?: Record<string, string> | null
+  mapUrl?: string | null
 
   minTeamSize?: number
   maxTeamSize?: number
@@ -85,6 +89,7 @@ interface SportDetail {
 
   entryFee?: number
   prizeMoney?: number
+  prizeDistribution?: PrizePosition[] | null
 
   registrationStartDate?: string
   registrationEndDate?: string
@@ -162,7 +167,7 @@ function StatusPill({ status }: { status?: string }) {
 // FIELD  (sport-details grid cell — hidden entirely when there's no value)
 // ─────────────────────────────────────────────────────────────
 
-function Field({ label, value }: { label: string; value?: string | number | null }) {
+function Field({ label, value }: { label: string; value?: React.ReactNode }) {
   if (value == null || value === "") return null
   return (
     <div>
@@ -468,6 +473,8 @@ function EditSportModal({
     maxTeams:               sport.maxTeams ?? undefined,
     entryFee:               sport.entryFee ?? undefined,
     prizeMoney:             sport.prizeMoney ?? undefined,
+    prizeDistribution:      sport.prizeDistribution ?? [],
+    mapUrl:                 sport.mapUrl ?? "",
     formatType:             sport.formatType ?? "",
     registrationStartDate:  toDatetimeLocal(sport.registrationStartDate),
     registrationEndDate:    toDatetimeLocal(sport.registrationEndDate),
@@ -513,6 +520,13 @@ function EditSportModal({
       const extraRules: Record<string, string> = {}
       extraRulesList.forEach(r => { if (r.key.trim()) extraRules[r.key.trim()] = r.value })
 
+      const dist = (form.prizeDistribution ?? []).filter(p =>
+        p.type === "GOODIES" ? (p.description ?? "").trim() !== "" : p.amount != null)
+      if (dist.length > 0 && !prizeDistributionBalanced(form.prizeMoney ?? 0, dist)) {
+        setSaveError(`Prize distribution money (${formatINR(sumPrizeMoney(dist))}) must equal the Prize Money pool (${formatINR(form.prizeMoney ?? 0)}).`)
+        return
+      }
+
       // Build raw payload then strip every key whose value is "" — those become
       // undefined and Axios excludes them from the JSON body, so the backend's
       // partial-update logic skips them instead of crashing on empty enum strings.
@@ -525,6 +539,10 @@ function EditSportModal({
       const payload = Object.fromEntries(
         Object.entries(raw).filter(([, v]) => v !== "" && v !== undefined && v !== null)
       ) as unknown as CreateEventSportRequest
+
+      // Always send these two so clearing them actually persists.
+      payload.mapUrl = form.mapUrl ?? ""
+      payload.prizeDistribution = dist
 
       await onSave(eventId, sportId, payload)
       onDone()
@@ -827,6 +845,22 @@ function EditSportModal({
               <label style={labelStyle}>Prize Money (₹)</label>
               <input type="number" min={0} style={inputStyle} value={form.prizeMoney ?? ""} onChange={e => setNum("prizeMoney", e.target.value)} />
             </div>
+          </div>
+
+          {/* Prize distribution — the money placings must add up to Prize Money */}
+          <div style={groupStyle}>
+            <label style={labelStyle}>Prize Distribution</label>
+            <PrizeDistributionEditor
+              poolAmount={form.prizeMoney ?? 0}
+              positions={form.prizeDistribution ?? []}
+              onChange={next => set("prizeDistribution", next)}
+            />
+          </div>
+
+          {/* Location / map link (per-sport override) */}
+          <div style={groupStyle}>
+            <label style={labelStyle}>Location / Google Maps link</label>
+            <input type="url" style={inputStyle} placeholder="https://maps.app.goo.gl/…" value={form.mapUrl ?? ""} onChange={e => set("mapUrl", e.target.value)} />
           </div>
 
           {/* Row 8: Registration Window */}
@@ -1183,7 +1217,7 @@ export default function AdminSport() {
         )}
         {sport.entryFee != null && (
           <div className="sdt-stat-card">
-            <span className="sdt-stat-icon"><DollarSign size={20} /></span>
+            <span className="sdt-stat-icon"><IndianRupee size={20} /></span>
             <div><div className="sdt-stat-value">{formatCurrency(sport.entryFee)}</div><div className="sdt-stat-label">Entry Fee</div></div>
           </div>
         )}
@@ -1205,7 +1239,7 @@ export default function AdminSport() {
 
           {/* meta fields — real sport specs, styled in the fields-box treatment */}
           <div className="sdt-fields-box">
-            <Field label="Age Group" value={sport.ageGroup ? toLabel(sport.ageGroup) : null} />
+            <Field label="Age Group" value={sport.ageGroup ? ageGroupLabel(sport.ageGroup) : null} />
             <Field label="Format" value={sport.formatType ? toLabel(sport.formatType) : null} />
             <Field label="Weight Class" value={sport.weightClass ? formatWeightClass(sport.weightClass) : null} />
             <Field label="Weight Limit" value={sport.weightLimitKg != null ? `${sport.weightLimitKg} KG` : null} />
@@ -1228,7 +1262,23 @@ export default function AdminSport() {
             <Field label="Max Teams" value={sport.maxTeams ?? null} />
             <Field label="Entry Fee" value={sport.entryFee != null ? formatCurrency(sport.entryFee) : null} />
             <Field label="Prize Pool" value={sport.prizeMoney != null ? formatCurrency(sport.prizeMoney) : null} />
+            <Field
+              label="Location"
+              value={sport.mapUrl ? <a href={sport.mapUrl} target="_blank" rel="noopener noreferrer" style={{ color: ORG.blue }}>View on map</a> : null}
+            />
           </div>
+
+          {/* prize breakdown */}
+          {sport.prizeDistribution && sport.prizeDistribution.length > 0 && (
+            <div style={{ background: "rgba(1,98,209,0.05)", border: "1px solid rgba(75,134,232,0.28)", borderRadius: "9px", padding: "12px 16px" }}>
+              <div style={{ fontSize: "0.62rem", color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "10px" }}>Prize Distribution</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                {sport.prizeDistribution.map((p, i) => (
+                  <div key={i} style={{ fontSize: "0.82rem" }}>{formatPrizePosition(p)}</div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* extra rules */}
           {sport.extraRules && Object.keys(sport.extraRules).length > 0 && (
@@ -1351,6 +1401,8 @@ export default function AdminSport() {
         formatType={sport.formatType ?? null}
         weightClass={sport.weightClass ?? null}
         weightLimitKg={sport.weightLimitKg ?? null}
+        mapUrl={sport.mapUrl ?? null}
+        prizeDistribution={sport.prizeDistribution ?? null}
         teamSizeLabel={sport.minTeamSize != null && sport.maxTeamSize != null ? `${sport.minTeamSize} – ${sport.maxTeamSize} players` : null}
         registrationStartDate={sport.registrationStartDate ?? null}
         registrationEndDate={sport.registrationEndDate ?? null}

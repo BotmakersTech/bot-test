@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Search, ExternalLink } from "lucide-react"
 import { formatWeightClass } from "../../Robots/constants/weightClasses"
+import { ageGroupLabel } from "../../../shared/utils/ageGroup"
 import { getMyEvents, type OrganizerEvent, type OrganizerSport } from "../api/organizer.api"
 import { ORG } from "../theme/organizerTheme"
 
@@ -141,7 +142,7 @@ export default function OrganizerSportsPage() {
                     <p style={{ color: TEXT, fontWeight: 500, margin: 0 }}>{sp.eventName}</p>
                     {sp.eventStatus && <p style={{ color: MUTED, fontSize: "0.72rem", margin: "2px 0 0" }}>{toLabel(sp.eventStatus)}</p>}
                   </td>
-                  <td style={{ padding: "13px 14px", color: MUTED }}>{toLabel(sp.ageGroup)}</td>
+                  <td style={{ padding: "13px 14px", color: MUTED }}>{ageGroupLabel(sp.ageGroup)}</td>
                   <td style={{ padding: "13px 14px", color: MUTED }}>{formatWeightClass(sp.weightClass)}</td>
                   <td style={{ padding: "13px 14px", textAlign: "center" }}>
                     <span style={{ fontFamily: "monospace", color: TEXT, fontWeight: 600 }}>

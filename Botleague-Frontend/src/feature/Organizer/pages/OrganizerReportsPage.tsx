@@ -6,6 +6,7 @@ import {
 } from "../api/organizer.api"
 import { ORG } from "../theme/organizerTheme"
 import { formatWeightClass } from "../../Robots/constants/weightClasses"
+import { ageGroupLabel } from "../../../shared/utils/ageGroup"
 
 // ── theme ─────────────────────────────────────────────────────────────────────
 const P      = "#8c6cff"
@@ -145,7 +146,7 @@ export default function OrganizerReportsPage() {
                     {r.weightClass && <p style={{ color: MUTED, fontSize: "0.72rem", margin: "2px 0 0" }}>{formatWeightClass(r.weightClass)}</p>}
                   </td>
                   <td style={{ padding: "13px 14px", color: MUTED }}>{r.eventName}</td>
-                  <td style={{ padding: "13px 14px", color: MUTED }}>{toLabel(r.ageGroup)}</td>
+                  <td style={{ padding: "13px 14px", color: MUTED }}>{ageGroupLabel(r.ageGroup)}</td>
                   <td style={{ padding: "13px 14px", color: MUTED }}>{toLabel(r.formatType)}</td>
                   <td style={{ padding: "13px 14px", textAlign: "center" }}>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: TEXT, fontWeight: 600 }}>

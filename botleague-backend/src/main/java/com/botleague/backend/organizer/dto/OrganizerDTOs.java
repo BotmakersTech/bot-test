@@ -3,6 +3,9 @@ package com.botleague.backend.organizer.dto;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+
 /**
  * All organiser-module request / response DTOs in one file.
  * Split into separate files if the module grows.
@@ -35,7 +38,9 @@ public final class OrganizerDTOs {
     // =========================================================================
 
     public static class ArenaRequest {
+        @NotBlank(message = "arenaName is required")
         public String arenaName;
+        @Min(value = 1, message = "capacity must be positive")
         public Integer capacity;
         public String locationNotes;
         public String sportType;
@@ -57,6 +62,7 @@ public final class OrganizerDTOs {
     // =========================================================================
 
     public static class VolunteerRequest {
+        @NotBlank(message = "name is required")
         public String name;
         public String email;
         public String phone;
@@ -95,6 +101,7 @@ public final class OrganizerDTOs {
 
     public static class VolunteerDecisionRequest {
         /** APPROVED | REJECTED */
+        @NotBlank(message = "status is required")
         public String status;
         public String reason;
     }
@@ -122,6 +129,7 @@ public final class OrganizerDTOs {
 
     public static class JudgeRequest {
         public UUID userId;
+        @NotBlank(message = "name is required")
         public String name;
         public String email;
         public String phone;
@@ -152,6 +160,7 @@ public final class OrganizerDTOs {
     // =========================================================================
 
     public static class StaffRequest {
+        @NotBlank(message = "name is required")
         public String name;
         public String email;
         public String phone;
@@ -179,7 +188,9 @@ public final class OrganizerDTOs {
     // =========================================================================
 
     public static class AnnouncementRequest {
+        @NotBlank(message = "title is required")
         public String title;
+        @NotBlank(message = "body is required")
         public String body;
         public String targetType;
         public UUID targetSportId;
@@ -208,6 +219,7 @@ public final class OrganizerDTOs {
 
     public static class SupportContactRequest {
         public UUID eventSportId; // null = event-wide contact
+        @NotBlank(message = "name is required")
         public String name;
         public String email;
         public String phone;
@@ -231,13 +243,16 @@ public final class OrganizerDTOs {
     // =========================================================================
 
     public static class IncidentRequest {
+        @NotBlank(message = "title is required")
         public String title;
+        @NotBlank(message = "description is required")
         public String description;
         public String severity;
         public String arenaName;
     }
 
     public static class IncidentUpdateRequest {
+        @NotBlank(message = "status is required")
         public String status;
         public String resolutionNotes;
     }
@@ -298,7 +313,9 @@ public final class OrganizerDTOs {
 
     public static class CertificateRequest {
         public UUID recipientUserId;
+        @NotBlank(message = "recipientName is required")
         public String recipientName;
+        @NotBlank(message = "certificateType is required")
         public String certificateType;
         public UUID sportId;
         public Integer position;

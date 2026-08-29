@@ -1,8 +1,12 @@
 package com.botleague.backend.catalog.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class CreateSportRequest {
 
+    @NotBlank(message = "name is required")
     private String name;
+    @NotBlank(message = "slug is required")
     private String slug;
     private String competitionTypeHint;
     private String description;

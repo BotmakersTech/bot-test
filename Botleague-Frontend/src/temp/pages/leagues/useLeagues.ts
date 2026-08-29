@@ -80,3 +80,11 @@ export function useLeagues() {
 export function getLeagueBySlug(leagues: PresentedLeague[], slug?: string): PresentedLeague | undefined {
   return leagues.find((l) => l.slug === slug);
 }
+
+/**
+ * Best-effort synchronous read of the loaded league catalog. Empty until
+ * useLeagues() has run once this session; callers must tolerate that.
+ */
+export function getCachedLeagues(): PresentedLeague[] {
+  return cache ?? [];
+}

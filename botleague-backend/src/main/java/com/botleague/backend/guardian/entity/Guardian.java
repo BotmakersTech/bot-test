@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.botleague.backend.guardian.enums.GuardianVerificationStatus;
+
 @Entity
 @Table(
     name = "guardians",
@@ -32,6 +34,13 @@ public class Guardian {
 
     @Column(name = "emergency_contact", nullable = false, length = 20)
     private String emergencyContact;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private GuardianVerificationStatus status = GuardianVerificationStatus.PENDING;
+
+    @Column(name = "verified_at")
+    private LocalDateTime verifiedAt;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -72,6 +81,12 @@ public class Guardian {
 
     public String getEmergencyContact() { return emergencyContact; }
     public void setEmergencyContact(String emergencyContact) { this.emergencyContact = emergencyContact; }
+
+    public GuardianVerificationStatus getStatus() { return status; }
+    public void setStatus(GuardianVerificationStatus status) { this.status = status; }
+
+    public LocalDateTime getVerifiedAt() { return verifiedAt; }
+    public void setVerifiedAt(LocalDateTime verifiedAt) { this.verifiedAt = verifiedAt; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

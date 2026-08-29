@@ -3,6 +3,9 @@ package com.botleague.backend.matches.dto;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
 import com.botleague.backend.matches.enums.BracketSide;
 import com.botleague.backend.matches.enums.MatchFormat;
 import com.botleague.backend.matches.enums.MatchType;
@@ -91,6 +94,8 @@ public class UpdateMatchRequestDTO {
 
     private UUID nextMatchId;
 
+    @Min(value = 1, message = "nextMatchSlot must be between 1 and 4")
+    @Max(value = 4, message = "nextMatchSlot must be between 1 and 4")
     private Integer nextMatchSlot;
 
     // =====================================================
@@ -103,6 +108,8 @@ public class UpdateMatchRequestDTO {
 
     private UUID loserNextMatchId;
 
+    @Min(value = 1, message = "loserNextMatchSlot must be between 1 and 2")
+    @Max(value = 2, message = "loserNextMatchSlot must be between 1 and 2")
     private Integer loserNextMatchSlot;
 
     // =====================================================

@@ -1,5 +1,6 @@
 package com.botleague.backend.events.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -8,6 +9,10 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.botleague.backend.events.dto.PrizePositionDTO;
 
 import com.botleague.backend.catalog.service.LeagueService;
 import com.botleague.backend.chat.service.ChatService;
@@ -42,6 +47,8 @@ public class EventSportsService {
     private final NotificationService notificationService;
     private final AuthorizationService authorizationService;
     private final LeagueService leagueService;
+
+    private static final ObjectMapper JSON = new ObjectMapper();
 
     public EventSportsService(EventSportsRepository eventSportsRepository,
                               EventRepository eventRepository,
@@ -386,12 +393,19 @@ public class EventSportsService {
             entity.setExtraRules(dto.getExtraRules());
         }
 
+        entity.setMapUrl(dto.getMapUrl());
+
         entity.setMinTeamSize(dto.getMinTeamSize());
         entity.setMaxTeamSize(dto.getMaxTeamSize());
         entity.setMaxTeams(dto.getMaxTeams());
 
         entity.setEntryFee(dto.getEntryFee());
         entity.setPrizeMoney(dto.getPrizeMoney());
+
+        if (dto.getPrizeDistribution() != null) {
+            validatePrizeDistribution(dto.getPrizeMoney(), dto.getPrizeDistribution());
+            entity.setPrizeDistributionJson(serializePrizeDistribution(dto.getPrizeDistribution()));
+        }
 
         entity.setFormatType(dto.getFormatType());
 
@@ -440,6 +454,9 @@ public class EventSportsService {
         if (request.getExtraRules() != null) {
             sport.setExtraRules(request.getExtraRules());
         }
+        if (request.getMapUrl() != null) {
+            sport.setMapUrl(request.getMapUrl().isBlank() ? null : request.getMapUrl());
+        }
 
         if (request.getMinTeamSize() != null) {
             sport.setMinTeamSize(request.getMinTeamSize());
@@ -456,6 +473,15 @@ public class EventSportsService {
         }
         if (request.getPrizeMoney() != null) {
             sport.setPrizeMoney(request.getPrizeMoney());
+        }
+        // Validate against the pool value AFTER any prizeMoney change above.
+        if (request.getPrizeDistribution() != null) {
+            if (request.getPrizeDistribution().isEmpty()) {
+                sport.setPrizeDistributionJson(null);
+            } else {
+                validatePrizeDistribution(sport.getPrizeMoney(), request.getPrizeDistribution());
+                sport.setPrizeDistributionJson(serializePrizeDistribution(request.getPrizeDistribution()));
+            }
         }
 
         if (request.getFormatType() != null) {
@@ -508,6 +534,8 @@ public class EventSportsService {
 
         response.setEntryFee(sport.getEntryFee());
         response.setPrizeMoney(sport.getPrizeMoney());
+        response.setMapUrl(sport.getMapUrl());
+        response.setPrizeDistribution(parsePrizeDistribution(sport.getPrizeDistributionJson()));
         response.setFormatType(sport.getFormatType());
 
         response.setRegistrationStartDate(sport.getRegistrationStartDate());
@@ -574,6 +602,67 @@ public class EventSportsService {
     private void validateTeamSize(Integer min, Integer max) {
         if (min != null && max != null && min > max) {
             throw new IllegalArgumentException("Min team size cannot be greater than max team size");
+        }
+    }
+
+    // =========================
+    // PRIZE DISTRIBUTION
+    // =========================
+
+    /**
+     * The MONEY entries in the breakdown must add up exactly to the sport's
+     * prize pool (prizeMoney). GOODIES entries carry a description, not money.
+     */
+    private void validatePrizeDistribution(BigDecimal prizeMoney, List<PrizePositionDTO> dist) {
+        if (dist == null || dist.isEmpty()) {
+            return;
+        }
+        BigDecimal moneySum = BigDecimal.ZERO;
+        for (PrizePositionDTO p : dist) {
+            String type = p.getType() == null ? "" : p.getType().trim().toUpperCase();
+            if ("MONEY".equals(type)) {
+                if (p.getAmount() == null || p.getAmount().signum() < 0) {
+                    throw new IllegalArgumentException(
+                            "Prize position " + p.getPosition() + ": a valid money amount is required.");
+                }
+                moneySum = moneySum.add(p.getAmount());
+            } else if ("GOODIES".equals(type)) {
+                if (p.getDescription() == null || p.getDescription().isBlank()) {
+                    throw new IllegalArgumentException(
+                            "Prize position " + p.getPosition() + ": describe what the winner receives.");
+                }
+            } else {
+                throw new IllegalArgumentException(
+                        "Prize position " + p.getPosition() + ": type must be MONEY or GOODIES.");
+            }
+        }
+        BigDecimal pool = prizeMoney == null ? BigDecimal.ZERO : prizeMoney;
+        if (moneySum.compareTo(pool) != 0) {
+            throw new IllegalArgumentException(
+                    "Prize distribution money (₹" + moneySum.toPlainString()
+                    + ") must equal the prize pool (₹" + pool.toPlainString() + ").");
+        }
+    }
+
+    private String serializePrizeDistribution(List<PrizePositionDTO> dist) {
+        if (dist == null || dist.isEmpty()) {
+            return null;
+        }
+        try {
+            return JSON.writeValueAsString(dist);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Could not save the prize distribution.");
+        }
+    }
+
+    private List<PrizePositionDTO> parsePrizeDistribution(String json) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        try {
+            return JSON.readValue(json, new TypeReference<List<PrizePositionDTO>>() {});
+        } catch (Exception e) {
+            return null;
         }
     }
 

@@ -11,9 +11,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.botleague.backend.audit.service.AuditLogService;
 import com.botleague.backend.auth.entity.RefreshToken;
 import com.botleague.backend.auth.repository.RefreshTokenRepository;
 import com.botleague.backend.common.exception.ApiException;
+import com.botleague.backend.common.security.TokenInvalidationRegistry;
 
 /**
  * Opaque refresh tokens stored hashed in Postgres. This is how we get logout and
@@ -30,12 +32,18 @@ public class RefreshTokenService {
     private final RefreshTokenRepository repository;
     private final long ttlDays;
     private final SecureRandom random = new SecureRandom();
+    private final TokenInvalidationRegistry tokenInvalidationRegistry;
+    private final AuditLogService auditLogService;
 
     public RefreshTokenService(
             RefreshTokenRepository repository,
-            @Value("${security.refresh.ttl-days:30}") long ttlDays) {
+            @Value("${security.refresh.ttl-days:30}") long ttlDays,
+            TokenInvalidationRegistry tokenInvalidationRegistry,
+            AuditLogService auditLogService) {
         this.repository = repository;
         this.ttlDays = ttlDays;
+        this.tokenInvalidationRegistry = tokenInvalidationRegistry;
+        this.auditLogService = auditLogService;
     }
 
     /** Returns the RAW token (give to client once); stores only its hash. */
@@ -57,8 +65,14 @@ public class RefreshTokenService {
                 .orElseThrow(() -> ApiException.unauthorized("Invalid refresh token"));
 
         if (existing.isRevoked()) {
-            // Reuse of a revoked token => likely theft. Burn the whole family.
+            // Reuse of a revoked token => likely theft. Burn the whole family,
+            // and any live access token too — a stolen refresh token means the
+            // access token it was paired with may be compromised as well.
             repository.revokeAllForUser(existing.getUserId());
+            tokenInvalidationRegistry.invalidateNow(existing.getUserId());
+            auditLogService.log("REFRESH_TOKEN_REUSE_DETECTED", "USER", existing.getUserId(),
+                    existing.getUserId().toString(), null, null,
+                    "Revoked refresh token presented again — entire token family revoked");
             throw ApiException.unauthorized("Refresh token reuse detected");
         }
         if (existing.getExpiresAt().isBefore(LocalDateTime.now())) {

@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import com.botleague.backend.audit.service.AuditLogService;
 import com.botleague.backend.auth.dto.*;
 import com.botleague.backend.auth.entity.PasswordResetToken;
 import com.botleague.backend.auth.entity.User;
@@ -33,6 +34,7 @@ import com.botleague.backend.role.repository.UserRoleRepository;
 import com.botleague.backend.role.service.UserRoleService;
 import com.botleague.backend.common.security.JwtService;
 import com.botleague.backend.common.security.PasswordHasher;
+import com.botleague.backend.common.security.TokenInvalidationRegistry;
 import com.botleague.backend.common.service.BotleagueIdService;
 import com.botleague.backend.common.service.EmailService;
 
@@ -53,6 +55,8 @@ public class AuthService {
     private final ResourceRoleAssignmentRepository resourceRoleAssignmentRepository;
     private final UserRoleService userRoleService;
     private final NotificationService notificationService;
+    private final TokenInvalidationRegistry tokenInvalidationRegistry;
+    private final AuditLogService auditLogService;
 
     private static final List<AccountType> ROLE_PRIORITY = List.of(
             AccountType.SUPER_ADMIN, AccountType.ADMIN, AccountType.ORGANISER,
@@ -83,7 +87,9 @@ public class AuthService {
             UserRoleRepository userRoleRepository,
             ResourceRoleAssignmentRepository resourceRoleAssignmentRepository,
             UserRoleService userRoleService,
-            NotificationService notificationService) {
+            NotificationService notificationService,
+            TokenInvalidationRegistry tokenInvalidationRegistry,
+            AuditLogService auditLogService) {
         this.userRepository = userRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.botleagueIdService = botleagueIdService;
@@ -96,6 +102,8 @@ public class AuthService {
         this.resourceRoleAssignmentRepository = resourceRoleAssignmentRepository;
         this.userRoleService = userRoleService;
         this.notificationService = notificationService;
+        this.tokenInvalidationRegistry = tokenInvalidationRegistry;
+        this.auditLogService = auditLogService;
     }
 
     // ================= REGISTER =================
@@ -275,8 +283,12 @@ public class AuthService {
             // in the first place), this user is already authenticated from the
             // Google sign-in that preceded role selection — that session must be
             // torn down now so the same "PENDING == no live session" invariant
-            // holds regardless of how PENDING was reached.
+            // holds regardless of how PENDING was reached. Refresh tokens are
+            // DB-backed and revokeAll() kills them immediately; the access token
+            // already issued at Google sign-in is stateless, so it needs the
+            // in-memory registry to stop being honored before its own TTL expires.
             refreshTokenService.revokeAll(user.getId());
+            tokenInvalidationRegistry.invalidateNow(user.getId());
 
             return new AuthTokensDTO(null, null, user.getBotleagueId(), true);
         }
@@ -343,6 +355,8 @@ public class AuthService {
 
             updatePassword(user, request.getNewPassword());
             refreshTokenService.revokeAll(user.getId());
+            tokenInvalidationRegistry.invalidateNow(user.getId());
+            auditLogService.log("PASSWORD_RESET", "USER", user.getId(), user.getBotleagueId(), null, null);
         }
         // ----- EMAIL TOKEN FLOW -----
         else if (request.getToken() != null) {
@@ -362,6 +376,8 @@ public class AuthService {
 
             updatePassword(user, request.getNewPassword());
             refreshTokenService.revokeAll(user.getId());
+            tokenInvalidationRegistry.invalidateNow(user.getId());
+            auditLogService.log("PASSWORD_RESET", "USER", user.getId(), user.getBotleagueId(), null, null);
 
             resetToken.setUsedAt(LocalDateTime.now());
             passwordResetTokenRepository.save(resetToken);

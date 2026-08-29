@@ -18,7 +18,7 @@ docker compose -f docker-compose.prod.yml up -d --remove-orphans
 
 echo "[4/4] Waiting for backend to come up..."
 for i in $(seq 1 18); do
-  if curl -sf http://localhost:8081/api/health > /dev/null 2>&1; then
+  if curl -sf http://localhost:8081/actuator/health > /dev/null 2>&1; then
     echo "✓ Backend healthy"
     break
   fi

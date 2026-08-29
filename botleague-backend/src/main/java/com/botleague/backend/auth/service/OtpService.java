@@ -80,16 +80,16 @@ public class OtpService {
             ResponseEntity<String> response =
                     restTemplate.postForEntity(SEND_URL, request, String.class);
 
-            log.info("MSG91 send OTP status={} phone={}****",
-                    response.getStatusCode(), phone.substring(0, 4));
+            log.info("MSG91 send OTP status={} phone=***{}",
+                    response.getStatusCode(), lastFourDigits(phone));
 
             return response.getStatusCode() == HttpStatus.OK;
 
         } catch (Exception e) {
             // Log the error but don't expose it to the caller — forgotPassword
             // must stay silent about whether the phone exists.
-            log.error("MSG91 send OTP failed for phone={}****: {}",
-                    phone.substring(0, 4), e.getMessage());
+            log.error("MSG91 send OTP failed for phone=***{}: {}",
+                    lastFourDigits(phone), e.getMessage());
             return false;
         }
     }
@@ -117,8 +117,8 @@ public class OtpService {
             JsonNode json = objectMapper.readTree(response.getBody());
             String type = json.has("type") ? json.get("type").asText() : "";
 
-            log.info("MSG91 verify OTP type={} phone={}****",
-                    type, phone.substring(0, 4));
+            log.info("MSG91 verify OTP type={} phone=***{}",
+                    type, lastFourDigits(phone));
 
             if (!"success".equalsIgnoreCase(type)) {
                 // MSG91 returned a non-success response (wrong code, expired, etc.)
@@ -131,8 +131,8 @@ public class OtpService {
             throw e;
         } catch (Exception e) {
             // network error, timeout, JSON parse failure
-            log.error("MSG91 verify OTP failed for phone={}****: {}",
-                    phone.substring(0, 4), e.getMessage());
+            log.error("MSG91 verify OTP failed for phone=***{}: {}",
+                    lastFourDigits(phone), e.getMessage());
             throw ApiException.badRequest("OTP verification failed, please try again");
         }
     }
@@ -158,14 +158,14 @@ public class OtpService {
             ResponseEntity<String> response =
                     restTemplate.exchange(url, HttpMethod.POST, request, String.class);
 
-            log.info("MSG91 resend OTP status={} phone={}****",
-                    response.getStatusCode(), phone.substring(0, 4));
+            log.info("MSG91 resend OTP status={} phone=***{}",
+                    response.getStatusCode(), lastFourDigits(phone));
 
             return response.getStatusCode() == HttpStatus.OK;
 
         } catch (Exception e) {
-            log.error("MSG91 resend OTP failed for phone={}****: {}",
-                    phone.substring(0, 4), e.getMessage());
+            log.error("MSG91 resend OTP failed for phone=***{}: {}",
+                    lastFourDigits(phone), e.getMessage());
             return false;
         }
     }
@@ -177,5 +177,13 @@ public class OtpService {
         headers.set("authkey", authKey);
         headers.setContentType(MediaType.APPLICATION_JSON);
         return headers;
+    }
+
+    // Trailing digits, matching the masking convention used everywhere else
+    // a phone number is partially shown (leading digits are far more useful
+    // for reconstructing/correlating a full number than trailing ones).
+    private static String lastFourDigits(String phone) {
+        if (phone == null || phone.length() < 4) return "****";
+        return phone.substring(phone.length() - 4);
     }
 }

@@ -3,13 +3,17 @@ package com.botleague.backend.catalog.dto;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.validation.constraints.Min;
+
 /** All fields optional — only non-null fields are applied (PATCH semantics). */
 public class UpdateLeagueRequest {
 
     private String slug;
     private String ageGroupCode;
     private String name;
+    @Min(value = 0, message = "minAge cannot be negative")
     private Integer minAge;
+    @Min(value = 0, message = "maxAge cannot be negative")
     private Integer maxAge;
     private String tagline;
     private String description;

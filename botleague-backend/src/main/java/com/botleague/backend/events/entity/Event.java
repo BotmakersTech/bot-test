@@ -76,6 +76,11 @@ public class Event {
     @Column(name = "venue_address", columnDefinition = "TEXT")
     private String venueAddress;
 
+    // Google Maps share link for the venue (can be long — short links resolve
+    // to a full /maps/place/... URL).
+    @Column(name = "map_url", length = 2048)
+    private String mapUrl;
+
     private String city;
     private String state;
     private String country;
@@ -270,6 +275,14 @@ public class Event {
 
     public void setVenueAddress(String venueAddress) {
         this.venueAddress = venueAddress;
+    }
+
+    public String getMapUrl() {
+        return mapUrl;
+    }
+
+    public void setMapUrl(String mapUrl) {
+        this.mapUrl = mapUrl;
     }
 
     public String getCity() {

@@ -3,6 +3,8 @@ package com.botleague.backend.matches.dto;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.validation.constraints.NotNull;
+
 import com.botleague.backend.matches.enums.MatchFormat;
 import com.botleague.backend.matches.enums.MatchType;
 import com.botleague.backend.matches.enums.TournamentFormat;
@@ -13,6 +15,7 @@ public class GenerateBracketRequestDTO {
     // EVENT SPORT
     // =====================================================
 
+    @NotNull(message = "eventSportId is required")
     private UUID eventSportId;
 
     // =====================================================

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react"
 import { getMySports, getMatchesForSport, type OrganizerSport, type OrganizerMatch } from "../../Organizer/api/organizer.api"
 import { updateMatchScore, startMatch, completeMatch } from "../../Admin/api/adminMatches.api"
 import { useSportMatchRealtime, mergeMatchUpdate } from "../../../shared/realtime/useMatchRealtime"
+import { ageGroupLabel } from "../../../shared/utils/ageGroup"
 import "../../../styles/organizerTheme.css"
 
 function toLabel(raw?: string | null) {
@@ -163,7 +164,7 @@ export default function SubOrganizerScoresPage() {
             >
               {sports.map((sp) => (
                 <option key={sp.id} value={sp.id}>
-                  {toLabel(sp.sport)}{sp.ageGroup ? ` · ${toLabel(sp.ageGroup)}` : ""}
+                  {toLabel(sp.sport)}{sp.ageGroup ? ` · ${ageGroupLabel(sp.ageGroup)}` : ""}
                 </option>
               ))}
             </select>

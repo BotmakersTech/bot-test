@@ -1,6 +1,7 @@
 package com.botleague.backend.events.dto;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -34,14 +35,16 @@ public class UpdateSportsDTO {
     private String controlType;
     private Integer maxBotsPerTeam;
     private Map<String, String> extraRules;
+    private String mapUrl;
 
     // ---- config ----
     private Integer minTeamSize;
     private Integer maxTeamSize;
     private Integer maxTeams;
 
-    private Double entryFee;
-    private Double prizeMoney;
+    private java.math.BigDecimal entryFee;
+    private java.math.BigDecimal prizeMoney;
+    private List<PrizePositionDTO> prizeDistribution;
 
     private String formatType;
 
@@ -91,6 +94,12 @@ public class UpdateSportsDTO {
     public Map<String, String> getExtraRules() { return extraRules; }
     public void setExtraRules(Map<String, String> extraRules) { this.extraRules = extraRules; }
 
+    public String getMapUrl() { return mapUrl; }
+    public void setMapUrl(String mapUrl) { this.mapUrl = mapUrl; }
+
+    public List<PrizePositionDTO> getPrizeDistribution() { return prizeDistribution; }
+    public void setPrizeDistribution(List<PrizePositionDTO> prizeDistribution) { this.prizeDistribution = prizeDistribution; }
+
     public Integer getMinTeamSize() { return minTeamSize; }
     public void setMinTeamSize(Integer minTeamSize) { this.minTeamSize = minTeamSize; }
 
@@ -100,11 +109,11 @@ public class UpdateSportsDTO {
     public Integer getMaxTeams() { return maxTeams; }
     public void setMaxTeams(Integer maxTeams) { this.maxTeams = maxTeams; }
 
-    public Double getEntryFee() { return entryFee; }
-    public void setEntryFee(Double entryFee) { this.entryFee = entryFee; }
+    public java.math.BigDecimal getEntryFee() { return entryFee; }
+    public void setEntryFee(java.math.BigDecimal entryFee) { this.entryFee = entryFee; }
 
-    public Double getPrizeMoney() { return prizeMoney; }
-    public void setPrizeMoney(Double prizeMoney) { this.prizeMoney = prizeMoney; }
+    public java.math.BigDecimal getPrizeMoney() { return prizeMoney; }
+    public void setPrizeMoney(java.math.BigDecimal prizeMoney) { this.prizeMoney = prizeMoney; }
 
     public String getFormatType() { return formatType; }
     public void setFormatType(String formatType) { this.formatType = formatType; }

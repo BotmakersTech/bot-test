@@ -13,6 +13,7 @@ import com.botleague.backend.auth.entity.User;
 import com.botleague.backend.auth.repository.UserRepository;
 import com.botleague.backend.chat.service.ChatService;
 import com.botleague.backend.common.exception.ApiException;
+import com.botleague.backend.events.service.SportRegistrationLineupService;
 import com.botleague.backend.notification.enums.NotificationPriority;
 import com.botleague.backend.notification.enums.NotificationType;
 import com.botleague.backend.notification.service.NotificationService;
@@ -34,18 +35,21 @@ public class TeamMembershipService {
     private final ChatService chatService;
     private final TeamInviteRepository teamInviteRepository;
     private final NotificationService notificationService;
+    private final SportRegistrationLineupService sportRegistrationLineupService;
 
     public TeamMembershipService(
             TeamMembershipRepository teamMembershipRepository,
             UserRepository userRepository,
             ChatService chatService,
             TeamInviteRepository teamInviteRepository,
-            NotificationService notificationService) {
+            NotificationService notificationService,
+            SportRegistrationLineupService sportRegistrationLineupService) {
         this.teamMembershipRepository = teamMembershipRepository;
         this.userRepository = userRepository;
         this.chatService = chatService;
         this.teamInviteRepository = teamInviteRepository;
         this.notificationService = notificationService;
+        this.sportRegistrationLineupService = sportRegistrationLineupService;
     }
 
     // ================= ASSIGN CAPTAIN ON TEAM CREATION =================
@@ -160,13 +164,19 @@ public class TeamMembershipService {
                 ? targetUser.getFirstName() : targetUser.getUsername();
         String roleLabel = role.name().replace("_", " ");
 
-        notificationService.teamNotifyExcluding(
-                teamId, currentUserId,
-                "Team Role Updated",
-                displayName + " has been assigned as " + roleLabel + ".",
-                NotificationType.TEAM_ROLE_ASSIGNED,
-                NotificationPriority.MEDIUM,
-                "/team");
+        // Best-effort side effect (matches AdminTeamService.createAdminTeam's
+        // chat-creation guard) — a notification failure must never roll back
+        // a role assignment that already succeeded.
+        try {
+            notificationService.teamNotifyExcluding(
+                    teamId, currentUserId,
+                    "Team Role Updated",
+                    displayName + " has been assigned as " + roleLabel + ".",
+                    NotificationType.TEAM_ROLE_ASSIGNED,
+                    NotificationPriority.MEDIUM,
+                    "/team");
+        } catch (Exception ignored) {
+        }
     }
 
     // ================= TRANSFER CAPTAIN =================
@@ -205,13 +215,16 @@ public class TeamMembershipService {
         String newCaptainName = newCaptainUser.getFirstName() != null
                 ? newCaptainUser.getFirstName() : newCaptainUser.getUsername();
 
-        notificationService.teamNotifyExcluding(
-                teamId, currentUserId,
-                "New Team Captain",
-                newCaptainName + " is now the team captain.",
-                NotificationType.CAPTAIN_TRANSFERRED,
-                NotificationPriority.HIGH,
-                "/team");
+        try {
+            notificationService.teamNotifyExcluding(
+                    teamId, currentUserId,
+                    "New Team Captain",
+                    newCaptainName + " is now the team captain.",
+                    NotificationType.CAPTAIN_TRANSFERRED,
+                    NotificationPriority.HIGH,
+                    "/team");
+        } catch (Exception ignored) {
+        }
     }
 
     // ================= LEAVE TEAM =================
@@ -237,6 +250,7 @@ public class TeamMembershipService {
                 vice.setRoleInTeam(TeamRole.CAPTAIN);
                 teamMembershipRepository.save(vice);
                 markLeft(membership);
+                freeLineupSlots(membership.getId());
                 cancelPendingInvitesSentBy(currentUserId, teamId);
                 chatService.removeMemberFromTeamChat(teamId, currentUserId, "left the team.");
                 return;
@@ -248,6 +262,7 @@ public class TeamMembershipService {
 
             if (others.isEmpty()) {
                 markLeft(membership);
+                freeLineupSlots(membership.getId());
                 cancelPendingInvitesSentBy(currentUserId, teamId);
                 chatService.removeMemberFromTeamChat(teamId, currentUserId, "left the team.");
                 return;
@@ -257,6 +272,7 @@ public class TeamMembershipService {
         }
 
         markLeft(membership);
+        freeLineupSlots(membership.getId());
         cancelPendingInvitesSentBy(currentUserId, teamId);
         chatService.removeMemberFromTeamChat(teamId, currentUserId, "left the team.");
     }
@@ -309,17 +325,21 @@ public class TeamMembershipService {
         target.setStatus(TeamMembershipStatus.REMOVED);
         target.setLeftAt(LocalDateTime.now());
         teamMembershipRepository.save(target);
+        freeLineupSlots(target.getId());
 
         cancelPendingInvitesSentBy(targetUserId, teamId);
         chatService.removeMemberFromTeamChat(teamId, targetUserId, "was removed from the team.");
 
-        notificationService.teamNotifyExcluding(
-                teamId, currentUserId,
-                "Team Member Removed",
-                displayName + " has been removed from the team.",
-                NotificationType.TEAM_MEMBER_REMOVED,
-                NotificationPriority.MEDIUM,
-                "/team");
+        try {
+            notificationService.teamNotifyExcluding(
+                    teamId, currentUserId,
+                    "Team Member Removed",
+                    displayName + " has been removed from the team.",
+                    NotificationType.TEAM_MEMBER_REMOVED,
+                    NotificationPriority.MEDIUM,
+                    "/team");
+        } catch (Exception ignored) {
+        }
     }
 
     // ================= GET TEAM ID =================
@@ -378,6 +398,18 @@ public class TeamMembershipService {
         membership.setStatus(TeamMembershipStatus.LEFT);
         membership.setLeftAt(LocalDateTime.now());
         teamMembershipRepository.save(membership);
+    }
+
+    /**
+     * Frees every competition lineup slot this membership still actively
+     * holds — without this, a removed/departed member keeps occupying their
+     * DRIVER/BUILD_HEAD slot and still shows as an active competitor
+     * (the lineup's own role-uniqueness check only looks at isActive=true,
+     * so the slot never becomes available again otherwise).
+     */
+    private void freeLineupSlots(UUID teamMembershipId) {
+        sportRegistrationLineupService.getLineupForMember(teamMembershipId)
+                .forEach(lineup -> sportRegistrationLineupService.removeMember(lineup.getId()));
     }
 
     private void validateUserExists(UUID userId) {

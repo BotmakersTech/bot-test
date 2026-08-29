@@ -39,7 +39,7 @@
                  bucket4j is declared with a version in <dependencies> below.
                  JUnit is managed by the Spring Boot BOM via spring-boot-starter-test,
                  so the explicit junit-jupiter pin was removed to avoid version skew. -->
-        </dependencies>
+        </dependenci es>
     </dependencyManagement>
 
     <dependencies>
@@ -90,6 +90,18 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- Actuator: /actuator/health (replaces the old hand-rolled /api/health),
+             /actuator/metrics, /actuator/prometheus. micrometer-registry-prometheus
+             gives the metrics endpoint an actual scrape format instead of just JSON. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
 
         <!-- Certificate generation: PDFBox draws each template's background image +
@@ -183,6 +195,13 @@
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>auth</artifactId>
         </dependency>
+        <!-- Explicit sync HTTP client — needed for R2Config's connection-pool
+             sizing (ApacheHttpClient.builder().maxConnections(...)); the s3
+             module alone doesn't pull this in as a compile-time dependency. -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>apache-client</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -240,6 +259,23 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <!-- No <execution>/<phase> binding on purpose — this never runs
+                 during a normal `mvn package`/`mvn compile` (deploy.yml's
+                 build-check job is unaffected). Invoked explicitly via
+                 `mvn org.owasp:dependency-check-maven:check` by the
+                 dependency-check.yml workflow only. -->
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>10.0.4</version>
+                <configuration>
+                    <failBuildOnCVSS>9</failBuildOnCVSS>
+                    <formats>
+                        <format>HTML</format>
+                        <format>JSON</format>
+                    </formats>
                 </configuration>
             </plugin>
         </plugins>

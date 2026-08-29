@@ -2,6 +2,7 @@ package com.botleague.backend.admin.controller;
 
 import java.util.UUID;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -38,7 +39,7 @@ public class AdminTeamController {
     @PostMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<AdminTeamDetail> createTeam(
-            @RequestBody CreateAdminTeamRequest request) {
+            @Valid @RequestBody CreateAdminTeamRequest request) {
         return ResponseEntity.ok(adminTeamService.createAdminTeam(request));
     }
 
@@ -68,7 +69,7 @@ public class AdminTeamController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<AdminTeamDetail> updateTeam(
             @PathVariable UUID teamId,
-            @RequestBody UpdateTeamRequest request
+            @Valid @RequestBody UpdateTeamRequest request
     ) {
         return ResponseEntity.ok(adminTeamService.updateTeam(teamId, request));
     }
@@ -79,7 +80,7 @@ public class AdminTeamController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<AdminTeamDetail> changeTeamStatus(
             @PathVariable UUID teamId,
-            @RequestBody ChangeTeamStatusRequest request
+            @Valid @RequestBody ChangeTeamStatusRequest request
     ) {
         return ResponseEntity.ok(adminTeamService.changeTeamStatus(teamId, request));
     }

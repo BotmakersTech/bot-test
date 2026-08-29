@@ -2,7 +2,9 @@ package com.botleague.backend.matches.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import com.botleague.backend.common.exception.ResourceNotFoundException;
 import com.botleague.backend.common.exception.ApiException;
@@ -32,6 +34,7 @@ import com.botleague.backend.notification.enums.NotificationTargetType;
 import com.botleague.backend.notification.enums.NotificationType;
 import com.botleague.backend.notification.service.NotificationService;
 import com.botleague.backend.team.repository.TeamRepository;
+import com.botleague.backend.matches.dto.CorrectMatchResultDTO;
 import com.botleague.backend.matches.dto.CreateMatchRequestDTO;
 import com.botleague.backend.matches.dto.GenerateBracketRequestDTO;
 import com.botleague.backend.matches.dto.MatchResponseDTO;
@@ -670,7 +673,7 @@ public class MatchService {
     @Transactional
     public MatchResponseDTO correctMatchResult(
             UUID matchId,
-            String reason,
+            CorrectMatchResultDTO request,
             Authentication authentication
     ) {
         Match match = matchRepository
@@ -684,6 +687,62 @@ public class MatchService {
                     "Only a COMPLETED match can be corrected; current status: " + match.getStatus());
         }
 
+        UUID oldWinnerId = match.getWinnerRegistrationId();
+
+        // ── Apply corrected scores (only fields actually provided) ──
+        if (request.getTeamAScore() != null) match.setTeamAScore(request.getTeamAScore());
+        if (request.getTeamBScore() != null) match.setTeamBScore(request.getTeamBScore());
+        if (request.getTeamCScore() != null) match.setTeamCScore(request.getTeamCScore());
+        if (request.getTeamDScore() != null) match.setTeamDScore(request.getTeamDScore());
+
+        // ── Apply corrected finish positions ──
+        if (request.getPositionFirstRegistrationId()  != null)
+            match.setPositionFirstRegistrationId(request.getPositionFirstRegistrationId());
+        if (request.getPositionSecondRegistrationId() != null)
+            match.setPositionSecondRegistrationId(request.getPositionSecondRegistrationId());
+        if (request.getPositionThirdRegistrationId()  != null)
+            match.setPositionThirdRegistrationId(request.getPositionThirdRegistrationId());
+        if (request.getPositionFourthRegistrationId() != null)
+            match.setPositionFourthRegistrationId(request.getPositionFourthRegistrationId());
+
+        if (request.getWinMethod() != null) match.setWinMethod(request.getWinMethod());
+
+        // Only re-resolve the winner if the correction actually touched
+        // something that could change it — an unrelated correction (e.g.
+        // fixing winMethod only) must not silently re-derive/overwrite an
+        // already-correct winner.
+        boolean mayChangeWinner = request.getWinnerRegistrationId() != null
+                || request.getTeamAScore() != null || request.getTeamBScore() != null
+                || request.getTeamCScore() != null || request.getTeamDScore() != null;
+
+        UUID newWinnerId = oldWinnerId;
+        if (mayChangeWinner) {
+            newWinnerId = request.getWinnerRegistrationId() != null
+                    ? request.getWinnerRegistrationId()
+                    : inferWinner(match);
+            if (newWinnerId == null) {
+                throw ApiException.badRequest(
+                        "Cannot correct match: winner cannot be inferred from a tied score. "
+                        + "Provide an explicit winnerRegistrationId to resolve the tie.");
+            }
+            match.setWinnerRegistrationId(newWinnerId);
+        }
+
+        boolean winnerChanged = !Objects.equals(oldWinnerId, newWinnerId);
+
+        // The original approval already optimistically advanced the old
+        // winner into the next round (see submitMatchResult) — if the
+        // correction changes who won, that placement is now wrong and must
+        // be retracted before re-advancing with the corrected winner.
+        // unwindOptimisticAdvancement only clears a downstream slot that's
+        // still SCHEDULED (or was itself only bye-cascaded); if it's
+        // already been played past that point, it safely no-ops and logs
+        // for manual review instead of corrupting a real result — same
+        // guarantee rejectMatchResult/cancelMatch already rely on.
+        if (winnerChanged) {
+            unwindOptimisticAdvancement(match);
+        }
+
         if (rankingEngineService != null) {
             rankingEngineService.voidPointsForMatch(match.getId());
         }
@@ -691,16 +750,37 @@ public class MatchService {
         match.setStatus(MatchStatus.PENDING_APPROVAL);
         match.setApprovedBy(null);
         match.setApprovedAt(null);
-        match.setRejectionReason(reason);
+        match.setRejectionReason(request.getReason());
 
         Match savedMatch = matchRepository.save(match);
 
         auditLogService.log("MATCH_RESULT_CORRECTION_OPENED", "MATCH", savedMatch.getId(), null,
-                "COMPLETED", "PENDING_APPROVAL", reason);
+                "COMPLETED", "PENDING_APPROVAL", request.getReason());
+
+        Match nextMatch = null;
+        Match thirdPlaceMatch = null;
+        Match loserMatch = null;
+        if (winnerChanged) {
+            nextMatch = advanceWinner(savedMatch);
+            cascadeIfBye(nextMatch);
+            thirdPlaceMatch = advanceRunnerUpToThirdPlace(savedMatch);
+            loserMatch = TournamentFormat.DOUBLE_ELIMINATION.equals(savedMatch.getTournamentFormat())
+                    ? advanceLoser(savedMatch) : null;
+            cascadeIfBye(loserMatch);
+        }
 
         MatchResponseDTO dto = mapToResponseDTO(savedMatch);
         realtimePublisher.pushMatchUpdate(savedMatch.getId(), savedMatch.getEventSportId(),
                 RealtimeEventType.MATCH_UPDATED, dto);
+        if (nextMatch != null)
+            realtimePublisher.pushMatchUpdate(nextMatch.getId(), nextMatch.getEventSportId(),
+                    RealtimeEventType.MATCH_UPDATED, mapToResponseDTO(nextMatch));
+        if (thirdPlaceMatch != null)
+            realtimePublisher.pushMatchUpdate(thirdPlaceMatch.getId(), thirdPlaceMatch.getEventSportId(),
+                    RealtimeEventType.MATCH_UPDATED, mapToResponseDTO(thirdPlaceMatch));
+        if (loserMatch != null)
+            realtimePublisher.pushMatchUpdate(loserMatch.getId(), loserMatch.getEventSportId(),
+                    RealtimeEventType.MATCH_UPDATED, mapToResponseDTO(loserMatch));
         return dto;
     }
 
@@ -1404,28 +1484,47 @@ public class MatchService {
     // PRIVATE — HIGHEST SCORING TEAM
     // =====================================================
 
+    /**
+     * A genuine tie for the top score — including every participant still
+     * sitting at 0 before any scores are entered — has no winner, matching
+     * inferWinner's ONE_VS_ONE branch (and its own javadoc) exactly: null
+     * means manual resolution is needed, not "whoever's slot came first."
+     */
     private UUID highestScoringTeam(Match match, MatchType matchType) {
 
-        UUID winner = null;
-        int best = -1;
+        List<UUID> registrationIds = new ArrayList<>();
+        List<Integer> scores = new ArrayList<>();
 
-        int a = orZero(match.getTeamAScore());
-        int b = orZero(match.getTeamBScore());
-
-        if (a > best) { best = a; winner = match.getTeamARegistrationId(); }
-        if (b > best) { best = b; winner = match.getTeamBRegistrationId(); }
+        addScoredParticipant(registrationIds, scores, match.getTeamARegistrationId(), match.getTeamAScore());
+        addScoredParticipant(registrationIds, scores, match.getTeamBRegistrationId(), match.getTeamBScore());
 
         if (matchType == MatchType.TRIPLE_THREAT || matchType == MatchType.FATAL_FOUR) {
-            int c = orZero(match.getTeamCScore());
-            if (c > best) { best = c; winner = match.getTeamCRegistrationId(); }
+            addScoredParticipant(registrationIds, scores, match.getTeamCRegistrationId(), match.getTeamCScore());
         }
-
         if (matchType == MatchType.FATAL_FOUR) {
-            int d = orZero(match.getTeamDScore());
-            if (d > best) { winner = match.getTeamDRegistrationId(); }
+            addScoredParticipant(registrationIds, scores, match.getTeamDRegistrationId(), match.getTeamDScore());
         }
 
-        return winner;
+        if (registrationIds.isEmpty()) return null;
+
+        int max = Collections.max(scores);
+        UUID leader = null;
+        int leaders = 0;
+        for (int i = 0; i < scores.size(); i++) {
+            if (scores.get(i) == max) {
+                leaders++;
+                leader = registrationIds.get(i);
+            }
+        }
+
+        return leaders == 1 ? leader : null;
+    }
+
+    private void addScoredParticipant(List<UUID> registrationIds, List<Integer> scores,
+                                       UUID registrationId, Integer score) {
+        if (registrationId == null) return;
+        registrationIds.add(registrationId);
+        scores.add(orZero(score));
     }
 
     // =====================================================
@@ -1449,7 +1548,27 @@ public class MatchService {
                 completedMatch.getWinnerRegistrationId()
         );
 
-        return matchRepository.save(nextMatch);
+        return saveNextMatchOrConflict(nextMatch);
+    }
+
+    /**
+     * Two sibling matches (e.g. both semifinals) can advance into different
+     * slots on the SAME next-match row at nearly the same moment — a real
+     * concurrent write, not a data conflict, but Match's @Version still
+     * rejects the second save. saveAndFlush (rather than plain save) is what
+     * makes the version check happen synchronously here, so it's actually
+     * catchable — matching approveMatchResult's same-exception handling but
+     * ensuring the exception truly surfaces at this call site instead of
+     * possibly only at a later, uncaught flush.
+     */
+    private Match saveNextMatchOrConflict(Match nextMatch) {
+        try {
+            return matchRepository.saveAndFlush(nextMatch);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            throw ApiException.conflict(
+                    "Match " + nextMatch.getId() + " was updated concurrently by a sibling match "
+                            + "advancing at the same time — please retry.");
+        }
     }
 
     // =====================================================
@@ -1494,11 +1613,17 @@ public class MatchService {
         } else if (completedMatch.getId().equals(thirdPlaceMatch.getSourceMatchBId())) {
             thirdPlaceMatch.setTeamBRegistrationId(runnerUpId);
 
+        } else if (completedMatch.getId().equals(thirdPlaceMatch.getSourceMatchCId())) {
+            thirdPlaceMatch.setTeamCRegistrationId(runnerUpId);
+
+        } else if (completedMatch.getId().equals(thirdPlaceMatch.getSourceMatchDId())) {
+            thirdPlaceMatch.setTeamDRegistrationId(runnerUpId);
+
         } else {
             return null;
         }
 
-        return matchRepository.save(thirdPlaceMatch);
+        return saveNextMatchOrConflict(thirdPlaceMatch);
     }
 
     // =====================================================
@@ -1557,7 +1682,7 @@ public class MatchService {
                 loserId
         );
 
-        return matchRepository.save(loserNextMatch);
+        return saveNextMatchOrConflict(loserNextMatch);
     }
 
     // =====================================================
@@ -1826,12 +1951,34 @@ public class MatchService {
         boolean anyPending = matchRepository
                 .findByEventSportIdAndDeletedAtIsNull(eventSportId)
                 .stream()
-                .filter(m -> !Boolean.TRUE.equals(m.getIsBye()))      // ignore bye matches
+                // isBye stays true even for a genuinely-played multi-competitor match with
+                // one empty slot — autoAdvanced is the correct "resolved without real
+                // competition" signal (see RankingEngineService's identical distinction).
+                .filter(m -> !Boolean.TRUE.equals(m.getAutoAdvanced()))
                 .anyMatch(m -> m.getStatus() != MatchStatus.COMPLETED
                             && m.getStatus() != MatchStatus.CANCELLED);
 
         if (!anyPending) {
             rankingEngineService.finalizeEventLeaderboard(eventSportId);
+
+            // First time this event sport's bracket finishes: the additive
+            // pushToGlobalRankings is safe. Any later re-finalize (a score
+            // correction reopened and re-approved a match) must instead use
+            // fullRecalculate — pushToGlobalRankings is not idempotent and
+            // would double-count global totals on a second call for the
+            // same event sport.
+            EventSports sport = eventSportsRepository.findById(eventSportId).orElse(null);
+            if (sport != null) {
+                if (!sport.isGlobalRankingsPushed()) {
+                    rankingEngineService.pushToGlobalRankings(eventSportId);
+                    sport.setGlobalRankingsPushed(true);
+                    eventSportsRepository.save(sport);
+                    auditLogService.log("GLOBAL_RANKINGS_PUSHED", "EVENT_SPORT", eventSportId, null, null, null);
+                } else {
+                    rankingEngineService.fullRecalculate(sport.getSport(), sport.getAgeGroup(), sport.getWeightClass());
+                    auditLogService.log("GLOBAL_RANKINGS_RECALCULATED", "EVENT_SPORT", eventSportId, null, null, null);
+                }
+            }
         }
     }
 
