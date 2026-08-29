@@ -190,7 +190,7 @@ export default function GlobalRankingsPage() {
   const selectedLeagueSport = leagueSports.find((ls) => ls.sportSlug === draftSportSlug) ?? null;
   const weightOptions: { weightKg: number; label: string }[] = selectedLeagueSport
     ? selectedLeagueSport.weightClasses.length > 0
-      ? selectedLeagueSport.weightClasses.map((wc) => ({ weightKg: wc.weightKg, label: wc.label }))
+      ? selectedLeagueSport.weightClasses.map((wc) => ({ weightKg: wc.weightKg, label: `${wc.weightKg} kg` }))
       : selectedLeagueSport.weightLimitKg != null
         ? [{ weightKg: selectedLeagueSport.weightLimitKg, label: `${selectedLeagueSport.weightLimitKg} kg` }]
         : []

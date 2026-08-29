@@ -1,8 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react"
-import { X, ChevronDown, Info, Calendar, Plus, ArrowLeft, Check, Sparkles, Cpu, Brain, AlertTriangle } from "lucide-react"
+import { X, Info, Calendar, Plus, ArrowLeft, Check, Sparkles, Cpu, Brain, AlertTriangle } from "lucide-react"
 import { getPublicLeagueSports, toWeightClasses, type LeagueSport } from "../../api/catalog.api"
 import PrizeDistributionEditor from "../PrizeDistributionEditor"
 import { prizeDistributionBalanced, sumPrizeMoney, formatINR, type PrizePosition } from "../../utils/prize"
+import { formatWeightClass } from "../../../feature/Robots/constants/weightClasses"
 import { useLeagues, formatAgeRange } from "../../../temp/pages/leagues/useLeagues"
 import type { CreateEventSportRequest } from "../../../feature/Admin/api/admin.api"
 import "../EventDashboard/EventDashboard.css"
@@ -14,12 +15,6 @@ export interface AddSportModalProps {
   onClose: () => void
 }
 
-const FORMAT_TYPE_OPTIONS = [
-  { value: "KNOCKOUT", label: "Knockout" },
-  { value: "ROUND_ROBIN", label: "Round Robin" },
-  { value: "SWISS", label: "Swiss" },
-  { value: "DOUBLE_ELIMINATION", label: "Double Elimination" },
-]
 
 interface ConfigState {
   sportData: string
@@ -37,8 +32,8 @@ interface ConfigState {
 
 const INITIAL_CONFIG: ConfigState = {
   sportData: "",
-  formatType: "",
-  minTeamSize: 2,
+  formatType: "KNOCKOUT",
+  minTeamSize: 1,
   maxTeamSize: 5,
   maxTeams: 16,
   entryFee: 0,
@@ -181,11 +176,9 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
     if (selectedSports.length === 0) { setError("Please select at least one sport."); return }
     const missingWeightClass = sportsNeedingWeightClass.filter(s => !weightClassBySport[s.id])
     if (missingWeightClass.length > 0) { setError(`Please select a weight class for: ${missingWeightClass.map(s => s.sportName).join(", ")}.`); return }
-    if (!config.formatType) { setError("Please select a format type."); return }
     if (!config.registrationStartDate) { setError("Please set a registration start date."); return }
     if (!config.registrationEndDate) { setError("Please set a registration end date."); return }
     if (config.registrationStartDate > config.registrationEndDate) { setError("Registration start date must be before end date."); return }
-    if (config.minTeamSize > config.maxTeamSize) { setError("Min team size cannot exceed max team size."); return }
     {
       const dist = config.prizeDistribution.filter(p => p.type === "GOODIES" ? (p.description ?? "").trim() !== "" : p.amount != null)
       if (dist.length > 0 && !prizeDistributionBalanced(config.prizeMoney, dist)) {
@@ -277,7 +270,7 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
                             {hint && <span className="asm-sport-hint"><Info size={10} style={{ flexShrink: 0, marginTop: "2px" }} />{hint}</span>}
                             {classes.length > 0 && (
                               <span className="asm-sport-pills">
-                                {classes.map(wc => <span key={wc.value} className="asm-sport-pill">{wc.label}</span>)}
+                                {classes.map(wc => <span key={wc.value} className="asm-sport-pill">{formatWeightClass(wc.label)}</span>)}
                               </span>
                             )}
                           </button>
@@ -324,7 +317,7 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
                           const active = weightClassBySport[sp.id] === wc.value
                           return (
                             <button key={wc.value} type="button" className={`asm-weight-pill${active ? " asm-weight-pill--active" : ""}`} onClick={() => setWeightClassBySport(w => ({ ...w, [sp.id]: wc.value }))}>
-                              {wc.label}
+                              {formatWeightClass(wc.label)}
                             </button>
                           )
                         })}
@@ -334,23 +327,12 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
                 </div>
               )}
 
-              <FormField label="Format Type" required>
-                <div className="asm-select-wrap">
-                  <select className="asm-select" value={config.formatType} onChange={e => setCfg("formatType", e.target.value)}>
-                    <option value="">Select format…</option>
-                    {FORMAT_TYPE_OPTIONS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
-                  </select>
-                  <ChevronDown size={14} className="asm-select-chevron" />
-                </div>
-              </FormField>
-
               <FormField label="Description">
                 <textarea className="asm-textarea" placeholder="Describe this sport category…" value={config.sportData} onChange={e => setCfg("sportData", e.target.value)} />
               </FormField>
 
-              <div className="asm-grid-3">
-                <FormField label="Min Team Size" required><input type="number" min={1} className="asm-input" value={config.minTeamSize} onChange={e => setCfg("minTeamSize", parseInt(e.target.value) || 1)} /></FormField>
-                <FormField label="Max Team Size" required><input type="number" min={1} className="asm-input" value={config.maxTeamSize} onChange={e => setCfg("maxTeamSize", parseInt(e.target.value) || 1)} /></FormField>
+              <div className="asm-grid-2">
+                <FormField label="Team Size (players)" required><input type="number" min={1} className="asm-input" value={config.maxTeamSize} onChange={e => setCfg("maxTeamSize", parseInt(e.target.value) || 1)} /></FormField>
                 <FormField label="Max Teams" required><input type="number" min={2} className="asm-input" value={config.maxTeams} onChange={e => setCfg("maxTeams", parseInt(e.target.value) || 2)} /></FormField>
               </div>
 

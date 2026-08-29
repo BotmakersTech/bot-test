@@ -572,7 +572,7 @@ function PairingsTable({
 
 function formatSpec(p: LeagueSport): string {
   if (p.weightClasses.length > 0) {
-    return p.weightClasses.map((w) => w.label).join(" / ");
+    return p.weightClasses.map((w) => `${w.weightKg} kg`).join(" / ");
   }
   const parts: string[] = [];
   if (p.weightLimitKg != null) parts.push(`${p.weightLimitKg}kg`);

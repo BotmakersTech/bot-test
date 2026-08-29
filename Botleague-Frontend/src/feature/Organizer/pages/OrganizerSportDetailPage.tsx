@@ -2,7 +2,7 @@ import React from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
 import {
-  ArrowLeft, Users, Trophy, Calendar, CalendarRange, Tag, Swords, IndianRupee, Award, Bot,
+  ArrowLeft, Users, Trophy, Calendar, CalendarRange, MapPin, Swords, IndianRupee, Award, Bot,
   Edit2, X, Megaphone, FileEdit, PlayCircle, RefreshCw, CheckCircle2, XCircle, Lock, Unlock, Globe,
   AlertTriangle, MessageCircle, Check, Ban, Clock, ChevronUp, ChevronDown,
 } from "lucide-react"
@@ -18,6 +18,7 @@ import { getPublicLeagueSports, toWeightClasses, type LeagueSport } from "../../
 import { formatWeightClass } from "../../Robots/constants/weightClasses"
 import PrizeDistributionEditor from "../../../shared/components/PrizeDistributionEditor"
 import { formatPrizePosition, prizeDistributionBalanced, sumPrizeMoney, formatINR, type PrizePosition } from "../../../shared/utils/prize"
+import { directionsHref } from "../../../shared/utils/maps"
 import { ageGroupLabel } from "../../../shared/utils/ageGroup"
 import { useLeagues, formatAgeRange, type PresentedLeague } from "../../../temp/pages/leagues/useLeagues"
 import SportMediaField from "../components/SportMediaField"
@@ -401,47 +402,6 @@ function TeamCard({
 // EDIT SPORT MODAL
 // ─────────────────────────────────────────────────────────────
 
-// ── Age groups + sports now come from the backend League/Sport catalog
-// (useLeagues() + getPublicLeagueSports()) instead of this hardcoded list —
-// see getPresetSpec below. Only FORMAT_TYPE_OPTIONS stays local
-// (unrelated to the catalog: format is a bracket-generation concept).
-
-const FORMAT_TYPE_OPTIONS = [
-  { value: "KNOCKOUT",           label: "Knockout"           },
-  { value: "ROUND_ROBIN",        label: "Round Robin"        },
-  { value: "SWISS",              label: "Swiss"              },
-  { value: "DOUBLE_ELIMINATION", label: "Double Elimination" },
-]
-
-// ── Official spec preview — now sourced live from the League/Sport catalog
-// (LeagueSport rows, one per league+sport pairing) instead of a hardcoded
-// rulebook table. A sport with several weight classes (e.g. Apex's Robo War,
-// 1.5kg + 60kg) has no single weightLimitKg — the caller passes the chosen
-// class's kg value explicitly once the organiser picks one.
-interface SportSpecPreset {
-  weightLimitKg?: number
-  maxLengthCm?: number
-  maxWidthCm?: number
-  maxHeightCm?: number
-  controlType?: string   // WIRED | WIRELESS | ANY
-  maxBotsPerTeam?: number
-  note?: string
-  extraSpecs?: Record<string, string>
-}
-
-function getPresetSpec(ls: LeagueSport, chosenWeightKg?: number): SportSpecPreset {
-  return {
-    weightLimitKg: ls.weightClasses.length > 0 ? chosenWeightKg : ls.weightLimitKg ?? undefined,
-    maxLengthCm: ls.maxLengthCm ?? undefined,
-    maxWidthCm: ls.maxWidthCm ?? undefined,
-    maxHeightCm: ls.maxHeightCm ?? undefined,
-    controlType: ls.controlType ?? undefined,
-    maxBotsPerTeam: ls.maxBotsPerTeam ?? undefined,
-    note: ls.entryNote ?? undefined,
-    extraSpecs: ls.extraSpecs,
-  }
-}
-
 type EditForm = CreateEventSportRequest & { extraRulesList: { key: string; value: string }[] }
 
 function toDatetimeLocal(iso?: string | null): string {
@@ -523,18 +483,6 @@ function EditSportModal({
   const setNum = (field: keyof EditForm, raw: string) =>
     set(field, raw === "" ? undefined : Number(raw))
 
-  const addRule = () =>
-    setForm(prev => ({ ...prev, extraRulesList: [...prev.extraRulesList, { key: "", value: "" }] }))
-
-  const removeRule = (i: number) =>
-    setForm(prev => ({ ...prev, extraRulesList: prev.extraRulesList.filter((_, idx) => idx !== i) }))
-
-  const setRule = (i: number, field: "key" | "value", val: string) =>
-    setForm(prev => {
-      const list = [...prev.extraRulesList]
-      list[i] = { ...list[i], [field]: val }
-      return { ...prev, extraRulesList: list }
-    })
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -695,109 +643,8 @@ function EditSportModal({
             )
           })()}
 
-          {/* Official spec preview + one-click apply ────────────────────── */}
-          {(() => {
-            const matched = leagueSports.find(s => s.sportName === form.sport)
-            if (!matched) return null
-
-            const formatParts = (p: SportSpecPreset) => {
-              const parts: string[] = []
-              if (p.weightLimitKg != null) parts.push(`${p.weightLimitKg}kg`)
-              if (p.maxLengthCm != null && p.maxWidthCm != null && p.maxHeightCm != null) {
-                parts.push(`${p.maxLengthCm}×${p.maxWidthCm}×${p.maxHeightCm}cm`)
-              }
-              if (p.controlType) parts.push(p.controlType === "ANY" ? "Wired or Wireless" : p.controlType)
-              if (p.maxBotsPerTeam != null) parts.push(`max ${p.maxBotsPerTeam} bot/team`)
-              Object.entries(p.extraSpecs ?? {}).forEach(([k, v]) => parts.push(`${k}: ${v}`))
-              return parts
-            }
-
-            const applyPreset = (p: SportSpecPreset, weightClassLabel?: string) => {
-              setForm(prev => ({
-                ...prev,
-                weightLimitKg: p.weightLimitKg,
-                maxLengthCm:   p.maxLengthCm,
-                maxWidthCm:    p.maxWidthCm,
-                maxHeightCm:   p.maxHeightCm,
-                controlType:   p.controlType ?? prev.controlType,
-                maxBotsPerTeam: p.maxBotsPerTeam ?? prev.maxBotsPerTeam,
-                weightClass:   weightClassLabel ?? prev.weightClass,
-                extraRulesList: p.extraSpecs && Object.keys(p.extraSpecs).length > 0
-                  ? Object.entries(p.extraSpecs).map(([key, value]) => ({ key, value }))
-                  : prev.extraRulesList,
-              }))
-            }
-
-            // Multiple weight classes (e.g. Apex's Robo War: 1.5kg + 60kg) —
-            // no single spec to apply, offer one button per class instead.
-            if (matched.weightClasses.length > 0) {
-              return (
-                <div style={{
-                  display: "flex", flexDirection: "column", gap: "8px",
-                  background: "rgba(75,134,232,0.06)", border: "1px solid rgba(75,134,232,0.25)",
-                  borderRadius: "8px", padding: "10px 14px",
-                }}>
-                  <div style={{ fontSize: "0.74rem", color: TEXT }}>
-                    <strong style={{ color: ACCENT }}>Official spec:</strong> multiple weight classes — pick one to apply
-                    {matched.entryNote && <span style={{ color: MUTED }}> — {matched.entryNote}</span>}
-                  </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                    {matched.weightClasses.map(wc => (
-                      <button
-                        key={wc.label}
-                        type="button"
-                        onClick={() => applyPreset(getPresetSpec(matched, wc.weightKg), wc.label)}
-                        style={{
-                          background: ORG.gradientCta, border: "none", color: "#fff",
-                          borderRadius: "6px", padding: "6px 12px", fontSize: "0.72rem", fontWeight: 700,
-                          cursor: "pointer", whiteSpace: "nowrap",
-                        }}
-                      >
-                        Apply {wc.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )
-            }
-
-            const preset = getPresetSpec(matched)
-            const parts = formatParts(preset)
-            return (
-              <div style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
-                background: "rgba(75,134,232,0.06)", border: "1px solid rgba(75,134,232,0.25)",
-                borderRadius: "8px", padding: "10px 14px",
-              }}>
-                <div style={{ fontSize: "0.74rem", color: TEXT }}>
-                  <strong style={{ color: ACCENT }}>Official spec:</strong>{" "}
-                  {parts.length > 0 ? parts.join(" · ") : "No physical limits"}
-                  {preset.note && <span style={{ color: MUTED }}> — {preset.note}</span>}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => applyPreset(preset)}
-                  style={{
-                    flexShrink: 0, background: ORG.gradientCta, border: "none", color: "#fff",
-                    borderRadius: "6px", padding: "6px 12px", fontSize: "0.72rem", fontWeight: 700,
-                    cursor: "pointer", whiteSpace: "nowrap",
-                  }}
-                >
-                  Apply Spec
-                </button>
-              </div>
-            )
-          })()}
-
-          {/* Row 3: Format + Weight Class */}
+          {/* Row 3: Weight Class */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-            <div style={groupStyle}>
-              <label style={labelStyle}>Format</label>
-              <select style={inputStyle} value={form.formatType ?? ""} onChange={e => set("formatType", e.target.value || undefined)}>
-                <option value="">None</option>
-                {FORMAT_TYPE_OPTIONS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
-              </select>
-            </div>
             <div style={groupStyle}>
               <label style={labelStyle}>Weight Class</label>
               {(() => {
@@ -842,19 +689,11 @@ function EditSportModal({
             </div>
           </div>
 
-          {/* Row 6: Team Size + Max Teams */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
+          {/* Row 6: Team Size */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
             <div style={groupStyle}>
-              <label style={labelStyle}>Min Team Size</label>
-              <input type="number" min={1} style={inputStyle} value={form.minTeamSize ?? ""} onChange={e => setNum("minTeamSize", e.target.value)} />
-            </div>
-            <div style={groupStyle}>
-              <label style={labelStyle}>Max Team Size</label>
+              <label style={labelStyle}>Team Size (players)</label>
               <input type="number" min={1} style={inputStyle} value={form.maxTeamSize ?? ""} onChange={e => setNum("maxTeamSize", e.target.value)} />
-            </div>
-            <div style={groupStyle}>
-              <label style={labelStyle}>Max Teams</label>
-              <input type="number" min={1} style={inputStyle} value={form.maxTeams ?? ""} onChange={e => setNum("maxTeams", e.target.value)} />
             </div>
           </div>
 
@@ -905,32 +744,6 @@ function EditSportModal({
               onChange={e => set("sportData", e.target.value)}
               placeholder="Sport description…"
             />
-          </div>
-
-          {/* Row 10: Extra Rules */}
-          <div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
-              <label style={{ ...labelStyle, marginBottom: 0 }}>Extra Rules</label>
-              <button type="button" onClick={addRule} style={{
-                background: "rgba(140,108,255,0.12)",
-                border: "1px solid rgba(140,108,255,0.3)",
-                color: ACCENT,
-                borderRadius: "6px",
-                padding: "4px 10px",
-                fontSize: "0.72rem",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}>+ Add Rule</button>
-            </div>
-            {form.extraRulesList.map((rule, i) => (
-              <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "8px", marginBottom: "8px", alignItems: "center" }}>
-                <input style={inputStyle} placeholder="Rule key" value={rule.key} onChange={e => setRule(i, "key", e.target.value)} />
-                <input style={inputStyle} placeholder="Rule value" value={rule.value} onChange={e => setRule(i, "value", e.target.value)} />
-                <button type="button" onClick={() => removeRule(i)} style={{ background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)", color: DANGER, borderRadius: "6px", padding: "6px 8px", cursor: "pointer" }}>
-                  <X size={12} />
-                </button>
-              </div>
-            ))}
           </div>
 
           {saveError && (
@@ -1454,12 +1267,6 @@ export default function OrganizerSportDetailPage() {
           <span className="sdt-stat-icon"><Users size={20} /></span>
           <div><div className="sdt-stat-value">{totalPlayers}</div><div className="sdt-stat-label">Players</div></div>
         </div>
-        {sport.maxTeams != null && (
-          <div className="sdt-stat-card">
-            <span className="sdt-stat-icon"><Tag size={20} /></span>
-            <div><div className="sdt-stat-value">{sport.maxTeams}</div><div className="sdt-stat-label">Max Teams</div></div>
-          </div>
-        )}
         {sport.entryFee != null && (
           <div className="sdt-stat-card">
             <span className="sdt-stat-icon"><IndianRupee size={20} /></span>
@@ -1485,7 +1292,6 @@ export default function OrganizerSportDetailPage() {
           {/* meta fields — real sport specs, styled in the fields-box treatment */}
           <div className="sdt-fields-box">
             <Field label="League" value={sport.ageGroup ? ageGroupLabel(sport.ageGroup) : null} />
-            <Field label="Format" value={sport.formatType ? toLabel(sport.formatType) : null} />
             <Field label="Weight Class" value={sport.weightClass ? formatWeightClass(sport.weightClass) : null} />
             <Field label="Weight Limit" value={sport.weightLimitKg != null ? `${sport.weightLimitKg} KG` : null} />
             <Field
@@ -1496,20 +1302,16 @@ export default function OrganizerSportDetailPage() {
                   : null
               }
             />
-            <Field
-              label="Team Size"
-              value={
-                sport.minTeamSize != null && sport.maxTeamSize != null
-                  ? `${sport.minTeamSize} – ${sport.maxTeamSize} players`
-                  : null
-              }
-            />
-            <Field label="Max Teams" value={sport.maxTeams ?? null} />
             <Field label="Entry Fee" value={sport.entryFee != null ? formatCurrency(sport.entryFee) : null} />
             <Field label="Prize Pool" value={sport.prizeMoney != null ? formatCurrency(sport.prizeMoney) : null} />
             <Field
               label="Location"
-              value={sport.mapUrl ? <a href={sport.mapUrl} target="_blank" rel="noopener noreferrer" style={{ color: ORG.blue }}>View on map</a> : null}
+              value={sport.mapUrl ? (
+                <a href={directionsHref({ mapUrl: sport.mapUrl }) ?? sport.mapUrl} target="_blank" rel="noopener noreferrer"
+                   style={{ display: "inline-flex", alignItems: "center", gap: 5, color: ORG.blue, fontWeight: 600 }}>
+                  <MapPin size={13} /> Get Directions
+                </a>
+              ) : null}
             />
           </div>
 
@@ -1519,28 +1321,6 @@ export default function OrganizerSportDetailPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {sport.prizeDistribution.map((p, i) => (
                   <div key={i} style={{ fontSize: "0.82rem" }}>{formatPrizePosition(p)}</div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* extra rules */}
-          {sport.extraRules && Object.keys(sport.extraRules).length > 0 && (
-            <div style={{
-              background: "rgba(1,98,209,0.05)",
-              border: "1px solid rgba(75,134,232,0.28)",
-              borderRadius: "9px",
-              padding: "12px 16px"
-            }}>
-              <div style={{ fontSize: "0.62rem", color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "10px" }}>
-                Extra Rules
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                {Object.entries(sport.extraRules).map(([key, val]) => (
-                  <div key={key} style={{ display: "flex", gap: "10px", fontSize: "0.82rem" }}>
-                    <span style={{ color: ACCENT, fontWeight: 700, minWidth: "120px" }}>{toLabel(key)}</span>
-                    <span style={{ color: LABEL }}>{val}</span>
-                  </div>
                 ))}
               </div>
             </div>
@@ -1644,12 +1424,11 @@ export default function OrganizerSportDetailPage() {
         entryFee={sport.entryFee ?? null}
         prizeMoney={sport.prizeMoney ?? null}
         ageGroup={sport.ageGroup ?? null}
-        formatType={sport.formatType ?? null}
         weightClass={sport.weightClass ?? null}
         weightLimitKg={sport.weightLimitKg ?? null}
         mapUrl={sport.mapUrl ?? null}
         prizeDistribution={sport.prizeDistribution ?? null}
-        teamSizeLabel={sport.minTeamSize != null && sport.maxTeamSize != null ? `${sport.minTeamSize} – ${sport.maxTeamSize} players` : null}
+        teamSizeLabel={sport.maxTeamSize != null ? `${sport.maxTeamSize} players` : null}
         registrationStartDate={sport.registrationStartDate ?? null}
         registrationEndDate={sport.registrationEndDate ?? null}
         matchActions={[

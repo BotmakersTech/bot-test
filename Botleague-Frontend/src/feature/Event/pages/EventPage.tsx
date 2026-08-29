@@ -16,6 +16,7 @@ import { getEventSupportContacts, type SupportContact } from "../api/event.api";
 import SponsorStrip from "../../../shared/components/SponsorStrip";
 import { formatWeightClass } from "../../Robots/constants/weightClasses";
 import { formatPrizePosition } from "../../../shared/utils/prize";
+import { directionsHref } from "../../../shared/utils/maps";
 
 import type {
   EventRegistrationResponse,
@@ -237,6 +238,10 @@ function EventCard({ event, isRegistered, isSelected, onSelect }: EventCardProps
       <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "12px" }}>
         {event.venueName        && <span style={chip()}>📍 {event.venueName}</span>}
         {event.city             && <span style={chip()}>🌆 {[event.city, event.state].filter(Boolean).join(", ")}</span>}
+        {(() => {
+          const dir = directionsHref({ mapUrl: event.mapUrl, venueName: event.venueName, city: event.city, state: event.state, country: event.country });
+          return dir ? <a href={dir} target="_blank" rel="noopener noreferrer" style={{ ...chip(), color: "#93c5fd", textDecoration: "none", fontWeight: 700 }}>🧭 Get Directions</a> : null;
+        })()}
         {event.mapUrl           && <a href={event.mapUrl} target="_blank" rel="noopener noreferrer" style={{ ...chip(), color: "#93c5fd", textDecoration: "none" }}>🗺 View on map</a>}
         {event.startDate        && <span style={chip()}>📅 {new Date(event.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>}
         {event.organizationName && <span style={chip()}>🏛 {event.organizationName}</span>}
@@ -310,8 +315,6 @@ function SportCard({
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(95px, 1fr))", gap: "7px", marginBottom: "12px" }}>
         {[
-          { label: "Format",      value: sport.formatType },
-          { label: "Team Size",   value: `${sport.minTeamSize}–${sport.maxTeamSize}` },
           { label: "Entry Fee",   value: sport.entryFee > 0 ? `₹${sport.entryFee}` : "Free" },
           { label: "Prize",       value: sport.prizeMoney > 0 ? `₹${sport.prizeMoney}` : "—" },
           { label: "Slots Left",  value: isFull ? "Full" : `${spotsLeft} / ${sport.maxTeams}`, danger: isFull },
@@ -333,7 +336,7 @@ function SportCard({
       <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center", marginBottom: "12px" }}>
         {sport.ageGroup    && <CategoryBadge category={sport.ageGroup} size="xs" showAgeRange />}
         {sport.weightClass && <span style={chip()}>⚖️ {formatWeightClass(sport.weightClass)}</span>}
-        {sport.mapUrl      && <a href={sport.mapUrl} target="_blank" rel="noopener noreferrer" style={{ ...chip(), textDecoration: "none" }}>🗺 Map</a>}
+        {sport.mapUrl      && <a href={directionsHref({ mapUrl: sport.mapUrl }) ?? sport.mapUrl} target="_blank" rel="noopener noreferrer" style={{ ...chip(), textDecoration: "none", fontWeight: 700 }}>🧭 Get Directions</a>}
         {categoryMismatch && (
           <span style={{ fontSize: "0.63rem", color: "#f87171", fontWeight: 600, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)", borderRadius: "6px", padding: "2px 7px" }}>
             Not eligible for your category
