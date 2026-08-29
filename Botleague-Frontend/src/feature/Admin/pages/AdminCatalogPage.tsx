@@ -390,7 +390,6 @@ function SportsTable({ sports, onEdit, onNew }: { sports: Sport[]; onEdit: (s: S
             <tr style={{ background: ORG.gradientPill }}>
               <th className="px-4 py-3.5 text-left font-semibold text-white">Name</th>
               <th className="px-4 py-3.5 text-left font-semibold text-white">Slug</th>
-              <th className="px-4 py-3.5 text-left font-semibold text-white">Competition Type Hint</th>
               <th className="px-4 py-3.5 text-center font-semibold text-white">Status</th>
               <th className="px-4 py-3.5 text-right font-semibold text-white">Action</th>
             </tr>
@@ -398,7 +397,7 @@ function SportsTable({ sports, onEdit, onNew }: { sports: Sport[]; onEdit: (s: S
           <tbody className="bg-white">
             {sports.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-gray-400">
+                <td colSpan={4} className="px-4 py-10 text-center text-gray-400">
                   No sports yet
                 </td>
               </tr>
@@ -407,7 +406,6 @@ function SportsTable({ sports, onEdit, onNew }: { sports: Sport[]; onEdit: (s: S
                 <tr key={s.id} className="border-t hover:bg-[#f8f9ff]" style={{ borderColor: "rgba(75,134,232,0.14)" }}>
                   <td className="px-4 py-3 font-medium text-[#374151]">{s.name}</td>
                   <td className="px-4 py-3 text-gray-500">{s.slug}</td>
-                  <td className="px-4 py-3 text-gray-500">{s.competitionTypeHint ?? "—"}</td>
                   <td className="px-4 py-3 text-center">
                     <StatusBadge status={s.status} />
                   </td>
@@ -441,7 +439,9 @@ function SportFormOverlay({
 }) {
   const [name, setName] = useState(sport?.name ?? "");
   const [slug, setSlug] = useState(sport?.slug ?? "");
-  const [competitionTypeHint, setCompetitionTypeHint] = useState(sport?.competitionTypeHint ?? "");
+  // Competition-type hint is no longer surfaced in the UI, but keep the
+  // existing value flowing through so editing a sport doesn't wipe it.
+  const [competitionTypeHint] = useState(sport?.competitionTypeHint ?? "");
   const [status, setStatus] = useState(sport?.status ?? "ACTIVE");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -471,14 +471,6 @@ function SportFormOverlay({
       </Field>
       <Field label="Slug (URL-safe, unique)">
         <input className={inputCls} value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="robo-war" />
-      </Field>
-      <Field label="Competition type hint (advisory only)">
-        <input
-          className={inputCls}
-          value={competitionTypeHint}
-          onChange={(e) => setCompetitionTypeHint(e.target.value)}
-          placeholder="e.g. ROBO_WAR"
-        />
       </Field>
       {sport && (
         <Field label="Status">
@@ -615,7 +607,9 @@ function PairingFormOverlay({
   const [maxLengthCm, setMaxLengthCm] = useState(pairing?.maxLengthCm?.toString() ?? "");
   const [maxWidthCm, setMaxWidthCm] = useState(pairing?.maxWidthCm?.toString() ?? "");
   const [maxHeightCm, setMaxHeightCm] = useState(pairing?.maxHeightCm?.toString() ?? "");
-  const [controlType, setControlType] = useState<ControlType | "">(pairing?.controlType ?? "");
+  // Control type is no longer surfaced in the UI, but keep the existing value
+  // flowing through so editing a pairing doesn't wipe it.
+  const [controlType] = useState<ControlType | "">(pairing?.controlType ?? "");
   const [weightClasses, setWeightClasses] = useState<WeightClass[]>(pairing?.weightClasses ?? []);
   const [extraSpecs, setExtraSpecs] = useState<[string, string][]>(Object.entries(pairing?.extraSpecs ?? {}));
   const [entryNote, setEntryNote] = useState(pairing?.entryNote ?? "");
@@ -697,7 +691,7 @@ function PairingFormOverlay({
       </div>
 
       <Field label="Weight limit (kg) — leave blank if using weight classes below">
-        <input className={inputCls} type="number" value={weightLimitKg} onChange={(e) => setWeightLimitKg(e.target.value)} />
+        <input className={inputCls} type="number" min={0} step="any" value={weightLimitKg} onChange={(e) => setWeightLimitKg(e.target.value)} />
       </Field>
 
       <div className="grid grid-cols-3 gap-3">
@@ -711,15 +705,6 @@ function PairingFormOverlay({
           <input className={inputCls} type="number" value={maxHeightCm} onChange={(e) => setMaxHeightCm(e.target.value)} />
         </Field>
       </div>
-
-      <Field label="Control type">
-        <select className={inputCls} value={controlType} onChange={(e) => setControlType(e.target.value as ControlType | "")}>
-          <option value="">—</option>
-          <option value="WIRED">WIRED</option>
-          <option value="WIRELESS">WIRELESS</option>
-          <option value="ANY">ANY</option>
-        </select>
-      </Field>
 
       <div className="mb-3">
         <div className="mb-1 flex items-center justify-between">
@@ -739,6 +724,8 @@ function PairingFormOverlay({
             <input
               className={inputCls}
               type="number"
+              min={0}
+              step="any"
               placeholder="kg"
               value={w.weightKg}
               onChange={(e) => updateWeightClass(i, "weightKg", e.target.value)}

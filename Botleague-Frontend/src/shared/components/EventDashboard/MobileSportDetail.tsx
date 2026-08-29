@@ -56,12 +56,9 @@ interface MobileSportDetailProps {
   prizeMoney?: number | null
 
   ageGroup?: string | null
-  competitionType?: string | null
   formatType?: string | null
-  controlType?: string | null
   weightClass?: string | null
   weightLimitKg?: number | null
-  maxBotsPerTeam?: number | null
   teamSizeLabel?: string | null
 
   registrationStartDate?: string | null
@@ -159,7 +156,7 @@ export default function MobileSportDetail({
   onEditSport, onToggleRegistration, registrationLoading, extraTitleActions,
   errorBanner, publishMsg, publishOk, topExtra,
   totalTeams, totalPlayers, maxTeams, entryFee, prizeMoney,
-  ageGroup, competitionType, formatType, controlType, weightClass, weightLimitKg, maxBotsPerTeam, teamSizeLabel,
+  ageGroup, formatType, weightClass, weightLimitKg, teamSizeLabel,
   registrationStartDate, registrationEndDate,
   matchActions, onCertificates, showPublish, onPublish, publishing,
   teams, regActionError, onTeamStatusChange, onMessageTeam,
@@ -241,12 +238,9 @@ export default function MobileSportDetail({
       <div className="ssd-m-details-box">
         <div className="ssd-m-details-grid">
           <div className="ssd-m-detail-cell"><div className="label">Age Group</div><div className="value">{toLabel(ageGroup)}</div></div>
-          <div className="ssd-m-detail-cell"><div className="label">Competition Type</div><div className="value">{toLabel(competitionType)}</div></div>
           <div className="ssd-m-detail-cell"><div className="label">Format</div><div className="value">{toLabel(formatType)}</div></div>
-          <div className="ssd-m-detail-cell"><div className="label">Control Type</div><div className="value">{toLabel(controlType)}</div></div>
           <div className="ssd-m-detail-cell"><div className="label">Weight Class</div><div className="value">{toLabel(weightClass)}</div></div>
           <div className="ssd-m-detail-cell"><div className="label">Weight Limit</div><div className="value">{weightLimitKg != null ? `${weightLimitKg} kg` : "—"}</div></div>
-          <div className="ssd-m-detail-cell"><div className="label">Max Bots/Team</div><div className="value">{maxBotsPerTeam ?? "—"}</div></div>
           <div className="ssd-m-detail-cell"><div className="label">Team Size</div><div className="value">{teamSizeLabel || "—"}</div></div>
         </div>
 

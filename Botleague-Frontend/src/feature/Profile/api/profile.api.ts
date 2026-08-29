@@ -74,6 +74,7 @@ export type UpdateProfilePayload = {
   state?: string;
   city?: string;
   address?: string;
+  pincode?: string;
 };
 
 export const updateProfile = async (payload: UpdateProfilePayload) => {

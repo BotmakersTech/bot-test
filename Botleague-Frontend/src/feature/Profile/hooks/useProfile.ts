@@ -68,6 +68,7 @@ export interface ProfileResponse {
   state?: string;
   country?: string;
   address?: string;
+  pincode?: string;
   dateOfBirth?: string;
   teamName?: string;
   profilePhotoUrl?: string;
@@ -119,6 +120,8 @@ export interface UseProfileReturn {
   setCountry: (v: string) => void;
   address: string;
   setAddress: (v: string) => void;
+  pincode: string;
+  setPincode: (v: string) => void;
   dateOfBirth: string;
   setDateOfBirth: (v: string) => void;
   username: string;
@@ -236,6 +239,7 @@ export default function useProfile(): UseProfileReturn {
   const [state, setState]             = useState("");
   const [country, setCountry]         = useState("");
   const [address, setAddress]         = useState("");
+  const [pincode, setPincode]         = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [botleagueId, setBotleagueId] = useState("");
   const [teamName, setTeamName]       = useState(DEFAULT_TEAM_NAME);
@@ -320,6 +324,7 @@ export default function useProfile(): UseProfileReturn {
     setState((data.state ?? "").trim());
     setCountry((data.country ?? "").trim());
     setAddress(data.address ?? "");
+    setPincode(data.pincode ?? "");
     setDateOfBirth(data.dateOfBirth ?? "");
     if (data.pendingEmail) {
       setPendingEmail(data.pendingEmail);
@@ -536,13 +541,24 @@ const loadTeamMembership = useCallback(async (teamCode: string) => {
 
   const saveUsername = useCallback(async () => {
     clearError("username");
-    if (!username.trim()) {
+    const trimmed = username.trim();
+    if (!trimmed) {
       setError("username", "Username cannot be empty.");
       return false;
     }
     startLoading("username");
     try {
-      await updateUsername(username.trim());
+      // Backend echoes back the normalized (lower-cased) username it stored.
+      const echoed = await updateUsername(trimmed);
+      const savedName =
+        typeof echoed === "string" && echoed.trim()
+          ? echoed.trim()
+          : trimmed.toLowerCase();
+      // Reflect the new name in the @username heading right away — the refetch
+      // below is only for whole-profile consistency, and the heading must not
+      // depend on that GET landing fresh the instant after this POST.
+      setUsername(savedName);
+      setProfile((prev) => (prev ? { ...prev, userName: savedName } : prev));
       setIsEditingUsername(false);
       await loadProfile();
       return true;
@@ -572,6 +588,7 @@ const loadTeamMembership = useCallback(async (teamCode: string) => {
         state:       state.trim(),
         country:     country.trim(),
         address:     address.trim(),
+        pincode:     pincode.trim(),
       });
       setIsEditingName(false);
       setSaveSuccess(true);
@@ -588,7 +605,7 @@ const loadTeamMembership = useCallback(async (teamCode: string) => {
     }
   }, [
     address, city, country, dateOfBirth,
-    firstName, lastName,
+    firstName, lastName, pincode,
     loadProfile, setError, startLoading, state, stopLoading,
   ]);
 
@@ -651,6 +668,7 @@ const loadTeamMembership = useCallback(async (teamCode: string) => {
     state,       setState,
     country,     setCountry,
     address,     setAddress,
+    pincode,     setPincode,
     dateOfBirth, setDateOfBirth,
     username,    setUsername,
     botleagueId,

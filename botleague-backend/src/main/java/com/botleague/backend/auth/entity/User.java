@@ -121,6 +121,9 @@ public class User {
     private String city;
     private String address;
 
+    @Column(name = "pincode", length = 20)
+    private String pincode;
+
     // =========================
     // SYSTEM
     // =========================
@@ -366,6 +369,14 @@ public class User {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getPincode() {
+        return pincode;
+    }
+
+    public void setPincode(String pincode) {
+        this.pincode = pincode;
     }
 
     public LocalDateTime getLastLoginAt() {

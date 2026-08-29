@@ -373,25 +373,14 @@ function TeamCard({
 
 // ── Age groups + sports now come from the backend League/Sport catalog
 // (useLeagues() + getPublicLeagueSports()) instead of this hardcoded list —
-// see catalogSpecHelpers below. Only FORMAT_TYPE_OPTIONS/CONTROL_TYPES stay
-// local (unrelated to the catalog: format is a bracket-generation concept,
-// control type mirrors the backend's own fixed ControlMode enum).
+// see catalogSpecHelpers below. Only FORMAT_TYPE_OPTIONS stays local
+// (unrelated to the catalog: format is a bracket-generation concept).
 
 const FORMAT_TYPE_OPTIONS = [
   { value: "KNOCKOUT",           label: "Knockout"           },
   { value: "ROUND_ROBIN",        label: "Round Robin"        },
   { value: "SWISS",              label: "Swiss"              },
   { value: "DOUBLE_ELIMINATION", label: "Double Elimination" },
-]
-
-// Matches backend ControlMode enum exactly (team/enums/ControlMode.java).
-// NOTE: previously this listed MANUAL/AUTONOMOUS/HYBRID/REMOTE/SEMI_AUTONOMOUS,
-// none of which exist in ControlMode — selecting any of them would have made
-// the backend reject the save with a 400 enum-deserialization error.
-const CONTROL_TYPES = [
-  { value: "WIRED",    label: "Wired"    },
-  { value: "WIRELESS", label: "Wireless" },
-  { value: "ANY",      label: "Any (Wired or Wireless)" },
 ]
 
 // ── Official spec preview — now sourced live from the League/Sport catalog
@@ -787,35 +776,11 @@ function EditSportModal({
             </div>
           </div>
 
-          {/* Row 4: Control Type + Competition Type */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-            <div style={groupStyle}>
-              <label style={labelStyle}>Control Type</label>
-              <select style={inputStyle} value={form.controlType ?? ""} onChange={e => set("controlType", e.target.value || undefined)}>
-                <option value="">None</option>
-                {CONTROL_TYPES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-              </select>
-            </div>
-            <div style={groupStyle}>
-              <label style={labelStyle}>Competition Type</label>
-              <input
-                style={inputStyle}
-                value={form.competitionType ?? ""}
-                onChange={e => set("competitionType", e.target.value || undefined)}
-                placeholder="e.g. KNOCKOUT"
-              />
-            </div>
-          </div>
-
-          {/* Row 4: Weight Limit + Max Bots */}
+          {/* Row 4: Weight Limit */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
             <div style={groupStyle}>
               <label style={labelStyle}>Weight Limit (kg)</label>
-              <input type="number" min={0} style={inputStyle} value={form.weightLimitKg ?? ""} onChange={e => setNum("weightLimitKg", e.target.value)} placeholder="e.g. 15" />
-            </div>
-            <div style={groupStyle}>
-              <label style={labelStyle}>Max Bots / Team</label>
-              <input type="number" min={1} style={inputStyle} value={form.maxBotsPerTeam ?? ""} onChange={e => setNum("maxBotsPerTeam", e.target.value)} placeholder="e.g. 2" />
+              <input type="number" min={0} step="any" style={inputStyle} value={form.weightLimitKg ?? ""} onChange={e => setNum("weightLimitKg", e.target.value)} placeholder="e.g. 1.5" />
             </div>
           </div>
 
@@ -1240,12 +1205,9 @@ export default function AdminSport() {
           {/* meta fields — real sport specs, styled in the fields-box treatment */}
           <div className="sdt-fields-box">
             <Field label="Age Group" value={sport.ageGroup ? toLabel(sport.ageGroup) : null} />
-            <Field label="Competition Type" value={sport.competitionType ? toLabel(sport.competitionType) : null} />
             <Field label="Format" value={sport.formatType ? toLabel(sport.formatType) : null} />
-            <Field label="Control Type" value={sport.controlType ? toLabel(sport.controlType) : null} />
             <Field label="Weight Class" value={sport.weightClass ? toLabel(sport.weightClass) : null} />
             <Field label="Weight Limit" value={sport.weightLimitKg != null ? `${sport.weightLimitKg} kg` : null} />
-            <Field label="Max Bots/Team" value={sport.maxBotsPerTeam ?? null} />
             <Field
               label="Dimensions (L×W×H)"
               value={
@@ -1385,12 +1347,9 @@ export default function AdminSport() {
         entryFee={sport.entryFee ?? null}
         prizeMoney={sport.prizeMoney ?? null}
         ageGroup={sport.ageGroup ?? null}
-        competitionType={sport.competitionType ?? null}
         formatType={sport.formatType ?? null}
-        controlType={sport.controlType ?? null}
         weightClass={sport.weightClass ?? null}
         weightLimitKg={sport.weightLimitKg ?? null}
-        maxBotsPerTeam={sport.maxBotsPerTeam ?? null}
         teamSizeLabel={sport.minTeamSize != null && sport.maxTeamSize != null ? `${sport.minTeamSize} – ${sport.maxTeamSize} players` : null}
         registrationStartDate={sport.registrationStartDate ?? null}
         registrationEndDate={sport.registrationEndDate ?? null}

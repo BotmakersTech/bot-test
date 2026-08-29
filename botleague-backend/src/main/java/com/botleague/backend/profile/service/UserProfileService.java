@@ -84,6 +84,9 @@ public class UserProfileService {
         if (request.getAddress() != null) {
             user.setAddress(request.getAddress());
         }
+        if (request.getPincode() != null) {
+            user.setPincode(request.getPincode());
+        }
 
         userRepository.save(user);
         return mapToProfileDTO(user);
@@ -221,6 +224,7 @@ public class UserProfileService {
         dto.setState(user.getState());
         dto.setCity(user.getCity());
         dto.setAddress(user.getAddress());
+        dto.setPincode(user.getPincode());
         dto.setCreatedAt(user.getCreatedAt());
         dto.setPhoneVerified(user.isPhoneVerified());
 

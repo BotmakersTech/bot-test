@@ -58,9 +58,6 @@ export default function ProfilePage() {
   // First-time users (profile not yet complete) land straight in edit mode;
   // everyone else sees read-only until they tap "Edit Profile".
   const [isEditMode, setIsEditMode] = useState(!isComplete);
-  // Not backed by the profile API yet — kept local so the field still
-  // matches the mockup visually without silently pretending it persists.
-  const [pinCode, setPinCode] = useState("");
 
   // ── Contact number: OTP-verified change flow ──────────────────────────
   const [phoneOtpSent, setPhoneOtpSent] = useState(false);
@@ -460,12 +457,14 @@ export default function ProfilePage() {
                   {isEditMode ? (
                     <input
                       type="text"
-                      value={pinCode}
-                      onChange={(e) => setPinCode(e.target.value)}
+                      inputMode="numeric"
+                      maxLength={20}
+                      value={p.pincode}
+                      onChange={(e) => p.setPincode(e.target.value)}
                       className="w-full rounded-lg text-gray-500"
                     />
                   ) : (
-                    <ReadOnlyField value={pinCode} />
+                    <ReadOnlyField value={p.pincode} />
                   )}
                 </div>
               </div>
