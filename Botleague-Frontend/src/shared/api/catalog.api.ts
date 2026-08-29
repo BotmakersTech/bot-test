@@ -95,10 +95,17 @@ export const getPublicSports = async (): Promise<Sport[]> => {
 };
 
 /** LeagueSport.weightClasses if set (Apex-style multi-class), else a single
- *  implicit class synthesized from weightLimitKg (Ignite/Inferno-style). */
+ *  implicit class synthesized from weightLimitKg (Ignite/Inferno-style).
+ *  Always keyed/labelled by the actual kg number ("1.5 kg", "60 kg") — never
+ *  a free-text name like "Featherweight" — so the number is what gets stored
+ *  and shown everywhere. */
 export function toWeightClasses(ls: LeagueSport): { value: string; label: string }[] {
   if (ls.weightClasses.length > 0) {
-    return ls.weightClasses.map((wc) => ({ value: wc.label, label: wc.label }));
+    return ls.weightClasses.map((wc) =>
+      wc.weightKg != null
+        ? { value: `${wc.weightKg}kg`, label: `${wc.weightKg} kg` }
+        : { value: wc.label, label: wc.label }
+    );
   }
   if (ls.weightLimitKg != null) {
     return [{ value: `${ls.weightLimitKg}kg`, label: `${ls.weightLimitKg} kg` }];

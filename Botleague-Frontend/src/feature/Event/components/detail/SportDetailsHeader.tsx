@@ -1,5 +1,6 @@
-import { Users, Weight, Wallet, Trophy, GraduationCap, Layers, MapPin } from "lucide-react";
+import { Weight, Wallet, Trophy, GraduationCap, Layers, MapPin } from "lucide-react";
 import { formatPrizePosition } from "../../../../shared/utils/prize";
+import { directionsHref } from "../../../../shared/utils/maps";
 import type { ComponentType } from "react";
 import type { EventSportResponse, SupportContact } from "../../api/event.api";
 import plane from "../../../../assets/Auth/plane.svg";
@@ -22,39 +23,29 @@ function formatCurrency(val?: number | null): string {
   return `₹${val.toLocaleString("en-IN")}`;
 }
 
-function titleCase(val?: string | null): string {
-  if (!val) return "—";
-  return val.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 interface SpecItem {
   icon: ComponentType<{ size?: number }>;
   label: string;
-  value: string;
+  value: string | null;
 }
 
 export default function SportDetailsHeader({ sport, contacts }: SportDetailsHeaderProps) {
-  // Always exactly 6 specs, same order, every time — a badge that silently
-  // disappears (or renders blank) when data is missing reads as broken; a
-  // "—" placeholder reads as "not set yet" and keeps the row's layout stable.
+  // Only the specs this sport actually has — a RoboWar shows Weight, a drone
+  // shows nothing where weight would be. Anything with no value is dropped.
+  const weight = sport.weightLimitKg != null
+    ? `${sport.weightLimitKg} KG`
+    : (formatWeightClass(sport.weightClass) || null);
+  const dims = sport.maxLengthCm != null && sport.maxWidthCm != null && sport.maxHeightCm != null
+    ? `${sport.maxLengthCm}×${sport.maxWidthCm}×${sport.maxHeightCm} cm`
+    : null;
+
   const specs: SpecItem[] = [
-    { icon: GraduationCap, label: "League", value: ageGroupLabel(sport.ageGroup) },
-    {
-      icon: Users,
-      label: "Teams",
-      value: sport.maxTeams
-        ? `${sport.registeredTeamsCount ?? 0}/${sport.maxTeams}`
-        : sport.registeredTeamsCount != null ? String(sport.registeredTeamsCount) : "—",
-    },
-    {
-      icon: Weight,
-      label: "Weight",
-      value: sport.weightLimitKg != null ? `${sport.weightLimitKg} KG` : (formatWeightClass(sport.weightClass) || "—"),
-    },
-    { icon: Layers, label: "Format", value: titleCase(sport.formatType) },
-    { icon: Wallet, label: "Entry Fee", value: formatCurrency(sport.entryFee) },
-    { icon: Trophy, label: "Prize Pool", value: formatCurrency(sport.prizeMoney) },
-  ];
+    { icon: GraduationCap, label: "League", value: ageGroupLabel(sport.ageGroup) || null },
+    { icon: Weight, label: "Weight", value: weight },
+    { icon: Layers, label: "Dimensions", value: dims },
+    { icon: Wallet, label: "Entry Fee", value: sport.entryFee != null ? formatCurrency(sport.entryFee) : null },
+    { icon: Trophy, label: "Prize Pool", value: sport.prizeMoney != null ? formatCurrency(sport.prizeMoney) : null },
+  ].filter((s) => s.value && s.value !== "—") as SpecItem[];
 
   return (
     <section
@@ -89,9 +80,12 @@ export default function SportDetailsHeader({ sport, contacts }: SportDetailsHead
         <p>{sport.sportsDescription || "Details for this competition will be published soon."}</p>
 
         {sport.mapUrl && (
-          <p style={{ margin: "4px 0 10px" }}>
-            <a href={sport.mapUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#0162D1", fontWeight: 600 }}>
-              <MapPin size={15} /> View location on map
+          <p style={{ margin: "4px 0 10px", display: "flex", gap: 14, flexWrap: "wrap" }}>
+            <a href={directionsHref({ mapUrl: sport.mapUrl }) ?? sport.mapUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#0162D1", fontWeight: 700 }}>
+              <MapPin size={15} /> Get Directions
+            </a>
+            <a href={sport.mapUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#0162D1", fontWeight: 500 }}>
+              View on map
             </a>
           </p>
         )}

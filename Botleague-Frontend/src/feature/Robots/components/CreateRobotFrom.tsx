@@ -150,7 +150,7 @@ export default function CreateRobotForm({ onSuccess, onCancel }: Props) {
 
   const weightOptions: { weightKg: number; label: string }[] = selectedLeagueSport
     ? selectedLeagueSport.weightClasses.length > 0
-      ? selectedLeagueSport.weightClasses.map((wc) => ({ weightKg: wc.weightKg, label: wc.label }))
+      ? selectedLeagueSport.weightClasses.map((wc) => ({ weightKg: wc.weightKg, label: `${wc.weightKg} kg` }))
       : selectedLeagueSport.weightLimitKg != null
         ? [{ weightKg: selectedLeagueSport.weightLimitKg, label: `${selectedLeagueSport.weightLimitKg} kg` }]
         : []
