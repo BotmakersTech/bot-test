@@ -106,7 +106,6 @@ function memberRoleUpper(member: any) {
 
 export default function MyTeam() {
   const navigate = useNavigate();
-  const reduxTeam = useAppSelector((state) => state.team);
   const authUser = useAppSelector((state) => state.auth.user);
   const [fallbackMemberships, setFallbackMemberships] = useState<TeamMembershipsApiResponse[]>([]);
   const [fallbackMembersLoading, setFallbackMembersLoading] = useState(false);
@@ -122,7 +121,6 @@ export default function MyTeam() {
 
   const {
     activeTeam,
-    teams,
     robots,
     events,
     stats,
@@ -131,12 +129,19 @@ export default function MyTeam() {
     refresh,
   } = useDashboard();
 
-  const dashboardTeam = useMemo(
-    () => activeTeam ?? teams.find((item) => isUsableTeamStatus(item.status)) ?? teams[0] ?? null,
-    [activeTeam, teams]
-  );
+  // Only an ACTIVE membership may surface team data on this dashboard.
+  // `activeTeam` is already filtered to status === "ACTIVE" by useDashboard.
+  // The old fallbacks here — `teams.find(...) ?? teams[0]` and a Redux-cached
+  // team — would resurface a team the user had LEFT / been REMOVED from (or
+  // only holds a pending invite to): the dashboard payload's `teams[]` keeps
+  // every past membership, and the Redux copy carried no reliable membership
+  // status (it defaulted to "ACTIVE"). A non-active user now falls through to
+  // the create-or-join empty state below.
+  const dashboardTeam = activeTeam ?? null;
 
   const resolvedTeam = useMemo(() => {
+    // `team` comes from GET /teams/getTeam/my, which the backend only returns
+    // for an ACTIVE membership (NO_TEAM otherwise → `team` is null here).
     if (team) return team;
     if (dashboardTeam) {
       return {
@@ -148,22 +153,8 @@ export default function MyTeam() {
         memberRole: dashboardTeam.role,
       };
     }
-    if (reduxTeam.teamCode || reduxTeam.teamName) {
-      return {
-        id: reduxTeam.id ?? "",
-        teamCode: reduxTeam.teamCode ?? "",
-        teamName: reduxTeam.teamName ?? "Your Team",
-        logoUrl: reduxTeam.logoUrl ?? undefined,
-        institutionName: reduxTeam.institutionName ?? undefined,
-        city: reduxTeam.city ?? undefined,
-        state: reduxTeam.state ?? undefined,
-        country: reduxTeam.country ?? undefined,
-        status: reduxTeam.status ?? "ACTIVE",
-        createdAt: reduxTeam.createdAt ?? undefined,
-      };
-    }
     return null;
-  }, [dashboardTeam, reduxTeam, team]);
+  }, [dashboardTeam, team]);
 
   const resolvedTeamCode = resolvedTeam?.teamCode || "";
 
