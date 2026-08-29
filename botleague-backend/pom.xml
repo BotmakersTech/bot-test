@@ -39,7 +39,7 @@
                  bucket4j is declared with a version in <dependencies> below.
                  JUnit is managed by the Spring Boot BOM via spring-boot-starter-test,
                  so the explicit junit-jupiter pin was removed to avoid version skew. -->
-        </dependenci es>
+        </dependencies>
     </dependencyManagement>
 
     <dependencies>
