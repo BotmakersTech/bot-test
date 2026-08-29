@@ -32,17 +32,18 @@ function Field({ label, value }: { label: string; value?: string | number | null
 }
 
 function FormField({
-  label, value, onChange, type = "text",
+  label, value, onChange, type = "text", step,
 }: {
   label: string
   value: string
   onChange: (v: string) => void
   type?: string
+  step?: string
 }) {
   return (
     <div className="adp-field">
       <label>{label}</label>
-      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} />
+      <input type={type} step={step} value={value} onChange={(e) => onChange(e.target.value)} />
     </div>
   )
 }
@@ -229,7 +230,7 @@ export default function AdminRobotDetailPage() {
                     </div>
                   )
                 })()}
-                <FormField label="Weight (kg)" value={form.weightKg} type="number" onChange={(v) => setForm((f) => ({ ...f, weightKg: v }))} />
+                <FormField label="Weight (kg)" value={form.weightKg} type="number" step="any" onChange={(v) => setForm((f) => ({ ...f, weightKg: v }))} />
                 <FormField label="Length (cm)" value={form.lengthCm} type="number" onChange={(v) => setForm((f) => ({ ...f, lengthCm: v }))} />
                 <FormField label="Width (cm)" value={form.widthCm} type="number" onChange={(v) => setForm((f) => ({ ...f, widthCm: v }))} />
                 <FormField label="Height (cm)" value={form.heightCm} type="number" onChange={(v) => setForm((f) => ({ ...f, heightCm: v }))} />

@@ -28,6 +28,9 @@ public class UpdateProfileRequestDTO {
     @Size(max = 500)
     private String address;
 
+    @Size(max = 20)
+    private String pincode;
+
     public UpdateProfileRequestDTO() {
     }
 
@@ -111,5 +114,13 @@ public class UpdateProfileRequestDTO {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getPincode() {
+        return pincode;
+    }
+
+    public void setPincode(String pincode) {
+        this.pincode = pincode;
     }
 }

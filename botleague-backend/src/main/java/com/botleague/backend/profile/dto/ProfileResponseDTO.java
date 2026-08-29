@@ -42,6 +42,8 @@ public class ProfileResponseDTO {
 
     private String address;
 
+    private String pincode;
+
     private LocalDateTime createdAt;
 
     private boolean phoneVerified;
@@ -153,6 +155,14 @@ public class ProfileResponseDTO {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getPincode() {
+        return pincode;
+    }
+
+    public void setPincode(String pincode) {
+        this.pincode = pincode;
     }
 
     public LocalDateTime getCreatedAt() {
