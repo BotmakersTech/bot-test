@@ -69,7 +69,13 @@ export default function UserEventDetail() {
   } else {
     body = (
       <div className="evd-page">
-        <Hero title={event.eventName} backLabel="Events" onBack={() => navigate("/events")} />
+        <Hero
+          title={event.eventName}
+          imageUrl={event.eventThumbnailUrl}
+          videoUrl={event.teaserVideo1Url}
+          backLabel="Events"
+          onBack={() => navigate("/events")}
+        />
         <Overview description={event.eventDescription} />
         <EventInfoGrid event={event} sportsCount={eventSports.length} />
         <VolunteerCTA eventId={event.id} eventName={event.eventName} volunteersNeeded={event.volunteersNeeded} />

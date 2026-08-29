@@ -78,6 +78,30 @@ public class GetFileService {
         return null;
     }
 
+    /**
+     * Resolves a stored sport thumbnail/teaser-video value the same way
+     * {@link #resolveEventImage} does for events. The sport media-upload flow
+     * (EventSportsService.saveSportMediaSlot / FileKeyService.generateSportMediaKey)
+     * stores just the raw "sports/..." object key, so without this the
+     * frontend would receive an unusable relative path.
+     *   - null/blank               -> null
+     *   - already a full URL        -> returned as-is
+     *   - "sports/..."             -> CDN-prefixed into a full public URL
+     *   - anything else unexpected  -> null, rather than throwing
+     */
+    public String resolveSportImage(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        if (raw.startsWith("http://") || raw.startsWith("https://")) {
+            return raw;
+        }
+        if (raw.startsWith("sports/")) {
+            return publicBaseUrl + "/" + raw;
+        }
+        return null;
+    }
+
     /** Certificate template backgrounds and issued certificate PDFs/images/QR codes. */
     public String getCertificateUrl(String key) {
         if (key == null || key.isEmpty()) {

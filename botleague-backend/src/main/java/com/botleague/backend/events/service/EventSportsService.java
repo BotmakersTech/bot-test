@@ -18,6 +18,7 @@ import com.botleague.backend.catalog.service.LeagueService;
 import com.botleague.backend.chat.service.ChatService;
 import com.botleague.backend.common.exception.ApiException;
 import com.botleague.backend.common.security.AuthorizationService;
+import com.botleague.backend.common.service.GetFileService;
 import com.botleague.backend.matches.repository.MatchRepository;
 import com.botleague.backend.notification.enums.NotificationPriority;
 import com.botleague.backend.notification.enums.NotificationTargetType;
@@ -47,6 +48,7 @@ public class EventSportsService {
     private final NotificationService notificationService;
     private final AuthorizationService authorizationService;
     private final LeagueService leagueService;
+    private final GetFileService getFileService;
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -57,7 +59,8 @@ public class EventSportsService {
                               RealtimePublisher realtimePublisher,
                               NotificationService notificationService,
                               AuthorizationService authorizationService,
-                              LeagueService leagueService) {
+                              LeagueService leagueService,
+                              GetFileService getFileService) {
         this.eventSportsRepository = eventSportsRepository;
         this.eventRepository = eventRepository;
         this.matchRepository = matchRepository;
@@ -66,6 +69,7 @@ public class EventSportsService {
         this.notificationService = notificationService;
         this.authorizationService = authorizationService;
         this.leagueService = leagueService;
+        this.getFileService = getFileService;
     }
 
     /**
@@ -504,8 +508,8 @@ public class EventSportsService {
         response.setEventId(sport.getEventId());
         response.setSport(sport.getSport());
         response.setSportsDescription(sport.getSportsDescription());
-        response.setSportThumbnailUrl(sport.getSportThumbnailUrl());
-        response.setSportTeaserVideoUrl(sport.getSportTeaserVideoUrl());
+        response.setSportThumbnailUrl(getFileService.resolveSportImage(sport.getSportThumbnailUrl()));
+        response.setSportTeaserVideoUrl(getFileService.resolveSportImage(sport.getSportTeaserVideoUrl()));
 
         if (sport.getCompetitionType() != null) {
             response.setCompetitionType(sport.getCompetitionType().name());

@@ -243,8 +243,8 @@ public class OrganizerService {
         dto.setId(es.getId());
         dto.setEventId(es.getEventId());
         dto.setSport(es.getSport());
-        dto.setSportThumbnailUrl(es.getSportThumbnailUrl());
-        dto.setSportTeaserVideoUrl(es.getSportTeaserVideoUrl());
+        dto.setSportThumbnailUrl(getFileService.resolveSportImage(es.getSportThumbnailUrl()));
+        dto.setSportTeaserVideoUrl(getFileService.resolveSportImage(es.getSportTeaserVideoUrl()));
         dto.setAgeGroup(es.getAgeGroup());
         dto.setWeightClass(es.getWeightClass());
         dto.setMapUrl(es.getMapUrl());
