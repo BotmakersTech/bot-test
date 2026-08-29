@@ -233,6 +233,7 @@ export default function UserSportDetail() {
         <Hero
           title={sport.sport?.replace(/_/g, " ") ?? "Sport"}
           imageUrl={sport.sportThumbnailUrl}
+          videoUrl={sport.sportTeaserVideoUrl}
           backLabel={event.eventName}
           onBack={() => navigate(`/events/${eventId}`)}
         />

@@ -689,8 +689,8 @@ public class AdminService {
         dto.setId(sport.getId());
         dto.setSport(sport.getSport());
         dto.setSportsInfo(sport.getSportsDescription());   // getSportsDescription(), not getSportsDescripction()
-        dto.setSportThumbnailUrl(sport.getSportThumbnailUrl());
-        dto.setSportTeaserVideoUrl(sport.getSportTeaserVideoUrl());
+        dto.setSportThumbnailUrl(getFileService.resolveSportImage(sport.getSportThumbnailUrl()));
+        dto.setSportTeaserVideoUrl(getFileService.resolveSportImage(sport.getSportTeaserVideoUrl()));
         dto.setStatus(sport.getStatus() != null ? sport.getStatus().name() : null);
         dto.setFormatType(sport.getFormatType());
         dto.setAgeGroup(sport.getAgeGroup());
