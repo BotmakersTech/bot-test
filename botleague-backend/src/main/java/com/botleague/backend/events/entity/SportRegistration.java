@@ -121,13 +121,16 @@ public class SportRegistration {
     // =========================
 
     /**
-     * Validates this robot against the competition's constraints: weight, the
-     * three dimensions, and control type. Limits that are null on the
-     * COMPETITION are simply skipped (so a drone / project sport with no size
-     * rule passes automatically) — but if the competition DOES have a limit
-     * and the ROBOT's value for that same field is missing, this fails
-     * closed rather than silently letting incomplete robot data bypass a
-     * real, active limit.
+     * Validates this robot against ONLY the physical constraint(s) that
+     * actually gate this (league, sport) — see SportSpecPolicy. A RoboWar
+     * competition is governed by weight alone, so its EventSports row's
+     * length/width/height limits (if any) are ignored here; a Line Follower
+     * is governed by its footprint, so its weight limit is ignored; etc.
+     *
+     * Within an applicable constraint a limit that is null on the COMPETITION
+     * is skipped, and a value that is null on the ROBOT never disqualifies —
+     * only a value that is actually present AND over the limit is rejected.
+     * This matches the frontend eligible-robot filter.
      *
      * NOTE: age and "max bots per team" need data this row doesn't hold
      * (the participant's date of birth, and a count of the team's existing
@@ -136,27 +139,36 @@ public class SportRegistration {
      *   - eventSport.getMaxBotsPerTeam()     vs existing registrations for (team, competition)
      *   - eventSport.isRegistrationOpen(today) and eventSport.isFull()
      */
-    public void validateAgainst(EventSports eventSport) {
+    public void validateAgainst(EventSports eventSport, java.util.Set<com.botleague.backend.events.enums.SpecConstraint> constraints) {
         if (eventSport == null) {
             throw new IllegalArgumentException("Competition (EventSports) is required");
         }
+        if (constraints == null || constraints.isEmpty()) {
+            constraints = java.util.EnumSet.allOf(com.botleague.backend.events.enums.SpecConstraint.class);
+        }
 
-        Double weightLimit = eventSport.getWeightLimitKg();
-        if (weightLimit != null) {
-            if (weightKg == null) {
-                throw new IllegalArgumentException(
-                    "This competition has a weight limit of " + weightLimit
-                        + "kg, but the robot's weight was not provided.");
+        if (constraints.contains(com.botleague.backend.events.enums.SpecConstraint.WEIGHT) && weightKg != null) {
+            Double ceiling = eventSport.getWeightLimitKg();
+            if (ceiling == null) {
+                // Weight-class sports (RoboWar) carry a class label ("1.5KG",
+                // "60KG") instead of an explicit weightLimitKg.
+                ceiling = weightClassCeilingKg(eventSport.getWeightClass());
             }
-            if (weightKg > weightLimit) {
+            if (ceiling != null && weightKg > ceiling) {
                 throw new IllegalArgumentException(
-                    "Robot weight " + weightKg + "kg exceeds the limit of " + weightLimit + "kg");
+                    "Robot weight " + weightKg + "kg exceeds the limit of " + ceiling + "kg");
             }
         }
 
-        checkDimension("length", lengthCm, eventSport.getMaxLengthCm());
-        checkDimension("width", widthCm, eventSport.getMaxWidthCm());
-        checkDimension("height", heightCm, eventSport.getMaxHeightCm());
+        if (constraints.contains(com.botleague.backend.events.enums.SpecConstraint.DIMENSION)) {
+            checkDimension("length", lengthCm, eventSport.getMaxLengthCm());
+            checkDimension("width", widthCm, eventSport.getMaxWidthCm());
+            checkDimension("height", heightCm, eventSport.getMaxHeightCm());
+        }
+
+        // SCALE (RC Racing Car): the Robot entity has no scale attribute, so
+        // there is nothing to validate on the robot side — the class/sport
+        // match in SportRegistrationService is the only gate that applies.
 
         ControlMode allowed = eventSport.getControlType();
         if (allowed != null && allowed != ControlMode.ANY) {
@@ -168,16 +180,35 @@ public class SportRegistration {
         }
     }
 
+    /** Back-compat overload — enforces every constraint the row carries. */
+    public void validateAgainst(EventSports eventSport) {
+        validateAgainst(eventSport, null);
+    }
+
     private void checkDimension(String name, Double value, Double max) {
-        if (max == null) return; // competition doesn't constrain this dimension
-        if (value == null) {
-            throw new IllegalArgumentException(
-                "This competition has a " + name + " limit of " + max
-                    + "cm, but the robot's " + name + " was not provided.");
-        }
+        if (max == null) return;   // competition doesn't constrain this dimension
+        if (value == null) return; // dimension is optional — a missing measurement never disqualifies
         if (value > max) {
             throw new IllegalArgumentException(
                 "Robot " + name + " " + value + "cm exceeds the limit of " + max + "cm");
+        }
+    }
+
+    /**
+     * Parse a weight-class label to its kg ceiling: "1.5KG" / "1_5KG" /
+     * "60 kg" → 1.5 / 1.5 / 60. Returns null for a non-numeric class
+     * ("OPEN") or a blank/absent value, meaning "no numeric ceiling".
+     */
+    private static Double weightClassCeilingKg(String weightClass) {
+        if (weightClass == null || weightClass.isBlank()) return null;
+        java.util.regex.Matcher m =
+            java.util.regex.Pattern.compile("(\\d+)(?:[._,](\\d+))?").matcher(weightClass);
+        if (!m.find()) return null;
+        try {
+            return Double.parseDouble(
+                m.group(2) != null ? m.group(1) + "." + m.group(2) : m.group(1));
+        } catch (NumberFormatException e) {
+            return null;
         }
     }
 

@@ -59,6 +59,19 @@ export function weightClassLabel(code: string): string {
  * labels are free text, so every UI weight-class render funnels through this
  * instead of ad-hoc toLabel()/titleCase() calls that leak "1_5" / "1 5KG".
  */
+/**
+ * Parse a weight-class label to its kg ceiling: "1_5KG" | "1.5kg" | "60 KG"
+ * -> 1.5 | 1.5 | 60. Returns null for a non-numeric class ("OPEN") or a
+ * blank/absent value — i.e. "no numeric ceiling to enforce".
+ */
+export function weightClassToKg(raw?: string | null): number | null {
+  if (raw == null) return null;
+  const m = String(raw).match(/(\d+)(?:[._,](\d+))?/);
+  if (!m) return null;
+  const n = Number(m[2] != null ? `${m[1]}.${m[2]}` : m[1]);
+  return Number.isFinite(n) ? n : null;
+}
+
 export function formatWeightClass(raw?: string | null): string {
   if (raw == null) return "";
   const s = String(raw).trim();
