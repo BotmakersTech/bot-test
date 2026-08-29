@@ -554,13 +554,16 @@ const loadTeamMembership = useCallback(async (teamCode: string) => {
         typeof echoed === "string" && echoed.trim()
           ? echoed.trim()
           : trimmed.toLowerCase();
-      // Reflect the new name in the @username heading right away — the refetch
-      // below is only for whole-profile consistency, and the heading must not
-      // depend on that GET landing fresh the instant after this POST.
+      setIsEditingUsername(false);
+      // Refetch the whole profile first, THEN assert the just-saved name —
+      // loadProfile()'s hydrate would otherwise overwrite the heading with a
+      // stale userName if that GET races ahead of the POST's commit.
+      await loadProfile();
       setUsername(savedName);
       setProfile((prev) => (prev ? { ...prev, userName: savedName } : prev));
-      setIsEditingUsername(false);
-      await loadProfile();
+      // Keep the navbar / useProfileComplete (Redux auth.user) in sync too —
+      // same pattern as the avatar handlers.
+      dispatch(updateUser({ userName: savedName }));
       return true;
     } catch (err: any) {
       setError(
@@ -571,7 +574,7 @@ const loadTeamMembership = useCallback(async (teamCode: string) => {
     } finally {
       stopLoading("username");
     }
-  }, [clearError, loadProfile, setError, startLoading, stopLoading, username]);
+  }, [clearError, dispatch, loadProfile, setError, startLoading, stopLoading, username]);
 
   // ───────────────────────────────────────────────────
   // UPDATE PROFILE
