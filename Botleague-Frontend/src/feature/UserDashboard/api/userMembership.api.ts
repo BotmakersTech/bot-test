@@ -16,6 +16,7 @@ export interface TeamMember {
   role?: string;
   status?: string;
   joinedAt?: string;
+  dateOfBirth?: string | null;  // backend field — used to gate age-group eligibility
   isActive?: boolean;
   membershipId?: string;
   teamMemberId?: string;

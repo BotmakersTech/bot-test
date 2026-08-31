@@ -446,6 +446,7 @@ const loadTeamMembership = useCallback(async (teamCode: string) => {
       userName:     member.userName     ?? "",
       userCode:     member.userCode     ?? "",
       teamRole:     member.teamRole     ?? "",
+      dateOfBirth:  member.dateOfBirth  ?? null,
       teamId:       "",
       isActive:     true,
       teamMemberId: member.membershipId ?? member.teamMemberId ?? member.userId ?? "",

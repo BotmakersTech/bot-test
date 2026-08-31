@@ -19,6 +19,9 @@ export interface TeamMembershipState {
   status: string | null;
 
   userId: string;
+
+  /** ISO date of birth — lets event lineup pickers hide age-mismatched members. */
+  dateOfBirth?: string | null;
 }
 
 // ======================================================
