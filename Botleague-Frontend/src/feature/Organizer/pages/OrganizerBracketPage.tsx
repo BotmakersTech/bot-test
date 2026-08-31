@@ -1694,7 +1694,7 @@ export default function OrganizerBracketPage() {
                     </button>
                   </div>
                 ) : (
-                  <div style={{ color: T.textSub, fontSize: "0.78rem" }}>Waiting for an event head or admin to approve.</div>
+                  <div style={{ color: T.textSub, fontSize: "0.78rem" }}>Waiting for a techfect head or admin to approve.</div>
                 )}
               </div>
             )}

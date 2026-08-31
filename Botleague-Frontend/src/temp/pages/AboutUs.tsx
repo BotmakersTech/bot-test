@@ -54,7 +54,7 @@ const PRINCIPLES: Principle[] = [
     n: "03.",
     title: "Built for the World Stage",
     color: "#3983DC",
-    body: "A regional qualifier should feel like a dress rehearsal for the world championship. Same rigor, same fairness, same respect for the competitor — wherever the event is held.",
+    body: "A regional qualifier should feel like a dress rehearsal for the world championship. Same rigor, same fairness, same respect for the competitor — wherever the techfect is held.",
   },
   {
     n: "04.",
@@ -65,7 +65,7 @@ const PRINCIPLES: Principle[] = [
 ];
 
 const RESULTS = [
-  { value: "120+", label: "Events Hosted" },
+  { value: "120+", label: "Techfects Hosted" },
   { value: "48K+", label: "Competitors" },
   { value: "9", label: "Countries" },
   { value: "1,300+", label: "Bots Battled" },
@@ -105,7 +105,7 @@ const TEAM: TeamMember[] = [
     name: "Rahul Ishi",
     role: "COO",
     initials: "RI",
-    quote: "I make sure the schedule survives contact with reality on event day.",
+    quote: "I make sure the schedule survives contact with reality on techfect day.",
     img: null,
   },
 ];

@@ -104,7 +104,7 @@ export default function OrganizerReportsPage() {
       <div style={{ display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap", alignItems: "center" }}>
         <select value={selected} onChange={e => setSelected(e.target.value)}
           style={{ height: "40px", background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "10px", color: TEXT, fontSize: "0.85rem", padding: "0 14px", outline: "none", cursor: "pointer" }}>
-          <option value="ALL">All Events</option>
+          <option value="ALL">All Techfects</option>
           {events.map(ev => <option key={ev.id} value={ev.id}>{ev.eventName}</option>)}
         </select>
         {loading && <span style={{ color: MUTED, fontSize: "0.82rem" }}>Loading…</span>}
@@ -131,7 +131,7 @@ export default function OrganizerReportsPage() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
             <thead>
               <tr style={{ background: "rgba(140,108,255,0.06)", borderBottom: `1px solid ${BORDER}` }}>
-                {["Sport", "Event", "Age Group", "Format", "Teams", "Capacity", "Status"].map((h, i) => (
+                {["Sport", "Techfect", "Age Group", "Format", "Teams", "Capacity", "Status"].map((h, i) => (
                   <th key={i} style={{ textAlign: i >= 4 ? "center" : "left", padding: "12px 14px", color: MUTED, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
                 ))}
               </tr>

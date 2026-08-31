@@ -37,7 +37,7 @@ export default function AdminRegistrations() {
           }
         }
       })
-      .catch(() => setError("Failed to load events"))
+      .catch(() => setError("Failed to load techfects"))
       .finally(() => setLoadingEvents(false))
   }, [])
 
@@ -108,7 +108,7 @@ export default function AdminRegistrations() {
       {/* Selectors */}
       <div className="flex flex-wrap gap-3 mb-5">
         {loadingEvents ? (
-          <p className="text-sm text-gray-400">Loading events…</p>
+          <p className="text-sm text-gray-400">Loading techfects…</p>
         ) : (
           <>
             <select
@@ -156,7 +156,7 @@ export default function AdminRegistrations() {
       ) : loadingRegs ? (
         <div className="flex items-center justify-center py-20 text-gray-400">Loading registrations…</div>
       ) : !selectedSportId ? (
-        <div className="flex items-center justify-center py-20 text-gray-400">Select an event and sport to view registrations</div>
+        <div className="flex items-center justify-center py-20 text-gray-400">Select a techfect and sport to view registrations</div>
       ) : filtered.length === 0 ? (
         <div className="flex items-center justify-center py-20 text-gray-400">No teams registered yet</div>
       ) : (

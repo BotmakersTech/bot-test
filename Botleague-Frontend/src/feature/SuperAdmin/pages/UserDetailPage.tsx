@@ -237,9 +237,9 @@ export default function UserDetailPage() {
                 className={"adp-tab" + (tab === t ? " adp-tab-active" : "")}
               >
                 {t === "events"
-                  ? `Event Access (${user.assignedEvents?.length ?? 0})`
+                  ? `Techfect Access (${user.assignedEvents?.length ?? 0})`
                   : t === "sports"
-                  ? `Sport Access (${user.assignedSports?.length ?? 0})`
+                  ? `Techsport Access (${user.assignedSports?.length ?? 0})`
                   : t.charAt(0).toUpperCase() + t.slice(1)}
               </button>
             ))}
@@ -363,10 +363,10 @@ export default function UserDetailPage() {
           {/* ── Events tab ── */}
           {!loading && tab === "events" && (
             <div className="adp-form-card">
-              <p className="adp-section-label">Assign Event</p>
+              <p className="adp-section-label">Assign Techfect</p>
               <div className="adp-assign-row" style={{ marginBottom: 28 }}>
                 <select value={selectedEventId} onChange={(e) => setSelectedEventId(e.target.value)}>
-                  <option value="">Select an event…</option>
+                  <option value="">Select a techfect…</option>
                   {availableEvents
                     .filter((ev) => !user.assignedEvents?.some((a) => a.eventId === ev.id))
                     .map((ev) => <option key={ev.id} value={ev.id}>{ev.eventName} ({ev.eventCode})</option>)}
@@ -376,9 +376,9 @@ export default function UserDetailPage() {
                 </button>
               </div>
 
-              <p className="adp-section-label">Assigned Events ({user.assignedEvents?.length ?? 0})</p>
+              <p className="adp-section-label">Assigned Techfects ({user.assignedEvents?.length ?? 0})</p>
               {!user.assignedEvents?.length ? (
-                <p className="adp-empty-note">No events assigned.</p>
+                <p className="adp-empty-note">No techfects assigned.</p>
               ) : (
                 <div className="adp-row-list">
                   {user.assignedEvents.map((e) => (
@@ -404,7 +404,7 @@ export default function UserDetailPage() {
                   value={selectedEventId}
                   onChange={(e) => { setSelectedEventId(e.target.value); setSelectedSportId("") }}
                 >
-                  <option value="">1. Select event…</option>
+                  <option value="">1. Select techfect…</option>
                   {availableEvents.map((ev) => <option key={ev.id} value={ev.id}>{ev.eventName} ({ev.eventCode})</option>)}
                 </select>
 

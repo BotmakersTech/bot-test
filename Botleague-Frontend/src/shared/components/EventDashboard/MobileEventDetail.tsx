@@ -151,7 +151,7 @@ export default function MobileEventDetail({
       </div>
 
       {/* Event Details */}
-      <div className="ed-m-section-title">Event Details</div>
+      <div className="ed-m-section-title">Techfect Details</div>
       <div className="ed-m-details-box">
         <div className="ed-m-field"><div className="ed-m-field-label">Organization</div><div className="ed-m-field-value">{event.organizationName || "—"}</div></div>
         <div className="ed-m-field-row">
@@ -257,7 +257,7 @@ export default function MobileEventDetail({
 
       {eventSponsors && (
         <>
-          <div className="ed-m-section-title">Event Sponsors</div>
+          <div className="ed-m-section-title">Techfect Sponsors</div>
           {eventSponsors}
         </>
       )}

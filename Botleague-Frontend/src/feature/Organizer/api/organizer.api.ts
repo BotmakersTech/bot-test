@@ -807,7 +807,7 @@ export const getSportChangeRequests = async (
 };
 
 // Event-level aggregate — every pending change request across all of an
-// event's sports in one call, used by the event dashboard's User Control panel.
+// event's sports in one call, used by the techfect dashboard's User Control panel.
 export const getEventChangeRequests = async (
   eventId: string,
   status: string = "PENDING"

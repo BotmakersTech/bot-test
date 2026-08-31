@@ -20,7 +20,7 @@ export default function PublicBottomNav() {
 
   const items = [
     { id: "home", label: "Home", link: "/", icon: <Home /> },
-    { id: "events", label: "Events", link: "/events", icon: <CalendarDays /> },
+    { id: "events", label: "Techfects", link: "/events", icon: <CalendarDays /> },
     { id: "rankings", label: "Rankings", link: "/rankings", icon: <Trophy /> },
     { id: "about", label: "About Us", link: "/about-us", icon: <Info /> },
     isAuthenticated

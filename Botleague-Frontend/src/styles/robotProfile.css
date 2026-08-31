@@ -503,7 +503,8 @@
    robot photo, stat-card-with-dividers treatment.
    ========================================================================= */
 
-.rprofile-desktop-only { display: block; }
+/* Desktop-only blocks keep their own layout (.rprofile-hero is a grid) — this
+   utility must NOT force `display: block`, it only hides them below 900px. */
 .rprofile-mobile-only { display: none; }
 
 @media (max-width: 900px) {

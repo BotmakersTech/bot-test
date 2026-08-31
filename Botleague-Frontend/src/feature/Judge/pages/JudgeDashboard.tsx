@@ -81,11 +81,11 @@ export default function JudgeDashboard() {
         stat1Value={completed.length}
         stat1Label="Judged"
         stat2Value={scheduled.length}
-        stat2Label="Next events"
+        stat2Label="Next techfects"
         stat3Value={distinctSports}
         stat3Label="Experience"
         stat3Icon={<BarChart3 size={20} />}
-        recentItemsTitle="Previous Events"
+        recentItemsTitle="Previous Techfects"
         recentItems={recentItems}
         recentItemsEmptyText="No matches judged yet."
         recentItemsHref="/judge/matches"

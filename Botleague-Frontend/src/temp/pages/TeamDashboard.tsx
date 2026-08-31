@@ -359,7 +359,7 @@ export default function ApexDashboard() {
       <div style={styles.statsRow}>
         {[
           { icon: "👥", bg: "#f9731622", label: "Members", value: "6", link: "View all members →" },
-          { icon: "📅", bg: "#6366f122", label: "Events Joined", value: "3", link: "View events →" },
+          { icon: "📅", bg: "#6366f122", label: "Techfects Joined", value: "3", link: "View techfects →" },
           { icon: "🏆", bg: "#3b82f622", label: "Matches Played", value: "5", link: "View matches →" },
           { icon: "📈", bg: "#22c55e22", label: "Win Rate", value: "60%", link: "Good going! 🔥" },
         ].map((s, i) => (
@@ -400,7 +400,7 @@ export default function ApexDashboard() {
         {/* Upcoming Events */}
         <div style={styles.panel}>
           <div style={styles.panelHeader}>
-            <span style={styles.panelTitle}>Upcoming Events</span>
+            <span style={styles.panelTitle}>Upcoming Techfects</span>
             <span style={styles.viewAll}>View Calendar</span>
           </div>
           {events.map((e, i) => (
@@ -428,7 +428,7 @@ export default function ApexDashboard() {
               </div>
             </div>
           ))}
-          <span style={styles.seeAll}>See all events →</span>
+          <span style={styles.seeAll}>See all techfects →</span>
         </div>
       </div>
     </div>

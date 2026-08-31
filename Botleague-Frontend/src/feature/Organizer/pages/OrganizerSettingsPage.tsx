@@ -74,7 +74,7 @@ export default function OrganizerSettingsPage() {
   return (
     <div className="min-h-full p-8 space-y-6">
       <div>
-        <h1 className="font-display text-[clamp(20px,4vw,38px)] font-medium text-[#0162d1]">Event Settings</h1>
+        <h1 className="font-display text-[clamp(20px,4vw,38px)] font-medium text-[#0162d1]">Techfect Settings</h1>
         <p className="text-sm text-[#5d5d5d] mt-0.5">
           Update event information. Sport specifications are managed by administrators.
         </p>
@@ -82,7 +82,7 @@ export default function OrganizerSettingsPage() {
 
       {/* Event selector */}
       <div>
-        <label className="text-xs text-[#5d5d5d] mb-1 block font-semibold">Event</label>
+        <label className="text-xs text-[#5d5d5d] mb-1 block font-semibold">Techfect</label>
         <select value={selectedEventId} onChange={e => handleSelectEvent(e.target.value)}
           className="rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none w-full sm:w-64">
           {events.map(e => <option key={e.id} value={e.id}>{e.eventName}</option>)}
@@ -98,15 +98,15 @@ export default function OrganizerSettingsPage() {
               <span className="rounded-full bg-[#4b86e8]/10 px-2 py-0.5 text-[10px] text-[#3567cf] font-semibold">Administrator Only</span>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Event Code"  value={event.eventCode} readOnly />
+              <Field label="Techfect Code"  value={event.eventCode} readOnly />
               <Field label="Status"      value={event.status}    readOnly />
             </div>
           </div>
 
           {/* Editable info fields */}
           <div className="rounded-2xl border border-[#4b86e8]/25 bg-white/90 p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-[#111111]">Event Information</h2>
-            <Field label="Event Name *" value={form.eventName ?? ""} onChange={set("eventName")} />
+            <h2 className="text-sm font-semibold text-[#111111]">Techfect Information</h2>
+            <Field label="Techfect Name *" value={form.eventName ?? ""} onChange={set("eventName")} />
             <div>
               <label className="text-xs text-[#5d5d5d] mb-1 block font-semibold">Description</label>
               <textarea value={form.eventDescription ?? ""}

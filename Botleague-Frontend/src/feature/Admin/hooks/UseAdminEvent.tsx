@@ -128,7 +128,7 @@ export const useAdminEvents = (
 
                 const message =
                     err?.response?.data?.message ||
-                    "Failed to fetch events"
+                    "Failed to fetch techfects"
 
                 setError(message)
 
@@ -167,7 +167,7 @@ export const useAdminEvents = (
 
                 const message =
                     err?.response?.data?.message ||
-                    "Failed to fetch event"
+                    "Failed to fetch techfect"
 
                 setError(message)
 
@@ -223,7 +223,7 @@ export const useAdminEvents = (
 
                 const message =
                     err?.response?.data?.message ||
-                    "Failed to fetch event sport"
+                    "Failed to fetch techsport"
 
                 setError(message)
 
@@ -262,7 +262,7 @@ export const useAdminEvents = (
 
                 const message =
                     err?.response?.data?.message ||
-                    "Failed to fetch event sports"
+                    "Failed to fetch techsports"
 
                 setError(message)
 
@@ -310,7 +310,7 @@ export const useAdminEvents = (
 
                 const message =
                     err?.response?.data?.message ||
-                    "Failed to create event"
+                    "Failed to create techfect"
 
                 setError(message)
 
@@ -475,7 +475,7 @@ const changeSportRegistrationStatus =
             setEvents(prev => prev.map(e => e.id === evtId ? response : e))
             return response
         } catch (err: any) {
-            const message = err?.response?.data?.message || "Failed to update event"
+            const message = err?.response?.data?.message || "Failed to update techfect"
             setError(message)
             throw new Error(message, { cause: err })
         } finally {
@@ -516,7 +516,7 @@ const changeSportRegistrationStatus =
             setEvents(prev => prev.filter(e => e.id !== evtId))
             setEvent(null)
         } catch (err: any) {
-            const message = err?.response?.data?.message || "Failed to delete event"
+            const message = err?.response?.data?.message || "Failed to delete techfect"
             setError(message)
             throw new Error(message, { cause: err })
         } finally {

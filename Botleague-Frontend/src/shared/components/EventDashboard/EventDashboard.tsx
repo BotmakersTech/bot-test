@@ -212,7 +212,7 @@ export default function EventDashboard({
           )}
         </div>
 
-        <h2 className="ed-section-title">EVENT DETAILS</h2>
+        <h2 className="ed-section-title">TECHFECT DETAILS</h2>
         <div className="ed-details-card">
           <DetailField label="Organization" value={event.organizationName} />
           <DetailField label="City" value={event.city} />
@@ -333,7 +333,7 @@ export default function EventDashboard({
 
         {eventSponsors && (
           <>
-            <h2 className="ed-section-title">EVENT SPONSORS</h2>
+            <h2 className="ed-section-title">TECHFECT SPONSORS</h2>
             {eventSponsors}
           </>
         )}

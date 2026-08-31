@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import {
   CalendarDays, Trophy, Users, Search, MapPin,
-  Activity, Clock, Zap, CheckCircle2, TrendingUp,
+  Activity, Clock, Zap, CheckCircle2, TrendingUp, Plus,
 } from "lucide-react"
 import {
   getMyEvents, getDashboardStats,
@@ -125,15 +125,15 @@ export default function OrganizerDashboard() {
   return (
     <div className="p-8" style={{ minHeight: "100vh", background: BG, fontFamily: "'Inter',sans-serif" }}>
       <div style={{ marginBottom: "24px" }}>
-        <h1 style={{ color: "#0162d1", fontFamily: "'Orbitron',sans-serif", fontSize: "clamp(20px,4vw,38px)", fontWeight: 500, margin: 0 }}>Events Dashboard</h1>
+        <h1 style={{ color: "#0162d1", fontFamily: "'Orbitron',sans-serif", fontSize: "clamp(20px,4vw,38px)", fontWeight: 500, margin: 0 }}>Techfects Dashboard</h1>
         <p style={{ color: MUTED, fontSize: "0.85rem", margin: "4px 0 0" }}>
-          {loading ? "Loading…" : `${events.length} event${events.length !== 1 ? "s" : ""} assigned to you`}
+          {loading ? "Loading…" : `${events.length} techfect${events.length !== 1 ? "s" : ""} assigned to you`}
         </p>
       </div>
 
       {stats && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "24px" }}>
-          <StatCard icon={<CalendarDays size={20} />} label="Total Events"    value={stats.totalEvents}        color={P}       />
+          <StatCard icon={<CalendarDays size={20} />} label="Total Techfects"    value={stats.totalEvents}        color={P}       />
           <StatCard icon={<Zap size={20} />}           label="Live"           value={stats.liveEvents}         color="#10b981" />
           <StatCard icon={<Clock size={20} />}          label="Upcoming"      value={stats.upcomingEvents}     color={BLUE}    />
           <StatCard icon={<Users size={20} />}          label="Registrations" value={stats.totalRegistrations} color="#f59e0b" />
@@ -148,13 +148,19 @@ export default function OrganizerDashboard() {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search events…"
+            placeholder="Search techfects…"
             style={{ width: "100%", paddingLeft: "36px", paddingRight: "12px", height: "40px", background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "10px", color: TEXT, fontSize: "0.85rem", outline: "none", boxSizing: "border-box" }}
           />
         </div>
         <button
-          onClick={() => navigate("/organizer/events")}
+          onClick={() => navigate("/organizer/events/create")}
           style={{ background: `linear-gradient(135deg,${BLUE},${P})`, color: "#fff", border: "none", borderRadius: "10px", padding: "0 18px", height: "40px", fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+        >
+          <Plus size={15} /> Create Techfect
+        </button>
+        <button
+          onClick={() => navigate("/organizer/events")}
+          style={{ background: "transparent", color: BLUE, border: `1.5px solid ${BORDER}`, borderRadius: "10px", padding: "0 18px", height: "40px", fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
         >
           <TrendingUp size={15} /> View All
         </button>
@@ -174,11 +180,11 @@ export default function OrganizerDashboard() {
       </div>
 
       {loading ? (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 0", color: MUTED }}>Loading events…</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 0", color: MUTED }}>Loading techfects…</div>
       ) : filtered.length === 0 ? (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 0", color: MUTED, gap: "8px" }}>
           <CalendarDays size={40} style={{ opacity: 0.25 }} />
-          <p style={{ margin: 0 }}>No events found</p>
+          <p style={{ margin: 0 }}>No techfects found</p>
         </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: "16px" }}>

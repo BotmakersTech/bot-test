@@ -9,8 +9,8 @@ const CARDS = [
   },
   {
     icon: <FaUsers />,
-    title: "Event Hosting & Partnerships",
-    desc: "Contact us regarding events, competitions and registrations.",
+    title: "Techfect Hosting & Partnerships",
+    desc: "Contact us regarding techfects, competitions and registrations.",
   },
   {
     icon: <FaHandshake />,

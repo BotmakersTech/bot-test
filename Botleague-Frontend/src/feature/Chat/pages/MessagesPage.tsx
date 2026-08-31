@@ -6,7 +6,7 @@ import {
   type ChangeEvent,
   type KeyboardEvent,
 } from "react";
-import { ChevronDown, ChevronLeft, Paperclip, Plus, Send, Trash2, UserPlus, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, Paperclip, Send, Trash2, UserPlus, X } from "lucide-react";
 import { useSelector } from "react-redux";
 
 import { useAppDispatch } from "../../../app/hooks";
@@ -105,7 +105,7 @@ function allRoomsFromList(rooms: ReturnType<typeof selectChatRooms>): ChatRoom[]
 type MessagesTab = "team" | "announcements";
 
 // "Team Chat" = team groups + the group created at event registration + direct messages.
-// "Event Announcement" = everything an organiser broadcasts (read-only for the recipient).
+// "Techfect Announcement" = everything an organiser broadcasts (read-only for the recipient).
 function roomsForTab(rooms: ReturnType<typeof selectChatRooms>, tab: MessagesTab): ChatRoom[] {
   if (!rooms) return [];
   return tab === "announcements"
@@ -390,9 +390,6 @@ export default function MessagesPage() {
             <ChevronDown size={16} strokeWidth={2.3} />
             <span>{unreadTotal || allRooms.length}</span>
           </div>
-          <button type="button" className="chat-add-button" aria-label="Start new chat">
-            <Plus size={26} strokeWidth={2.8} />
-          </button>
         </div>
 
         <div style={{ display: "flex", gap: "8px", padding: "12px 16px 12px" }}>

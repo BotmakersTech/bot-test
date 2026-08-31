@@ -31,7 +31,7 @@ export const useOrganizerSportDetail = (eventId?: string, sportId?: string) => {
       setEvent(response)
       return response
     } catch (err: any) {
-      const message = err?.response?.data?.message || "Failed to fetch event sport"
+      const message = err?.response?.data?.message || "Failed to fetch techsport"
       setError(message)
       throw new Error(message, { cause: err })
     } finally {

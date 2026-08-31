@@ -70,7 +70,7 @@ function SportAssignmentPanel({
   }
 
   if (sports.length === 0) {
-    return <p className="px-6 py-4 text-sm text-gray-400">No sports set up for this event yet.</p>
+    return <p className="px-6 py-4 text-sm text-gray-400">No sports set up for this techfect yet.</p>
   }
 
   return (
@@ -217,7 +217,7 @@ export default function AdminJudgeAssignmentPage() {
       setSelectedEventId("")
       await reload()
     } catch {
-      setError("Failed to assign event")
+      setError("Failed to assign techfect")
     } finally {
       setAssigning(false)
     }
@@ -266,7 +266,7 @@ export default function AdminJudgeAssignmentPage() {
         )}
 
         <div className="mb-6 rounded-2xl border p-6" style={{ borderColor: "rgba(75,134,232,0.25)", background: "#fff" }}>
-          <h2 className="mb-4 text-lg font-semibold" style={{ color: ORG.blueHeading, fontFamily: ORG.fontHeading }}>Assign to Event</h2>
+          <h2 className="mb-4 text-lg font-semibold" style={{ color: ORG.blueHeading, fontFamily: ORG.fontHeading }}>Assign to Techfect</h2>
           <div className="flex flex-wrap items-center gap-3">
             <select
               value={selectedEventId}
@@ -274,7 +274,7 @@ export default function AdminJudgeAssignmentPage() {
               className="min-w-[280px] flex-1 rounded-lg px-4 py-2.5 text-sm outline-none"
               style={{ border: `1px solid rgba(75,134,232,0.3)`, color: ORG.text }}
             >
-              <option value="">Select an event…</option>
+              <option value="">Select a techfect…</option>
               {availableEvents.map(ev => (
                 <option key={ev.id} value={ev.id}>{ev.eventName}</option>
               ))}
