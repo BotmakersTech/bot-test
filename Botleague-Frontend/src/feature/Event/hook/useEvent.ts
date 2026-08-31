@@ -37,6 +37,8 @@ export interface TeamMember {
   teamMemberId: string;
   membershipId: string;
   status: string;
+  /** ISO date of birth — used to hide members outside a techsport's age group. */
+  dateOfBirth?: string | null;
 }
 
 
@@ -181,6 +183,7 @@ const memberships = useAppSelector(
             membershipId:
               m.membershipId ?? m.teamMemberId ?? m.id ?? m.userId ?? "",
             status: m.status ?? "ACTIVE",
+            dateOfBirth: m.dateOfBirth ?? m.dob ?? null,
           });
         });
       }
@@ -212,6 +215,7 @@ const memberships = useAppSelector(
           teamMemberId: membership.id ?? membership.teamMemberId ?? membership.userId ?? "",
           membershipId: membership.id ?? membership.membershipId ?? membership.teamMemberId ?? membership.userId ?? "",
           status: membership.status ?? "ACTIVE",
+          dateOfBirth: membership.dateOfBirth ?? membership.dob ?? null,
         });
       }
     });

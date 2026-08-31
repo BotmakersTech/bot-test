@@ -6,6 +6,7 @@ import useRobots from "../../../Robots/hooks/useRobots";
 import type { Robot } from "../../../Robots/types/types";
 import type { EligibilityResponse } from "../../../Eligibility/api/eligibility.api";
 import { ageGroupLabel } from "../../../../shared/utils/ageGroup";
+import { fitsAgeGroup } from "../../../../shared/utils/ageCategory";
 import { weightClassToKg } from "../../../Robots/constants/weightClasses";
 import { constraintsFor } from "../../utils/specPolicy";
 
@@ -150,6 +151,14 @@ export default function RegistrationTab({
 
   const assignedMemberIds = new Set(pendingLineup.map((e) => e.membershipId));
   const takenRoles = new Set(pendingLineup.map((e) => e.role));
+
+  // Only members who can actually be in this techsport's age group are
+  // selectable — otherwise the pick fails on submit with "age mismatch".
+  const eligibleMembers = useMemo(
+    () => teamMembers.filter((m) => fitsAgeGroup(m.dateOfBirth, sport.ageGroup)),
+    [teamMembers, sport.ageGroup]
+  );
+  const hiddenForAge = teamMembers.length - eligibleMembers.length;
 
   const resetForm = () => {
     setSelectedRobotId("");
@@ -330,7 +339,7 @@ export default function RegistrationTab({
                   <div className="white-select">
                     <select value={regMember} onChange={(e) => setRegMember(e.target.value)}>
                       <option value="">Select member…</option>
-                      {teamMembers.map((m) => {
+                      {eligibleMembers.map((m) => {
                         const added = assignedMemberIds.has(m.membershipId);
                         const inactive = m.status !== "ACTIVE";
                         return (
@@ -355,6 +364,13 @@ export default function RegistrationTab({
                     <span>Add</span>
                   </button>
                 </div>
+
+                {hiddenForAge > 0 && (
+                  <p style={{ fontSize: 12.5, color: "#6b7280", marginTop: -6, marginBottom: 14 }}>
+                    <Info size={12} style={{ verticalAlign: -2, marginRight: 4 }} />
+                    {hiddenForAge} team member{hiddenForAge > 1 ? "s are" : " is"} hidden — not in the {ageGroupLabel(sport.ageGroup)} age group for this techsport.
+                  </p>
+                )}
 
                 {pendingLineup.length > 0 && (
                   <div style={{ marginBottom: 20 }}>

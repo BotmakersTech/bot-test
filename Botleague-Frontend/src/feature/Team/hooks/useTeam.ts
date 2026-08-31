@@ -305,6 +305,10 @@ const normalised =
           team.teamCode ??
           "",
 
+        dateOfBirth:
+          member.dateOfBirth ??
+          null,
+
         isActive:
           member.isActive ??
           true,

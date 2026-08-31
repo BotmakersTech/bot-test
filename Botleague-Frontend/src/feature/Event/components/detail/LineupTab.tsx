@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
-import { Lock, AlertTriangle, CheckCircle2, Check, LogIn } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Lock, AlertTriangle, CheckCircle2, Check, LogIn, Info } from "lucide-react";
 import type { EventSportResponse, EventRegistrationResponse, TeamLineUpResponse } from "../../api/event.api";
 import type { TeamMember } from "../../hook/useEvent";
+import { fitsAgeGroup } from "../../../../shared/utils/ageCategory";
+import { ageGroupLabel } from "../../../../shared/utils/ageGroup";
 
 const ACCENT = "#0162D1";
 const ACCENT2 = "#8C6CFF";
@@ -48,6 +50,14 @@ export default function LineupTab({
   onRequireLogin,
 }: LineupTabProps) {
   const [selectedMember, setSelectedMember] = useState("");
+
+  // Hide members who can't be in this techsport's age group — otherwise the
+  // add fails on submit with an "age mismatch".
+  const eligibleMembers = useMemo(
+    () => teamMembers.filter((m) => fitsAgeGroup(m.dateOfBirth, sport.ageGroup)),
+    [teamMembers, sport.ageGroup]
+  );
+  const hiddenForAge = teamMembers.length - eligibleMembers.length;
   const [lineupRole, setLineupRole] = useState("DRIVER");
 
   useEffect(() => {
@@ -188,7 +198,7 @@ export default function LineupTab({
           ) : (
             <>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 18 }}>
-                {teamMembers.map((m) => {
+                {eligibleMembers.map((m) => {
                   const isIn = inCurrentLineup.has(m.membershipId);
                   const isOther = !isIn && allAssigned.has(m.membershipId);
                   const isInactive = !isIn && !isOther && m.status !== "ACTIVE";
@@ -218,6 +228,13 @@ export default function LineupTab({
                   );
                 })}
               </div>
+
+              {hiddenForAge > 0 && (
+                <p style={{ fontSize: 12.5, color: "#6b7280", marginTop: -8, marginBottom: 16 }}>
+                  <Info size={12} style={{ verticalAlign: -2, marginRight: 4 }} />
+                  {hiddenForAge} team member{hiddenForAge > 1 ? "s are" : " is"} hidden — not in the {ageGroupLabel(sport.ageGroup)} age group for this techsport.
+                </p>
+              )}
 
               {selectedMember && (
                 <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
