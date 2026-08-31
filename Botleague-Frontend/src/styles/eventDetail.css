@@ -1282,6 +1282,30 @@
 .evd-page .gradient-select select:hover { transform: translateY(-2px); box-shadow: 0 14px 25px rgba(17, 124, 255, .40); }
 .evd-page .white-select select:hover { border-color: #7D63FF; }
 
+/* The native dropdown list inherits the <select>'s text colour — so the
+   white-on-gradient "gradient-select" renders white-on-white options that
+   are invisible until a row is hovered. Pin every option list to
+   readable dark-on-light regardless of the closed control's colour. */
+.evd-page .gradient-select select option,
+.evd-page .white-select select option,
+.evd-page .lineup-select option {
+    color: #111827;
+    background: #ffffff;
+    font-weight: 500;
+    padding: 8px 12px;
+}
+.evd-page .gradient-select select option:disabled,
+.evd-page .white-select select option:disabled,
+.evd-page .lineup-select option:disabled {
+    color: #9ca3af;
+}
+.evd-page .gradient-select select option:checked,
+.evd-page .white-select select option:checked,
+.evd-page .lineup-select option:checked {
+    background: #eef4ff;
+    color: #0e5fd7;
+}
+
 .evd-page .add-box {
     width: 100%;
     height: 72px;

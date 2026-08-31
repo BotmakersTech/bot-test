@@ -278,6 +278,18 @@
   transition: .35s;
 }
 
+/* Options inherit the select's white text over its gradient — force the
+   dropdown list back to readable dark-on-light. */
+.adb-status-select option {
+  color: #111827;
+  background: #ffffff;
+  font-weight: 500;
+}
+.adb-status-select option:checked {
+  background: #eef4ff;
+  color: #0e5fd7;
+}
+
 .adb-status-select:hover {
   box-shadow: 0 15px 30px rgba(1, 98, 209, .30);
 }
