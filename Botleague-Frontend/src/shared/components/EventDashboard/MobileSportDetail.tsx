@@ -77,6 +77,8 @@ interface MobileSportDetailProps {
   regActionError?: string | null
   onTeamStatusChange?: (registrationId: string, status: string) => void
   onMessageTeam?: (teamId: string) => void
+  /** Bracket already drawn — reject/waitlist are frozen. */
+  rosterLocked?: boolean
 }
 
 function toLabel(raw?: string | null): string {
@@ -95,12 +97,13 @@ function formatDate(val?: string | null): string {
 }
 
 function TeamCard({
-  team, index, onStatusChange, onMessage,
+  team, index, onStatusChange, onMessage, rosterLocked,
 }: {
   team: MobileSportTeamItem
   index: number
   onStatusChange?: (registrationId: string, status: string) => void
   onMessage?: (teamId: string) => void
+  rosterLocked?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const status = team.status?.toUpperCase()
@@ -135,7 +138,7 @@ function TeamCard({
             </div>
           )}
           <div className="ssd-m-team-actions">
-            {status === "REGISTERED" && onStatusChange && (
+            {status === "REGISTERED" && onStatusChange && !rosterLocked && (
               <>
                 <button type="button" className="ssd-m-team-action-btn wait" onClick={() => onStatusChange(team.id, "WAITLISTED")}>Waitlist</button>
                 <button type="button" className="ssd-m-team-action-btn reject" onClick={() => onStatusChange(team.id, "REJECTED")}><Ban size={11} /> Reject</button>
@@ -162,7 +165,7 @@ export default function MobileSportDetail({
   ageGroup, weightClass, weightLimitKg, teamSizeLabel, prizeDistribution,
   registrationStartDate, registrationEndDate,
   matchActions, onCertificates, showPublish, onPublish, publishing,
-  teams, regActionError, onTeamStatusChange, onMessageTeam,
+  teams, regActionError, onTeamStatusChange, onMessageTeam, rosterLocked,
 }: MobileSportDetailProps) {
   const hasRegWindow = !!registrationStartDate && !!registrationEndDate
 
@@ -294,7 +297,7 @@ export default function MobileSportDetail({
         ) : (
           <div className="ssd-m-teams-scroll">
             {teams.map((team, i) => (
-              <TeamCard key={team.id} team={team} index={i} onStatusChange={onTeamStatusChange} onMessage={onMessageTeam} />
+              <TeamCard key={team.id} team={team} index={i} onStatusChange={onTeamStatusChange} onMessage={onMessageTeam} rosterLocked={rosterLocked} />
             ))}
           </div>
         )}

@@ -229,14 +229,18 @@ export default function OrganizerRegistrationsPage() {
                             style={{ background: "rgba(75,134,232,0.1)", border: "1px solid rgba(75,134,232,0.3)", color: "#3567cf", borderRadius: "6px", padding: "4px 10px", fontSize: "0.72rem", fontWeight: 600, cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.5 : 1 }}>
                             Check In
                           </button>
-                          <button onClick={() => handleStatusChange(r, "WAITLISTED")} disabled={busy}
-                            style={{ background: "rgba(234,179,8,0.1)", border: "1px solid rgba(234,179,8,0.3)", color: "#a16207", borderRadius: "6px", padding: "4px 10px", fontSize: "0.72rem", fontWeight: 600, cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.5 : 1 }}>
-                            Waitlist
-                          </button>
-                          <button onClick={() => handleStatusChange(r, "REJECTED")} disabled={busy}
-                            style={{ background: "rgba(224,75,75,0.1)", border: "1px solid rgba(224,75,75,0.3)", color: "#e04b4b", borderRadius: "6px", padding: "4px 10px", fontSize: "0.72rem", fontWeight: 600, cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.5 : 1 }}>
-                            Reject
-                          </button>
+                          {!selectedSport?.bracketGenerated && (
+                            <>
+                              <button onClick={() => handleStatusChange(r, "WAITLISTED")} disabled={busy}
+                                style={{ background: "rgba(234,179,8,0.1)", border: "1px solid rgba(234,179,8,0.3)", color: "#a16207", borderRadius: "6px", padding: "4px 10px", fontSize: "0.72rem", fontWeight: 600, cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.5 : 1 }}>
+                                Waitlist
+                              </button>
+                              <button onClick={() => handleStatusChange(r, "REJECTED")} disabled={busy}
+                                style={{ background: "rgba(224,75,75,0.1)", border: "1px solid rgba(224,75,75,0.3)", color: "#e04b4b", borderRadius: "6px", padding: "4px 10px", fontSize: "0.72rem", fontWeight: 600, cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.5 : 1 }}>
+                                Reject
+                              </button>
+                            </>
+                          )}
                         </>
                       )}
                       {status === "WAITLISTED" && (

@@ -48,6 +48,19 @@ public interface EventRegistrationLineupRepository
     );
 
     // ----------------------------------------------------------
+    // USED BY: addMember() – one-robot-per-techsport check
+    //   A person may be in AT MOST ONE robot's lineup within a single
+    //   event sport. Any active row for this membership in the same
+    //   eventSport but a DIFFERENT robot blocks the assignment.
+    // ----------------------------------------------------------
+    boolean existsByEventSportIdAndTeamMembershipIdAndRobotIdNotAndIsActive(
+            UUID eventSportId,
+            UUID teamMembershipId,
+            UUID robotId,
+            Boolean isActive
+    );
+
+    // ----------------------------------------------------------
     // USED BY: addMember() – roster size cap
     //   Counts active people already in a robot's lineup.
     // ----------------------------------------------------------
