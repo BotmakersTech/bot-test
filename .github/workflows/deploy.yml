@@ -20,8 +20,16 @@ jobs:
           java-version: 25
           cache: maven
 
+      # -DskipTests to match botleague-backend/Dockerfile's build stage exactly.
+      # The only test is BotleagueBackendApplicationTests.contextLoads, a full
+      # @SpringBootTest that boots the app — Flyway then runs V1 (`ALTER TABLE
+      # matches ...`), which assumes the pre-Flyway ddl-auto baseline schema is
+      # already present and fails on an empty CI database. That made build-check
+      # fail on every push, so `deploy` (needs: build-check) never ran. The
+      # deployable image is built with -DskipTests too, so this gate now checks
+      # the same thing the deploy actually builds.
       - name: Build backend
-        run: mvn package -B -q
+        run: mvn package -DskipTests -B -q
         working-directory: botleague-backend
 
       - name: Set up Node 20
