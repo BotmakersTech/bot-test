@@ -11,6 +11,7 @@ import { type CreateEventSportRequest } from "../api/admin.api"
 import { getPublicLeagueSports, toWeightClasses, type LeagueSport } from "../../../shared/api/catalog.api"
 import { formatWeightClass, weightClassToKg } from "../../Robots/constants/weightClasses"
 import { ageGroupLabel } from "../../../shared/utils/ageGroup"
+import { constraintsFor } from "../../Event/utils/specPolicy"
 import PrizeDistributionEditor from "../../../shared/components/PrizeDistributionEditor"
 import { formatPrizePosition, prizeDistributionBalanced, sumPrizeMoney, formatINR, type PrizePosition } from "../../../shared/utils/prize"
 import { useLeagues, formatAgeRange, type PresentedLeague } from "../../../temp/pages/leagues/useLeagues"
@@ -450,10 +451,32 @@ function EditSportModal({
   const [leagueSports, setLeagueSports] = React.useState<LeagueSport[]>([])
   const selectedLeague = leagues.find(l => l.ageGroupValue === form.ageGroup) ?? null
 
+  // Which physical spec this (league, techsport) actually constrains, and the
+  // catalog row that defines the "max" values for it.
+  const specs = constraintsFor(form.ageGroup, form.sport)
+  const catalogSpec = leagueSports.find(s => s.sportName === form.sport) ?? null
+
   React.useEffect(() => {
     if (!selectedLeague) { setLeagueSports([]); return }
     getPublicLeagueSports(selectedLeague.slug).then(setLeagueSports).catch(() => setLeagueSports([]))
   }, [selectedLeague])
+
+  // Auto-fill the constraint's max values from the catalog when the form has
+  // none yet — the same way a numeric weight class fills the weight limit.
+  React.useEffect(() => {
+    if (!catalogSpec) return
+    setForm(prev => {
+      const next = { ...prev }
+      if (specs.weight && next.weightLimitKg == null && catalogSpec.weightLimitKg != null) next.weightLimitKg = catalogSpec.weightLimitKg
+      if (specs.dimension) {
+        if (next.maxLengthCm == null && catalogSpec.maxLengthCm != null) next.maxLengthCm = catalogSpec.maxLengthCm
+        if (next.maxWidthCm == null && catalogSpec.maxWidthCm != null) next.maxWidthCm = catalogSpec.maxWidthCm
+        if (next.maxHeightCm == null && catalogSpec.maxHeightCm != null) next.maxHeightCm = catalogSpec.maxHeightCm
+      }
+      return next
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [catalogSpec?.id, specs.weight, specs.dimension])
 
   const set = (field: keyof EditForm, value: unknown) =>
     setForm(prev => ({ ...prev, [field]: value }))
@@ -471,8 +494,9 @@ function EditSportModal({
 
       const dist = (form.prizeDistribution ?? []).filter(p =>
         p.type === "GOODIES" ? (p.description ?? "").trim() !== "" : p.amount != null)
-      if (dist.length > 0 && !prizeDistributionBalanced(form.prizeMoney ?? 0, dist)) {
-        setSaveError(`Prize distribution money (${formatINR(sumPrizeMoney(dist))}) must equal the Prize Money pool (${formatINR(form.prizeMoney ?? 0)}).`)
+      const cash = dist.filter(p => p.type === "MONEY")
+      if (cash.length > 0 && !prizeDistributionBalanced(form.prizeMoney ?? 0, cash)) {
+        setSaveError(`Cash prizes (${formatINR(sumPrizeMoney(cash))}) must add up to the Prize Money pool (${formatINR(form.prizeMoney ?? 0)}). Goodies are extra and don't count.`)
         return
       }
 
@@ -630,7 +654,7 @@ function EditSportModal({
             return (
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                 <div style={groupStyle}>
-                  <label style={labelStyle}>Weight Class</label>
+                  <label style={labelStyle}>Weight Class{specs.weight ? "" : " (optional)"}</label>
                   <select
                     style={inputStyle}
                     value={form.weightClass ?? ""}
@@ -649,38 +673,36 @@ function EditSportModal({
                   </select>
                 </div>
                 <div style={groupStyle}>
-                  <label style={labelStyle}>Weight Limit (kg)</label>
+                  <label style={labelStyle}>Weight Limit (kg){specs.weight ? "" : " (optional)"}</label>
                   {classKg != null ? (
                     <input type="text" readOnly style={{ ...inputStyle, background: "#f3f4f6", color: MUTED }} value={`${classKg} (from weight class)`} />
                   ) : (
-                    <input type="number" min={0} step="any" style={inputStyle} value={form.weightLimitKg ?? ""} onChange={e => setNum("weightLimitKg", e.target.value)} placeholder="e.g. 1.5" />
+                    <input type="number" min={0} step="any" style={inputStyle} value={form.weightLimitKg ?? ""} onChange={e => setNum("weightLimitKg", e.target.value)} placeholder={specs.weight ? "e.g. 1.5" : "optional"} />
                   )}
                 </div>
               </div>
             )
           })()}
 
-          {/* Row 5: Dimensions */}
+          {/* Row 5: Dimensions — the real constraint for some techsports, optional otherwise */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
-            <div style={groupStyle}>
-              <label style={labelStyle}>Max Length (cm)</label>
-              <input type="number" min={0} style={inputStyle} value={form.maxLengthCm ?? ""} onChange={e => setNum("maxLengthCm", e.target.value)} />
-            </div>
-            <div style={groupStyle}>
-              <label style={labelStyle}>Max Width (cm)</label>
-              <input type="number" min={0} style={inputStyle} value={form.maxWidthCm ?? ""} onChange={e => setNum("maxWidthCm", e.target.value)} />
-            </div>
-            <div style={groupStyle}>
-              <label style={labelStyle}>Max Height (cm)</label>
-              <input type="number" min={0} style={inputStyle} value={form.maxHeightCm ?? ""} onChange={e => setNum("maxHeightCm", e.target.value)} />
-            </div>
+            {([["Max Length (cm)", "maxLengthCm"], ["Max Width (cm)", "maxWidthCm"], ["Max Height (cm)", "maxHeightCm"]] as const).map(([lbl, field]) => (
+              <div style={groupStyle} key={field}>
+                <label style={labelStyle}>{lbl}{specs.dimension ? "" : " (optional)"}</label>
+                <input type="number" min={0} style={inputStyle} value={form[field] ?? ""} placeholder={specs.dimension ? "" : "optional"} onChange={e => setNum(field, e.target.value)} />
+              </div>
+            ))}
           </div>
+          {specs.dimension && (
+            <div style={{ fontSize: "0.72rem", color: MUTED, marginTop: -8 }}>Dimensions are this techsport's spec — pre-filled from the catalog, edit if this event differs.</div>
+          )}
 
-          {/* Row 6: Team Size + Max Teams */}
+          {/* Row 6: Max team size */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
             <div style={groupStyle}>
-              <label style={labelStyle}>Team Size (players)</label>
+              <label style={labelStyle}>Max Team Size (players)</label>
               <input type="number" min={1} style={inputStyle} value={form.maxTeamSize ?? ""} onChange={e => setNum("maxTeamSize", e.target.value)} />
+              <span style={{ fontSize: "0.72rem", color: MUTED }}>Most players a team can field in a lineup / registration.</span>
             </div>
           </div>
 

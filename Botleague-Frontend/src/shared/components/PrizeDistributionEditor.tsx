@@ -1,19 +1,19 @@
-import { Plus, X } from "lucide-react";
+import { Plus, X, Gift } from "lucide-react";
 import {
   positionLabel,
   sumPrizeMoney,
   formatINR,
   prizeDistributionBalanced,
   type PrizePosition,
-  type PrizeType,
 } from "../utils/prize";
 
 interface Props {
-  /** The sport's total Prize Pool (₹). The MONEY rows must add up to this. */
+  /** The techsport's Prize Pool (₹). The CASH rows must add up to this;
+   *  goodies are extra and never counted against it. */
   poolAmount: number;
   positions: PrizePosition[];
   onChange: (next: PrizePosition[]) => void;
-  /** hide the "Distributed / Pool" reconciliation line (e.g. read-only preview) */
+  /** hide the "cash prizes / pool" reconciliation line (e.g. read-only preview) */
   hideBalance?: boolean;
 }
 
@@ -34,61 +34,73 @@ const cell: React.CSSProperties = {
   fontSize: 13,
   background: "#fff",
 };
-const posBadge: React.CSSProperties = {
-  minWidth: 38,
+const badge: React.CSSProperties = {
+  minWidth: 46,
   textAlign: "center",
   fontWeight: 700,
-  fontSize: 12,
+  fontSize: 11,
   color: "#4b5563",
+};
+const addBtn: React.CSSProperties = {
+  ...cell,
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  fontWeight: 600,
 };
 
 export default function PrizeDistributionEditor({ poolAmount, positions, onChange, hideBalance }: Props) {
   const rows: PrizePosition[] =
     positions.length > 0 ? positions : [{ position: 1, type: "MONEY", amount: undefined }];
 
-  const moneyTotal = sumPrizeMoney(rows);
-  const balanced = prizeDistributionBalanced(poolAmount, rows);
+  // Cash placings first, goodies (extras) after — one flat list for the API.
+  const ordered = [...rows].sort((a, b) => (a.type === b.type ? 0 : a.type === "MONEY" ? -1 : 1));
 
-  const renumber = (list: PrizePosition[]) => list.map((r, i) => ({ ...r, position: i + 1 }));
+  const moneyTotal = sumPrizeMoney(ordered);
+  const cashOnly = ordered.filter((r) => r.type === "MONEY");
+  const hasGoodies = ordered.some((r) => r.type === "GOODIES");
+  const balanced = prizeDistributionBalanced(poolAmount, cashOnly);
 
+  const commit = (list: PrizePosition[]) => onChange(list.map((r, i) => ({ ...r, position: i + 1 })));
   const setRow = (i: number, patch: Partial<PrizePosition>) =>
-    onChange(rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+    commit(ordered.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+  const removeRow = (i: number) => commit(ordered.filter((_, idx) => idx !== i));
+  const addCash = () => commit([...ordered, { position: 0, type: "MONEY", amount: undefined }]);
+  const addGoodies = () => commit([...ordered, { position: 0, type: "GOODIES", description: "" }]);
 
-  const addRow = () =>
-    onChange([...rows, { position: rows.length + 1, type: "MONEY", amount: undefined }]);
-
-  const removeRow = (i: number) => onChange(renumber(rows.filter((_, idx) => idx !== i)));
+  let moneyRank = 0;
 
   return (
     <div style={wrap}>
-      {rows.map((r, i) => (
-        <div key={i} style={rowStyle}>
-          <span style={posBadge}>{positionLabel(r.position)}</span>
+      {ordered.map((r, i) => {
+        const isCash = r.type === "MONEY";
+        if (isCash) moneyRank += 1;
+        return (
+          <div key={i} style={rowStyle}>
+            <span style={badge}>{isCash ? positionLabel(moneyRank) : "Extra"}</span>
+            <span
+              style={{
+                ...cell,
+                fontWeight: 700,
+                color: isCash ? "#2563eb" : "#7c5cff",
+                background: isCash ? "#eef4ff" : "#f4f0ff",
+              }}
+            >
+              {isCash ? "Cash" : "Goodies"}
+            </span>
 
-          <select
-            style={{ ...cell, cursor: "pointer" }}
-            value={r.type}
-            onChange={(e) => {
-              const type = e.target.value as PrizeType;
-              setRow(i, { type, amount: type === "MONEY" ? r.amount : undefined, description: type === "GOODIES" ? r.description : undefined });
-            }}
-          >
-            <option value="MONEY">Money</option>
-            <option value="GOODIES">Goodies</option>
-          </select>
-
-          {r.type === "MONEY" ? (
-            <input
-              type="number"
-              min={0}
-              step="any"
-              placeholder="₹ amount"
-              style={{ ...cell, flex: 1, minWidth: 120 }}
-              value={r.amount ?? ""}
-              onChange={(e) => setRow(i, { amount: e.target.value === "" ? undefined : Number(e.target.value) })}
-            />
-          ) : (
-            <>
+            {isCash ? (
+              <input
+                type="number"
+                min={0}
+                step="any"
+                placeholder="₹ amount"
+                style={{ ...cell, flex: 1, minWidth: 120 }}
+                value={r.amount ?? ""}
+                onChange={(e) => setRow(i, { amount: e.target.value === "" ? undefined : Number(e.target.value) })}
+              />
+            ) : (
               <input
                 type="text"
                 placeholder="e.g. Trophy + robotics kit"
@@ -96,45 +108,36 @@ export default function PrizeDistributionEditor({ poolAmount, positions, onChang
                 value={r.description ?? ""}
                 onChange={(e) => setRow(i, { description: e.target.value })}
               />
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#7c5cff", whiteSpace: "nowrap" }}>+ extra</span>
-            </>
-          )}
+            )}
 
-          {rows.length > 1 && (
-            <button
-              type="button"
-              onClick={() => removeRow(i)}
-              aria-label={`Remove ${positionLabel(r.position)} prize`}
-              style={{ ...cell, cursor: "pointer", padding: "7px", color: "#dc2626", background: "#fff" }}
-            >
-              <X size={14} />
-            </button>
-          )}
-        </div>
-      ))}
+            {ordered.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeRow(i)}
+                aria-label={`Remove ${isCash ? positionLabel(moneyRank) : "extra"} prize`}
+                style={{ ...cell, cursor: "pointer", padding: "7px", color: "#dc2626", background: "#fff" }}
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+        );
+      })}
 
-      <button
-        type="button"
-        onClick={addRow}
-        style={{
-          ...cell,
-          alignSelf: "flex-start",
-          cursor: "pointer",
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 6,
-          fontWeight: 600,
-          color: "#2563eb",
-        }}
-      >
-        <Plus size={14} /> Add position
-      </button>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button type="button" onClick={addCash} style={{ ...addBtn, color: "#2563eb" }}>
+          <Plus size={14} /> Add cash placing
+        </button>
+        <button type="button" onClick={addGoodies} style={{ ...addBtn, color: "#7c5cff" }}>
+          <Gift size={14} /> Add goodies (extra)
+        </button>
+      </div>
 
       {!hideBalance && (
         <div style={{ fontSize: 12, fontWeight: 600, color: balanced ? "#16a34a" : "#dc2626" }}>
           Cash prizes {formatINR(moneyTotal)} of {formatINR(poolAmount)} pool
           {balanced ? " ✓" : " — cash placings must add up to the pool"}
-          {rows.some((r) => r.type === "GOODIES") && (
+          {hasGoodies && (
             <span style={{ color: "#6b7280", fontWeight: 500 }}> · goodies are extra, not part of the pool</span>
           )}
         </div>
