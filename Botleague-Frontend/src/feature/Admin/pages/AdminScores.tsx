@@ -343,7 +343,7 @@ const [showScores, setShowScores] =
                 fontSize: "1rem",
               }}
             >
-              <option>Select Sport</option>
+              <option>Select Techsport</option>
 
               <option>
                 RoboWars

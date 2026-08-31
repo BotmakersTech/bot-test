@@ -192,7 +192,7 @@ export default function MobileRobotBuild({
                     <span className="font-semibold text-[#4d4d4d]">{getWeight(robot)}</span>
                   </div>
                   <div className="text-[13px]">
-                    <span className="text-[#a2a2a2]">Sports - </span>
+                    <span className="text-[#a2a2a2]">Techsports - </span>
                     <span className="font-semibold text-[#4d4d4d]">{toLabel(robot.sport)}</span>
                   </div>
                   <button

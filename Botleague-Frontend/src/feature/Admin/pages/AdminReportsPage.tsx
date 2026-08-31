@@ -129,7 +129,7 @@ export default function AdminReportsPage() {
                     <div className="grid grid-cols-2 gap-3 mb-4">
                       <div className="rounded-lg bg-[#f8f9ff] p-3 text-center">
                         <p className="text-lg font-bold text-orange-600">{evSports}</p>
-                        <p className="text-[10px] text-gray-400 uppercase mt-0.5">Sports</p>
+                        <p className="text-[10px] text-gray-400 uppercase mt-0.5">Techsports</p>
                       </div>
                       <div className="rounded-lg bg-[#f8f9ff] p-3 text-center">
                         <p className="text-lg font-bold text-blue-600">{evTeams}</p>

@@ -94,7 +94,7 @@ export default function MobileRobotProfile({
           <div className="mrp-info-list">
             <p className="mrp-info-item">BotID - <b>{botId || "-"}</b></p>
             <p className="mrp-info-item">Weight - <b>{weightLabel}</b></p>
-            <p className="mrp-info-item">Sports - <b>{sportLabel}</b></p>
+            <p className="mrp-info-item">Techsports - <b>{sportLabel}</b></p>
 
             <div className="mrp-actions">
               <button type="button" className="mrp-action-btn" onClick={onShare}>
@@ -147,7 +147,7 @@ export default function MobileRobotProfile({
           <div className="mrp-table-head">
             <span className="mrp-col-tournament">Tournament</span>
             <span className="mrp-col-points">Points</span>
-            <span className="mrp-col-sport">Sports</span>
+            <span className="mrp-col-sport">Techsports</span>
             <span className="mrp-col-position">Position</span>
           </div>
 

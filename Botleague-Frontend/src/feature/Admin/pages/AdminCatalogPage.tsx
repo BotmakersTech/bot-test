@@ -527,7 +527,7 @@ function PairingsTable({
           <thead>
             <tr style={{ background: ORG.gradientPill }}>
               <th className="px-4 py-3.5 text-left font-semibold text-white">League</th>
-              <th className="px-4 py-3.5 text-left font-semibold text-white">Sport</th>
+              <th className="px-4 py-3.5 text-left font-semibold text-white">Techsport</th>
               <th className="px-4 py-3.5 text-left font-semibold text-white">Spec</th>
               <th className="px-4 py-3.5 text-left font-semibold text-white">Note</th>
               <th className="px-4 py-3.5 text-center font-semibold text-white">Status</th>
@@ -679,7 +679,7 @@ function PairingFormOverlay({
             ))}
           </select>
         </Field>
-        <Field label="Sport">
+        <Field label="Techsport">
           <select className={inputCls} value={sportId} onChange={(e) => setSportId(e.target.value)} disabled={!!pairing}>
             {sports.map((s) => (
               <option key={s.id} value={s.id}>

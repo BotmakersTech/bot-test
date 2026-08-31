@@ -54,7 +54,7 @@ export const NAV_CONFIG: NavItem[] = [
   { id: "og-dash",       label: "Dashboard",          link: "/organizer-dashboard",      iconName: "dashboard",     roles: [ORGR] },
   { id: "og-events",     label: "Techfect Management",   link: "/organizer/events",         iconName: "calendar",      roles: [ORGR] },
   { id: "og-create",     label: "Create Techfect",       link: "/organizer/events/create",  iconName: "calendar",      roles: [ORGR] },
-  { id: "og-sports",     label: "All Sports",         link: "/organizer/sports",         iconName: "sports",        roles: [ORGR] },
+  { id: "og-sports",     label: "All Techsports",         link: "/organizer/sports",         iconName: "sports",        roles: [ORGR] },
   { id: "og-reg",        label: "Registrations",      link: "/organizer/registrations",  iconName: "users",         roles: [ORGR] },
   { id: "og-matches",    label: "Matches",            link: "/organizer/matches",        iconName: "matches",       roles: [ORGR] },
   { id: "og-sched",      label: "Schedule",           link: "/organizer/schedule",       iconName: "schedule",      roles: [ORGR] },
@@ -81,7 +81,7 @@ export const NAV_CONFIG: NavItem[] = [
   { id: "o-dash",       label: "Dashboard",          link: "/organizer-dashboard",      iconName: "dashboard",     roles: [ORG] },
   { id: "o-events",     label: "Techfect Management",   link: "/organizer/events",         iconName: "calendar",      roles: [ORG] },
   { id: "o-create",     label: "Create Techfect",       link: "/organizer/events/create",  iconName: "calendar",      roles: [ORG] },
-  { id: "o-sports",     label: "All Sports",         link: "/organizer/sports",         iconName: "sports",        roles: [ORG] },
+  { id: "o-sports",     label: "All Techsports",         link: "/organizer/sports",         iconName: "sports",        roles: [ORG] },
   { id: "o-reg",        label: "Registrations",      link: "/organizer/registrations",  iconName: "users",         roles: [ORG] },
   { id: "o-matches",    label: "Matches",            link: "/organizer/matches",        iconName: "matches",       roles: [ORG] },
   { id: "o-sched",      label: "Schedule",           link: "/organizer/schedule",       iconName: "schedule",      roles: [ORG] },
@@ -106,7 +106,7 @@ export const NAV_CONFIG: NavItem[] = [
   // SPORT_HEAD  — sport-level management within an event
   // ══════════════════════════════════════════════════════════════════════════
   { id: "sub-dash",    label: "Dashboard",           link: "/organizer-dashboard",      iconName: "dashboard",  roles: [SUB] },
-  { id: "sub-sports",  label: "My Sports",           link: "/organizer/my-sports",      iconName: "sports",     roles: [SUB] },
+  { id: "sub-sports",  label: "My Techsports",           link: "/organizer/my-sports",      iconName: "sports",     roles: [SUB] },
   { id: "sub-reg",     label: "Registrations",       link: "/organizer/registrations",  iconName: "users",      roles: [SUB] },
   { id: "sub-matches", label: "Matches",             link: "/organizer/matches",        iconName: "matches",    roles: [SUB] },
   { id: "sub-scores",  label: "Scores",              link: "/organizer/scores",         iconName: "rankings",   roles: [SUB] },

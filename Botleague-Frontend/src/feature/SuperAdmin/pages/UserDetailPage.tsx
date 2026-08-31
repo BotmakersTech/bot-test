@@ -398,7 +398,7 @@ export default function UserDetailPage() {
           {/* ── Sports tab ── */}
           {!loading && tab === "sports" && (
             <div className="adp-form-card">
-              <p className="adp-section-label">Assign Sport</p>
+              <p className="adp-section-label">Assign Techsport</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
                 <select
                   value={selectedEventId}

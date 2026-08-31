@@ -223,7 +223,7 @@ export default function OrganizerVenuePage() {
           <input type="number" placeholder="Capacity" value={arenaForm.capacity ?? ""}
             onChange={e => setArenaForm(p => ({ ...p, capacity: e.target.value ? Number(e.target.value) : undefined }))}
             className="rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none" />
-          <input type="text" placeholder="Sport type (optional)" value={arenaForm.sportType ?? ""}
+          <input type="text" placeholder="Techsport type (optional)" value={arenaForm.sportType ?? ""}
             onChange={e => setArenaForm(p => ({ ...p, sportType: e.target.value }))}
             className="rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none" />
           <input type="text" placeholder="Location notes (optional)" value={arenaForm.locationNotes ?? ""}
@@ -280,7 +280,7 @@ export default function OrganizerVenuePage() {
                 className="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none" />
             </div>
             <div>
-              <label className="text-xs text-[#5d5d5d] mb-1 block font-semibold">Sport Type</label>
+              <label className="text-xs text-[#5d5d5d] mb-1 block font-semibold">Techsport Type</label>
               <input type="text" value={editingArena.sportType ?? ""}
                 onChange={e => setEditingArena(prev => prev ? { ...prev, sportType: e.target.value } : prev)}
                 className="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none" />

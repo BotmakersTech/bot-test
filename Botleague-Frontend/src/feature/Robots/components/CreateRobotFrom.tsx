@@ -274,7 +274,7 @@ export default function CreateRobotForm({ onSuccess, onCancel }: Props) {
       <section className="robot-create-section">
         <div className="robot-create-section-title">
           <span>2</span>
-          <strong>Select Sport</strong>
+          <strong>Select Techsport</strong>
         </div>
 
         <div className="robot-competition-grid">

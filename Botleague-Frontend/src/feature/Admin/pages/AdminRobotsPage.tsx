@@ -72,7 +72,7 @@ function CreateRobotModal({ onClose, onCreated }: { onClose: () => void; onCreat
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><label className={lbl}>Robot Type</label><select className={sel} value={form.robotType} onChange={e=>set("robotType",e.target.value)}>{ROBOT_TYPES_CREATE.map(r=><option key={r} value={r}>{r.replace(/_/g," ")}</option>)}</select></div>
-            <div><label className={lbl}>Sport</label><select className={sel} value={form.sport} onChange={e=>setSport(e.target.value)}>{SPORTS_CREATE.map(s=><option key={s} value={s}>{s.replace(/_/g," ")}</option>)}</select></div>
+            <div><label className={lbl}>Techsport</label><select className={sel} value={form.sport} onChange={e=>setSport(e.target.value)}>{SPORTS_CREATE.map(s=><option key={s} value={s}>{s.replace(/_/g," ")}</option>)}</select></div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div><label className={lbl}>Age Category</label><select className={sel} value={form.ageCategory} onChange={e=>set("ageCategory",e.target.value)}>{AGE_CATS.map(a=><option key={a} value={a}>{a.replace(/_/g," ")}</option>)}</select></div>
@@ -292,7 +292,7 @@ export default function AdminRobotsPage() {
                   <th className="px-5 py-4 font-semibold text-white">Robot</th>
                   <th className="hidden px-5 py-4 font-semibold text-white sm:table-cell">Code</th>
                   <th className="hidden px-5 py-4 font-semibold text-white md:table-cell">Type</th>
-                  <th className="hidden px-5 py-4 font-semibold text-white md:table-cell">Sport</th>
+                  <th className="hidden px-5 py-4 font-semibold text-white md:table-cell">Techsport</th>
                   <th className="hidden px-5 py-4 font-semibold text-white lg:table-cell">Team</th>
                   <th className="hidden px-5 py-4 font-semibold text-white lg:table-cell">Weight</th>
                   <th className="px-5 py-4 text-center font-semibold text-white">Status</th>

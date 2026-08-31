@@ -258,7 +258,7 @@ export default function AdminRobotDetailPage() {
           {tab === "specs" && (
             <div className="adp-form-card">
               <Field label="Robot Type"   value={robot.robotType?.replace(/_/g, " ")} />
-              <Field label="Sport"        value={robot.sport?.replace(/_/g, " ")} />
+              <Field label="Techsport"        value={robot.sport?.replace(/_/g, " ")} />
               <Field label="Control Type" value={robot.controlType} />
               <Field label="Control Mode" value={robot.controlMode} />
               <Field label="Weight Class" value={formatWeightClass(robot.weightClass) || undefined} />
@@ -276,7 +276,7 @@ export default function AdminRobotDetailPage() {
               )}
               {robot.attributes && Object.keys(robot.attributes).length > 0 && (
                 <div style={{ marginTop: 20 }}>
-                  <p className="adp-section-label">Sport-specific attributes</p>
+                  <p className="adp-section-label">Techsport-specific attributes</p>
                   {Object.entries(robot.attributes).map(([k, v]) => (
                     <div key={k} className="adp-spec-row">
                       <span>{k}</span>

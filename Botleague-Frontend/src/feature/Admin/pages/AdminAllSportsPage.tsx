@@ -79,7 +79,7 @@ export default function AdminAllSportsPage() {
     <div className="org-page-bg p-8">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="font-display text-[clamp(20px,4vw,38px)] font-medium text-[#0162d1] tracking-wide">All Sports</h1>
+        <h1 className="font-display text-[clamp(20px,4vw,38px)] font-medium text-[#0162d1] tracking-wide">All Techsports</h1>
         <p className="text-gray-400 text-sm mt-1">
           {loading ? "Loading…" : `${filtered.length} sport${filtered.length !== 1 ? "s" : ""} across ${events.length} event${events.length !== 1 ? "s" : ""}`}
         </p>
@@ -138,7 +138,7 @@ export default function AdminAllSportsPage() {
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr style={{ background: ORG.gradientPill }}>
-                <th className="px-4 py-3.5 text-left font-semibold text-white">Sport</th>
+                <th className="px-4 py-3.5 text-left font-semibold text-white">Techsport</th>
                 <th className="px-4 py-3.5 text-left font-semibold text-white">Techfect</th>
                 <th className="px-4 py-3.5 text-left font-semibold text-white hidden md:table-cell">Age Group</th>
                 <th className="px-4 py-3.5 text-left font-semibold text-white hidden lg:table-cell">Weight Class</th>

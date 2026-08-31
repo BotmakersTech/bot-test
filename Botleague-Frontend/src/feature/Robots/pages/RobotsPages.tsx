@@ -281,7 +281,7 @@ export default function RobotsPage() {
         </div>
 
         <div className="robot-row-field">
-          <span>Sports</span>
+          <span>Techsports</span>
           <strong>{toLabel(robot.sport)}</strong>
         </div>
       </div>
