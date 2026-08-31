@@ -13,6 +13,7 @@ import type { RootState } from "../../../app/store"
 import { hasRole, AppRole, EVENT_HEAD_AND_UP } from "../../../shared/constants/roles"
 import LocationSelects from "../../../shared/components/LocationSelects"
 import SponsorManager from "../components/SponsorManager"
+import SupportContactManager from "../../Organizer/components/SupportContactManager"
 import EventMediaField from "../../Organizer/components/EventMediaField"
 import EventDashboard from "../../../shared/components/EventDashboard/EventDashboard"
 import UserControlPanel from "../../../shared/components/EventDashboard/UserControlPanel"
@@ -506,9 +507,12 @@ export default function AdminEventPage() {
           canDelete={canDelete}
           onDelete={() => setShowDeleteConfirm(true)}
           eventSponsors={canManageSponsors ? <SponsorManager mode="event" entityId={eventId} title="Event Sponsors" /> : undefined}
-          extraSponsorSections={canManageSponsors ? (
+          extraSponsorSections={(canEdit || canManageSponsors) ? (
             <>
-              {sports.map(sport => (
+              {canEdit && (
+                <SupportContactManager mode="event" eventId={eventId} title="Event Support & Emergency Contacts" />
+              )}
+              {canManageSponsors && sports.map(sport => (
                 <SponsorManager key={sport.id} mode="sport" entityId={sport.id} title={`Sponsors — ${toLabel(sport.sport)}`} />
               ))}
             </>

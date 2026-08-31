@@ -59,8 +59,8 @@ function ContactFormModal({
           <button onClick={onClose} style={{ background: "none", border: "none", color: MUTED, cursor: "pointer" }}><X size={18} /></button>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          {field("name", "Name *", "e.g. Registration Desk")}
-          {field("roleLabel", "Role / Label", "e.g. Technical Support")}
+          {field("name", "Name *", "e.g. Registration Desk / Dr. A. Rao")}
+          {field("roleLabel", "Role / Label", "e.g. Emergency · Medical · Security · Technical Support")}
           {field("email", "Email", "support@example.com")}
           {field("phone", "Phone", "+91 98765 43210")}
         </div>
@@ -212,7 +212,7 @@ export default function SupportContactManager({
         {err && <div style={{ color: DANGER, fontSize: "0.83rem", marginBottom: "10px" }}>{err}</div>}
         {!loading && contacts.length === 0 && (
           <div style={{ textAlign: "center", padding: "20px 0", color: MUTED, fontSize: "0.82rem" }}>
-            No support contacts yet.
+            No support contacts yet — add on-site help & emergency numbers (medical, security, help desk) with “Add Contact”.
           </div>
         )}
         {actionErr && (

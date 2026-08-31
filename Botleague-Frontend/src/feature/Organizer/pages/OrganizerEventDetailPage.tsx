@@ -399,7 +399,7 @@ export default function OrganizerEventDetailPage() {
         backLabel="Back to My Techfects"
         errorBanner={actionError}
         eventSponsors={canManageEvent ? <SponsorManager mode="event" entityId={eventId} title="Event Sponsors" /> : undefined}
-        extraSponsorSections={canManageEvent ? <SupportContactManager mode="event" eventId={eventId} title="Event Support Contacts" /> : undefined}
+        extraSponsorSections={canManageEvent ? <SupportContactManager mode="event" eventId={eventId} title="Event Support & Emergency Contacts" /> : undefined}
       />
     </>
   )
