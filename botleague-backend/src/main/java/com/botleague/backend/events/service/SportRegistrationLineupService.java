@@ -51,6 +51,8 @@ import com.botleague.backend.team.repository.TeamMembershipRepository;
  *  3. Robot must exist, be ACTIVE, and match the registration's robotId
  *  4. TeamMembership must exist, be ACTIVE, and belong to the same team
  *  5. Duplicate check: same membership cannot be in the same robot's lineup twice
+ *  5b. One robot per techsport: a person cannot be in two different robots'
+ *      lineups within the same event sport
  *  6. Roster cap: active lineup count < EventSports.maxTeamSize
  *  7. Role uniqueness: DRIVER, SECONDARY_DRIVER, BUILD_HEAD can each appear at most once per registration
  */
@@ -268,6 +270,23 @@ public class SportRegistrationLineupService {
             throw new IllegalStateException(
                     "This team member is already assigned to robot '" +
                     robot.getRobotName() + "' in this competition.");
+        }
+
+        // =================================================
+        // 5b. ONE ROBOT PER TECHSPORT
+        //     A person can only compete with ONE robot in a given event
+        //     sport. If they already hold an active lineup slot for a
+        //     different robot in this same techsport, block the assignment.
+        // =================================================
+
+        boolean inAnotherRobotSameSport = lineupRepository
+                .existsByEventSportIdAndTeamMembershipIdAndRobotIdNotAndIsActive(
+                        registration.getEventSportId(), teamMembershipId, robotId, true);
+
+        if (inAnotherRobotSameSport) {
+            throw new IllegalStateException(
+                    "This team member is already in another robot's lineup for this techsport. " +
+                    "A person can only compete with one robot per techsport.");
         }
 
         // =================================================

@@ -97,6 +97,9 @@ export default function LineupTab({
   const atMax = currentLineup.length >= maxSize;
   const belowMin = minSize > 0 && currentLineup.length < minSize;
 
+  // Every role must stay filled — one Driver, one Secondary Driver, one Build Head.
+  const missingRoles = Object.keys(ROLE_LABEL).filter((r) => !takenRoles.has(r));
+
   return (
     <div className="lineup-page">
       {existingRegs.length > 1 && (
@@ -164,6 +167,11 @@ export default function LineupTab({
           {!atMax && belowMin && (
             <p style={{ fontSize: 13, color: WARNING, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
               <AlertTriangle size={14} /> Add at least {minSize - currentLineup.length} more player{minSize - currentLineup.length !== 1 ? "s" : ""} to meet the minimum.
+            </p>
+          )}
+          {!activeReg?.lineupLocked && missingRoles.length > 0 && (
+            <p style={{ fontSize: 13, color: WARNING, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+              <AlertTriangle size={14} /> Every role must be filled — still need: {missingRoles.map((r) => ROLE_LABEL[r]).join(", ")}.
             </p>
           )}
         </div>

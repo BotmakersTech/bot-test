@@ -152,6 +152,11 @@ export default function RegistrationTab({
   const assignedMemberIds = new Set(pendingLineup.map((e) => e.membershipId));
   const takenRoles = new Set(pendingLineup.map((e) => e.role));
 
+  // Every role must be filled to register — one Driver, one Secondary Driver,
+  // one Build Head (backend rejects an incomplete lineup).
+  const missingRoles = REG_ROLES.filter((r) => !takenRoles.has(r.value));
+  const lineupComplete = missingRoles.length === 0;
+
   // Only members who can actually be in this techsport's age group are
   // selectable — otherwise the pick fails on submit with "age mismatch".
   const eligibleMembers = useMemo(
@@ -374,7 +379,14 @@ export default function RegistrationTab({
 
                 {pendingLineup.length > 0 && (
                   <div style={{ marginBottom: 20 }}>
-                    <p style={{ fontWeight: 600, marginBottom: 10 }}>Lineup ({pendingLineup.length}/3)</p>
+                    <p style={{ fontWeight: 600, marginBottom: 10 }}>
+                      Lineup ({pendingLineup.length}/3)
+                      {!lineupComplete && (
+                        <span style={{ fontWeight: 500, color: "#b45309", marginLeft: 8 }}>
+                          — still need: {missingRoles.map((r) => r.label).join(", ")}
+                        </span>
+                      )}
+                    </p>
                     {pendingLineup.map((entry) => {
                       const member = teamMembers.find((m) => m.membershipId === entry.membershipId);
                       const roleLabel = REG_ROLES.find((r) => r.value === entry.role)?.label ?? entry.role;
@@ -398,13 +410,13 @@ export default function RegistrationTab({
                     type="button"
                     className="add-box"
                     style={{ background: "linear-gradient(180deg, #117CFF 70%, #7D63FF 100%)", color: "#fff", border: "none" }}
-                    disabled={busyReg || pendingLineup.length === 0}
+                    disabled={busyReg || !lineupComplete}
                     onClick={handleConfirmRegistration}
                   >
                     {busyReg
                       ? "Registering…"
-                      : pendingLineup.length === 0
-                        ? "Add at least one lineup member"
+                      : !lineupComplete
+                        ? `Assign ${missingRoles.map((r) => r.label).join(" + ")} to register`
                         : <><Zap size={14} /> Complete Registration</>}
                   </button>
                 </div>

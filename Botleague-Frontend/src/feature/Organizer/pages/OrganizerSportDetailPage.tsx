@@ -194,12 +194,14 @@ function Field({ label, value }: { label: string; value?: React.ReactNode }) {
 // ─────────────────────────────────────────────────────────────
 
 function TeamCard({
-  team, index, eventId, onStatusChange,
+  team, index, eventId, onStatusChange, rosterLocked,
 }: {
   team: TeamReg
   index: number
   eventId?: string
   onStatusChange?: (registrationId: string, status: string) => Promise<void>
+  /** Bracket already drawn — reject/waitlist are frozen. */
+  rosterLocked?: boolean
 }) {
   const [open, setOpen] = React.useState(false)
   const [messaging, setMessaging] = React.useState(false)
@@ -301,7 +303,7 @@ function TeamCard({
         </div>
 
         <div className="sdt-reg-actions" style={{ flexShrink: 0 }}>
-          {status === "REGISTERED" && onStatusChange && (
+          {status === "REGISTERED" && onStatusChange && !rosterLocked && (
             <>
               <button className="sdt-reg-action-btn sdt-reg-waitlist" disabled={statusBusy} onClick={(e) => handleStatusChange(e, "WAITLISTED")}>
                 Waitlist
@@ -1409,7 +1411,7 @@ export default function OrganizerSportDetailPage() {
           ) : (
             <div className="sdt-team-list">
               {registrations.map((team, i) => (
-                <TeamCard key={team.id} team={team} index={i} eventId={eventId} onStatusChange={handleRegistrationStatusChange} />
+                <TeamCard key={team.id} team={team} index={i} eventId={eventId} onStatusChange={handleRegistrationStatusChange} rosterLocked={hasMatches} />
               ))}
             </div>
           )}
@@ -1466,6 +1468,7 @@ export default function OrganizerSportDetailPage() {
         regActionError={regActionError}
         onTeamStatusChange={handleRegistrationStatusChange}
         onMessageTeam={handleMessageTeam}
+        rosterLocked={hasMatches}
       />
     </div>
     </>

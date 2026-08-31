@@ -2,11 +2,13 @@ package com.botleague.backend.events.service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,7 @@ import com.botleague.backend.events.entity.Event;
 import com.botleague.backend.events.entity.EventSports;
 import com.botleague.backend.events.enums.ControlMode;
 import com.botleague.backend.events.enums.ControlType;
+import com.botleague.backend.events.enums.LineupRole;
 import com.botleague.backend.events.entity.SportRegistration;
 import com.botleague.backend.events.enums.RegistrationStatus;
 import com.botleague.backend.events.enums.SportEventStatus;
@@ -607,6 +610,18 @@ public class SportRegistrationService {
                     "Cannot change registration status from " + current + " to " + newStatus);
         }
 
+        // Once the bracket is drawn, the roster is locked: an organiser can no
+        // longer reject or waitlist an entry (that would tear a competitor out
+        // of a live draw). Withdrawals still go through cancelRegistration().
+        if (newStatus == RegistrationStatus.WAITLISTED || newStatus == RegistrationStatus.REJECTED) {
+            EventSports es = eventSportsRepository.findById(registration.getEventSportId()).orElse(null);
+            if (es != null && es.isBracketGenerated()) {
+                throw new IllegalStateException(
+                        "The bracket for this techsport has already been created — registrations can no longer be "
+                        + (newStatus == RegistrationStatus.REJECTED ? "rejected." : "waitlisted."));
+            }
+        }
+
         // A team pulled from the active roster (waitlisted/rejected) must not
         // leave a stale, still-playable match behind — block until the
         // organizer resolves those matches (cancel/reschedule) first.
@@ -708,10 +723,37 @@ public class SportRegistrationService {
      * Registers a robot AND its lineup in a single transaction.
      * If any lineup entry fails validation, the entire operation is rolled back —
      * no robot is left registered without its required lineup.
+     *
+     * A complete lineup is mandatory to register: every {@link LineupRole}
+     * (DRIVER, SECONDARY_DRIVER, BUILD_HEAD) must be filled exactly once.
      */
     public RegistrationWithLineupResponse registerRobotWithLineup(
             RegistrationWithLineupRequest request
     ) {
+        // ── Mandatory lineup composition — all three roles, exactly one each ──
+        // Checked up-front so the caller gets a clear "what's missing" error
+        // instead of a mid-loop "role already taken" / rollback.
+        List<LineupRole> submittedRoles = request.getLineup().stream()
+                .map(RegistrationWithLineupRequest.LineupEntry::getLineupRole)
+                .collect(Collectors.toList());
+        EnumSet<LineupRole> requiredRoles = EnumSet.allOf(LineupRole.class);
+        EnumSet<LineupRole> distinctRoles = submittedRoles.isEmpty()
+                ? EnumSet.noneOf(LineupRole.class)
+                : EnumSet.copyOf(submittedRoles);
+
+        if (submittedRoles.size() != distinctRoles.size()) {
+            throw new IllegalStateException(
+                    "Each lineup role may be assigned to only one person: "
+                    + "one DRIVER, one SECONDARY_DRIVER, one BUILD_HEAD.");
+        }
+        if (!distinctRoles.containsAll(requiredRoles)) {
+            EnumSet<LineupRole> missing = EnumSet.copyOf(requiredRoles);
+            missing.removeAll(distinctRoles);
+            throw new IllegalStateException(
+                    "A complete lineup is required to register — one person per role. Missing: "
+                    + missing.stream().map(Enum::name).collect(Collectors.joining(", ")) + ".");
+        }
+
         // Build a RegistrationRequest from the combined request
         RegistrationRequest regReq = new RegistrationRequest();
         regReq.setEventSportId(request.getEventSportId());
