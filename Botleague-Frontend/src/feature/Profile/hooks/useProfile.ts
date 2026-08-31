@@ -312,6 +312,9 @@ export default function useProfile(): UseProfileReturn {
   }, []);
 
   const hydrateProfileState = useCallback((data: ProfileResponse) => {
+    // TEMP DEBUG: confirm the backend actually returns userName on the profile
+    // payload (GET /profile/me and the email-poll refetch both land here).
+    console.log("[useProfile] profile payload from backend →", data, "| userName:", data.userName);
     setProfile(data);
     setFirstName(data.firstName ?? "");
     setLastName(data.lastName ?? "");

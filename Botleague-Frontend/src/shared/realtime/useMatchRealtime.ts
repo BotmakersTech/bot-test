@@ -14,7 +14,15 @@ export function mergeMatchUpdate<T extends { matchId: string }>(list: T[], paylo
   const idx = list.findIndex((m) => m.matchId === payload.matchId)
   if (idx === -1) return [...list, payload as T]
   const next = list.slice()
-  next[idx] = { ...next[idx], ...payload }
+  // Ignore keys the frame didn't include so a sparse push can't blank out
+  // fields (status, winner, scores) a fuller earlier frame already set.
+  const clean: Partial<T> = {}
+  for (const k in payload) {
+    if (payload[k as keyof typeof payload] !== undefined) {
+      clean[k as keyof T] = payload[k as keyof typeof payload] as T[keyof T]
+    }
+  }
+  next[idx] = { ...next[idx], ...clean }
   return next
 }
 
@@ -70,14 +78,23 @@ export function useSportMatchRealtime(
   useEffect(() => {
     if (!eventSportId) return
 
-    // Catch-up: whenever the socket (re)connects, re-pull matches + poke the
-    // leaderboard so anything that changed while we were disconnected — a
-    // score, an approval, a bracket advance — lands without a manual refresh.
-    if (connected) {
+    // Catch-up: whenever the socket (re)connects OR the tab returns to the
+    // foreground, re-pull matches + poke the leaderboard so anything that
+    // changed while we were disconnected/backgrounded — a score, a completed
+    // match, a bracket advance — lands without a manual refresh.
+    const catchUp = () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       dispatch((fetchMatchesByEventSport as any)(eventSportId))
       dispatch(triggerRankingsRefresh(eventSportId))
     }
+
+    if (connected) catchUp()
+
+    const onForeground = () => {
+      if (document.visibilityState === 'visible') catchUp()
+    }
+    document.addEventListener('visibilitychange', onForeground)
+    window.addEventListener('focus', onForeground)
 
     const unsubscribe = subscribe(`/topic/sports/${eventSportId}`, (frame) => {
       try {
@@ -88,16 +105,29 @@ export function useSportMatchRealtime(
           case 'MATCH_STARTED':
           case 'MATCH_SCORE_UPDATED':
           case 'MATCH_RESULT_SUBMITTED':
-          case 'MATCH_RESULT_PENDING_APPROVAL': // judge/sport-head submitted, awaiting approval
-          case 'MATCH_RESULT_APPROVED':         // admin/organiser/event-head approved — now COMPLETED
-          case 'MATCH_RESULT_REJECTED':         // sent back to LIVE for correction
+          case 'MATCH_RESULT_PENDING_APPROVAL':
+          case 'MATCH_RESULT_APPROVED':
+          case 'MATCH_RESULT_REJECTED':
           case 'MATCH_COMPLETED':
           case 'MATCH_UPDATED':      // participant slots filled after winner/loser advancement
             dispatch(updateMatchRealtime(msg.payload as PublicMatchView))
+            // A completed result now moves ranking points in the same request
+            // (no approval step), so refresh the leaderboard in this tick
+            // rather than waiting on a separate RANKINGS_UPDATED frame that
+            // could be dropped independently.
+            if (
+              msg.type === 'MATCH_COMPLETED' ||
+              msg.type === 'MATCH_RESULT_APPROVED' ||
+              msg.type === 'MATCH_RESULT_REJECTED'
+            ) {
+              dispatch(triggerRankingsRefresh(eventSportId))
+            }
             break
           case 'BRACKET_CREATED': // all individual MATCH_CREATED already pushed; this is a fence signal
-            // fetch once as a safety net in case any MATCH_CREATED was missed
+            // fetch once as a safety net in case any MATCH_CREATED was missed;
+            // bracket generation also seeds the leaderboard, so refresh it too
             dispatch((fetchMatchesByEventSport as any)(eventSportId))
+            dispatch(triggerRankingsRefresh(eventSportId))
             break
           case 'RANKINGS_UPDATED':
             dispatch(
@@ -115,7 +145,11 @@ export function useSportMatchRealtime(
       }
     })
 
-    return unsubscribe
+    return () => {
+      document.removeEventListener('visibilitychange', onForeground)
+      window.removeEventListener('focus', onForeground)
+      unsubscribe()
+    }
   }, [eventSportId, subscribe, dispatch, connected])
 }
 

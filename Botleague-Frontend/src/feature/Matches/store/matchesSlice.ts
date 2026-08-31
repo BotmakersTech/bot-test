@@ -73,8 +73,15 @@ const matchesSlice = createSlice({
     },
     /** Merge or insert a match update received over WebSocket into both caches. */
     updateMatchRealtime: (state, action: PayloadAction<Partial<PublicMatchView>>) => {
-      const updated = action.payload;
-      if (!updated.matchId) return;
+      const raw = action.payload;
+      if (!raw.matchId) return;
+      // Drop keys the frame didn't include so a sparse push (e.g. the
+      // "participant slot filled" MATCH_UPDATED) can't blank out the status,
+      // winner or scores that a fuller earlier frame already set.
+      const updated: Partial<PublicMatchView> = {};
+      (Object.keys(raw) as (keyof PublicMatchView)[]).forEach((k) => {
+        if (raw[k] !== undefined) (updated as Record<string, unknown>)[k] = raw[k];
+      });
       // allMatches: update or insert
       const idx = state.allMatches.findIndex((m) => m.matchId === updated.matchId);
       if (idx !== -1) {
