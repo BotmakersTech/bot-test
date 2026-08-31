@@ -397,8 +397,6 @@ function localToIso(local?: string): string | undefined {
   return isNaN(d.getTime()) ? undefined : d.toISOString()
 }
 
-// Local wall-clock "now" as YYYY-MM-DDTHH:mm — floor for the registration-start picker.
-const NOW_LOCAL = toDatetimeLocal(new Date().toISOString())
 
 function EditSportModal({
   sport,
@@ -732,11 +730,11 @@ function EditSportModal({
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
             <div style={groupStyle}>
               <label style={labelStyle}>Registration Start</label>
-              <input type="datetime-local" style={inputStyle} min={NOW_LOCAL} value={form.registrationStartDate ?? ""} onChange={e => set("registrationStartDate", e.target.value)} />
+              <input type="datetime-local" style={inputStyle} value={form.registrationStartDate ?? ""} onChange={e => set("registrationStartDate", e.target.value)} />
             </div>
             <div style={groupStyle}>
               <label style={labelStyle}>Registration End</label>
-              <input type="datetime-local" style={inputStyle} min={form.registrationStartDate || NOW_LOCAL} value={form.registrationEndDate ?? ""} onChange={e => set("registrationEndDate", e.target.value)} />
+              <input type="datetime-local" style={inputStyle} min={form.registrationStartDate || undefined} value={form.registrationEndDate ?? ""} onChange={e => set("registrationEndDate", e.target.value)} />
             </div>
           </div>
 

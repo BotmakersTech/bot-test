@@ -62,7 +62,13 @@ export default function PrizeDistributionEditor({ poolAmount, positions, onChang
   const hasGoodies = ordered.some((r) => r.type === "GOODIES");
   const balanced = prizeDistributionBalanced(poolAmount, cashOnly);
 
-  const commit = (list: PrizePosition[]) => onChange(list.map((r, i) => ({ ...r, position: i + 1 })));
+  // Cash and goodies each get their own 1st/2nd/3rd… sequence; `position` is
+  // stored per-type (the backend only uses it for messages, not uniqueness).
+  const commit = (list: PrizePosition[]) => {
+    const sorted = [...list].sort((a, b) => (a.type === b.type ? 0 : a.type === "MONEY" ? -1 : 1));
+    let m = 0, g = 0;
+    onChange(sorted.map((r) => ({ ...r, position: r.type === "MONEY" ? ++m : ++g })));
+  };
   const setRow = (i: number, patch: Partial<PrizePosition>) =>
     commit(ordered.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
   const removeRow = (i: number) => commit(ordered.filter((_, idx) => idx !== i));
@@ -70,15 +76,16 @@ export default function PrizeDistributionEditor({ poolAmount, positions, onChang
   const addGoodies = () => commit([...ordered, { position: 0, type: "GOODIES", description: "" }]);
 
   let moneyRank = 0;
+  let goodieRank = 0;
 
   return (
     <div style={wrap}>
       {ordered.map((r, i) => {
         const isCash = r.type === "MONEY";
-        if (isCash) moneyRank += 1;
+        const rank = isCash ? (moneyRank += 1) : (goodieRank += 1);
         return (
           <div key={i} style={rowStyle}>
-            <span style={badge}>{isCash ? positionLabel(moneyRank) : "Extra"}</span>
+            <span style={badge}>{positionLabel(rank)}</span>
             <span
               style={{
                 ...cell,
@@ -114,7 +121,7 @@ export default function PrizeDistributionEditor({ poolAmount, positions, onChang
               <button
                 type="button"
                 onClick={() => removeRow(i)}
-                aria-label={`Remove ${isCash ? positionLabel(moneyRank) : "extra"} prize`}
+                aria-label={`Remove ${positionLabel(rank)} ${isCash ? "cash" : "goodies"} prize`}
                 style={{ ...cell, cursor: "pointer", padding: "7px", color: "#dc2626", background: "#fff" }}
               >
                 <X size={14} />
@@ -129,7 +136,7 @@ export default function PrizeDistributionEditor({ poolAmount, positions, onChang
           <Plus size={14} /> Add cash placing
         </button>
         <button type="button" onClick={addGoodies} style={{ ...addBtn, color: "#7c5cff" }}>
-          <Gift size={14} /> Add goodies (extra)
+          <Gift size={14} /> Add goodies placing
         </button>
       </div>
 
@@ -138,7 +145,7 @@ export default function PrizeDistributionEditor({ poolAmount, positions, onChang
           Cash prizes {formatINR(moneyTotal)} of {formatINR(poolAmount)} pool
           {balanced ? " ✓" : " — cash placings must add up to the pool"}
           {hasGoodies && (
-            <span style={{ color: "#6b7280", fontWeight: 500 }}> · goodies are extra, not part of the pool</span>
+            <span style={{ color: "#6b7280", fontWeight: 500 }}> · goodies placings are separate, not part of the pool</span>
           )}
         </div>
       )}
