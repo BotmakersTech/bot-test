@@ -9,7 +9,7 @@ import { useAdminEvents } from "../hooks/UseAdminEvent"
 import { useMatches } from "../hooks/useMatches"
 import { type CreateEventSportRequest } from "../api/admin.api"
 import { getPublicLeagueSports, toWeightClasses, type LeagueSport } from "../../../shared/api/catalog.api"
-import { formatWeightClass } from "../../Robots/constants/weightClasses"
+import { formatWeightClass, weightClassToKg } from "../../Robots/constants/weightClasses"
 import { ageGroupLabel } from "../../../shared/utils/ageGroup"
 import PrizeDistributionEditor from "../../../shared/components/PrizeDistributionEditor"
 import { formatPrizePosition, prizeDistributionBalanced, sumPrizeMoney, formatINR, type PrizePosition } from "../../../shared/utils/prize"
@@ -424,7 +424,8 @@ function EditSportModal({
     competitionType:        sport.competitionType ?? "",
     sportData:              sport.sportsDescription ?? "",
     weightClass:            sport.weightClass ?? "",
-    weightLimitKg:          sport.weightLimitKg ?? undefined,
+    // A numeric weight class IS the weight limit — derive it if the row never stored one.
+    weightLimitKg:          sport.weightLimitKg ?? weightClassToKg(sport.weightClass) ?? undefined,
     maxLengthCm:            sport.maxLengthCm ?? undefined,
     maxWidthCm:             sport.maxWidthCm ?? undefined,
     maxHeightCm:            sport.maxHeightCm ?? undefined,
@@ -619,35 +620,45 @@ function EditSportModal({
             )
           })()}
 
-          {/* Row 3: Weight Class */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-            <div style={groupStyle}>
-              <label style={labelStyle}>Weight Class</label>
-              {(() => {
-                const wcs = Array.from(
-                  new Map(leagueSports.flatMap(s => toWeightClasses(s)).map(w => [w.value, w])).values()
-                )
-                const currentInWc = wcs.some(w => w.value === form.weightClass)
-                return (
-                  <select style={inputStyle} value={form.weightClass ?? ""} onChange={e => set("weightClass", e.target.value || undefined)}>
+          {/* Row 3: Weight Class + Weight Limit (limit is derived from a numeric class) */}
+          {(() => {
+            const wcs = Array.from(
+              new Map(leagueSports.flatMap(s => toWeightClasses(s)).map(w => [w.value, w])).values()
+            )
+            const currentInWc = wcs.some(w => w.value === form.weightClass)
+            const classKg = weightClassToKg(form.weightClass)   // number when the class is like "1.5kg" / "60 KG"
+            return (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div style={groupStyle}>
+                  <label style={labelStyle}>Weight Class</label>
+                  <select
+                    style={inputStyle}
+                    value={form.weightClass ?? ""}
+                    onChange={e => {
+                      const v = e.target.value || undefined
+                      set("weightClass", v)
+                      const kg = weightClassToKg(v)
+                      if (kg != null) set("weightLimitKg", kg)   // class kg IS the limit
+                    }}
+                  >
                     <option value="">None</option>
                     {!currentInWc && form.weightClass && (
                       <option value={form.weightClass}>{formatWeightClass(form.weightClass)}</option>
                     )}
                     {wcs.map(w => <option key={w.value} value={w.value}>{formatWeightClass(w.label)}</option>)}
                   </select>
-                )
-              })()}
-            </div>
-          </div>
-
-          {/* Row 4: Weight Limit */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-            <div style={groupStyle}>
-              <label style={labelStyle}>Weight Limit (kg)</label>
-              <input type="number" min={0} step="any" style={inputStyle} value={form.weightLimitKg ?? ""} onChange={e => setNum("weightLimitKg", e.target.value)} placeholder="e.g. 1.5" />
-            </div>
-          </div>
+                </div>
+                <div style={groupStyle}>
+                  <label style={labelStyle}>Weight Limit (kg)</label>
+                  {classKg != null ? (
+                    <input type="text" readOnly style={{ ...inputStyle, background: "#f3f4f6", color: MUTED }} value={`${classKg} (from weight class)`} />
+                  ) : (
+                    <input type="number" min={0} step="any" style={inputStyle} value={form.weightLimitKg ?? ""} onChange={e => setNum("weightLimitKg", e.target.value)} placeholder="e.g. 1.5" />
+                  )}
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Row 5: Dimensions */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
