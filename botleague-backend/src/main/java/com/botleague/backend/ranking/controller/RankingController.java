@@ -111,6 +111,14 @@ public class RankingController {
     @GetMapping("/leaderboard/{eventSportId}")
     public ResponseEntity<EventLeaderboardResponse> getEventLeaderboard(
             @PathVariable UUID eventSportId) {
+        // Back-fill the standings for brackets generated before seeding existed
+        // (and for later-round / bye robots the per-match path never touched).
+        // No-op once every registered robot already has a row.
+        eventSportsRepository.findById(eventSportId).ifPresent(s -> {
+            if (s.isBracketGenerated()) {
+                engineService.seedEventLeaderboard(eventSportId);
+            }
+        });
         return ResponseEntity.ok(queryService.getEventLeaderboard(eventSportId));
     }
 

@@ -43,22 +43,26 @@ function MatchCard({ match }: { match: PublicMatchView }) {
   const decided = match.status === "COMPLETED" && !!match.winnerRegistrationId;
   const leftWon = decided && left?.registrationId === match.winnerRegistrationId;
   const rightWon = decided && right?.registrationId === match.winnerRegistrationId;
+  const leftLost = decided && !!left?.registrationId && !leftWon;
+  const rightLost = decided && !!right?.registrationId && !rightWon;
 
   return (
     <div className="match-grid" style={{ marginBottom: 24 }}>
-      <div className={`match left${leftWon ? " winner" : ""}`}>
+      <div className={`match left${leftWon ? " winner" : ""}${leftLost ? " loser" : ""}`}>
         <div className="team-slot">
           <div className="team-image" />
           <span className="match-name-full">{left ? slotLabel(left) : "TBD"}</span>
           <span className="match-name-compact">{left ? slotCompactLabel(left) : "TBD"}</span>
         </div>
+        {leftWon && <span className="match-won-badge">🏆 Winner</span>}
       </div>
-      <div className={`match right${rightWon ? " winner" : ""}`}>
+      <div className={`match right${rightWon ? " winner" : ""}${rightLost ? " loser" : ""}`}>
         <div className="team-slot">
           <span className="match-name-full">{right ? slotLabel(right) : "TBD"}</span>
           <span className="match-name-compact">{right ? slotCompactLabel(right) : "TBD"}</span>
           <div className="team-image" />
         </div>
+        {rightWon && <span className="match-won-badge">🏆 Winner</span>}
       </div>
       {teams.length > 2 && (
         <p style={{ gridColumn: "1 / -1", fontSize: 14, color: "#666" }}>

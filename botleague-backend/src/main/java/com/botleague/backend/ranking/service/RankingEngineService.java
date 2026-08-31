@@ -531,13 +531,15 @@ public class RankingEngineService {
         List<SportRegistration> regs = sportRegistrationRepository
                 .findByEventSportIdAndStatus(eventSportId, RegistrationStatus.REGISTERED);
 
+        // One query for what already exists — the per-match lazy-create means
+        // some robots may have entries while later-round / bye robots don't.
+        Set<UUID> haveEntry = leaderboardEntryRepository
+                .findByEventSportIdOrderByPointsEarnedDescWinsDescMatchesPlayedDesc(eventSportId)
+                .stream().map(EventLeaderboardEntry::getRobotId).collect(Collectors.toSet());
+
         List<EventLeaderboardEntry> fresh = new ArrayList<>();
         for (SportRegistration reg : regs) {
-            if (reg.getRobotId() == null) continue;
-            boolean exists = leaderboardEntryRepository
-                    .findByEventSportIdAndRobotId(eventSportId, reg.getRobotId())
-                    .isPresent();
-            if (exists) continue;
+            if (reg.getRobotId() == null || haveEntry.contains(reg.getRobotId())) continue;
 
             EventLeaderboardEntry e = new EventLeaderboardEntry();
             e.setEventId(sport.getEventId());
