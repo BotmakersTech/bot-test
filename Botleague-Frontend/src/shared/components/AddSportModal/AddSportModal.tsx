@@ -46,8 +46,9 @@ const INITIAL_CONFIG: ConfigState = {
 
 type SubmitResult = { sport: LeagueSport; ok: boolean; message?: string }
 
-/** Today in YYYY-MM-DD — floor for the registration-start date picker. */
-const TODAY = new Date().toISOString().split("T")[0]
+/** Today (LOCAL) as YYYY-MM-DD — floor for the registration-start date
+ *  picker. en-CA gives ISO order; local so "today" is always selectable. */
+const TODAY = new Date().toLocaleDateString("en-CA")
 
 /** "" stays "" (blank field); a valid number passes through; garbage -> "". */
 const numOrEmpty = (raw: string): number | "" => {
