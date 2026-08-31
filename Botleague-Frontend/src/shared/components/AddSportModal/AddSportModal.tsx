@@ -342,7 +342,7 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
               </FormField>
 
               <div className="asm-grid-2">
-                <FormField label="Team Size (players)" required><input type="number" min={1} className="asm-input" value={config.maxTeamSize} onChange={e => setCfg("maxTeamSize", parseInt(e.target.value) || 1)} /></FormField>
+                <FormField label="Max Team Size (players)" required><input type="number" min={1} className="asm-input" value={config.maxTeamSize} onChange={e => setCfg("maxTeamSize", parseInt(e.target.value) || 1)} /></FormField>
                 <FormField label="Max Teams" required><input type="number" min={2} className="asm-input" value={config.maxTeams} onChange={e => setCfg("maxTeams", parseInt(e.target.value) || 2)} /></FormField>
               </div>
 

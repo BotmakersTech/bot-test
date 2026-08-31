@@ -39,8 +39,9 @@ export function prizeDistributionBalanced(
   return Math.round(sumPrizeMoney(positions) * 100) === Math.round((Number(poolAmount) || 0) * 100);
 }
 
-/** One-line summary of a placing: "1st — ₹50,000" / "3rd — Trophy + kit". */
+/** One-line summary: "1st — ₹50,000" for cash placings, "Extra — Trophy + kit"
+ *  for goodies (goodies are add-ons, not a numbered placing in the pool). */
 export function formatPrizePosition(p: PrizePosition): string {
-  const prize = p.type === "MONEY" ? formatINR(p.amount) : (p.description || "Goodies");
-  return `${positionLabel(p.position)} — ${prize}`;
+  if (p.type === "MONEY") return `${positionLabel(p.position)} — ${formatINR(p.amount)}`;
+  return `Extra — ${p.description || "Goodies"}`;
 }
