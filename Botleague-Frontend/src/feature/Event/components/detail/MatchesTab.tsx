@@ -1,3 +1,4 @@
+import { Trophy } from "lucide-react";
 import type { PublicMatchView } from "../../../Matches/api/matches.api";
 
 interface MatchesTabProps {
@@ -54,7 +55,7 @@ function MatchCard({ match }: { match: PublicMatchView }) {
           <span className="match-name-full">{left ? slotLabel(left) : "TBD"}</span>
           <span className="match-name-compact">{left ? slotCompactLabel(left) : "TBD"}</span>
         </div>
-        {leftWon && <span className="match-won-badge">🏆 Winner</span>}
+        {leftWon && <span className="match-won-badge"><Trophy size={12} strokeWidth={2.75} aria-hidden="true" />Winner</span>}
       </div>
       <div className={`match right${rightWon ? " winner" : ""}${rightLost ? " loser" : ""}`}>
         <div className="team-slot">
@@ -62,7 +63,7 @@ function MatchCard({ match }: { match: PublicMatchView }) {
           <span className="match-name-compact">{right ? slotCompactLabel(right) : "TBD"}</span>
           <div className="team-image" />
         </div>
-        {rightWon && <span className="match-won-badge">🏆 Winner</span>}
+        {rightWon && <span className="match-won-badge"><Trophy size={12} strokeWidth={2.75} aria-hidden="true" />Winner</span>}
       </div>
       {teams.length > 2 && (
         <p style={{ gridColumn: "1 / -1", fontSize: 14, color: "#666" }}>

@@ -1,10 +1,7 @@
 package com.botleague.backend.team.service;
 
 import com.botleague.backend.common.exception.ApiException;
-import com.botleague.backend.events.entity.SportRegistration;
 import com.botleague.backend.events.repository.EventRepository;
-import com.botleague.backend.events.repository.EventSportsRepository;
-import com.botleague.backend.events.repository.SportRegistrationRepository;
 import com.botleague.backend.ranking.entity.EventLeaderboardEntry;
 import com.botleague.backend.ranking.repository.EventLeaderboardEntryRepository;
 import com.botleague.backend.team.dto.PublicRobotProfileDTO;
@@ -27,26 +24,20 @@ public class PublicRobotService {
     private final RobotRepository                robotRepository;
     private final RobotMediaRepository           robotMediaRepository;
     private final TeamRepository                 teamRepository;
-    private final SportRegistrationRepository    sportRegistrationRepository;
     private final EventLeaderboardEntryRepository leaderboardEntryRepository;
     private final EventRepository                eventRepository;
-    private final EventSportsRepository          eventSportsRepository;
 
     public PublicRobotService(
             RobotRepository robotRepository,
             RobotMediaRepository robotMediaRepository,
             TeamRepository teamRepository,
-            SportRegistrationRepository sportRegistrationRepository,
             EventLeaderboardEntryRepository leaderboardEntryRepository,
-            EventRepository eventRepository,
-            EventSportsRepository eventSportsRepository) {
+            EventRepository eventRepository) {
         this.robotRepository             = robotRepository;
         this.robotMediaRepository        = robotMediaRepository;
         this.teamRepository              = teamRepository;
-        this.sportRegistrationRepository = sportRegistrationRepository;
         this.leaderboardEntryRepository  = leaderboardEntryRepository;
         this.eventRepository             = eventRepository;
-        this.eventSportsRepository       = eventSportsRepository;
     }
 
     public PublicRobotProfileDTO getPublicProfileByCode(String robotCode) {
@@ -97,38 +88,37 @@ public class PublicRobotService {
             });
         }
 
-        // ── Tournament records — via SportRegistration ────────────────────────
-        List<SportRegistration> regs = sportRegistrationRepository.findByRobotId(robot.getId());
+        // ── Tournament records — one per leaderboard entry the robot holds ────
+        // Sourced straight from EventLeaderboardEntry (not joined through
+        // SportRegistration): a robot fielded in several events has one entry
+        // per event-sport, and the old reg→entry join silently dropped any
+        // record whose SportRegistration row didn't line up (re-registration,
+        // team move, seeded-but-unregistered byes), so a multi-event robot
+        // often showed just one tournament.
+        List<EventLeaderboardEntry> entries = leaderboardEntryRepository.findByRobotId(robot.getId());
 
         List<PublicRobotProfileDTO.TournamentRecord> records = new ArrayList<>();
         int totalMatches = 0, totalWins = 0, totalLosses = 0, totalPoints = 0;
         int gold = 0, silver = 0, bronze = 0;
 
-        for (SportRegistration reg : regs) {
-            // Lookup this robot's own leaderboard entry for this sport. Was
-            // previously keyed by teamId, which merged two robots from the same
-            // team fielded into the same event-sport into one entry — this robot's
-            // profile would show its teammate's combined stats instead of its own.
-            leaderboardEntryRepository
-                    .findByEventSportIdAndRobotId(reg.getEventSportId(), reg.getRobotId())
-                    .ifPresent(lb -> {
-                        PublicRobotProfileDTO.TournamentRecord rec = new PublicRobotProfileDTO.TournamentRecord();
-                        rec.setEventSportId(lb.getEventSportId());
-                        rec.setEventId(lb.getEventId());
-                        rec.setSport(lb.getSport());
-                        rec.setAgeGroup(lb.getAgeGroup());
-                        rec.setWeightClass(lb.getWeightClass());
-                        rec.setEventRank(lb.getEventRank());
-                        rec.setMatchesPlayed(lb.getMatchesPlayed() != null ? lb.getMatchesPlayed() : 0);
-                        rec.setWins(lb.getWins() != null ? lb.getWins() : 0);
-                        rec.setLosses(lb.getLosses() != null ? lb.getLosses() : 0);
-                        rec.setPointsEarned(lb.getPointsEarned() != null ? lb.getPointsEarned() : 0);
-                        rec.setFinalized(Boolean.TRUE.equals(lb.getIsFinalized()));
-                        // Resolve event name
-                        eventRepository.findById(lb.getEventId())
-                                .ifPresent(ev -> rec.setEventName(ev.getEventName()));
-                        records.add(rec);
-                    });
+        for (EventLeaderboardEntry lb : entries) {
+            PublicRobotProfileDTO.TournamentRecord rec = new PublicRobotProfileDTO.TournamentRecord();
+            rec.setEventSportId(lb.getEventSportId());
+            rec.setEventId(lb.getEventId());
+            rec.setSport(lb.getSport());
+            rec.setAgeGroup(lb.getAgeGroup());
+            rec.setWeightClass(lb.getWeightClass());
+            rec.setEventRank(lb.getEventRank());
+            rec.setMatchesPlayed(lb.getMatchesPlayed() != null ? lb.getMatchesPlayed() : 0);
+            rec.setWins(lb.getWins() != null ? lb.getWins() : 0);
+            rec.setLosses(lb.getLosses() != null ? lb.getLosses() : 0);
+            rec.setPointsEarned(lb.getPointsEarned() != null ? lb.getPointsEarned() : 0);
+            rec.setFinalized(Boolean.TRUE.equals(lb.getIsFinalized()));
+            if (lb.getEventId() != null) {
+                eventRepository.findById(lb.getEventId())
+                        .ifPresent(ev -> rec.setEventName(ev.getEventName()));
+            }
+            records.add(rec);
         }
 
         // Aggregate career totals from records
@@ -153,7 +143,8 @@ public class PublicRobotService {
 
         // Sort newest first (by eventId as proxy when createdAt isn't on leaderboard)
         records.sort(Comparator.comparing(
-                (PublicRobotProfileDTO.TournamentRecord r) -> r.getEventId().toString()).reversed());
+                (PublicRobotProfileDTO.TournamentRecord r) ->
+                        r.getEventId() != null ? r.getEventId().toString() : "").reversed());
         dto.setRecords(records);
 
         return dto;
