@@ -337,7 +337,7 @@ export default function SponsorManager({ mode, entityId, title }: SponsorManager
     }
   }
 
-  const headingText = title ?? (mode === "event" ? "Event Sponsors" : "Sport Sponsors");
+  const headingText = title ?? (mode === "event" ? "Techfect Sponsors" : "Techsport Sponsors");
 
   function toSponsorEntry(s: Sponsor): SponsorEntry {
     return { id: s.id, sponsorName: s.sponsorName, sponsorType: s.sponsorType, logoUrl: s.logoUrl, website: s.website };

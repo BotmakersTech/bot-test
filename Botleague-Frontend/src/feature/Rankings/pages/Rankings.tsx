@@ -389,7 +389,7 @@ export default function GlobalRankingsPage() {
               <span className="rank-col-rank text-[18px] sm:text-[20px] lg:text-[23px] font-normal text-[#0162D1]">Rank</span>
               <span className="text-[18px] sm:text-[20px] lg:text-[23px] font-normal text-[#0162D1]">Team</span>
               <span className="text-[18px] sm:text-[20px] lg:text-[23px] font-normal text-[#0162D1]">Points</span>
-              <span className="text-[18px] sm:text-[20px] lg:text-[23px] font-normal text-[#0162D1]">Events</span>
+              <span className="text-[18px] sm:text-[20px] lg:text-[23px] font-normal text-[#0162D1]">Techfects</span>
               <span className="text-[18px] sm:text-[20px] lg:text-[23px] font-normal text-[#0162D1]">Matches Played</span>
             </div>
 

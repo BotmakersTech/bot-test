@@ -123,13 +123,13 @@ export default function VolunteerCTA({ eventId, eventName, volunteersNeeded }: V
 
   function renderMessage() {
     if (!isAuthenticated) {
-      return "This event is looking for volunteers. Sign in with a Volunteer account to apply.";
+      return "This techfect is looking for volunteers. Sign in with a Volunteer account to apply.";
     }
     if (!isVolunteerEligible) {
-      return "This event is looking for volunteers. Only accounts registered as a Volunteer can apply.";
+      return "This techfect is looking for volunteers. Only accounts registered as a Volunteer can apply.";
     }
     if (!loaded) return "Checking your application status…";
-    if (!application) return "Help make this event happen — apply to volunteer today.";
+    if (!application) return "Help make this techfect happen — apply to volunteer today.";
     if (application.status === "PENDING") return "Your application is submitted and waiting for organiser review.";
     if (application.status === "APPROVED") return "You're confirmed as a volunteer for this event. Check your volunteer dashboard for your duty station and shift.";
     return "Your previous application wasn't approved, but you're welcome to apply again.";

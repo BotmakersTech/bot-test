@@ -169,7 +169,7 @@ export default function AdminMatches() {
           className="rounded-xl bg-white border px-4 py-2 text-sm text-[#374151] outline-none"
           style={{ borderColor: "rgba(75,134,232,0.3)" }}
         >
-          <option value="ALL">All Events</option>
+          <option value="ALL">All Techfects</option>
           {events.map((ev) => (
             <option key={ev.id} value={ev.id}>{ev.eventName}</option>
           ))}

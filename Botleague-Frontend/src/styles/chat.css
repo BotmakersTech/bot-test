@@ -57,19 +57,6 @@
   font-weight: 800;
 }
 
-.chat-add-button {
-  width: 35px;
-  height: 35px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: 999px;
-  color: #ffffff;
-  background: #3c146e;
-  cursor: pointer;
-}
-
 .chat-search {
   height: 48px;
   margin: 10px 29px 12px 14px;
@@ -612,7 +599,6 @@
      single deliberate scale instead of a per-element guess. */
   .chat-panel-header { padding: 18px 16px 14px; }
   .chat-title-wrap > span { min-width: 26px; height: 21px; font-size: 13px; }
-  .chat-add-button { width: 32px; height: 32px; }
 
   .chat-tabs { margin: 0 14px 12px; }
   .chat-tabs button { height: 36px; font-size: 13px; }

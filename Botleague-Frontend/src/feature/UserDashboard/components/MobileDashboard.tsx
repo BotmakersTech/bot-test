@@ -299,7 +299,7 @@ export default function MobileDashboard({
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, width: 78 }}>
               <CalendarDays size={20} style={{ color: "#3269d0" }} />
               <p style={{ ...gradientText, margin: 0, fontFamily: "Sarpanch, sans-serif", fontWeight: 600, fontSize: 18, whiteSpace: "nowrap" }}>{eventsParticipated}</p>
-              <p style={statLabelStyle}>Events</p>
+              <p style={statLabelStyle}>Techfects</p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, width: 78 }}>
               <Swords size={20} style={{ color: "#3269d0" }} />

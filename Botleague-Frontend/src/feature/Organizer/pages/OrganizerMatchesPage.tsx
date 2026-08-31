@@ -177,7 +177,7 @@ export default function OrganizerMatchesPage() {
         {events.length > 0 && (
           <select value={selectedEventId} onChange={e => handleEventChange(e.target.value)}
             style={{ height: "40px", background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "10px", color: TEXT, fontSize: "0.85rem", padding: "0 14px", outline: "none", cursor: "pointer" }}>
-            <option value="">— Select Event —</option>
+            <option value="">— Select Techfect —</option>
             {events.map(ev => <option key={ev.id} value={ev.id}>{ev.eventName}</option>)}
           </select>
         )}
@@ -206,7 +206,7 @@ export default function OrganizerMatchesPage() {
       {error ? (
         <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: "12px", padding: "20px", color: "#ef4444", textAlign: "center" }}>{error}</div>
       ) : !selectedSportId ? (
-        <div style={{ textAlign: "center", padding: "80px 0", color: MUTED }}>Select an event and sport to view matches</div>
+        <div style={{ textAlign: "center", padding: "80px 0", color: MUTED }}>Select a techfect and sport to view matches</div>
       ) : loading ? (
         <div style={{ textAlign: "center", padding: "80px 0", color: MUTED }}>Loading matches…</div>
       ) : filtered.length === 0 ? (

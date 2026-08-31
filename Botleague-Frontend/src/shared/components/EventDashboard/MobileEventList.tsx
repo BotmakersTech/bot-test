@@ -3,7 +3,7 @@ import "./MobileEventList.css"
 
 // Mobile view of the events list/dashboard page (mockup: "Eventdashboardmobile.jsx").
 // Shared by AdminDashboard.tsx (/admin/user) and OrganizerEventsPage.tsx
-// (/organizer/events, the Event Head / Sport Head "my events" list) via the
+// (/organizer/events, the Event Head / Sport Head "my techfects" list) via the
 // same .el-desktop-only/.el-mobile-only toggle every dual-render page in
 // this codebase uses — each page normalizes its own event shape into
 // MobileEventListItem[] and passes real, already-fetched data down.
@@ -89,7 +89,7 @@ export default function MobileEventList({
       {/* Stat cards */}
       <div className="el-m-stats-scroll">
         <div className="el-m-stat-card">
-          <div className="el-m-stat-label">Total Events</div>
+          <div className="el-m-stat-label">Total Techfects</div>
           <div className="el-m-stat-value">{totalCount}</div>
           <div className="el-m-stat-icon-box"><CalendarDays size={20} /></div>
         </div>
@@ -115,7 +115,7 @@ export default function MobileEventList({
         <div className="el-m-search-box">
           <input
             className="el-m-search-input"
-            placeholder="Search events…"
+            placeholder="Search techfects…"
             value={search}
             onChange={e => onSearchChange(e.target.value)}
           />
@@ -125,9 +125,9 @@ export default function MobileEventList({
 
       {/* Event cards */}
       {loading ? (
-        <div className="el-m-empty">Loading events…</div>
+        <div className="el-m-empty">Loading techfects…</div>
       ) : events.length === 0 ? (
-        <div className="el-m-empty">No events found</div>
+        <div className="el-m-empty">No techfects found</div>
       ) : (
         <div className="el-m-events-list">
           {events.map(ev => (

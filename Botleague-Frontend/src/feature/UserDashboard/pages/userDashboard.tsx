@@ -234,7 +234,7 @@ export default function UserDashboard() {
             <StatRibbon
               icon={<CalendarDays size={35} />}
               value={stats.eventsParticipated}
-              label="Events"
+              label="Techfects"
             />
             <StatRibbon icon={<Swords size={35} />} value={stats.matchesTotal} label="Matches" />
             <StatRibbon icon={<Medal size={38} />} value={`${winRate}%`} label="Win Rate" />

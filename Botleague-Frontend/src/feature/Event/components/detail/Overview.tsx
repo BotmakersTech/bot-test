@@ -15,7 +15,7 @@ export default function Overview({ description }: OverviewProps) {
       } as React.CSSProperties}
     >
       <h2>OVERVIEW</h2>
-      <p>{description || "No overview has been added for this event yet."}</p>
+      <p>{description || "No overview has been added for this techfect yet."}</p>
     </section>
   );
 }

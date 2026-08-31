@@ -302,7 +302,7 @@ const memberships = useAppSelector(
       setError(
         err?.response?.data?.error ??
           err?.message ??
-          "Failed to fetch events."
+          "Failed to fetch techfects."
       );
     } finally {
       setLoading(false);

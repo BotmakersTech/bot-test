@@ -101,7 +101,7 @@ export default function AdminCertificatesPage() {
             </div>
           )}
           <div>
-            <label className="text-xs font-semibold mb-1 block" style={{ color: ORG.muted }}>Event Sport</label>
+            <label className="text-xs font-semibold mb-1 block" style={{ color: ORG.muted }}>Techsport</label>
             <select
               value={eventSportId}
               onChange={(e) => setEventSportId(e.target.value)}
@@ -133,7 +133,7 @@ export default function AdminCertificatesPage() {
               resend={resendAdminCertificate}
             />
           ) : (
-            <p className="text-sm" style={{ color: ORG.muted }}>Select an event sport to configure its certificates.</p>
+            <p className="text-sm" style={{ color: ORG.muted }}>Select a techsport to configure its certificates.</p>
           )}
         </div>
       )}

@@ -21,7 +21,7 @@ const ROLES = [
     key: "volunteer",
     title: "Volunteer",
     desc: "Learn. Contribute. Grow",
-    hoverDesc: "Help run the show — check-ins, logistics, and keeping matches on schedule at live events.",
+    hoverDesc: "Help run the show — check-ins, logistics, and keeping matches on schedule at live techfects.",
     icon: (
       <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor">
         <path d="M12 21s-7.5-4.6-10-9.1C.5 8.6 2 5 5.4 5c1.9 0 3.3 1 4.1 2.3C10.3 6 11.7 5 13.6 5 17 5 18.5 8.6 22 11.9 14.5 16.4 12 21 12 21Z" />
@@ -32,7 +32,7 @@ const ROLES = [
     key: "organiser",
     title: "Organiser",
     desc: "Host World-Class Robotics Competitions.",
-    hoverDesc: "Create and manage your own events — registrations, schedules, judging, and live results, all in one place.",
+    hoverDesc: "Create and manage your own techfects — registrations, schedules, judging, and live results, all in one place.",
     icon: (
       <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor">
         <path d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm3 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-2 8h4a2 2 0 0 0-4 0Zm8-6h6v-1h-6Zm0 3h6v-1h-6Z" />

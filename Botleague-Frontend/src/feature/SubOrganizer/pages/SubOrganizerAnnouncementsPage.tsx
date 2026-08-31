@@ -76,7 +76,7 @@ export default function SubOrganizerAnnouncementsPage() {
     try {
       const id = await ensureEventChatRoom(selectedEventId)
       setChatRoomId(id)
-      flash("Event chat room created (or already exists).")
+      flash("Techfect chat room created (or already exists).")
     } catch {
       setError("Failed to create chat room.")
     } finally {
@@ -90,7 +90,7 @@ export default function SubOrganizerAnnouncementsPage() {
     <div className="org-page-bg p-8">
       <div className="mb-6">
         <h1 className="font-display text-[clamp(20px,4vw,38px)] font-medium text-[#0162d1] tracking-wide">Announcements</h1>
-        <p className="text-gray-400 text-sm mt-1">Broadcast messages to teams in your assigned events</p>
+        <p className="text-gray-400 text-sm mt-1">Broadcast messages to teams in your assigned techfects</p>
       </div>
 
       {success && (
@@ -115,7 +115,7 @@ export default function SubOrganizerAnnouncementsPage() {
 
               {/* Event selector */}
               <div className="mb-4">
-                <label className="block text-xs text-gray-500 mb-1.5">Target Event</label>
+                <label className="block text-xs text-gray-500 mb-1.5">Target Techfect</label>
                 <select
                   value={selectedEventId}
                   onChange={(e) => setSelectedEventId(e.target.value)}
@@ -162,7 +162,7 @@ export default function SubOrganizerAnnouncementsPage() {
                   <input
                     value={chatMsg}
                     onChange={(e) => setChatMsg(e.target.value)}
-                    placeholder="Also posted to the event chat room…"
+                    placeholder="Also posted to the techfect chat room…"
                     className={inputClass}
                     style={inputStyle}
                   />
@@ -184,7 +184,7 @@ export default function SubOrganizerAnnouncementsPage() {
           {/* Right: Chat room */}
           <div>
             <div className="rounded-2xl bg-white border p-6" style={{ borderColor: "rgba(75,134,232,0.2)" }}>
-              <h2 className="font-semibold text-[#374151] mb-2">Event Chat Room</h2>
+              <h2 className="font-semibold text-[#374151] mb-2">Techfect Chat Room</h2>
               <p className="text-xs text-gray-400 mb-4">
                 Create a shared chat room for real-time communication with all event participants.
               </p>

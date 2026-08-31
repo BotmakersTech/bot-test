@@ -69,7 +69,7 @@ export default function OrganizerEventsPage() {
     <div className="org-page-bg p-8 el-desktop-only" style={{ fontFamily: ORG.fontBody }}>
       <div style={{ marginBottom: "24px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
         <div>
-          <h1 style={{ color: "#0162d1", fontFamily: ORG.fontHeading, fontSize: "clamp(20px,4vw,38px)", fontWeight: 500, margin: 0, letterSpacing: "0.02em" }}>Event Management</h1>
+          <h1 style={{ color: "#0162d1", fontFamily: ORG.fontHeading, fontSize: "clamp(20px,4vw,38px)", fontWeight: 500, margin: 0, letterSpacing: "0.02em" }}>Techfect Management</h1>
           <p style={{ color: MUTED, fontSize: "0.85rem", margin: "4px 0 0" }}>
             {loading ? "Loading…" : `${filtered.length} of ${events.length} event${events.length !== 1 ? "s" : ""}`}
           </p>
@@ -111,15 +111,15 @@ export default function OrganizerEventsPage() {
 
       {/* Table */}
       {loading ? (
-        <div style={{ textAlign: "center", padding: "80px 0", color: MUTED }}>Loading events…</div>
+        <div style={{ textAlign: "center", padding: "80px 0", color: MUTED }}>Loading techfects…</div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "80px 0", color: MUTED }}>No events found</div>
+        <div style={{ textAlign: "center", padding: "80px 0", color: MUTED }}>No techfects found</div>
       ) : (
         <div style={{ background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "16px", overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
             <thead>
               <tr style={{ background: "rgba(75,134,232,0.06)", borderBottom: `1px solid ${BORDER}` }}>
-                <th style={{ textAlign: "left", padding: "12px 16px", color: MUTED, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Event</th>
+                <th style={{ textAlign: "left", padding: "12px 16px", color: MUTED, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Techfect</th>
                 <th style={{ textAlign: "left", padding: "12px 16px", color: MUTED, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Dates</th>
                 <th style={{ textAlign: "left", padding: "12px 16px", color: MUTED, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Venue</th>
                 <th style={{ textAlign: "center", padding: "12px 16px", color: MUTED, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Sports</th>
@@ -188,7 +188,7 @@ export default function OrganizerEventsPage() {
 
     <div className="el-mobile-only">
       <MobileEventList
-        heading="Event Management"
+        heading="Techfect Management"
         totalCount={events.length}
         completedCount={completedCount}
         upcomingCount={upcomingCount}

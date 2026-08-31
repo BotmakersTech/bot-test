@@ -52,7 +52,7 @@ export default function OrganizerCertificatesPage() {
   const activeTemplates = templates.filter((t) => t.status === "ACTIVE");
   const preselectedSport = preselectedSportId ? sports.find((s) => s.id === preselectedSportId) : undefined;
 
-  const eventName = (eventId: string) => events.find((e) => e.id === eventId)?.eventName ?? "Event";
+  const eventName = (eventId: string) => events.find((e) => e.id === eventId)?.eventName ?? "Techfect";
   const groupedSports = useMemo(() => {
     const byEvent = new Map<string, OrganizerSport[]>();
     for (const s of sports) {
@@ -107,7 +107,7 @@ export default function OrganizerCertificatesPage() {
             </div>
           )}
           <div>
-            <label className="text-xs font-semibold mb-1 block" style={{ color: ORG.muted }}>Event Sport</label>
+            <label className="text-xs font-semibold mb-1 block" style={{ color: ORG.muted }}>Techsport</label>
             <select
               value={eventSportId}
               onChange={(e) => setEventSportId(e.target.value)}
@@ -139,7 +139,7 @@ export default function OrganizerCertificatesPage() {
               resend={resendOrganizerCertificate}
             />
           ) : (
-            <p className="text-sm" style={{ color: ORG.muted }}>Select an event sport to configure its certificates.</p>
+            <p className="text-sm" style={{ color: ORG.muted }}>Select a techsport to configure its certificates.</p>
           )}
         </div>
       )}

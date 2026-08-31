@@ -63,7 +63,7 @@ export default function AdminReportsPage() {
     <div className="org-page-bg p-8">
       <div className="mb-6">
         <h1 className="font-display text-[clamp(20px,4vw,38px)] font-medium text-[#0162d1] tracking-wide">Reports</h1>
-        <p className="text-gray-400 text-sm mt-1">Platform-wide overview across all events</p>
+        <p className="text-gray-400 text-sm mt-1">Platform-wide overview across all techfects</p>
       </div>
 
       {loading ? (
@@ -75,8 +75,8 @@ export default function AdminReportsPage() {
           {/* Top-level KPIs */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
             {[
-              { label: "Total Events",    value: events.length,  color: "text-orange-600" },
-              { label: "Active Events",   value: activeCount,    color: "text-green-600" },
+              { label: "Total Techfects",    value: events.length,  color: "text-orange-600" },
+              { label: "Active Techfects",   value: activeCount,    color: "text-green-600" },
               { label: "Total Sports",    value: totalSports,    color: "text-blue-600" },
               { label: "Teams Registered",value: totalTeams,     color: "text-purple-600" },
             ].map(({ label, value, color }) => (
@@ -93,7 +93,7 @@ export default function AdminReportsPage() {
           </h2>
 
           {events.length === 0 ? (
-            <div className="flex items-center justify-center py-16 text-gray-400">No events yet</div>
+            <div className="flex items-center justify-center py-16 text-gray-400">No techfects yet</div>
           ) : (
             <div className="space-y-4">
               {events.map((ev) => {
@@ -179,23 +179,23 @@ export default function AdminReportsPage() {
             <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Summary</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
               <div>
-                <p className="text-gray-400 text-xs">Completed Events</p>
+                <p className="text-gray-400 text-xs">Completed Techfects</p>
                 <p className="text-[#374151] font-semibold mt-0.5">{completedCount}</p>
               </div>
               <div>
-                <p className="text-gray-400 text-xs">Upcoming Events</p>
+                <p className="text-gray-400 text-xs">Upcoming Techfects</p>
                 <p className="text-[#374151] font-semibold mt-0.5">
                   {events.filter((e) => ["UPCOMING", "REGISTRATION_OPEN"].includes((e.status ?? "").toUpperCase())).length}
                 </p>
               </div>
               <div>
-                <p className="text-gray-400 text-xs">Avg Teams / Event</p>
+                <p className="text-gray-400 text-xs">Avg Teams / Techfect</p>
                 <p className="text-[#374151] font-semibold mt-0.5">
                   {events.length > 0 ? (totalTeams / events.length).toFixed(1) : "—"}
                 </p>
               </div>
               <div>
-                <p className="text-gray-400 text-xs">Avg Sports / Event</p>
+                <p className="text-gray-400 text-xs">Avg Sports / Techfect</p>
                 <p className="text-[#374151] font-semibold mt-0.5">
                   {events.length > 0 ? (totalSports / events.length).toFixed(1) : "—"}
                 </p>

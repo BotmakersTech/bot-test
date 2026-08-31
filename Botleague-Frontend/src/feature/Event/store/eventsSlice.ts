@@ -21,7 +21,7 @@ export const fetchLiveEvents = createAsyncThunk(
     try {
       return await getLiveEvents();
     } catch (err: any) {
-      return rejectWithValue(err?.response?.data?.message ?? "Failed to load events");
+      return rejectWithValue(err?.response?.data?.message ?? "Failed to load techfects");
     }
   }
 );

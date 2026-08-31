@@ -63,7 +63,7 @@ export const uploadEventMedia = async (
     const errorMessage =
       (error as any)?.response?.data?.message ||
       (error as Error)?.message ||
-      "Event media upload failed";
+      "Techfect media upload failed";
     throw new Error(errorMessage, { cause: error });
   }
 };

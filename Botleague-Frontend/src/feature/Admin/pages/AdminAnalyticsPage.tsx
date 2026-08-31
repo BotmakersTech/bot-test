@@ -80,7 +80,7 @@ export default function AdminAnalyticsPage() {
         <div className="space-y-8">
           {/* KPIs */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <StatCard label="Total Events"    value={totalEvents}   color="text-orange-600" />
+            <StatCard label="Total Techfects"    value={totalEvents}   color="text-orange-600" />
             <StatCard label="Total Sports"    value={totalSports}   color="text-blue-600" />
             <StatCard label="Teams Registered" value={totalTeams}   color="text-purple-600" />
             <StatCard label="Avg Fill Rate"   value={avgFill ? `${avgFill}%` : "—"} color="text-green-600" sub="across capped sports" />
@@ -89,7 +89,7 @@ export default function AdminAnalyticsPage() {
           {/* Event status breakdown */}
           <div className="grid grid-cols-1 gap-5">
             <div className="rounded-2xl bg-white border p-5" style={{ borderColor: "rgba(75,134,232,0.2)" }}>
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Event Status</h3>
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Techfect Status</h3>
               <div className="space-y-3">
                 <HorizBar label="Live / Active" value={liveEvents}     max={totalEvents} color="bg-green-500" />
                 <HorizBar label="Upcoming"      value={upcomingEvents} max={totalEvents} color="bg-yellow-500" />
@@ -129,7 +129,7 @@ export default function AdminAnalyticsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
               <div>
                 <p className="text-2xl font-bold text-orange-600">{totalEvents}</p>
-                <p className="text-xs text-gray-400 mt-1">Events Created</p>
+                <p className="text-xs text-gray-400 mt-1">Techfects Created</p>
               </div>
               <div className="flex items-center justify-center text-gray-400 text-2xl">→</div>
               <div>
@@ -140,7 +140,7 @@ export default function AdminAnalyticsPage() {
             <div className="mt-4 text-center text-xs text-gray-400">
               {totalEvents > 0
                 ? `${(totalTeams / totalEvents).toFixed(1)} teams per event on average`
-                : "No events yet"}
+                : "No techfects yet"}
             </div>
           </div>
         </div>

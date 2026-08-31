@@ -117,7 +117,7 @@ export default function MobileRobotProfile({
           <CalendarDays size={22} className="mrp-stat-icon" />
           <div>
             <p className="mrp-stat-num">{eventsPlayed}</p>
-            <p className="mrp-stat-label">Events</p>
+            <p className="mrp-stat-label">Techfects</p>
           </div>
         </div>
         <span className="mrp-divider" />

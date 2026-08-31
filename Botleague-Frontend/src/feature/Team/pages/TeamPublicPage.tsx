@@ -277,7 +277,7 @@ export default function TeamPublicPage() {
                   {/* Tournament name + tags */}
                   <div>
                     <p style={{ margin: "0 0 4px", fontWeight: 700, fontSize: "0.9rem", color: TEXT }}>
-                      {rec.eventName ?? "Unknown Event"}
+                      {rec.eventName ?? "Unknown Techfect"}
                     </p>
                     {rec.robotName && (
                       <p style={{ margin: "0 0 4px", fontSize: "0.72rem", color: GOLD2, display: "flex", alignItems: "center", gap: 4 }}>

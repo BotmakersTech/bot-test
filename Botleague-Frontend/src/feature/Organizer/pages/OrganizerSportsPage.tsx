@@ -96,7 +96,7 @@ export default function OrganizerSportsPage() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               onKeyDown={e => e.key === "Enter" && setActiveSearch(search)}
-              placeholder="Search by sport, event, age group…"
+              placeholder="Search by sport, techfect, age group…"
               style={{ width: "100%", paddingLeft: "36px", paddingRight: "12px", height: "40px", background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "10px", color: TEXT, fontSize: "0.85rem", outline: "none", boxSizing: "border-box" }}
             />
           </div>
@@ -107,7 +107,7 @@ export default function OrganizerSportsPage() {
         </div>
         <select value={eventFilter} onChange={e => setEventFilter(e.target.value)}
           style={{ height: "40px", background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "10px", color: TEXT, fontSize: "0.85rem", padding: "0 14px", outline: "none", cursor: "pointer" }}>
-          <option value="ALL">All Events</option>
+          <option value="ALL">All Techfects</option>
           {events.map(ev => <option key={ev.id} value={ev.id}>{ev.eventName}</option>)}
         </select>
       </div>
@@ -123,7 +123,7 @@ export default function OrganizerSportsPage() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
             <thead>
               <tr style={{ background: "rgba(140,108,255,0.06)", borderBottom: `1px solid ${BORDER}` }}>
-                {["Sport", "Event", "Age Group", "Weight Class", "Teams", "Status", ""].map((h, i) => (
+                {["Sport", "Techfect", "Age Group", "Weight Class", "Teams", "Status", ""].map((h, i) => (
                   <th key={i} style={{ textAlign: i >= 4 ? "center" : "left", padding: "12px 14px", color: MUTED, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
                 ))}
               </tr>

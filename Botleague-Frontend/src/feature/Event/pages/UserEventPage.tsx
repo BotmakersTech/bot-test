@@ -1,6 +1,6 @@
 // ======================================================
 // UserEventPage.tsx
-// Logged-in "Browse Events" dashboard view — Route: /browse-events
+// Logged-in "Browse Techfects" dashboard view — Route: /browse-events
 // (distinct from the public marketing page at /events)
 // Uses: useEvent hook → fetchLiveEvents()
 // ======================================================
@@ -195,7 +195,7 @@ export default function UserEventPage() {
                 onBlur={() => setSearchFocused(false)}
                 onChange={(e) => { setSearch(e.target.value); setShowDropdown(true); }}
                 onKeyDown={(e) => { if (e.key === "Enter") submitSearch(); }}
-                placeholder="Search events by name, city, or code…"
+                placeholder="Search techfects by name, city, or code…"
                 className="flex-1 bg-transparent outline-none text-[14px] evt-font-poppins placeholder:text-gray-400"
               />
               {search && (
@@ -225,7 +225,7 @@ export default function UserEventPage() {
                     </div>
                   ))
                 ) : (
-                  <div className="px-5 py-4 text-center text-[13px] text-gray-400 evt-font-poppins">No matching events</div>
+                  <div className="px-5 py-4 text-center text-[13px] text-gray-400 evt-font-poppins">No matching techfects</div>
                 )}
               </div>
             )}
@@ -240,7 +240,7 @@ export default function UserEventPage() {
         {loading && (
           <div className="flex flex-col items-center justify-center gap-4 py-20 text-gray-400">
             <span className="evt-spinner" style={{ width: 34, height: 34 }} />
-            <p className="evt-font-poppins text-[13.5px]">Loading events…</p>
+            <p className="evt-font-poppins text-[13.5px]">Loading techfects…</p>
           </div>
         )}
 
@@ -262,7 +262,7 @@ export default function UserEventPage() {
         {!loading && !error && events.length > 0 && filtered.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center gap-2">
             <Search size={38} className="text-gray-300 mb-1" />
-            <h3 className="evt-heading-mobile evt-font-poppins font-bold text-[14px] text-[#1a1a2e]">No events found</h3>
+            <h3 className="evt-heading-mobile evt-font-poppins font-bold text-[14px] text-[#1a1a2e]">No techfects found</h3>
             <p className="evt-font-poppins text-[13px] text-gray-400">Try adjusting your search query.</p>
           </div>
         )}
@@ -273,7 +273,7 @@ export default function UserEventPage() {
             <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-2" style={{ background: "rgba(79,108,234,0.08)", border: "1px solid rgba(79,108,234,0.18)" }}>
               <Calendar size={26} className="text-[#4F6EF7]" />
             </div>
-            <h3 className="evt-heading-mobile evt-font-poppins font-bold text-[14px] text-[#1a1a2e]">No live events right now</h3>
+            <h3 className="evt-heading-mobile evt-font-poppins font-bold text-[14px] text-[#1a1a2e]">No live techfects right now</h3>
             <p className="evt-font-poppins text-[13px] text-gray-400 max-w-[260px]">Check back soon for upcoming competitions.</p>
           </div>
         )}

@@ -22,8 +22,10 @@ interface ConfigState {
   minTeamSize: number
   maxTeamSize: number
   maxTeams: number
-  entryFee: number
-  prizeMoney: number
+  // Blank-able: start empty instead of forcing a 0 the organiser then has to
+  // clear. Coerced to a number (0 if left blank) at submit time.
+  entryFee: number | ""
+  prizeMoney: number | ""
   prizeDistribution: PrizePosition[]
   mapUrl: string
   registrationStartDate: string
@@ -36,8 +38,8 @@ const INITIAL_CONFIG: ConfigState = {
   minTeamSize: 1,
   maxTeamSize: 5,
   maxTeams: 16,
-  entryFee: 0,
-  prizeMoney: 0,
+  entryFee: "",
+  prizeMoney: "",
   prizeDistribution: [],
   mapUrl: "",
   registrationStartDate: "",
@@ -45,6 +47,13 @@ const INITIAL_CONFIG: ConfigState = {
 }
 
 type SubmitResult = { sport: LeagueSport; ok: boolean; message?: string }
+
+/** "" stays "" (blank field); a valid number passes through; garbage -> "". */
+const numOrEmpty = (raw: string): number | "" => {
+  if (raw.trim() === "") return ""
+  const n = parseFloat(raw)
+  return Number.isFinite(n) ? n : ""
+}
 
 function formatSpecHint(ls: LeagueSport): string | undefined {
   const parts: string[] = []
@@ -164,8 +173,8 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
     minTeamSize: config.minTeamSize,
     maxTeamSize: config.maxTeamSize,
     maxTeams: config.maxTeams,
-    entryFee: config.entryFee,
-    prizeMoney: config.prizeMoney,
+    entryFee: config.entryFee === "" ? 0 : config.entryFee,
+    prizeMoney: config.prizeMoney === "" ? 0 : config.prizeMoney,
     prizeDistribution: config.prizeDistribution,
     mapUrl: config.mapUrl || undefined,
     registrationStartDate: config.registrationStartDate,
@@ -180,9 +189,10 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
     if (!config.registrationEndDate) { setError("Please set a registration end date."); return }
     if (config.registrationStartDate > config.registrationEndDate) { setError("Registration start date must be before end date."); return }
     {
+      const pool = config.prizeMoney === "" ? 0 : config.prizeMoney
       const dist = config.prizeDistribution.filter(p => p.type === "GOODIES" ? (p.description ?? "").trim() !== "" : p.amount != null)
-      if (dist.length > 0 && !prizeDistributionBalanced(config.prizeMoney, dist)) {
-        setError(`Prize distribution money (${formatINR(sumPrizeMoney(dist))}) must equal the Prize Money pool (${formatINR(config.prizeMoney)}).`); return
+      if (dist.length > 0 && !prizeDistributionBalanced(pool, dist)) {
+        setError(`Prize distribution money (${formatINR(sumPrizeMoney(dist))}) must equal the Prize Money pool (${formatINR(pool)}).`); return
       }
     }
 
@@ -218,7 +228,7 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
         <div className="ed-modal-head">
           <div>
             <h2 className="ed-modal-title">ADD SPORT</h2>
-            <div className="asm-head-meta">Configure new sport(s) for this event</div>
+            <div className="asm-head-meta">Configure new sport(s) for this techfect</div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <div className="asm-step-dots">
@@ -337,13 +347,13 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
               </div>
 
               <div className="asm-grid-2">
-                <FormField label="Entry Fee (₹)" required><input type="number" min={0} step={50} className="asm-input" value={config.entryFee} onChange={e => setCfg("entryFee", parseFloat(e.target.value) || 0)} /></FormField>
-                <FormField label="Prize Money (₹)" required><input type="number" min={0} step={1000} className="asm-input" value={config.prizeMoney} onChange={e => setCfg("prizeMoney", parseFloat(e.target.value) || 0)} /></FormField>
+                <FormField label="Entry Fee (₹)" required><input type="number" min={0} step={50} className="asm-input" value={config.entryFee} onChange={e => setCfg("entryFee", numOrEmpty(e.target.value))} /></FormField>
+                <FormField label="Prize Money (₹)" required><input type="number" min={0} step={1000} className="asm-input" value={config.prizeMoney} onChange={e => setCfg("prizeMoney", numOrEmpty(e.target.value))} /></FormField>
               </div>
 
               <FormField label="Prize Distribution">
                 <PrizeDistributionEditor
-                  poolAmount={config.prizeMoney}
+                  poolAmount={config.prizeMoney === "" ? 0 : config.prizeMoney}
                   positions={config.prizeDistribution}
                   onChange={next => setCfg("prizeDistribution", next)}
                 />

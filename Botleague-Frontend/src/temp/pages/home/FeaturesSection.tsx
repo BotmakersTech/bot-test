@@ -5,8 +5,8 @@ import repairImg from "../../../assets/home/Img/spec/repair.png";
 import earthImg from "../../../assets/home/Img/spec/earth.png";
 
 const FEATURES = [
-  { img: trophyImg, title: "National Ranking", desc: "One National Leaderboard. Every Event Counts." },
-  { img: certificateImg, title: "Verified Certificates", desc: "QR-Verified Achievements Recognized Across Affiliated Events." },
+  { img: trophyImg, title: "National Ranking", desc: "One National Leaderboard. Every Techfect Counts." },
+  { img: certificateImg, title: "Verified Certificates", desc: "QR-Verified Achievements Recognized Across Affiliated Techfects." },
   { img: repairImg, title: "Ground Repair Tools", desc: "Repair, Rebuild, And Get Back In The Game." },
   { img: earthImg, title: "Gateway On Global", desc: "Qualify For Battle Of Robots And Represent India." },
 ];

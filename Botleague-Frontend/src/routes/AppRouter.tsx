@@ -737,7 +737,7 @@ function AppRoutes() {
 
         {/* ── Competitor pages ── */}
         {/* NOTE: /events (no id) is the public marketing/events page above —
-            this is the logged-in "browse & search events" dashboard view.
+            this is the logged-in "browse & search techfects" dashboard view.
             /events/:eventId and /events/:eventId/sports/:sportId moved to the
             public routes section — they're unprotected so anyone can browse
             an event/sport without an account; registration/lineup actions
