@@ -2,6 +2,7 @@ package com.botleague.backend.ranking.service;
 
 import com.botleague.backend.events.entity.EventSports;
 import com.botleague.backend.events.entity.SportRegistration;
+import com.botleague.backend.events.enums.RegistrationStatus;
 import com.botleague.backend.events.repository.EventSportsRepository;
 import com.botleague.backend.events.repository.SportRegistrationRepository;
 import com.botleague.backend.matches.entity.Match;
@@ -514,6 +515,51 @@ public class RankingEngineService {
         if (match.getTeamCRegistrationId() != null) ids.add(match.getTeamCRegistrationId());
         if (match.getTeamDRegistrationId() != null) ids.add(match.getTeamDRegistrationId());
         return ids;
+    }
+
+    /**
+     * Seed a 0-point EventLeaderboardEntry for every REGISTERED robot in a
+     * sport, so the Leaderboard tab shows the full field from the moment the
+     * bracket is generated instead of an empty "matches haven't started" state.
+     * Idempotent — never touches an entry that already exists (i.e. one that
+     * already has match stats). Safe to call after every bracket generation.
+     */
+    public void seedEventLeaderboard(UUID eventSportId) {
+        EventSports sport = eventSportsRepository.findById(eventSportId).orElse(null);
+        if (sport == null) return;
+
+        List<SportRegistration> regs = sportRegistrationRepository
+                .findByEventSportIdAndStatus(eventSportId, RegistrationStatus.REGISTERED);
+
+        List<EventLeaderboardEntry> fresh = new ArrayList<>();
+        for (SportRegistration reg : regs) {
+            if (reg.getRobotId() == null) continue;
+            boolean exists = leaderboardEntryRepository
+                    .findByEventSportIdAndRobotId(eventSportId, reg.getRobotId())
+                    .isPresent();
+            if (exists) continue;
+
+            EventLeaderboardEntry e = new EventLeaderboardEntry();
+            e.setEventId(sport.getEventId());
+            e.setEventSportId(eventSportId);
+            e.setRobotId(reg.getRobotId());
+            e.setTeamId(reg.getTeamId());
+            e.setSport(sport.getSport());
+            e.setAgeGroup(sport.getAgeGroup());
+            e.setWeightClass(sport.getWeightClass());
+            if (reg.getTeamId() != null) {
+                teamRepository.findById(reg.getTeamId()).ifPresent(t -> e.setTeamName(t.getTeamName()));
+            }
+            e.setRobotName(reg.getRobotName());
+            // points/wins/losses/matchesPlayed default to 0 on the entity.
+            fresh.add(e);
+        }
+
+        if (!fresh.isEmpty()) {
+            leaderboardEntryRepository.saveAll(fresh);
+            recalculateLeaderboardRanks(eventSportId);
+            log.info("[RankingEngine] Seeded {} leaderboard entries for eventSport {}", fresh.size(), eventSportId);
+        }
     }
 
     private void updateLeaderboardEntry(EventSports sport, UUID robotId, UUID teamId, SportRegistration reg,

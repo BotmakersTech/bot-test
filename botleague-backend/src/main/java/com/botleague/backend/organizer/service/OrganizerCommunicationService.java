@@ -166,21 +166,24 @@ public class OrganizerCommunicationService {
                     NotificationPriority.HIGH, NotificationTargetType.SPORT, sportId, actionUrl);
         }
 
-        // 2. Post into the sport's read-only announcement chat room.
-        // Deliberately ALL-only: the room is one shared, persistent board per
-        // sport, so a SPECIFIC_TEAMS message posted there would stay visible
-        // to every team ever onboarded from a past ALL send, not just the
-        // teams targeted this time. Specific-team sends still notify + show
-        // up (correctly team-filtered) in the sport's Announcements tab —
-        // they just don't get echoed into the shared chat room.
-        if (!specific) {
+        // 2. Post into the sport's announcement chat room so it also lands in
+        // the recipient's chat "Announcements" tab (not just as a notification).
+        // The room is one shared, persistent board per sport; for a
+        // SPECIFIC_TEAMS send we only add the targeted users as participants
+        // and prefix the message so it reads as targeted. A team onboarded
+        // from a past ALL send may still see a later specific message in the
+        // shared board — an accepted trade-off for having it visible in chat.
+        {
             ChatRoom room = chatService.createSportAnnouncementChannel(
                     sportId, sport.getSport(), eventId, event.getEventName());
             for (UUID userId : recipientUserIds) {
                 chatService.addParticipant(room.getId(), userId, false);
             }
             chatService.addParticipant(room.getId(), senderId, true);
-            chatService.sendMessage(room.getId(), senderId, title + "\n\n" + req.getMessage(),
+            String chatBody = specific
+                    ? "📢 Sent to selected participants\n\n" + title + "\n\n" + req.getMessage()
+                    : title + "\n\n" + req.getMessage();
+            chatService.sendMessage(room.getId(), senderId, chatBody,
                     req.getAttachmentUrl(), req.getAttachmentFileType());
         }
 

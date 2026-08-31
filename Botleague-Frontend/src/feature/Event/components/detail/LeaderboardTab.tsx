@@ -22,7 +22,7 @@ export default function LeaderboardTab({ leaderboard, loading, error }: Leaderbo
   if (loading) return <p style={{ textAlign: "center", padding: "40px 0" }}>Loading leaderboard…</p>;
   if (error) return <p style={{ textAlign: "center", padding: "40px 0", color: "#dc2626" }}>{error}</p>;
   if (!leaderboard || leaderboard.entries.length === 0) {
-    return <p style={{ textAlign: "center", padding: "40px 0", color: "#666" }}>Rankings will appear here once matches begin.</p>;
+    return <p style={{ textAlign: "center", padding: "40px 0", color: "#666" }}>Standings will appear here once the bracket is generated.</p>;
   }
 
   const visible = leaderboard.entries.slice(0, visibleCount);

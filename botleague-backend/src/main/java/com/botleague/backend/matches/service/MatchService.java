@@ -227,18 +227,28 @@ public class MatchService {
             throw ApiException.badRequest("tournamentFormat is required");
         }
 
+        List<MatchResponseDTO> generated;
         switch (tournamentFormat) {
             case SINGLE_ELIMINATION:
-                return generateSingleElimination(request);
+                generated = generateSingleElimination(request);
+                break;
 
             case DOUBLE_ELIMINATION:
-                return generateDoubleElimination(request);
+                generated = generateDoubleElimination(request);
+                break;
 
             default:
                 throw ApiException.badRequest(
                         "Tournament format not supported: " + tournamentFormat
                 );
         }
+
+        // Show the full field at 0 points the moment the bracket exists,
+        // instead of an empty leaderboard until the first match is scored.
+        if (rankingEngineService != null) {
+            rankingEngineService.seedEventLeaderboard(request.getEventSportId());
+        }
+        return generated;
     }
 
     // =====================================================
@@ -495,6 +505,11 @@ public class MatchService {
         realtimePublisher.pushBracketCreated(eventSportId);
         if (tournamentNotificationService != null) {
             tournamentNotificationService.onBracketCreated(eventSportId, "Tournament");
+        }
+
+        // Show the full field at 0 points as soon as the bracket exists.
+        if (rankingEngineService != null) {
+            rankingEngineService.seedEventLeaderboard(eventSportId);
         }
         return response;
     }
