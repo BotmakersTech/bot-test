@@ -185,7 +185,7 @@ export default function EventDashboard({
             <div className="ed-stat-icon"><Trophy size={18} /></div>
             <div>
               <div className="ed-stat-value">{sports.length}</div>
-              <div className="ed-stat-label">SPORTS</div>
+              <div className="ed-stat-label">TECHSPORTS</div>
             </div>
           </div>
           <div className="ed-stat-card">

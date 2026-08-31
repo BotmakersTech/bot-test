@@ -132,7 +132,7 @@ export default function MobileEventDetail({
       <div className="ed-m-stats-grid">
         <div className="ed-m-stat-card">
           <div className="ed-m-stat-icon"><Trophy size={17} /></div>
-          <div className="ed-m-stat-text"><div className="ed-m-stat-value">{sports.length}</div><div className="ed-m-stat-label">Sports</div></div>
+          <div className="ed-m-stat-text"><div className="ed-m-stat-value">{sports.length}</div><div className="ed-m-stat-label">Techsports</div></div>
         </div>
         <div className="ed-m-stat-card">
           <div className="ed-m-stat-icon"><Users size={17} /></div>
@@ -170,7 +170,7 @@ export default function MobileEventDetail({
 
       {/* Sports */}
       <div className="ed-m-section-title-row">
-        <div className="ed-m-section-title">Sports</div>
+        <div className="ed-m-section-title">Techsports</div>
         {canAddSport && (
           <button type="button" className="ed-m-btn-gradient-pill" onClick={onAddSport}>
             <Plus size={12} /> Add Sports

@@ -106,7 +106,7 @@ export default function AdminAnalyticsPage() {
 
           {/* Popular sports */}
           <div className="rounded-2xl bg-white border p-5" style={{ borderColor: "rgba(75,134,232,0.2)" }}>
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Most Popular Sports</h3>
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Most Popular Techsports</h3>
             {sportCounts.length === 0 ? (
               <p className="text-gray-400 text-sm">No sports data yet</p>
             ) : (

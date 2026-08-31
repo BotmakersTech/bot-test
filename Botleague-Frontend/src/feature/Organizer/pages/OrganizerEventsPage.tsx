@@ -122,7 +122,7 @@ export default function OrganizerEventsPage() {
                 <th style={{ textAlign: "left", padding: "12px 16px", color: MUTED, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Techfect</th>
                 <th style={{ textAlign: "left", padding: "12px 16px", color: MUTED, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Dates</th>
                 <th style={{ textAlign: "left", padding: "12px 16px", color: MUTED, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Venue</th>
-                <th style={{ textAlign: "center", padding: "12px 16px", color: MUTED, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Sports</th>
+                <th style={{ textAlign: "center", padding: "12px 16px", color: MUTED, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Techsports</th>
                 <th style={{ textAlign: "center", padding: "12px 16px", color: MUTED, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Teams</th>
                 <th style={{ textAlign: "center", padding: "12px 16px", color: MUTED, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Status</th>
                 <th style={{ textAlign: "right", padding: "12px 16px" }}></th>

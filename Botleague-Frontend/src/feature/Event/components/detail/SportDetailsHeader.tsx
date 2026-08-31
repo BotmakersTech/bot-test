@@ -1,6 +1,5 @@
-import { Weight, Wallet, Trophy, GraduationCap, Layers, MapPin } from "lucide-react";
+import { Weight, Wallet, Trophy, GraduationCap, Layers } from "lucide-react";
 import { formatPrizePosition } from "../../../../shared/utils/prize";
-import { directionsHref } from "../../../../shared/utils/maps";
 import type { ComponentType } from "react";
 import type { EventSportResponse, SupportContact } from "../../api/event.api";
 import plane from "../../../../assets/Auth/plane.svg";
@@ -76,19 +75,8 @@ export default function SportDetailsHeader({ sport, contacts }: SportDetailsHead
       </div>
 
       <div className="event-info">
-        <h2>{sport.sport?.replace(/_/g, " ") ?? "Sport"}</h2>
+        <h2>{sport.sport?.replace(/_/g, " ") ?? "Techsport"}</h2>
         <p>{sport.sportsDescription || "Details for this competition will be published soon."}</p>
-
-        {sport.mapUrl && (
-          <p style={{ margin: "4px 0 10px", display: "flex", gap: 14, flexWrap: "wrap" }}>
-            <a href={directionsHref({ mapUrl: sport.mapUrl }) ?? sport.mapUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#0162D1", fontWeight: 700 }}>
-              <MapPin size={15} /> Get Directions
-            </a>
-            <a href={sport.mapUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#0162D1", fontWeight: 500 }}>
-              View on map
-            </a>
-          </p>
-        )}
 
         {sport.prizeDistribution && sport.prizeDistribution.length > 0 && (
           <div style={{ margin: "0 0 12px", display: "flex", flexWrap: "wrap", gap: 8 }}>

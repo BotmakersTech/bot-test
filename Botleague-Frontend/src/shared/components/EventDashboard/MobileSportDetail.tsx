@@ -7,7 +7,6 @@ import "./MobileSportDetail.css"
 import { formatWeightClass } from "../../../feature/Robots/constants/weightClasses"
 import { ageGroupLabel } from "../../utils/ageGroup"
 import { formatPrizePosition, type PrizePosition } from "../../utils/prize"
-import { directionsHref } from "../../utils/maps"
 
 // Mobile view of the single-sport management page (mockup: "Sportmanagementdashboard.jsx").
 // Shared by AdminSport.tsx (/admin/events/:eventId/sports/:sportId) and
@@ -63,7 +62,6 @@ interface MobileSportDetailProps {
   weightClass?: string | null
   weightLimitKg?: number | null
   teamSizeLabel?: string | null
-  mapUrl?: string | null
   prizeDistribution?: PrizePosition[] | null
 
   registrationStartDate?: string | null
@@ -161,7 +159,7 @@ export default function MobileSportDetail({
   onEditSport, onToggleRegistration, registrationLoading, extraTitleActions,
   errorBanner, publishMsg, publishOk, topExtra,
   totalTeams, totalPlayers, maxTeams, entryFee, prizeMoney,
-  ageGroup, weightClass, weightLimitKg, teamSizeLabel, mapUrl, prizeDistribution,
+  ageGroup, weightClass, weightLimitKg, teamSizeLabel, prizeDistribution,
   registrationStartDate, registrationEndDate,
   matchActions, onCertificates, showPublish, onPublish, publishing,
   teams, regActionError, onTeamStatusChange, onMessageTeam,
@@ -238,7 +236,7 @@ export default function MobileSportDetail({
       </div>
 
       {/* Sports Details */}
-      <div className="ssd-m-section-title">Sports Details</div>
+      <div className="ssd-m-section-title">Techsports Details</div>
       <hr className="ssd-m-section-line" />
       <div className="ssd-m-details-box">
         <div className="ssd-m-details-grid">
@@ -246,9 +244,6 @@ export default function MobileSportDetail({
           <div className="ssd-m-detail-cell"><div className="label">Weight Class</div><div className="value">{formatWeightClass(weightClass) || "—"}</div></div>
           <div className="ssd-m-detail-cell"><div className="label">Weight Limit</div><div className="value">{weightLimitKg != null ? `${weightLimitKg} KG` : "—"}</div></div>
           <div className="ssd-m-detail-cell"><div className="label">Team Size</div><div className="value">{teamSizeLabel || "—"}</div></div>
-          {mapUrl && (
-            <div className="ssd-m-detail-cell"><div className="label">Location</div><div className="value"><a href={directionsHref({ mapUrl }) ?? mapUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#0162D1" }}>Get Directions</a></div></div>
-          )}
         </div>
 
         {prizeDistribution && prizeDistribution.length > 0 && (

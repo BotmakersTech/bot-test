@@ -164,7 +164,7 @@ export default function OrganizerRegistrationsPage() {
         )}
         <select value={selectedSportId} onChange={e => setSelectedSportId(e.target.value)}
           style={{ height: "40px", background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "10px", color: TEXT, fontSize: "0.85rem", padding: "0 14px", outline: "none", cursor: "pointer" }}>
-          <option value="">— Select Sport —</option>
+          <option value="">— Select Techsport —</option>
           {sports.map(sp => <option key={sp.id} value={sp.id}>{toLabel(sp.sport)}{sp.ageGroup ? ` · ${ageGroupLabel(sp.ageGroup)}` : ""}</option>)}
         </select>
         <div style={{ flex: 1, minWidth: "200px", position: "relative" }}>

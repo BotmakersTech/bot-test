@@ -336,7 +336,6 @@ function SportCard({
       <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center", marginBottom: "12px" }}>
         {sport.ageGroup    && <CategoryBadge category={sport.ageGroup} size="xs" showAgeRange />}
         {sport.weightClass && <span style={chip()}>⚖️ {formatWeightClass(sport.weightClass)}</span>}
-        {sport.mapUrl      && <a href={directionsHref({ mapUrl: sport.mapUrl }) ?? sport.mapUrl} target="_blank" rel="noopener noreferrer" style={{ ...chip(), textDecoration: "none", fontWeight: 700 }}>🧭 Get Directions</a>}
         {categoryMismatch && (
           <span style={{ fontSize: "0.63rem", color: "#f87171", fontWeight: 600, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)", borderRadius: "6px", padding: "2px 7px" }}>
             Not eligible for your category
@@ -1096,7 +1095,7 @@ export default function SearchEvents() {
             {selectedEvent && (
               <div style={{ animation: "fadeSlideIn 0.25s ease", position: "sticky", top: "20px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-                  <span style={{ fontSize: "0.67rem", fontWeight: 700, letterSpacing: "0.12em", color: ACCENT, textTransform: "uppercase", fontFamily: "'Sarpanch', sans-serif" }}>Sport Categories</span>
+                  <span style={{ fontSize: "0.67rem", fontWeight: 700, letterSpacing: "0.12em", color: ACCENT, textTransform: "uppercase", fontFamily: "'Sarpanch', sans-serif" }}>Techsport Categories</span>
                   {eventSports.length > 0 && <span style={{ background: "rgba(250,71,21,0.13)", border: "1px solid rgba(250,71,21,0.25)", color: ACCENT, borderRadius: "999px", fontSize: "0.7rem", padding: "1px 9px", fontWeight: 700 }}>{eventSports.length}</span>}
                 </div>
                 <SportsPanel

@@ -844,7 +844,7 @@
 //             <div style={{ ...inputBase, opacity: 0.6 }}>{eventName}</div>
 //           </Row>
 //           {sport && (
-//             <Row label={<><Swords size={13} color={T.muted} /> Sport</>}>
+//             <Row label={<><Swords size={13} color={T.muted} /> Techsport</>}>
 //               <div style={{ ...inputBase, color: T.accent2, fontWeight: 600 }}>{sport}</div>
 //             </Row>
 //           )}

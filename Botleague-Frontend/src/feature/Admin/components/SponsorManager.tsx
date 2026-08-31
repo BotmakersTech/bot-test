@@ -1,6 +1,6 @@
 // Unified sponsor manager for event-level and sport-level sponsors.
 // Usage:  <SponsorManager mode="event" entityId={eventId} title="Event Sponsors" />
-//         <SponsorManager mode="sport"  entityId={sportId} title="Sport Sponsors" />
+//         <SponsorManager mode="sport"  entityId={sportId} title="Techsport Sponsors" />
 
 import { useRef, useState, useEffect, useCallback } from "react";
 import { X, Upload, AlertTriangle, Handshake } from "lucide-react";

@@ -97,7 +97,7 @@ export default function VerifyCertificatePage() {
                 )}
                 <Row label="Recipient" value={result.recipientName} />
                 <Row label="Techfect" value={result.eventName} />
-                <Row label="Sport" value={result.eventSportName} />
+                <Row label="Techsport" value={result.eventSportName} />
                 <Row label="Certificate" value={result.label} />
                 {result.teamName && <Row label="Team" value={result.teamName} />}
                 {result.robotName && <Row label="Robot" value={result.robotName} />}

@@ -143,7 +143,7 @@ export default function MobileEventList({
                 <div className="el-m-event-stats">
                   <div>
                     <div className="el-m-event-stat-value">{ev.sportsCount}</div>
-                    <div className="el-m-event-stat-label">Sports</div>
+                    <div className="el-m-event-stat-label">Techsports</div>
                   </div>
                   <div>
                     <div className="el-m-event-stat-value">{ev.registeredCount}</div>

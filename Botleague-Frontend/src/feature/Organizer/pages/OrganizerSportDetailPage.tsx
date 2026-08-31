@@ -2,7 +2,7 @@ import React from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
 import {
-  ArrowLeft, Users, Trophy, Calendar, CalendarRange, MapPin, Swords, IndianRupee, Award, Bot,
+  ArrowLeft, Users, Trophy, Calendar, CalendarRange, Swords, IndianRupee, Award, Bot,
   Edit2, X, Megaphone, FileEdit, PlayCircle, RefreshCw, CheckCircle2, XCircle, Lock, Unlock, Globe,
   AlertTriangle, MessageCircle, Check, Ban, Clock, ChevronUp, ChevronDown,
 } from "lucide-react"
@@ -18,7 +18,6 @@ import { getPublicLeagueSports, toWeightClasses, type LeagueSport } from "../../
 import { formatWeightClass } from "../../Robots/constants/weightClasses"
 import PrizeDistributionEditor from "../../../shared/components/PrizeDistributionEditor"
 import { formatPrizePosition, prizeDistributionBalanced, sumPrizeMoney, formatINR, type PrizePosition } from "../../../shared/utils/prize"
-import { directionsHref } from "../../../shared/utils/maps"
 import { ageGroupLabel } from "../../../shared/utils/ageGroup"
 import { useLeagues, formatAgeRange, type PresentedLeague } from "../../../temp/pages/leagues/useLeagues"
 import SportMediaField from "../components/SportMediaField"
@@ -421,6 +420,9 @@ function localToIso(local?: string): string | undefined {
   return isNaN(d.getTime()) ? undefined : d.toISOString()
 }
 
+// Local wall-clock "now" as YYYY-MM-DDTHH:mm — floor for the registration-start picker.
+const NOW_LOCAL = toDatetimeLocal(new Date().toISOString())
+
 function EditSportModal({
   sport,
   eventId,
@@ -458,7 +460,6 @@ function EditSportModal({
     entryFee:               sport.entryFee ?? undefined,
     prizeMoney:             sport.prizeMoney ?? undefined,
     prizeDistribution:      sport.prizeDistribution ?? [],
-    mapUrl:                 sport.mapUrl ?? "",
     formatType:             sport.formatType ?? "",
     registrationStartDate:  toDatetimeLocal(sport.registrationStartDate),
     registrationEndDate:    toDatetimeLocal(sport.registrationEndDate),
@@ -512,7 +513,6 @@ function EditSportModal({
         Object.entries(raw).filter(([, v]) => v !== "" && v !== undefined && v !== null)
       ) as unknown as CreateEventSportRequest
 
-      payload.mapUrl = form.mapUrl ?? ""
       payload.prizeDistribution = dist
 
       const result = await onSave(eventId, sportId, payload)
@@ -595,7 +595,7 @@ function EditSportModal({
             background: "#f8f9ff", border: "1px solid rgba(75,134,232,0.3)", borderRadius: "10px",
             padding: "14px 16px", display: "flex", flexDirection: "column", gap: "16px",
           }}>
-            <SportMediaField eventId={eventId} sportId={sportId} slot="THUMBNAIL" kind="image" label="Sport Thumbnail" currentUrl={sport.sportThumbnailUrl} onMediaChange={onMediaChange} colors={{ border: "rgba(75,134,232,0.3)", muted: MUTED, accent: ACCENT, danger: DANGER, uploadBg: "#f8f9ff" }} />
+            <SportMediaField eventId={eventId} sportId={sportId} slot="THUMBNAIL" kind="image" label="Techsport Thumbnail" currentUrl={sport.sportThumbnailUrl} onMediaChange={onMediaChange} colors={{ border: "rgba(75,134,232,0.3)", muted: MUTED, accent: ACCENT, danger: DANGER, uploadBg: "#f8f9ff" }} />
             <SportMediaField eventId={eventId} sportId={sportId} slot="TEASER" kind="video" label="Teaser Video" currentUrl={sport.sportTeaserVideoUrl} onMediaChange={onMediaChange} colors={{ border: "rgba(75,134,232,0.3)", muted: MUTED, accent: ACCENT, danger: DANGER, uploadBg: "#f8f9ff" }} />
           </div>
 
@@ -718,20 +718,15 @@ function EditSportModal({
             />
           </div>
 
-          <div style={groupStyle}>
-            <label style={labelStyle}>Location / Google Maps link</label>
-            <input type="url" style={inputStyle} placeholder="https://maps.app.goo.gl/…" value={form.mapUrl ?? ""} onChange={e => set("mapUrl", e.target.value)} />
-          </div>
-
           {/* Row 8: Registration Window */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
             <div style={groupStyle}>
               <label style={labelStyle}>Registration Start</label>
-              <input type="datetime-local" style={inputStyle} value={form.registrationStartDate ?? ""} onChange={e => set("registrationStartDate", e.target.value)} />
+              <input type="datetime-local" style={inputStyle} min={NOW_LOCAL} value={form.registrationStartDate ?? ""} onChange={e => set("registrationStartDate", e.target.value)} />
             </div>
             <div style={groupStyle}>
               <label style={labelStyle}>Registration End</label>
-              <input type="datetime-local" style={inputStyle} value={form.registrationEndDate ?? ""} onChange={e => set("registrationEndDate", e.target.value)} />
+              <input type="datetime-local" style={inputStyle} min={form.registrationStartDate || NOW_LOCAL} value={form.registrationEndDate ?? ""} onChange={e => set("registrationEndDate", e.target.value)} />
             </div>
           </div>
 
@@ -742,7 +737,7 @@ function EditSportModal({
               style={{ ...inputStyle, minHeight: "72px", resize: "vertical" }}
               value={form.sportData ?? ""}
               onChange={e => set("sportData", e.target.value)}
-              placeholder="Sport description…"
+              placeholder="Techsport description…"
             />
           </div>
 
@@ -1098,7 +1093,7 @@ export default function OrganizerSportDetailPage() {
   if (!sport) {
     return (
       <PageWrapper>
-        <div style={{ textAlign: "center", padding: "80px 0", color: MUTED }}>Sport not found</div>
+        <div style={{ textAlign: "center", padding: "80px 0", color: MUTED }}>Techsport not found</div>
       </PageWrapper>
     )
   }
@@ -1284,7 +1279,7 @@ export default function OrganizerSportDetailPage() {
       {/* ── SPORT DETAILS ── */}
       <div className="sdt-panel">
         <div className="sdt-panel-header">
-          <span className="sdt-panel-title"><Swords size={14} /> SPORT DETAILS</span>
+          <span className="sdt-panel-title"><Swords size={14} /> TECHSPORT DETAILS</span>
         </div>
 
         <div className="sdt-panel-body">
@@ -1304,15 +1299,6 @@ export default function OrganizerSportDetailPage() {
             />
             <Field label="Entry Fee" value={sport.entryFee != null ? formatCurrency(sport.entryFee) : null} />
             <Field label="Prize Pool" value={sport.prizeMoney != null ? formatCurrency(sport.prizeMoney) : null} />
-            <Field
-              label="Location"
-              value={sport.mapUrl ? (
-                <a href={directionsHref({ mapUrl: sport.mapUrl }) ?? sport.mapUrl} target="_blank" rel="noopener noreferrer"
-                   style={{ display: "inline-flex", alignItems: "center", gap: 5, color: ORG.blue, fontWeight: 600 }}>
-                  <MapPin size={13} /> Get Directions
-                </a>
-              ) : null}
-            />
           </div>
 
           {sport.prizeDistribution && sport.prizeDistribution.length > 0 && (
@@ -1426,7 +1412,6 @@ export default function OrganizerSportDetailPage() {
         ageGroup={sport.ageGroup ?? null}
         weightClass={sport.weightClass ?? null}
         weightLimitKg={sport.weightLimitKg ?? null}
-        mapUrl={sport.mapUrl ?? null}
         prizeDistribution={sport.prizeDistribution ?? null}
         teamSizeLabel={sport.maxTeamSize != null ? `${sport.maxTeamSize} players` : null}
         registrationStartDate={sport.registrationStartDate ?? null}

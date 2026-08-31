@@ -122,7 +122,7 @@ export default function OrganizerJudgesPage() {
               <tr className="border-b border-[#4b86e8]/20 text-left text-[11px] text-[#5d5d5d] uppercase tracking-wide">
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Contact</th>
-                <th className="px-4 py-3">Assigned Sport</th>
+                <th className="px-4 py-3">Assigned Techsport</th>
                 <th className="px-4 py-3">Arena</th>
                 <th className="px-4 py-3">Scoring Rights</th>
                 <th className="px-4 py-3 text-right">Actions</th>
@@ -186,7 +186,7 @@ export default function OrganizerJudgesPage() {
               </div>
             ))}
             <div>
-              <label className="text-xs text-[#5d5d5d] mb-1 block font-semibold">Assigned Sport</label>
+              <label className="text-xs text-[#5d5d5d] mb-1 block font-semibold">Assigned Techsport</label>
               <select value={form.assignedSportId ?? ""}
                 onChange={e => setForm(p => ({ ...p, assignedSportId: e.target.value || undefined }))}
                 className="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none">

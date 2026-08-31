@@ -27,7 +27,7 @@ export default function SportsSection({ eventId, eventSports }: SportsSectionPro
   if (eventSports.length === 0) {
     return (
       <section className="sports" style={{ "--star": `url(${star})` } as React.CSSProperties}>
-        <h2>SPORTS</h2>
+        <h2>TECHSPORTS</h2>
         <p className="sports-empty">
           Sports for this event haven't been published yet — check back soon.
         </p>
@@ -40,7 +40,7 @@ export default function SportsSection({ eventId, eventSports }: SportsSectionPro
       <img src={star} className="sports-star star-1" alt="" />
       <img src={star} className="sports-star star-2" alt="" />
 
-      <h2>SPORTS</h2>
+      <h2>TECHSPORTS</h2>
 
       <div className="cards">
         {eventSports.map((sport) => (

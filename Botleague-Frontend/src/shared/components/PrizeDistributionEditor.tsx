@@ -88,13 +88,16 @@ export default function PrizeDistributionEditor({ poolAmount, positions, onChang
               onChange={(e) => setRow(i, { amount: e.target.value === "" ? undefined : Number(e.target.value) })}
             />
           ) : (
-            <input
-              type="text"
-              placeholder="e.g. Trophy + robotics kit"
-              style={{ ...cell, flex: 1, minWidth: 160 }}
-              value={r.description ?? ""}
-              onChange={(e) => setRow(i, { description: e.target.value })}
-            />
+            <>
+              <input
+                type="text"
+                placeholder="e.g. Trophy + robotics kit"
+                style={{ ...cell, flex: 1, minWidth: 160 }}
+                value={r.description ?? ""}
+                onChange={(e) => setRow(i, { description: e.target.value })}
+              />
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#7c5cff", whiteSpace: "nowrap" }}>+ extra</span>
+            </>
           )}
 
           {rows.length > 1 && (
@@ -129,8 +132,11 @@ export default function PrizeDistributionEditor({ poolAmount, positions, onChang
 
       {!hideBalance && (
         <div style={{ fontSize: 12, fontWeight: 600, color: balanced ? "#16a34a" : "#dc2626" }}>
-          Distributed {formatINR(moneyTotal)} of {formatINR(poolAmount)} pool
-          {balanced ? " ✓" : " — money placings must add up to the pool"}
+          Cash prizes {formatINR(moneyTotal)} of {formatINR(poolAmount)} pool
+          {balanced ? " ✓" : " — cash placings must add up to the pool"}
+          {rows.some((r) => r.type === "GOODIES") && (
+            <span style={{ color: "#6b7280", fontWeight: 500 }}> · goodies are extra, not part of the pool</span>
+          )}
         </div>
       )}
     </div>

@@ -279,7 +279,7 @@ function EventCard({ event }: { event: AdminEventResponse }) {
       <div className="adb-stats-box">
         <div className="adb-stat-num">
           <h2>{sportsCount}</h2>
-          <span>Sports</span>
+          <span>Techsports</span>
         </div>
         <div className="adb-num-divider" />
         <div className="adb-stat-num">

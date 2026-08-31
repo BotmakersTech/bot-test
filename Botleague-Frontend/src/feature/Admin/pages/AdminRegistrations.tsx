@@ -84,7 +84,7 @@ export default function AdminRegistrations() {
           <p className="text-2xl font-bold mt-0.5 text-orange-600">{registrations.length}</p>
         </div>
         <div className="rounded-xl bg-white border px-4 py-3" style={{ borderColor: "rgba(75,134,232,0.2)" }}>
-          <p className="text-xs text-gray-400">Sport</p>
+          <p className="text-xs text-gray-400">Techsport</p>
           <p className="text-sm font-semibold mt-0.5 text-[#374151] truncate">
             {selectedSport ? toLabel(selectedSport.sport) : "—"}
           </p>

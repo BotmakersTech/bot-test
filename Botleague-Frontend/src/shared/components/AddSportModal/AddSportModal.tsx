@@ -27,7 +27,6 @@ interface ConfigState {
   entryFee: number | ""
   prizeMoney: number | ""
   prizeDistribution: PrizePosition[]
-  mapUrl: string
   registrationStartDate: string
   registrationEndDate: string
 }
@@ -41,12 +40,14 @@ const INITIAL_CONFIG: ConfigState = {
   entryFee: "",
   prizeMoney: "",
   prizeDistribution: [],
-  mapUrl: "",
   registrationStartDate: "",
   registrationEndDate: "",
 }
 
 type SubmitResult = { sport: LeagueSport; ok: boolean; message?: string }
+
+/** Today in YYYY-MM-DD — floor for the registration-start date picker. */
+const TODAY = new Date().toISOString().split("T")[0]
 
 /** "" stays "" (blank field); a valid number passes through; garbage -> "". */
 const numOrEmpty = (raw: string): number | "" => {
@@ -143,15 +144,14 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
     setError(null)
   }
 
+  // One techsport per add — selecting another replaces the current pick,
+  // tapping the selected one clears it.
   const toggleSport = (sport: LeagueSport) => {
     setSelectedSports(prev => {
-      const exists = prev.some(s => s.id === sport.id)
-      if (exists) return prev.filter(s => s.id !== sport.id)
+      if (prev.some(s => s.id === sport.id)) return []
       const classes = toWeightClasses(sport)
-      if (classes.length === 1) {
-        setWeightClassBySport(w => ({ ...w, [sport.id]: classes[0].value }))
-      }
-      return [...prev, sport]
+      setWeightClassBySport(classes.length === 1 ? { [sport.id]: classes[0].value } : {})
+      return [sport]
     })
     setError(null)
   }
@@ -176,7 +176,6 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
     entryFee: config.entryFee === "" ? 0 : config.entryFee,
     prizeMoney: config.prizeMoney === "" ? 0 : config.prizeMoney,
     prizeDistribution: config.prizeDistribution,
-    mapUrl: config.mapUrl || undefined,
     registrationStartDate: config.registrationStartDate,
     registrationEndDate: config.registrationEndDate,
   })
@@ -186,13 +185,14 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
     const missingWeightClass = sportsNeedingWeightClass.filter(s => !weightClassBySport[s.id])
     if (missingWeightClass.length > 0) { setError(`Please select a weight class for: ${missingWeightClass.map(s => s.sportName).join(", ")}.`); return }
     if (!config.registrationStartDate) { setError("Please set a registration start date."); return }
+    if (config.registrationStartDate < TODAY) { setError("Registration start date can't be in the past."); return }
     if (!config.registrationEndDate) { setError("Please set a registration end date."); return }
     if (config.registrationStartDate > config.registrationEndDate) { setError("Registration start date must be before end date."); return }
     {
       const pool = config.prizeMoney === "" ? 0 : config.prizeMoney
-      const dist = config.prizeDistribution.filter(p => p.type === "GOODIES" ? (p.description ?? "").trim() !== "" : p.amount != null)
-      if (dist.length > 0 && !prizeDistributionBalanced(pool, dist)) {
-        setError(`Prize distribution money (${formatINR(sumPrizeMoney(dist))}) must equal the Prize Money pool (${formatINR(pool)}).`); return
+      const cash = config.prizeDistribution.filter(p => p.type === "MONEY" && p.amount != null)
+      if (cash.length > 0 && !prizeDistributionBalanced(pool, cash)) {
+        setError(`Cash prizes (${formatINR(sumPrizeMoney(cash))}) must add up to the Prize Money pool (${formatINR(pool)}). Goodies are extra and don't count.`); return
       }
     }
 
@@ -227,7 +227,7 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
       <div className="ed-modal asm-modal">
         <div className="ed-modal-head">
           <div>
-            <h2 className="ed-modal-title">ADD SPORT</h2>
+            <h2 className="ed-modal-title">ADD TECHSPORT</h2>
             <div className="asm-head-meta">Configure new sport(s) for this techfect</div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -259,7 +259,7 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
 
           {selectedAg && (
             <div>
-              <SectionHead step={2} currentStep={step} label="Select Sport(s)" subLabel={`${selectedAg.shortName} · ${formatAgeRange(selectedAg.minAge, selectedAg.maxAge)} yrs`} />
+              <SectionHead step={2} currentStep={step} label="Select Techsport" subLabel={`${selectedAg.shortName} · ${formatAgeRange(selectedAg.minAge, selectedAg.maxAge)} yrs`} />
 
               {!confirmedSports && (
                 <>
@@ -313,8 +313,8 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
           {step === 3 && (
             <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
               <div>
-                <button type="button" className="asm-back-link" disabled={busy} onClick={() => setConfirmedSports(false)}><ArrowLeft size={12} /> Back to sports</button>
-                <SectionHead step={3} currentStep={step} label="Configuration" subLabel={`${selectedSports.length} sport${selectedSports.length > 1 ? "s" : ""} selected`} />
+                <button type="button" className="asm-back-link" disabled={busy} onClick={() => setConfirmedSports(false)}><ArrowLeft size={12} /> Back to techsport</button>
+                <SectionHead step={3} currentStep={step} label="Configuration" subLabel={selectedSports[0]?.sportName} />
               </div>
 
               {sportsNeedingWeightClass.length > 0 && (
@@ -351,7 +351,7 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
                 <FormField label="Prize Money (₹)" required><input type="number" min={0} step={1000} className="asm-input" value={config.prizeMoney} onChange={e => setCfg("prizeMoney", numOrEmpty(e.target.value))} /></FormField>
               </div>
 
-              <FormField label="Prize Distribution">
+              <FormField label="Prize Pool Breakdown">
                 <PrizeDistributionEditor
                   poolAmount={config.prizeMoney === "" ? 0 : config.prizeMoney}
                   positions={config.prizeDistribution}
@@ -359,15 +359,11 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
                 />
               </FormField>
 
-              <FormField label="Location / Google Maps link">
-                <input type="url" className="asm-input" placeholder="https://maps.app.goo.gl/…" value={config.mapUrl} onChange={e => setCfg("mapUrl", e.target.value)} />
-              </FormField>
-
               <div className="asm-reg-box">
                 <div className="asm-reg-label"><Calendar size={13} />Registration Window</div>
                 <div className="asm-grid-2">
-                  <FormField label="Start Date" required><input type="date" className="asm-date" value={config.registrationStartDate} onChange={e => setCfg("registrationStartDate", e.target.value)} /></FormField>
-                  <FormField label="End Date" required><input type="date" className="asm-date" value={config.registrationEndDate} min={config.registrationStartDate || undefined} onChange={e => setCfg("registrationEndDate", e.target.value)} /></FormField>
+                  <FormField label="Start Date" required><input type="date" className="asm-date" value={config.registrationStartDate} min={TODAY} onChange={e => setCfg("registrationStartDate", e.target.value)} /></FormField>
+                  <FormField label="End Date" required><input type="date" className="asm-date" value={config.registrationEndDate} min={config.registrationStartDate || TODAY} onChange={e => setCfg("registrationEndDate", e.target.value)} /></FormField>
                 </div>
                 {config.registrationStartDate && config.registrationEndDate && (
                   <div className="asm-reg-confirm" style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -385,8 +381,8 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
           <button type="button" className="asm-btn-cancel" onClick={onClose} disabled={busy}>Cancel</button>
           <button type="button" className="asm-btn-submit" onClick={handleSubmit} disabled={busy || step < 3}>
             {bulkProgress
-              ? <><Spinner />Adding {bulkProgress.index} of {bulkProgress.total}…</>
-              : <><Plus size={14} />{selectedSports.length > 1 ? `Add ${selectedSports.length} Sports` : "Add Sport"}</>}
+              ? <><Spinner />Adding…</>
+              : <><Plus size={14} />Add Techsport</>}
           </button>
         </div>
       </div>
