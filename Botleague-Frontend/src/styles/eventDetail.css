@@ -890,9 +890,39 @@
 .evd-page .match.left::before { clip-path: polygon(0 0, 92% 0, 82% 100%, 0 100%); }
 .evd-page .match.right::before { clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%); }
 
-.evd-page .match.winner::before { background: linear-gradient(90deg, #2F7DF5, #9A5FFF); }
+.evd-page .match.winner::before { background: linear-gradient(90deg, #1B54C9, #6E38D6); }
 .evd-page .match.winner span { color: #fff; }
 .evd-page .match:not(.winner) span { color: #1b1b1b; }
+
+/* Decided match: the loser slice greys right down so the result reads at a
+   glance — a pale-lavender slice that isn't the vivid winner is clearly
+   "not the winner" instead of looking like an undecided/scheduled slot. */
+.evd-page .match.loser::before { background: linear-gradient(90deg, #E7E5EE, #D9D4E3); }
+.evd-page .match.loser span { color: #9a9a9a; font-weight: 600; }
+.evd-page .match.loser .team-image { opacity: .45; }
+
+/* "Winner" pill pinned to the top edge of the winning slice. */
+.evd-page .match .match-won-badge {
+    position: absolute;
+    top: -11px;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 22px;
+    padding: 0 11px;
+    border-radius: 999px;
+    background: #16a34a;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    box-shadow: 0 3px 9px rgba(22, 163, 74, .38);
+}
+.evd-page .match.left .match-won-badge { left: 16px; }
+.evd-page .match.right .match-won-badge { right: 16px; }
 
 .evd-page .match.left .team-slot { justify-content: flex-start; gap: 25px; padding-left: 22px; padding-right: 110px; }
 .evd-page .match.right .team-slot { justify-content: space-between; padding-left: 85px; padding-right: 22px; }
@@ -1000,6 +1030,10 @@
     /* Robot vs Robot only — no room for the team name at 180px. */
     .evd-page .match .match-name-full { display: none; }
     .evd-page .match .match-name-compact { display: inline; }
+
+    .evd-page .match .match-won-badge { top: -9px; height: 17px; padding: 0 7px; font-size: 9px; letter-spacing: 0.02em; }
+    .evd-page .match.left .match-won-badge { left: 8px; }
+    .evd-page .match.right .match-won-badge { right: 8px; }
 }
 @media (max-width: 480px) {
     .evd-page .tournament { padding: 25px 12px; }

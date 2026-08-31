@@ -70,6 +70,15 @@ export function useSportMatchRealtime(
   useEffect(() => {
     if (!eventSportId) return
 
+    // Catch-up: whenever the socket (re)connects, re-pull matches + poke the
+    // leaderboard so anything that changed while we were disconnected — a
+    // score, an approval, a bracket advance — lands without a manual refresh.
+    if (connected) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      dispatch((fetchMatchesByEventSport as any)(eventSportId))
+      dispatch(triggerRankingsRefresh(eventSportId))
+    }
+
     const unsubscribe = subscribe(`/topic/sports/${eventSportId}`, (frame) => {
       try {
         const msg: RealtimeMessage = JSON.parse(frame.body)
