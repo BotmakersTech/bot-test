@@ -298,8 +298,6 @@ export default function OrganizerBracketPage() {
     updateMatchScore,
     submitMatchResult,
     completeMatch,
-    approveMatchResult,
-    rejectMatchResult,
     lockMatchScore,
     unlockMatchScore,
     cancelMatch,
@@ -578,33 +576,6 @@ export default function OrganizerBracketPage() {
       await refreshMatches()
     } catch (err: any) {
       setActionError(describeActionError(err, "Failed to submit match result"))
-    }
-  }
-
-  // =====================================================
-  // APPROVE / REJECT PENDING RESULT
-  // =====================================================
-
-  const handleApprove = async () => {
-    if (!selectedMatchId) return
-    setActionError(null)
-    try {
-      await approveMatchResult(selectedMatchId)
-      await refreshMatches()
-    } catch (err: any) {
-      setActionError(describeActionError(err, "Failed to approve match result"))
-    }
-  }
-
-  const handleReject = async () => {
-    if (!selectedMatchId) return
-    const reason = window.prompt("Reason for rejecting this result (optional):") || undefined
-    setActionError(null)
-    try {
-      await rejectMatchResult(selectedMatchId, reason)
-      await refreshMatches()
-    } catch (err: any) {
-      setActionError(describeActionError(err, "Failed to reject match result"))
     }
   }
 
@@ -1661,42 +1632,6 @@ export default function OrganizerBracketPage() {
                   </button>
                 </div>
               </>
-            )}
-
-            {/* ── PENDING APPROVAL — result submitted, waiting on EVENT_HEAD/ORGANISER/ADMIN ── */}
-            {selectedMatch.status === "PENDING_APPROVAL" && (
-              <div style={{
-                display: "flex", flexDirection: "column", gap: 10,
-                background: "rgba(161,98,7,0.08)", border: "1px solid rgba(161,98,7,0.3)",
-                borderRadius: 10, padding: "12px 14px", marginBottom: 14,
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, color: T.gold, fontWeight: 700, fontSize: "0.85rem" }}>
-                  <Clock size={15} /> Result pending approval
-                  {selectedMatch.winnerRegistrationId && (
-                    <span style={{ color: T.textSub, fontWeight: 500 }}>— {resolveWinnerName(selectedMatch)} currently winning</span>
-                  )}
-                </div>
-                {canApprove ? (
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button
-                      style={{ ...styles.actionBtn, background: "rgba(31,169,82,0.12)", borderColor: "rgba(31,169,82,0.3)", color: T.green, opacity: updateLoading ? 0.5 : 1 }}
-                      onClick={handleApprove}
-                      disabled={updateLoading}
-                    >
-                      <CheckCircle2 size={14} /> Approve Result
-                    </button>
-                    <button
-                      style={{ ...styles.actionBtn, background: T.accentDim, borderColor: T.accentBorder, color: T.accent, opacity: updateLoading ? 0.5 : 1 }}
-                      onClick={handleReject}
-                      disabled={updateLoading}
-                    >
-                      <Ban size={14} /> Reject
-                    </button>
-                  </div>
-                ) : (
-                  <div style={{ color: T.textSub, fontSize: "0.78rem" }}>Waiting for a techfect head or admin to approve.</div>
-                )}
-              </div>
             )}
 
             {/* ── READ-ONLY SCORES (COMPLETED multi-team) ── */}

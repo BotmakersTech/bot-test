@@ -8,8 +8,6 @@ import {
 import { useSportMatchRealtime, mergeMatchUpdate } from "../../../shared/realtime/useMatchRealtime"
 
 import {
-    approveMatchResult,
-    rejectMatchResult,
     lockMatchScore,
     unlockMatchScore,
     cancelMatch,
@@ -670,71 +668,6 @@ export const useMatches = (
         }, [])
 
     // =====================================================
-    // APPROVE MATCH RESULT
-    // PATCH /v1/matches/:matchId/approve
-    // =====================================================
-
-    const handleApproveMatchResult =
-        useCallback(async (
-            matchId: string
-        ) => {
-
-            try {
-
-                setUpdateLoading(true)
-                setError(null)
-
-                return await approveMatchResult(matchId)
-
-            } catch (err: any) {
-
-                const message =
-                    extractError(err, "Failed to approve match result")
-
-                setError(message)
-                throw err
-
-            } finally {
-
-                setUpdateLoading(false)
-            }
-
-        }, [])
-
-    // =====================================================
-    // REJECT MATCH RESULT
-    // PATCH /v1/matches/:matchId/reject
-    // =====================================================
-
-    const handleRejectMatchResult =
-        useCallback(async (
-            matchId: string,
-            reason?: string
-        ) => {
-
-            try {
-
-                setUpdateLoading(true)
-                setError(null)
-
-                return await rejectMatchResult(matchId, reason)
-
-            } catch (err: any) {
-
-                const message =
-                    extractError(err, "Failed to reject match result")
-
-                setError(message)
-                throw err
-
-            } finally {
-
-                setUpdateLoading(false)
-            }
-
-        }, [])
-
-    // =====================================================
     // LOCK / UNLOCK SCORE
     // PATCH /v1/matches/:matchId/lock-score, /unlock-score
     // =====================================================
@@ -918,8 +851,6 @@ export const useMatches = (
         updateMatchScore:         handleUpdateScore,
         submitMatchResult:        handleSubmitMatchResult,
         completeMatch:            handleCompleteMatch,
-        approveMatchResult:       handleApproveMatchResult,
-        rejectMatchResult:        handleRejectMatchResult,
         lockMatchScore:           handleLockScore,
         unlockMatchScore:         handleUnlockScore,
         cancelMatch:              handleCancelMatch,

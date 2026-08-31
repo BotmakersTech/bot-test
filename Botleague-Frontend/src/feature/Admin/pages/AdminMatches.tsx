@@ -3,8 +3,6 @@ import { getAllEvents, type AdminEventResponse } from "../api/admin.api"
 import {
   getAllMatches,
   getMatchesByEventSport,
-  approveMatchResult,
-  rejectMatchResult,
   type MatchDTO,
   type MatchStatus,
 } from "../api/adminMatches.api"
@@ -33,7 +31,7 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-const STATUS_FILTERS: Array<MatchStatus | "ALL"> = ["ALL", "SCHEDULED", "LIVE", "PENDING_APPROVAL", "COMPLETED", "CANCELLED"]
+const STATUS_FILTERS: Array<MatchStatus | "ALL"> = ["ALL", "SCHEDULED", "LIVE", "COMPLETED", "CANCELLED"]
 
 export default function AdminMatches() {
   const [events, setEvents] = useState<AdminEventResponse[]>([])
@@ -89,23 +87,6 @@ export default function AdminMatches() {
     if (type === 'RANKINGS_UPDATED' || type === 'BRACKET_CREATED') return
     setMatches((prev) => mergeMatchUpdate(prev, payload as MatchDTO))
   })
-
-  const [actingOnId, setActingOnId] = useState<string | null>(null)
-
-  const handleApprove = async (matchId: string) => {
-    setActingOnId(matchId)
-    try { await approveMatchResult(matchId); await load() }
-    catch { setError("Failed to approve match result") }
-    finally { setActingOnId(null) }
-  }
-
-  const handleReject = async (matchId: string) => {
-    const reason = window.prompt("Reason for rejecting this result (optional):") ?? undefined
-    setActingOnId(matchId)
-    try { await rejectMatchResult(matchId, reason); await load() }
-    catch { setError("Failed to reject match result") }
-    finally { setActingOnId(null) }
-  }
 
   const handleEventChange = (eventId: string) => {
     setSelectedEventId(eventId)
@@ -233,7 +214,6 @@ export default function AdminMatches() {
                 <th className="px-4 py-3.5 text-center font-semibold text-white hidden md:table-cell">Score</th>
                 <th className="px-4 py-3.5 text-left font-semibold text-white hidden lg:table-cell">Scheduled</th>
                 <th className="px-4 py-3.5 text-center font-semibold text-white">Status</th>
-                <th className="px-4 py-3.5 text-center font-semibold text-white">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white">
@@ -285,22 +265,6 @@ export default function AdminMatches() {
                   </td>
                   <td className="px-4 py-3 text-center">
                     <StatusBadge status={m.status ?? ""} />
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    {m.status === "PENDING_APPROVAL" ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <button onClick={() => handleApprove(m.matchId)} disabled={actingOnId === m.matchId}
-                          className="rounded-lg bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-600 hover:bg-green-100 disabled:opacity-50">
-                          Approve
-                        </button>
-                        <button onClick={() => handleReject(m.matchId)} disabled={actingOnId === m.matchId}
-                          className="rounded-lg bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-100 disabled:opacity-50">
-                          Reject
-                        </button>
-                      </div>
-                    ) : (
-                      <span className="text-gray-300">—</span>
-                    )}
                   </td>
                 </tr>
               ))}

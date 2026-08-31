@@ -54,7 +54,7 @@ export default function JudgeScoresPage() {
   }, [selected?.matchId])
 
   // Live-sync the match picker: if someone else's action moves a match out
-  // of LIVE (approved/rejected/cancelled elsewhere), drop it from the list
+  // of LIVE (completed or cancelled elsewhere), drop it from the list
   // instead of leaving a stale entry a judge could still try to score.
   // Deliberately does NOT touch scoreA/scoreB — never clobber an in-progress edit.
   const liveSportIds = useMemo(
@@ -94,13 +94,13 @@ export default function JudgeScoresPage() {
   }
 
   const handleComplete = async () => {
-    if (!selectedId || !confirm("Submit this as the final score? An organiser or admin will need to approve it before the match completes and the winner advances.")) return
+    if (!selectedId || !confirm("Submit this as the final score? This completes the match and advances the winner — it can't be undone here.")) return
     setSaving(true); setError(null)
     try {
       await api.patch(`/v1/matches/${selectedId}/complete`)
       setLiveMatches(p => p.filter(m => m.matchId !== selectedId))
       setSelectedId(liveMatches.find(m => m.matchId !== selectedId)?.matchId ?? "")
-      setSubmittedInfo("Score submitted — waiting for an organiser or admin to approve.")
+      setSubmittedInfo("Result submitted — match completed and the winner has advanced.")
       setTimeout(() => setSubmittedInfo(null), 5000)
     } catch (e: any) {
       setError(e?.response?.data?.message || "Failed to complete match")
