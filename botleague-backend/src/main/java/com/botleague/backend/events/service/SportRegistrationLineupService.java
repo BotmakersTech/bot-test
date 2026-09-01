@@ -52,10 +52,11 @@ import com.botleague.backend.team.repository.TeamMembershipRepository;
  *  3. Robot must exist, be ACTIVE, and match the registration's robotId
  *  4. TeamMembership must exist, be ACTIVE, and belong to the same team
  *  5. Duplicate check: same membership cannot be in the same robot's lineup twice
- *  5b. One robot per techsport: a person cannot be in two different robots'
- *      lineups within the same event sport
+ *  5b. One driver per techsport: a person can DRIVE only one robot within an
+ *      event sport (support roles may span several robots)
  *  6. Roster cap: active lineup count < EventSports.maxTeamSize
- *  7. Role uniqueness: DRIVER, SECONDARY_DRIVER, BUILD_HEAD can each appear at most once per registration
+ *  7. Driver uniqueness: only DRIVER is one-per-robot; SECONDARY_DRIVER and
+ *     BUILD_HEAD may each be held by more than one person
  */
 @Service
 @Transactional
@@ -274,20 +275,22 @@ public class SportRegistrationLineupService {
         }
 
         // =================================================
-        // 5b. ONE ROBOT PER TECHSPORT
-        //     A person can only compete with ONE robot in a given event
-        //     sport. If they already hold an active lineup slot for a
-        //     different robot in this same techsport, block the assignment.
+        // 5b. ONE DRIVER, ONE ROBOT PER TECHSPORT
+        //     A person may DRIVE only one robot within a given event sport
+        //     (e.g. one bot in RoboWar 1.5 kg) — but can still drive a
+        //     different bot in a different event sport (RoboWar 60 kg), and
+        //     can be a Secondary Driver / Build Head on several bots freely.
         // =================================================
 
-        boolean inAnotherRobotSameSport = lineupRepository
-                .existsByEventSportIdAndTeamMembershipIdAndRobotIdNotAndIsActive(
-                        registration.getEventSportId(), teamMembershipId, robotId, true);
-
-        if (inAnotherRobotSameSport) {
-            throw new IllegalStateException(
-                    "This team member is already in another robot's lineup for this techsport. " +
-                    "A person can only compete with one robot per techsport.");
+        if (role == LineupRole.DRIVER) {
+            boolean drivesAnotherRobotSameSport = lineupRepository
+                    .existsByEventSportIdAndTeamMembershipIdAndLineupRoleAndRobotIdNotAndIsActive(
+                            registration.getEventSportId(), teamMembershipId, LineupRole.DRIVER, robotId, true);
+            if (drivesAnotherRobotSameSport) {
+                throw new IllegalStateException(
+                        "This team member is already the driver of another robot in this techsport. " +
+                        "A person can drive only one robot per techsport.");
+            }
         }
 
         // =================================================
@@ -306,21 +309,23 @@ public class SportRegistrationLineupService {
         }
 
         // =================================================
-        // 7. ROLE UNIQUENESS
-        //    Each role may appear at most ONCE per SportRegistration:
-        //    one DRIVER, one SECONDARY_DRIVER, one BUILD_HEAD.
+        // 7. DRIVER UNIQUENESS
+        //    Only DRIVER is one-per-robot. SECONDARY_DRIVER and BUILD_HEAD
+        //    may each be held by more than one person on the same lineup.
         // =================================================
 
         if (role == null) {
             throw new IllegalArgumentException("Lineup role must not be null.");
         }
-        boolean roleTaken = lineupRepository
-                .existsBySportRegistrationIdAndLineupRoleAndIsActive(
-                        sportRegistrationId, role, true);
-        if (roleTaken) {
-            throw new IllegalStateException(
-                    "Role " + role + " is already assigned for this robot in this competition. " +
-                    "Each role (DRIVER, SECONDARY_DRIVER, BUILD_HEAD) can only be held by one person.");
+        if (role == LineupRole.DRIVER) {
+            boolean driverTaken = lineupRepository
+                    .existsBySportRegistrationIdAndLineupRoleAndIsActive(
+                            sportRegistrationId, LineupRole.DRIVER, true);
+            if (driverTaken) {
+                throw new IllegalStateException(
+                        "This robot already has a driver for this competition. "
+                        + "There can be only one DRIVER per robot.");
+            }
         }
 
         // =================================================
@@ -427,7 +432,7 @@ public class SportRegistrationLineupService {
 
     /**
      * Changes a member's role for the robot they are already assigned to.
-     * The new role must not already be held by another active member in the same registration.
+     * Only DRIVER is one-per-robot — the others may repeat.
      */
     public EventRegistrationLineup updateRole(UUID lineupId, LineupRole newRole) {
 
@@ -445,13 +450,15 @@ public class SportRegistrationLineupService {
             throw new IllegalArgumentException("Lineup role must not be null.");
         }
 
-        boolean roleTaken = lineupRepository
-                .existsBySportRegistrationIdAndLineupRoleAndIsActiveAndIdNot(
-                        lineup.getSportRegistrationId(), newRole, true, lineupId);
-        if (roleTaken) {
-            throw new IllegalStateException(
-                    "Role " + newRole + " is already assigned for this robot in this competition. " +
-                    "Each role (DRIVER, SECONDARY_DRIVER, BUILD_HEAD) can only be held by one person.");
+        if (newRole == LineupRole.DRIVER) {
+            boolean driverTaken = lineupRepository
+                    .existsBySportRegistrationIdAndLineupRoleAndIsActiveAndIdNot(
+                            lineup.getSportRegistrationId(), LineupRole.DRIVER, true, lineupId);
+            if (driverTaken) {
+                throw new IllegalStateException(
+                        "This robot already has a driver for this competition. "
+                        + "There can be only one DRIVER per robot.");
+            }
         }
 
         lineup.setLineupRole(newRole);
