@@ -106,6 +106,8 @@ export interface DashboardStats {
   liveEvents: number;
   upcomingEvents: number;
   completedEvents: number;
+  totalSports: number;
+  completedSports: number;
   totalRegistrations: number;
   totalTeams: number;
   totalVolunteers: number;

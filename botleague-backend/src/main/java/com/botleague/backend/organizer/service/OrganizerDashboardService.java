@@ -62,11 +62,11 @@ public class OrganizerDashboardService {
     public DashboardStatsResponse getStats(UUID userId, List<String> userRoles) {
         List<UUID> eventIds = resolveEventIds(userId, userRoles);
 
-        // Collect all sport IDs for the resolved events
-        List<UUID> sportIds = eventIds.stream()
+        // Collect all sports for the resolved events
+        List<EventSports> sports = eventIds.stream()
                 .flatMap(eid -> eventSportsRepository.findByEventId(eid).stream())
-                .map(EventSports::getId)
                 .collect(Collectors.toList());
+        List<UUID> sportIds = sports.stream().map(EventSports::getId).collect(Collectors.toList());
 
         var events = eventRepository.findAllById(eventIds);
 
@@ -75,6 +75,11 @@ public class OrganizerDashboardService {
         stats.liveEvents      = (int) events.stream().filter(e -> EventStatus.LIVE.equals(e.getStatus())).count();
         stats.upcomingEvents  = (int) events.stream().filter(e -> EventStatus.PUBLISHED.equals(e.getStatus())).count();
         stats.completedEvents = (int) events.stream().filter(e -> EventStatus.COMPLETED.equals(e.getStatus())).count();
+
+        // Sports — total, and those whose competition has been finalised
+        // (leaderboard pushed to global rankings).
+        stats.totalSports     = sports.size();
+        stats.completedSports = (int) sports.stream().filter(EventSports::isGlobalRankingsPushed).count();
 
         // Registrations are keyed by sportId
         stats.totalRegistrations = sportIds.stream()

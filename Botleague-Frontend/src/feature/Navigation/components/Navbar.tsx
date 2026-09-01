@@ -6,7 +6,6 @@ import { useSelector } from "react-redux"
 import {
   BellIcon,
   UserCircleIcon,
-  SettingsGearIcon,
   ChatIcon,
   SearchIcon,
 } from "./Icons/Icons"
@@ -70,11 +69,9 @@ function NotificationButton({ unreadCount, onClick, light }: { unreadCount: numb
 function CompetitorNavActions({
   unreadCount,
   pendingInvites,
-  showSettings = true,
 }: {
   unreadCount: number
   pendingInvites: number
-  showSettings?: boolean
 }) {
   const navigate = useNavigate()
   return (
@@ -100,11 +97,6 @@ function CompetitorNavActions({
       <IconButton label="Profile" onClick={() => navigate("/profile")}>
         <UserCircleIcon className="h-[22px] w-[22px]" />
       </IconButton>
-      {showSettings && (
-        <IconButton label="Settings" onClick={() => navigate("/settings")}>
-          <SettingsGearIcon className="h-5 w-5" />
-        </IconButton>
-      )}
     </div>
   )
 }
@@ -235,7 +227,6 @@ export default function Navbar() {
           <CompetitorNavActions
             unreadCount={unreadCount}
             pendingInvites={pendingInvites}
-            showSettings={primaryRole !== AppRole.COMPETITOR}
           />
         )}
       </div>
