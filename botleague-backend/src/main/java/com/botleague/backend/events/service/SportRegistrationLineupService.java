@@ -12,6 +12,7 @@ import com.botleague.backend.auth.repository.UserRepository;
 import com.botleague.backend.catalog.service.LeagueEligibilityService;
 import com.botleague.backend.chat.service.ChatService;
 import com.botleague.backend.common.utils.EligibilityUtils;
+import com.botleague.backend.events.dto.LineupResponse;
 import com.botleague.backend.events.entity.Event;
 import com.botleague.backend.events.entity.EventRegistrationLineup;
 import com.botleague.backend.events.entity.EventSports;
@@ -455,6 +456,47 @@ public class SportRegistrationLineupService {
 
         lineup.setLineupRole(newRole);
         return lineupRepository.save(lineup);
+    }
+
+    // =====================================================
+    // RESPONSE MAPPING
+    // =====================================================
+
+    /**
+     * Maps a lineup row to a fully-enriched {@link LineupResponse} — including
+     * the resolved member name / botleagueId / team role. Callers that hand back
+     * lineup rows (e.g. registerRobotWithLineup) should use this so the client
+     * never receives a row with a null memberName.
+     */
+    public LineupResponse toResponse(EventRegistrationLineup l) {
+        LineupResponse r = new LineupResponse();
+        r.setLineupId(l.getId());
+        r.setSportRegistrationId(l.getSportRegistrationId());
+        r.setRobotId(l.getRobotId());
+        r.setTeamMembershipId(l.getTeamMembershipId());
+        r.setEventId(l.getEventId());
+        r.setEventSportId(l.getEventSportId());
+        r.setTeamId(l.getTeamId());
+        r.setLineupRole(l.getLineupRole());
+        r.setIsActive(l.getIsActive());
+        r.setCreatedAt(l.getCreatedAt());
+
+        teamMembershipRepository.findById(l.getTeamMembershipId()).ifPresent(m -> {
+            r.setTeamRole(m.getRoleInTeam());
+            userRepository.findById(m.getUserId()).ifPresent(u -> {
+                r.setUserId(u.getId());
+                r.setBotleagueId(u.getBotleagueId());
+                String first = u.getFirstName();
+                String last  = u.getLastName();
+                String name;
+                if (first != null && last != null)      name = (first + " " + last).trim();
+                else if (first != null)                 name = first;
+                else if (u.getUsername() != null)        name = u.getUsername();
+                else                                     name = "Unknown";
+                r.setMemberName(name);
+            });
+        });
+        return r;
     }
 
     // =====================================================

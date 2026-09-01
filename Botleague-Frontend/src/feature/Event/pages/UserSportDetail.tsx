@@ -135,7 +135,15 @@ export default function UserSportDetail() {
       });
       const newRegId = result.registrationId;
       if (newRegId && result.lineup?.length > 0) {
-        setLineupsMap((prev) => ({ ...prev, [newRegId]: result.lineup }));
+        // The register-with-lineup response returns lineup rows without the
+        // resolved member name; re-read the enriched list so the Lineup tab
+        // build-cards show who was added instead of blanks.
+        try {
+          const enriched = await getLineup(newRegId);
+          setLineupsMap((prev) => ({ ...prev, [newRegId]: enriched }));
+        } catch {
+          setLineupsMap((prev) => ({ ...prev, [newRegId]: result.lineup }));
+        }
       }
       try { await fetchTeamRegistrations(teamId); } catch { /* non-fatal */ }
     } catch (err) {

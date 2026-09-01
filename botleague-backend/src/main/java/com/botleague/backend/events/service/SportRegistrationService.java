@@ -785,18 +785,9 @@ public class SportRegistrationService {
 
         List<LineupResponse> lineupResponses = new ArrayList<>();
         for (EventRegistrationLineup entry : savedLineup) {
-            LineupResponse lr = new LineupResponse();
-            lr.setLineupId(entry.getId());
-            lr.setSportRegistrationId(entry.getSportRegistrationId());
-            lr.setRobotId(entry.getRobotId());
-            lr.setTeamMembershipId(entry.getTeamMembershipId());
-            lr.setEventId(entry.getEventId());
-            lr.setEventSportId(entry.getEventSportId());
-            lr.setTeamId(entry.getTeamId());
-            lr.setLineupRole(entry.getLineupRole());
-            lr.setIsActive(entry.getIsActive());
-            lr.setCreatedAt(entry.getCreatedAt());
-            lineupResponses.add(lr);
+            // Enriched (member name / botleagueId / team role resolved) so the
+            // client's Lineup-tab build-cards aren't blank right after registering.
+            lineupResponses.add(lineupService.toResponse(entry));
         }
         response.setLineup(lineupResponses);
 
