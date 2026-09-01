@@ -41,12 +41,25 @@ interface SponsorForm {
   sponsorType: string;
   website: string;
   logoUrl: string;
-  displayOrder: string;
 }
 
 const EMPTY_FORM: SponsorForm = {
-  sponsorName: "", sponsorType: "", website: "", logoUrl: "", displayOrder: "",
+  sponsorName: "", sponsorType: "", website: "", logoUrl: "",
 };
+
+// Sort priority is derived from the sponsor tier — no manual "display order".
+// Lower = shown first. Anything without a recognised type sinks to the bottom.
+const SPONSOR_TYPE_ORDER: Record<string, number> = {
+  "Title Sponsor": 0,
+  "Gold Sponsor": 1,
+  "Silver Sponsor": 2,
+  "Bronze Sponsor": 3,
+  "Technology Partner": 4,
+  "Media Partner": 5,
+  "Equipment Partner": 6,
+};
+const orderForType = (t?: string | null): number =>
+  t && SPONSOR_TYPE_ORDER[t] != null ? SPONSOR_TYPE_ORDER[t] : 99;
 
 // ─── Logo uploader ──────────────────────────────────────────────────────────────
 interface LogoUploadProps {
@@ -181,8 +194,6 @@ function SponsorFormModal({ mode, entityId, title, initial, busy, error, onSave,
             value={form.logoUrl}
             onChange={url => setForm(f => ({ ...f, logoUrl: url }))}
           />
-
-          {field("displayOrder", "Display Order", "0 = first")}
         </div>
 
         {error && (
@@ -242,13 +253,34 @@ function SponsorRow({ sponsor, onEdit, onDelete, deleting }: SponsorRowProps) {
 }
 
 // ─── Main component ──────────────────────────────────────────────────────────────
+type SportOption = { id: string; label: string };
+
 interface SponsorManagerProps {
   mode: "event" | "sport";
-  entityId: string;
+  /** Event id for mode="event"; a single sport id for mode="sport". Omit when
+   *  passing sportOptions — the built-in picker chooses the sport. */
+  entityId?: string;
   title?: string;
+  /** mode="sport" only. Supplying this collapses the N per-sport blocks into
+   *  one block with a "Techsport" picker, plus an "All Techsports" option that
+   *  writes a sponsor to every sport at once. */
+  sportOptions?: SportOption[];
 }
 
-export default function SponsorManager({ mode, entityId, title }: SponsorManagerProps) {
+function sortSponsors<T extends Sponsor>(list: T[]): T[] {
+  return [...list].sort(
+    (a, b) =>
+      orderForType(a.sponsorType) - orderForType(b.sponsorType) ||
+      a.sponsorName.localeCompare(b.sponsorName),
+  );
+}
+
+export default function SponsorManager({ mode, entityId, title, sportOptions }: SponsorManagerProps) {
+  const usePicker = mode === "sport" && Array.isArray(sportOptions);
+  const opts = sportOptions ?? [];
+  const optIdsKey = opts.map(o => o.id).join(",");
+
+  const [selectedSportId, setSelectedSportId] = useState<string>(""); // "" = All Techsports
   const [sponsors, setSponsors]       = useState<Sponsor[]>([]);
   const [loading, setLoading]         = useState(false);
   const [err, setErr]                 = useState<string | null>(null);
@@ -258,42 +290,84 @@ export default function SponsorManager({ mode, entityId, title }: SponsorManager
   const [actionBusy, setActionBusy]   = useState(false);
   const [actionErr, setActionErr]     = useState<string | null>(null);
 
+  // "All Techsports": one sponsor spans every sport.
+  const allSports = usePicker && !selectedSportId;
+  // A concrete sport id for CRUD / the logo presign — in All mode fall back to
+  // the first sport so uploads still resolve.
+  const activeSportId = usePicker
+    ? (selectedSportId || opts[0]?.id || "")
+    : (entityId ?? "");
+  const uploadEntityId = mode === "event" ? (entityId ?? "") : activeSportId;
+
+  const sportLabel = useCallback(
+    (id?: string | null) => opts.find(o => o.id === id)?.label ?? "",
+    [optIdsKey], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
   const load = useCallback(async () => {
-    if (!entityId) return;
-    setLoading(true);
     setErr(null);
     try {
-      const list = mode === "event"
-        ? await getEventSponsors(entityId)
-        : await getSportSponsors(entityId);
-      setSponsors(list);
+      if (mode === "event") {
+        if (!entityId) return;
+        setLoading(true);
+        setSponsors(sortSponsors(await getEventSponsors(entityId)));
+      } else if (usePicker) {
+        if (opts.length === 0) { setSponsors([]); return; }
+        setLoading(true);
+        if (selectedSportId) {
+          setSponsors(sortSponsors(await getSportSponsors(selectedSportId)));
+        } else {
+          const lists = await Promise.all(opts.map(o => getSportSponsors(o.id)));
+          setSponsors(sortSponsors(lists.flat()));
+        }
+      } else {
+        if (!entityId) return;
+        setLoading(true);
+        setSponsors(sortSponsors(await getSportSponsors(entityId)));
+      }
     } catch {
       setErr("Failed to load sponsors.");
     } finally {
       setLoading(false);
     }
-  }, [mode, entityId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, entityId, usePicker, selectedSportId, optIdsKey]);
 
   useEffect(() => { load(); }, [load]);
+
+  function toBody(form: SponsorForm) {
+    return {
+      sponsorName: form.sponsorName.trim(),
+      sponsorType: form.sponsorType || null,
+      website: form.website.trim() || null,
+      logoUrl: form.logoUrl.trim() || null,
+      // Order is a pure function of the sponsor tier now — no manual field.
+      displayOrder: orderForType(form.sponsorType),
+    };
+  }
 
   async function handleAdd(form: SponsorForm) {
     setActionBusy(true);
     setActionErr(null);
     try {
-      const body = {
-        sponsorName: form.sponsorName.trim(),
-        sponsorType: form.sponsorType || null,
-        website: form.website.trim() || null,
-        logoUrl: form.logoUrl.trim() || null,
-        displayOrder: form.displayOrder ? parseInt(form.displayOrder, 10) : null,
-      };
-      const created = mode === "event"
-        ? await addEventSponsor(entityId, body)
-        : await addSportSponsor(entityId, body);
-      setSponsors(prev => [...prev, created]);
+      const body = toBody(form);
+      if (mode === "event") {
+        const created = await addEventSponsor(entityId as string, body);
+        setSponsors(prev => sortSponsors([...prev, created]));
+      } else if (usePicker && allSports) {
+        await Promise.all(opts.map(o => addSportSponsor(o.id, body)));
+        await load();
+      } else {
+        const created = await addSportSponsor(activeSportId, body);
+        setSponsors(prev => sortSponsors([...prev, created]));
+      }
       setAddOpen(false);
     } catch {
-      setActionErr("Failed to add sponsor.");
+      setActionErr(
+        usePicker && allSports
+          ? "Failed to add the sponsor to every techsport."
+          : "Failed to add sponsor.",
+      );
     } finally {
       setActionBusy(false);
     }
@@ -304,17 +378,11 @@ export default function SponsorManager({ mode, entityId, title }: SponsorManager
     setActionBusy(true);
     setActionErr(null);
     try {
-      const body = {
-        sponsorName: form.sponsorName.trim(),
-        sponsorType: form.sponsorType || null,
-        website: form.website.trim() || null,
-        logoUrl: form.logoUrl.trim() || null,
-        displayOrder: form.displayOrder ? parseInt(form.displayOrder, 10) : null,
-      };
+      const body = toBody(form);
       const updated = mode === "event"
         ? await updateEventSponsor(editTarget.id, body)
         : await updateSportSponsor(editTarget.id, body);
-      setSponsors(prev => prev.map(s => s.id === updated.id ? updated : s));
+      setSponsors(prev => sortSponsors(prev.map(s => s.id === updated.id ? updated : s)));
       setEditTarget(null);
     } catch {
       setActionErr("Failed to update sponsor.");
@@ -338,6 +406,8 @@ export default function SponsorManager({ mode, entityId, title }: SponsorManager
   }
 
   const headingText = title ?? (mode === "event" ? "Techfect Sponsors" : "Techsport Sponsors");
+  const noSports = usePicker && opts.length === 0;
+  const canAdd = !noSports;
 
   function toSponsorEntry(s: Sponsor): SponsorEntry {
     return { id: s.id, sponsorName: s.sponsorName, sponsorType: s.sponsorType, logoUrl: s.logoUrl, website: s.website };
@@ -349,25 +419,48 @@ export default function SponsorManager({ mode, entityId, title }: SponsorManager
       sponsorType: s.sponsorType ?? "",
       website: s.website ?? "",
       logoUrl: s.logoUrl ?? "",
-      displayOrder: s.displayOrder != null ? String(s.displayOrder) : "",
     };
   }
 
+  const pickerStyle = {
+    background: "#ffffff", border: `1px solid ${BORDER}`, borderRadius: "8px",
+    padding: "7px 12px", color: TEXT, fontSize: "0.8rem", outline: "none", cursor: "pointer",
+  } as const;
+
   return (
     <div style={{ background: CARD2, border: "1px solid rgba(75,134,232,0.15)", borderRadius: "14px", overflow: "hidden", marginTop: "24px" }}>
-      <div style={{ padding: "12px 18px", borderBottom: `1px solid ${BORDER}`, background: "rgba(75,134,232,0.04)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ padding: "12px 18px", borderBottom: `1px solid ${BORDER}`, background: "rgba(75,134,232,0.04)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
         <div style={{ fontWeight: 700, letterSpacing: "0.06em", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: 6 }}><Handshake size={15} /> {headingText.toUpperCase()}</div>
-        <button
-          onClick={() => { setActionErr(null); setAddOpen(true); }}
-          style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(75,134,232,0.1)", border: "1px solid rgba(75,134,232,0.3)", color: ACCENT, borderRadius: "8px", padding: "7px 14px", fontSize: "0.77rem", fontWeight: 700, cursor: "pointer" }}
-        >+ Add Sponsor</button>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          {usePicker && (
+            <select
+              value={selectedSportId}
+              onChange={e => setSelectedSportId(e.target.value)}
+              style={pickerStyle}
+              aria-label="Techsport"
+            >
+              <option value="">All Techsports</option>
+              {opts.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+            </select>
+          )}
+          <button
+            onClick={() => { setActionErr(null); setAddOpen(true); }}
+            disabled={!canAdd}
+            style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(75,134,232,0.1)", border: "1px solid rgba(75,134,232,0.3)", color: ACCENT, borderRadius: "8px", padding: "7px 14px", fontSize: "0.77rem", fontWeight: 700, cursor: canAdd ? "pointer" : "not-allowed", opacity: canAdd ? 1 : 0.5 }}
+          >+ Add Sponsor{usePicker && allSports ? " (all)" : ""}</button>
+        </div>
       </div>
 
       <div style={{ padding: "16px 18px" }}>
-        {loading && <div style={{ color: MUTED, fontSize: "0.83rem", padding: "12px 0" }}>Loading…</div>}
+        {noSports && (
+          <div style={{ textAlign: "center", padding: "24px 0", color: MUTED, fontSize: "0.83rem" }}>
+            Add a Techsport first, then you can attach sponsors to it.
+          </div>
+        )}
+        {!noSports && loading && <div style={{ color: MUTED, fontSize: "0.83rem", padding: "12px 0" }}>Loading…</div>}
         {err && <div style={{ color: DANGER, fontSize: "0.83rem", marginBottom: "10px", display: "flex", alignItems: "center", gap: 6 }}><AlertTriangle size={13} /> {err}</div>}
 
-        {!loading && sponsors.length === 0 && (
+        {!noSports && !loading && sponsors.length === 0 && (
           <div style={{ textAlign: "center", padding: "24px 0", color: MUTED, fontSize: "0.83rem" }}>
             No sponsors yet — click <strong>+ Add Sponsor</strong> to get started.
           </div>
@@ -379,13 +472,19 @@ export default function SponsorManager({ mode, entityId, title }: SponsorManager
 
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {sponsors.map(s => (
-            <SponsorRow
-              key={s.id}
-              sponsor={s}
-              onEdit={sp => { setActionErr(null); setEditTarget(sp); }}
-              onDelete={handleDelete}
-              deleting={deletingId === s.id}
-            />
+            <div key={s.id} style={{ position: "relative" }}>
+              {usePicker && allSports && "sportId" in s && (
+                <div style={{ position: "absolute", top: "6px", right: "58px", zIndex: 1, fontSize: "0.58rem", fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: MUTED, background: "rgba(75,134,232,0.1)", border: `1px solid ${BORDER}`, borderRadius: "5px", padding: "2px 6px", pointerEvents: "none" }}>
+                  {sportLabel((s as SportSponsor).sportId)}
+                </div>
+              )}
+              <SponsorRow
+                sponsor={s}
+                onEdit={sp => { setActionErr(null); setEditTarget(sp); }}
+                onDelete={handleDelete}
+                deleting={deletingId === s.id}
+              />
+            </div>
           ))}
         </div>
 
@@ -399,8 +498,8 @@ export default function SponsorManager({ mode, entityId, title }: SponsorManager
       {addOpen && (
         <SponsorFormModal
           mode={mode}
-          entityId={entityId}
-          title="Add Sponsor"
+          entityId={uploadEntityId}
+          title={usePicker && allSports ? "Add Sponsor to all Techsports" : "Add Sponsor"}
           initial={EMPTY_FORM}
           busy={actionBusy}
           error={actionErr}
@@ -412,7 +511,7 @@ export default function SponsorManager({ mode, entityId, title }: SponsorManager
       {editTarget && (
         <SponsorFormModal
           mode={mode}
-          entityId={entityId}
+          entityId={mode === "sport" && "sportId" in editTarget ? (editTarget as SportSponsor).sportId : uploadEntityId}
           title="Edit Sponsor"
           initial={toForm(editTarget)}
           busy={actionBusy}
