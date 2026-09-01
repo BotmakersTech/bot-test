@@ -874,8 +874,16 @@ public class SportRegistrationService {
         }
         if (registration.getEventSportId() != null) {
             eventSportsRepository.findById(registration.getEventSportId())
-                    .ifPresent(s -> response.setSportName(s.getSport()));
+                    .ifPresent(s -> {
+                        response.setSportName(s.getSport());
+                        response.setLineupLocked(s.isBracketGenerated());
+                    });
         }
+
+        // Active people currently in this robot's lineup — drives the
+        // "Lineup: N" chip on the registration card.
+        response.setLineupSize(
+                (int) lineupRepository.countBySportRegistrationIdAndIsActive(registration.getId(), true));
         if (registration.getEventId() != null) {
             eventRepository.findById(registration.getEventId())
                     .ifPresent(e -> response.setEventName(e.getEventName()));
