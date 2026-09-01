@@ -1321,7 +1321,6 @@ export default function OrganizerSportDetailPage() {
           <div className="sdt-fields-box">
             <Field label="League" value={sport.ageGroup ? ageGroupLabel(sport.ageGroup) : null} />
             <Field label="Weight Class" value={sport.weightClass ? formatWeightClass(sport.weightClass) : null} />
-            <Field label="Weight Limit" value={sport.weightLimitKg != null ? `${sport.weightLimitKg} KG` : null} />
             <Field
               label="Dimensions (L×W×H)"
               value={
