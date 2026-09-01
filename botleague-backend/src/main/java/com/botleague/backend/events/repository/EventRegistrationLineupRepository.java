@@ -48,15 +48,16 @@ public interface EventRegistrationLineupRepository
     );
 
     // ----------------------------------------------------------
-    // USED BY: addMember() / updateRole() – one-driver-per-techsport check
-    //   A person may DRIVE only one robot within a single event sport. An
-    //   active DRIVER row for this membership in the same eventSport but a
-    //   DIFFERENT robot blocks the assignment. Non-driver roles are exempt.
+    // USED BY: addMember() – one-person-one-robot-per-techsport check
+    //   A person may appear in only ONE robot's lineup within a single event
+    //   sport (sport + age category + weight class), whatever the role. An
+    //   active row for this membership in the same eventSport but a DIFFERENT
+    //   robot blocks the assignment. A different event sport (same sport at
+    //   another weight class) is a separate row and is allowed.
     // ----------------------------------------------------------
-    boolean existsByEventSportIdAndTeamMembershipIdAndLineupRoleAndRobotIdNotAndIsActive(
+    boolean existsByEventSportIdAndTeamMembershipIdAndRobotIdNotAndIsActive(
             UUID eventSportId,
             UUID teamMembershipId,
-            LineupRole lineupRole,
             UUID robotId,
             Boolean isActive
     );
