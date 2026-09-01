@@ -88,17 +88,25 @@ export default function LineupTab({
   const currentLineup = lineupsMap[activeRegId] ?? [];
 
   const memberKey = (e: TeamLineUpResponse) => e.teamMembershipId ?? "";
-  const allAssigned = new Set(Object.values(lineupsMap).flatMap((l) => l.map(memberKey)));
   const inCurrentLineup = new Set(currentLineup.map(memberKey));
-  const takenRoles = new Set(currentLineup.filter((m) => m.isActive).map((m) => m.lineupRole));
 
   const minSize = sport.minTeamSize ?? 0;
   const maxSize = sport.maxTeamSize ?? Infinity;
   const atMax = currentLineup.length >= maxSize;
   const belowMin = minSize > 0 && currentLineup.length < minSize;
 
-  // Every role must stay filled — one Driver, one Secondary Driver, one Build Head.
-  const missingRoles = Object.keys(ROLE_LABEL).filter((r) => !takenRoles.has(r));
+  // Only a Driver is required, and only the Driver slot is one-per-robot.
+  // Secondary Driver / Build Head are optional and may repeat.
+  const driverTaken = currentLineup.some((m) => m.isActive && m.lineupRole === "DRIVER");
+  const roleDisabled = (v: string) => v === "DRIVER" && driverTaken;
+
+  // Members who already DRIVE a different robot in this techsport — they can
+  // still be a support role here, but not the driver.
+  const drivesElsewhere = new Set(
+    Object.entries(lineupsMap)
+      .filter(([regId]) => regId !== activeRegId)
+      .flatMap(([, list]) => list.filter((e) => e.isActive && e.lineupRole === "DRIVER").map(memberKey))
+  );
 
   return (
     <div className="lineup-page">
@@ -169,9 +177,9 @@ export default function LineupTab({
               <AlertTriangle size={14} /> Add at least {minSize - currentLineup.length} more player{minSize - currentLineup.length !== 1 ? "s" : ""} to meet the minimum.
             </p>
           )}
-          {!activeReg?.lineupLocked && missingRoles.length > 0 && (
+          {!activeReg?.lineupLocked && !driverTaken && (
             <p style={{ fontSize: 13, color: WARNING, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
-              <AlertTriangle size={14} /> Every role must be filled — still need: {missingRoles.map((r) => ROLE_LABEL[r]).join(", ")}.
+              <AlertTriangle size={14} /> A Driver is required. Secondary Driver and Build Head are optional.
             </p>
           )}
         </div>
@@ -208,9 +216,9 @@ export default function LineupTab({
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 18 }}>
                 {eligibleMembers.map((m) => {
                   const isIn = inCurrentLineup.has(m.membershipId);
-                  const isOther = !isIn && allAssigned.has(m.membershipId);
-                  const isInactive = !isIn && !isOther && m.status !== "ACTIVE";
-                  const disabled = isIn || isOther || isInactive;
+                  const isDriverElsewhere = !isIn && drivesElsewhere.has(m.membershipId);
+                  const isInactive = !isIn && m.status !== "ACTIVE";
+                  const disabled = isIn || isInactive;
                   return (
                     <button
                       key={m.membershipId}
@@ -231,7 +239,7 @@ export default function LineupTab({
                       {m.userName}{" "}
                       {isIn ? (
                         <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Check size={12} /> In lineup</span>
-                      ) : isOther ? "(In other robot)" : isInactive ? "(Inactive)" : ""}
+                      ) : isInactive ? "(Inactive)" : isDriverElsewhere ? "(drives another robot)" : ""}
                     </button>
                   );
                 })}
@@ -248,8 +256,8 @@ export default function LineupTab({
                 <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
                   <select className="lineup-select" style={{ maxWidth: 220 }} value={lineupRole} onChange={(e) => setLineupRole(e.target.value)}>
                     {Object.entries(ROLE_LABEL).map(([value, label]) => (
-                      <option key={value} value={value} disabled={takenRoles.has(value)}>
-                        {label}
+                      <option key={value} value={value} disabled={roleDisabled(value)}>
+                        {label}{value === "DRIVER" ? "" : " (optional)"}
                       </option>
                     ))}
                   </select>
@@ -257,7 +265,7 @@ export default function LineupTab({
                     type="button"
                     className="add-box"
                     style={{ maxWidth: 160 }}
-                    disabled={takenRoles.has(lineupRole)}
+                    disabled={roleDisabled(lineupRole)}
                     onClick={() => { onAdd(selectedMember, lineupRole); setSelectedMember(""); }}
                   >
                     <span className="plus-circle">+</span>

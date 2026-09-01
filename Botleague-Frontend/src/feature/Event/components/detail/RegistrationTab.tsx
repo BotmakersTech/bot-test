@@ -150,12 +150,13 @@ export default function RegistrationTab({
   const canAdd = isCaptain && isRegOpen && !isFull && !!teamId;
 
   const assignedMemberIds = new Set(pendingLineup.map((e) => e.membershipId));
-  const takenRoles = new Set(pendingLineup.map((e) => e.role));
 
-  // Every role must be filled to register — one Driver, one Secondary Driver,
-  // one Build Head (backend rejects an incomplete lineup).
-  const missingRoles = REG_ROLES.filter((r) => !takenRoles.has(r.value));
-  const lineupComplete = missingRoles.length === 0;
+  // Only a Driver is required, and only the Driver slot is unique — Secondary
+  // Driver / Build Head are optional and can each be held by more than one
+  // person (backend enforces the same).
+  const driverTaken = pendingLineup.some((e) => e.role === "DRIVER");
+  const lineupComplete = driverTaken;
+  const roleDisabled = (v: string) => v === "DRIVER" && driverTaken;
 
   // Only members who can actually be in this techsport's age group are
   // selectable — otherwise the pick fails on submit with "age mismatch".
@@ -174,11 +175,11 @@ export default function RegistrationTab({
   };
 
   const addToPending = () => {
-    if (!regMember || takenRoles.has(regRole) || assignedMemberIds.has(regMember)) return;
+    if (!regMember || roleDisabled(regRole) || assignedMemberIds.has(regMember)) return;
     setPendingLineup((prev) => [...prev, { membershipId: regMember, role: regRole }]);
     setRegMember("");
-    const nextRole = REG_ROLES.find((r) => !takenRoles.has(r.value) && r.value !== regRole);
-    if (nextRole) setRegRole(nextRole.value);
+    // After the Driver is set, default the next pick to Secondary Driver.
+    if (regRole === "DRIVER") setRegRole("SECONDARY_DRIVER");
   };
 
   const removeFromPending = (membershipId: string) => {
@@ -270,7 +271,7 @@ export default function RegistrationTab({
             <div className="build-card" key={regId} style={{ justifyContent: "space-between", paddingRight: 16, marginBottom: 14, height: "auto", minHeight: 56 }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                 {reg.robotName}
-                <span style={{ color: "#6b7280", fontWeight: 500 }}>· Lineup: {reg.lineupSize ?? 0}</span>
+                <span style={{ color: "#FFF", fontWeight: 500 }}>· Lineup: {reg.lineupSize ?? 0}</span>
                 {reg.lineupLocked && (
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Lock size={12} /> Locked</span>
                 )}
@@ -357,13 +358,13 @@ export default function RegistrationTab({
                   <div className="white-select">
                     <select value={regRole} onChange={(e) => setRegRole(e.target.value)}>
                       {REG_ROLES.map((r) => (
-                        <option key={r.value} value={r.value} disabled={takenRoles.has(r.value)}>
-                          {r.label}
+                        <option key={r.value} value={r.value} disabled={roleDisabled(r.value)}>
+                          {r.label}{r.value === "DRIVER" ? "" : " (optional)"}
                         </option>
                       ))}
                     </select>
                   </div>
-                  <button type="button" className="add-box" disabled={!regMember || takenRoles.has(regRole)} onClick={addToPending}>
+                  <button type="button" className="add-box" disabled={!regMember || roleDisabled(regRole)} onClick={addToPending}>
                     <span className="plus-circle">+</span>
                     <span>Add</span>
                   </button>
@@ -379,10 +380,10 @@ export default function RegistrationTab({
                 {pendingLineup.length > 0 && (
                   <div style={{ marginBottom: 20 }}>
                     <p style={{ fontWeight: 600, marginBottom: 10 }}>
-                      Lineup ({pendingLineup.length}/3)
+                      Lineup ({pendingLineup.length})
                       {!lineupComplete && (
                         <span style={{ fontWeight: 500, color: "#b45309", marginLeft: 8 }}>
-                          — still need: {missingRoles.map((r) => r.label).join(", ")}
+                          — a Driver is required
                         </span>
                       )}
                     </p>
@@ -415,7 +416,7 @@ export default function RegistrationTab({
                     {busyReg
                       ? "Registering…"
                       : !lineupComplete
-                        ? `Assign ${missingRoles.map((r) => r.label).join(" + ")} to register`
+                        ? "Assign a Driver to register"
                         : <><Zap size={14} /> Complete Registration</>}
                   </button>
                 </div>

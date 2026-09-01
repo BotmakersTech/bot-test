@@ -2,13 +2,11 @@ package com.botleague.backend.events.service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -724,34 +722,19 @@ public class SportRegistrationService {
      * If any lineup entry fails validation, the entire operation is rolled back —
      * no robot is left registered without its required lineup.
      *
-     * A complete lineup is mandatory to register: every {@link LineupRole}
-     * (DRIVER, SECONDARY_DRIVER, BUILD_HEAD) must be filled exactly once.
+     * Only the DRIVER is mandatory (and there can be exactly one — see
+     * SportRegistrationLineupService.addMember). SECONDARY_DRIVER and
+     * BUILD_HEAD are optional and may each be held by more than one person.
      */
     public RegistrationWithLineupResponse registerRobotWithLineup(
             RegistrationWithLineupRequest request
     ) {
-        // ── Mandatory lineup composition — all three roles, exactly one each ──
-        // Checked up-front so the caller gets a clear "what's missing" error
-        // instead of a mid-loop "role already taken" / rollback.
-        List<LineupRole> submittedRoles = request.getLineup().stream()
-                .map(RegistrationWithLineupRequest.LineupEntry::getLineupRole)
-                .collect(Collectors.toList());
-        EnumSet<LineupRole> requiredRoles = EnumSet.allOf(LineupRole.class);
-        EnumSet<LineupRole> distinctRoles = submittedRoles.isEmpty()
-                ? EnumSet.noneOf(LineupRole.class)
-                : EnumSet.copyOf(submittedRoles);
-
-        if (submittedRoles.size() != distinctRoles.size()) {
+        // ── Mandatory: at least one DRIVER in the lineup ──
+        boolean hasDriver = request.getLineup().stream()
+                .anyMatch(e -> e.getLineupRole() == LineupRole.DRIVER);
+        if (!hasDriver) {
             throw new IllegalStateException(
-                    "Each lineup role may be assigned to only one person: "
-                    + "one DRIVER, one SECONDARY_DRIVER, one BUILD_HEAD.");
-        }
-        if (!distinctRoles.containsAll(requiredRoles)) {
-            EnumSet<LineupRole> missing = EnumSet.copyOf(requiredRoles);
-            missing.removeAll(distinctRoles);
-            throw new IllegalStateException(
-                    "A complete lineup is required to register — one person per role. Missing: "
-                    + missing.stream().map(Enum::name).collect(Collectors.joining(", ")) + ".");
+                    "A DRIVER is required to register. Secondary Driver and Build Head are optional.");
         }
 
         // Build a RegistrationRequest from the combined request
