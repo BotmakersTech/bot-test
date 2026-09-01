@@ -14,14 +14,17 @@ public class ProfileResponseDTO {
 
     private String phone;
     
-    private String UserName;
+    // Keep this camelCase like every sibling field. As `UserName` it
+    // serialized to the JSON key "UserName", so the web client (which reads
+    // `userName`) saw undefined and the profile name never survived a refresh.
+    private String userName;
 
     public String getUserName() {
-		return UserName;
+		return userName;
 	}
 
 	public void setUserName(String userName) {
-		UserName = userName;
+		this.userName = userName;
 	}
 
 	private String firstName;
