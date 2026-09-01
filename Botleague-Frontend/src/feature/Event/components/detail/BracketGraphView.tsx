@@ -4,10 +4,10 @@ import type { PublicMatchView } from "../../../Matches/api/matches.api";
 
 // Read-only rendering of the same connected-bracket graph the admin
 // Organizer Bracket page uses (see OrganizerBracketPage.tsx) — same layout
-// math (round columns + curved connector lines, winners/losers tracks for
-// double elimination), just without any of that page's click-to-score
-// popup or mutation handlers. Pan/zoom is kept since it's purely a viewing
-// aid, not an edit action.
+// math (round columns), traditional straight right-angle connectors,
+// winners/losers tracks for double elimination (the losers bracket stands
+// as its own tree — no loser-routing lines crossing the winners side).
+// No click-to-score popup or mutation handlers; pan/zoom kept as a viewing aid.
 
 const T = {
   border: "rgba(75,134,232,0.22)",
@@ -22,6 +22,9 @@ const T = {
   text: "#111111",
   textMuted: "#7c7c7c",
   textSub: "#5d5d5d",
+  label: "#4f46e5",       // round-label indigo (matches the reference)
+  winTint: "#fff6e9",     // warm cream behind the advancing competitor
+  line: "#c9d4ec",        // idle connector
 };
 
 const BOX_W_1V1 = 200;
@@ -69,16 +72,35 @@ function statusColor(status?: string) {
   return T.blue;
 }
 
-function matchTypeLabel(t?: PublicMatchView["matchType"]): string {
-  if (t === "TRIPLE_THREAT") return "Triple Threat";
-  if (t === "FATAL_FOUR") return "Fatal Four";
-  return "1v1";
-}
-
 function roundLabel(ri: number, total: number) {
   if (ri === total - 1) return "Final";
   if (ri === total - 2 && total > 2) return "Semifinal";
+  if (ri === total - 3 && total > 3) return "Quarterfinal";
   return `Round ${ri + 1}`;
+}
+
+/** Compact per-box tag, e.g. "QF · Game 2", "Final". */
+function boxLabel(columnLabel: string, gameNo: number, isFinalCol: boolean): string {
+  const l = columnLabel.toLowerCase();
+  let prefix: string;
+  if (l.includes("grand final")) prefix = "Grand Final";
+  else if (l.includes("final")) prefix = "Final";
+  else if (l.includes("semifinal")) prefix = "SF";
+  else if (l.includes("quarterfinal")) prefix = "QF";
+  else {
+    const m = columnLabel.match(/round\s*(\d+)/i);
+    const n = m ? m[1] : "1";
+    prefix = /losers/i.test(columnLabel) ? `LB ${n}` : /winners/i.test(columnLabel) ? `WB ${n}` : `R${n}`;
+  }
+  if (isFinalCol) return prefix;
+  return `${prefix} · Game ${gameNo}`;
+}
+
+function fmtDateTime(iso?: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleString(undefined, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
 }
 
 /** Lays out one bracket track (a flat list of same-bracketSide rounds) as round-columns. */
@@ -210,23 +232,17 @@ export default function BracketGraphView({ matches, loading, error }: BracketGra
 
   const { rounds, positions, svgW, svgH, roundLabels } = getBracketLayout(matches);
 
-  const lines: { x1: number; y1: number; x2: number; y2: number; color: string; dashed?: boolean }[] = [];
+  // Winners feed forward only. Loser-routing (double elimination) lines are
+  // deliberately not drawn — the losers bracket reads as its own tree, the
+  // traditional way, instead of spaghetti crossing the winners side.
+  const lines: { x1: number; y1: number; x2: number; y2: number; hot: boolean }[] = [];
   matches.forEach((m) => {
     if (m.nextMatchId && positions[m.matchId] && positions[m.nextMatchId]) {
       const from = positions[m.matchId];
       const to = positions[m.nextMatchId];
       lines.push({
         x1: from.x + from.w, y1: from.y + from.h / 2, x2: to.x, y2: to.y + to.h / 2,
-        color: m.status === "COMPLETED" && m.winnerRegistrationId ? T.brand : "#c3d2ee",
-      });
-    }
-    if (m.loserNextMatchId && positions[m.matchId] && positions[m.loserNextMatchId]) {
-      const from = positions[m.matchId];
-      const to = positions[m.loserNextMatchId];
-      lines.push({
-        x1: from.x + from.w, y1: from.y + from.h / 2, x2: to.x, y2: to.y + to.h / 2,
-        color: m.status === "COMPLETED" && m.winnerRegistrationId ? T.blue : "#c3d2ee",
-        dashed: true,
+        hot: m.status === "COMPLETED" && !!m.winnerRegistrationId,
       });
     }
   });
@@ -267,118 +283,142 @@ export default function BracketGraphView({ matches, loading, error }: BracketGra
       >
         <svg
           ref={svgRef}
-          width={svgW + 40}
-          height={svgH + 60}
+          width={svgW + 60}
+          height={svgH + 110}
           style={{ display: "block", overflow: "visible", transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "0 0" }}
         >
-          {rounds.map((round, ri) => {
-            const pos0 = positions[round[0]?.matchId];
-            return (
-              <text
-                key={ri}
-                x={(pos0?.x ?? 0) + (pos0?.w ?? BOX_W_1V1) / 2 + 20}
-                y={(pos0?.y ?? 0) + 18}
-                textAnchor="middle"
-                fill={ri === rounds.length - 1 ? T.brand : T.textMuted}
-                fontSize={11}
-                fontWeight={700}
-                fontFamily="'Inter', sans-serif"
-                letterSpacing={1.5}
-              >
-                {(roundLabels[ri] ?? roundLabel(ri, rounds.length)).toUpperCase()}
-              </text>
-            );
-          })}
-
-          <g transform="translate(20, 28)">
+          <g transform="translate(24, 46)">
+            {/* Straight right-angle connectors — solid, winners only. */}
             {lines.map((l, i) => {
-              const mx = l.x1 + H_GAP / 2;
-              const isHot = l.color === T.brand || l.color === T.blue;
+              const midX = Math.round((l.x1 + l.x2) / 2);
               return (
                 <path
                   key={i}
-                  d={`M${l.x1},${l.y1} C${mx},${l.y1} ${mx},${l.y2} ${l.x2},${l.y2}`}
+                  d={`M ${l.x1} ${l.y1} H ${midX} V ${l.y2} H ${l.x2}`}
                   fill="none"
-                  stroke={l.color}
-                  strokeWidth={isHot ? 1.5 : 1}
-                  strokeDasharray={l.dashed ? "4 3" : undefined}
-                  opacity={isHot ? 0.9 : 1}
+                  stroke={l.hot ? T.brand : T.line}
+                  strokeWidth={l.hot ? 2 : 1.5}
+                  strokeLinecap="square"
+                  strokeLinejoin="miter"
+                  shapeRendering="crispEdges"
                 />
               );
             })}
 
-            {matches.map((match) => {
-              const pos = positions[match.matchId];
-              if (!pos) return null;
-              const { x, y, w, h } = pos;
-              const sc = statusColor(match.status);
-              const isCompleted = match.status === "COMPLETED";
-              const isLive = match.status === "LIVE";
-              const isBye = match.isBye;
-              const teams = getTeams(match);
-              const rowH = h / teams.length;
+            {rounds.map((round, ri) => {
+              const isFinalCol = ri === rounds.length - 1;
+              const colLabel = roundLabels[ri] ?? roundLabel(ri, rounds.length);
+              return <g key={`col-${ri}`}>{round.map((match, mi) => {
+                const pos = positions[match.matchId];
+                if (!pos) return null;
+                const { x, y, w, h } = pos;
+                const sc = statusColor(match.status);
+                const isCompleted = match.status === "COMPLETED";
+                const isLive = match.status === "LIVE";
+                const isBye = match.isBye;
+                const scored = isCompleted || isLive;
+                const teams = getTeams(match);
+                const rowH = h / teams.length;
+                const gameNo = match.matchNumber ?? mi + 1;
+                const dateText = fmtDateTime(match.scheduledAt);
+                const byeW = 24;
 
-              return (
-                <g key={match.matchId}>
-                  <rect
-                    x={x} y={y} width={w} height={h} rx={13} ry={13}
-                    fill={isBye ? "#f6f8fd" : T.surface}
-                    stroke={isLive ? "rgba(224,75,75,0.5)" : "rgba(75,134,232,0.18)"}
-                    strokeWidth={1}
-                  />
-                  <rect x={x} y={y} width={3} height={h} rx={2} ry={2} fill={sc} opacity={isBye ? 0.2 : 0.8} />
-
-                  {match.matchType && match.matchType !== "ONE_VS_ONE" && (
+                return (
+                  <g key={match.matchId}>
+                    {/* per-box round tag */}
                     <text
-                      x={x + w - 8} y={y + 13}
-                      fontSize={8} fontWeight={700}
-                      fill={match.matchType === "FATAL_FOUR" ? T.purple : T.gold}
+                      x={x + 2} y={y - 7}
+                      fontSize={10.5} fontWeight={700} letterSpacing={0.6}
+                      fill={isFinalCol ? T.brand : T.label}
                       fontFamily="'Inter', sans-serif"
-                      textAnchor="end" letterSpacing={0.5}
                     >
-                      {matchTypeLabel(match.matchType).toUpperCase()}
+                      {boxLabel(colLabel, gameNo, isFinalCol)}
                     </text>
-                  )}
 
-                  {teams.map((team, ti) => {
-                    const rowY = y + ti * rowH;
-                    const isWinner = !!match.winnerRegistrationId && match.winnerRegistrationId === team.id;
-                    const nameColor = isBye ? T.textMuted : isWinner ? T.green : team.name ? T.text : T.textMuted;
+                    <rect
+                      x={x} y={y} width={w} height={h} rx={9} ry={9}
+                      fill={T.surface}
+                      stroke={isLive ? "rgba(224,75,75,0.55)" : "rgba(17,17,17,0.12)"}
+                      strokeWidth={1}
+                    />
+                    <rect x={x} y={y} width={3} height={h} fill={sc} opacity={isBye ? 0.25 : 0.85} />
 
-                    return (
-                      <g key={ti}>
-                        {ti > 0 && <line x1={x + 10} y1={rowY} x2={x + w - 10} y2={rowY} stroke="rgba(17,17,17,0.08)" strokeWidth={1} />}
-                        <text x={x + 16} y={rowY + rowH / 2 + 5} fontSize={11} fontWeight={isWinner ? 700 : 400} fill={nameColor} fontFamily="'Inter', sans-serif">
-                          {team.name || (team.id ? "…" : "TBD")}
-                        </text>
-                        {(isCompleted || isLive) && (
-                          <text x={x + w - 14} y={rowY + rowH / 2 + 5} fontSize={12} fontWeight={700} fill={isWinner ? T.green : T.textSub} fontFamily="'Inter', sans-serif" textAnchor="end">
-                            {team.score ?? 0}
+                    {teams.map((team, ti) => {
+                      const rowY = y + ti * rowH;
+                      const isWinner = !!match.winnerRegistrationId && match.winnerRegistrationId === team.id;
+                      const nameColor = isBye ? T.textMuted : isWinner ? T.text : team.name ? T.text : T.textMuted;
+                      const nameEndX = isBye && ti === 0 ? x + w - byeW - 8 : x + w - (scored ? 22 : 14);
+                      return (
+                        <g key={ti}>
+                          {isWinner && !isBye && (
+                            <rect x={x + 3} y={rowY + 1} width={w - 4} height={rowH - 2} fill={T.winTint} />
+                          )}
+                          {ti > 0 && <line x1={x + 8} y1={rowY} x2={x + w - 8} y2={rowY} stroke="rgba(17,17,17,0.09)" strokeWidth={1} />}
+                          <text
+                            x={x + 14} y={rowY + rowH / 2 + 4}
+                            fontSize={11} fontWeight={isWinner ? 700 : 500}
+                            fill={nameColor} fontFamily="'Inter', sans-serif"
+                          >
+                            {(() => {
+                              const label = team.name || (team.id ? "…" : "TBD");
+                              const maxChars = Math.max(6, Math.floor((nameEndX - (x + 14)) / 6.4));
+                              return label.length > maxChars ? label.slice(0, maxChars - 1) + "…" : label;
+                            })()}
                           </text>
-                        )}
+                          {scored && (
+                            <text
+                              x={x + w - 12} y={rowY + rowH / 2 + 4}
+                              fontSize={12} fontWeight={700}
+                              fill={isWinner ? T.brand : T.textSub}
+                              fontFamily="'Inter', sans-serif" textAnchor="end"
+                            >
+                              {team.score ?? 0}
+                            </text>
+                          )}
+                        </g>
+                      );
+                    })}
+
+                    {/* "vs" badge — shown until the match has a score */}
+                    {!scored && !isBye && teams.length === 2 && (
+                      <g>
+                        <circle cx={x + w} cy={y + h / 2} r={11} fill="#eef1fb" stroke="rgba(17,17,17,0.12)" strokeWidth={1} />
+                        <text x={x + w} y={y + h / 2 + 3.5} textAnchor="middle" fontSize={9} fontWeight={700} fill={T.textSub} fontFamily="'Inter', sans-serif">vs</text>
                       </g>
-                    );
-                  })}
+                    )}
 
-                  {isBye && (
-                    <text x={x + w - 10} y={y + h / 2 + 4} fontSize={9} fontWeight={700} fill={T.textMuted} fontFamily="'Inter', sans-serif" textAnchor="end" letterSpacing={1}>
-                      BYE
+                    {/* BYE — dark cap on the right edge */}
+                    {isBye && (
+                      <g>
+                        <path d={`M ${x + w - byeW} ${y} H ${x + w - 9} A 9 9 0 0 1 ${x + w} ${y + 9} V ${y + h - 9} A 9 9 0 0 1 ${x + w - 9} ${y + h} H ${x + w - byeW} Z`} fill="#2b3245" />
+                        <text x={x + w - byeW / 2} y={y + h / 2 + 3.5} textAnchor="middle" fontSize={8.5} fontWeight={800} letterSpacing={1} fill="#fff" fontFamily="'Inter', sans-serif">BYE</text>
+                      </g>
+                    )}
+
+                    {isLive && (
+                      <circle cx={x + w - 9} cy={y + 9} r={3.5} fill={T.accent}>
+                        <animate attributeName="opacity" values="1;0.3;1" dur="1.2s" repeatCount="indefinite" />
+                      </circle>
+                    )}
+
+                    {/* date / "set date & time" */}
+                    <text
+                      x={x + 2} y={y + h + 14}
+                      fontSize={10} fontWeight={500}
+                      fill={dateText ? T.textSub : T.textMuted}
+                      fontFamily="'Inter', sans-serif"
+                    >
+                      {dateText ?? "Set date & time"}
                     </text>
-                  )}
 
-                  {isLive && (
-                    <circle cx={x + w - 10} cy={y + 10} r={4} fill={T.accent} opacity={0.9}>
-                      <animate attributeName="opacity" values="0.9;0.3;0.9" dur="1.2s" repeatCount="indefinite" />
-                    </circle>
-                  )}
-
-                  {champion?.matchId === match.matchId && (
-                    <foreignObject x={x + w / 2 - 8} y={y - 22} width={16} height={16} style={{ overflow: "visible", pointerEvents: "none" }}>
-                      <Trophy size={16} color={T.gold} />
-                    </foreignObject>
-                  )}
-                </g>
-              );
+                    {champion?.matchId === match.matchId && (
+                      <foreignObject x={x + w / 2 - 8} y={y - 40} width={16} height={16} style={{ overflow: "visible", pointerEvents: "none" }}>
+                        <Trophy size={16} color={T.gold} />
+                      </foreignObject>
+                    )}
+                  </g>
+                );
+              })}</g>;
             })}
           </g>
         </svg>

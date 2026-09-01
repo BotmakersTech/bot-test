@@ -593,12 +593,11 @@ export default function TournamentBracket() {
 
   const { rounds, positions, svgW, svgH, roundLabels } = getBracketLayout(matches)
 
-  // Connector lines (only for matches that exist in the SVG layout).
-  // Winner-advancement (nextMatchId) lines use the accent color when the
-  // source match is decided; loser-routing (loserNextMatchId, double
-  // elimination only) lines are drawn dashed in a cooler tone so the two
-  // kinds of edges stay visually distinct.
-  const lines: { x1: number; y1: number; x2: number; y2: number; color: string; dashed?: boolean }[] = []
+  // Connector lines — traditional straight right-angle elbows, solid.
+  // Only winner-advancement (nextMatchId) edges are drawn; loser-routing
+  // (loserNextMatchId, double elimination) is left un-lined so the losers
+  // bracket reads as its own tree instead of crossing the winners side.
+  const lines: { x1: number; y1: number; x2: number; y2: number; hot: boolean }[] = []
   matches.forEach(m => {
     if (m.nextMatchId && positions[m.matchId] && positions[m.nextMatchId]) {
       const from = positions[m.matchId]
@@ -608,23 +607,7 @@ export default function TournamentBracket() {
         y1: from.y + from.h / 2,
         x2: to.x,
         y2: to.y + to.h / 2,
-        color: m.status === "COMPLETED" && m.winnerRegistrationId
-          ? T.brand
-          : "#c3d2ee"
-      })
-    }
-    if (m.loserNextMatchId && positions[m.matchId] && positions[m.loserNextMatchId]) {
-      const from = positions[m.matchId]
-      const to = positions[m.loserNextMatchId]
-      lines.push({
-        x1: from.x + from.w,
-        y1: from.y + from.h / 2,
-        x2: to.x,
-        y2: to.y + to.h / 2,
-        color: m.status === "COMPLETED" && m.winnerRegistrationId
-          ? T.blue
-          : "#c3d2ee",
-        dashed: true,
+        hot: m.status === "COMPLETED" && !!m.winnerRegistrationId,
       })
     }
   })
@@ -933,19 +916,19 @@ export default function TournamentBracket() {
 
           <g transform="translate(20, 28)">
 
-            {/* Connector lines */}
+            {/* Connector lines — straight right-angle elbows, solid */}
             {lines.map((l, i) => {
-              const mx = l.x1 + H_GAP / 2
-              const isHot = l.color === T.brand || l.color === T.blue
+              const midX = Math.round((l.x1 + l.x2) / 2)
               return (
                 <path
                   key={i}
-                  d={`M${l.x1},${l.y1} C${mx},${l.y1} ${mx},${l.y2} ${l.x2},${l.y2}`}
+                  d={`M ${l.x1} ${l.y1} H ${midX} V ${l.y2} H ${l.x2}`}
                   fill="none"
-                  stroke={l.color}
-                  strokeWidth={isHot ? 1.5 : 1}
-                  strokeDasharray={l.dashed ? "4 3" : undefined}
-                  opacity={isHot ? 0.9 : 1}
+                  stroke={l.hot ? T.brand : "#c9d4ec"}
+                  strokeWidth={l.hot ? 2 : 1.5}
+                  strokeLinecap="square"
+                  strokeLinejoin="miter"
+                  shapeRendering="crispEdges"
                 />
               )
             })}
