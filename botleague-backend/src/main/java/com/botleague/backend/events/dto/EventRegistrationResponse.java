@@ -48,6 +48,11 @@ public class EventRegistrationResponse {
     // connection axis: WIRED / WIRELESS
     private ControlMode controlMode;
 
+    // Number of active people in this robot's lineup, and whether the lineup
+    // is frozen (the sport's bracket has been drawn).
+    private Integer lineupSize;
+    private Boolean lineupLocked;
+
     private LocalDateTime createdAt;
 
     // =====================================================
@@ -185,6 +190,22 @@ public class EventRegistrationResponse {
 
     public void setControlMode(ControlMode controlMode) {
         this.controlMode = controlMode;
+    }
+
+    public Integer getLineupSize() {
+        return lineupSize;
+    }
+
+    public void setLineupSize(Integer lineupSize) {
+        this.lineupSize = lineupSize;
+    }
+
+    public Boolean getLineupLocked() {
+        return lineupLocked;
+    }
+
+    public void setLineupLocked(Boolean lineupLocked) {
+        this.lineupLocked = lineupLocked;
     }
 
     public LocalDateTime getCreatedAt() {

@@ -270,10 +270,9 @@ export default function RegistrationTab({
             <div className="build-card" key={regId} style={{ justifyContent: "space-between", paddingRight: 16, marginBottom: 14, height: "auto", minHeight: 56 }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                 {reg.robotName}
-                {reg.lineupLocked ? (
+                <span style={{ color: "#6b7280", fontWeight: 500 }}>· Lineup: {reg.lineupSize ?? 0}</span>
+                {reg.lineupLocked && (
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Lock size={12} /> Locked</span>
-                ) : (
-                  `· Operators: ${reg.lineupSize ?? 0}`
                 )}
               </span>
               <span style={{ display: "flex", gap: 10 }}>
