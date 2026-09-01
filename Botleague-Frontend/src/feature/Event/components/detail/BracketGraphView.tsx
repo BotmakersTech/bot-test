@@ -32,8 +32,10 @@ const BOX_W_MULTI = 220;
 const BOX_H_1V1 = 72;
 const BOX_H_TRIPLE = 100;
 const BOX_H_FATAL = 126;
-const H_GAP = 80;
-const V_GAP = 20;
+const H_GAP = 92;
+// Each box also paints a round tag ~15px above it and a date line ~16px below
+// it — the vertical gap has to clear both so stacked matches never touch.
+const V_GAP = 44;
 
 function getBoxDimensions(matchType?: PublicMatchView["matchType"]) {
   if (matchType === "FATAL_FOUR") return { w: BOX_W_MULTI, h: BOX_H_FATAL };
@@ -143,7 +145,7 @@ function layoutTrack(matches: PublicMatchView[], yOffset: number, labelPrefix: s
   });
 
   const svgW = Math.max(0, xCursor - H_GAP);
-  const svgH = maxMatchesR1 * (roundBoxH[0] || BOX_H_1V1 + V_GAP);
+  const svgH = maxMatchesR1 * ((roundBoxH[0] || BOX_H_1V1) + V_GAP);
   const roundLabels = rounds.map((_, ri) => (labelPrefix ? `${labelPrefix} ${roundLabel(ri, rounds.length)}` : roundLabel(ri, rounds.length)));
 
   return { rounds, positions, svgW, svgH, roundLabels };
@@ -465,15 +467,18 @@ export default function BracketGraphView({ matches, loading, error }: BracketGra
                       </circle>
                     )}
 
-                    {/* date / "set date & time" */}
-                    <text
-                      x={x + 2} y={y + h + 14}
-                      fontSize={10} fontWeight={500}
-                      fill={dateText ? T.textSub : T.textMuted}
-                      fontFamily="'Inter', sans-serif"
-                    >
-                      {dateText ?? "Set date & time"}
-                    </text>
+                    {/* scheduled date/time — shown only once it's set (this is a
+                        read-only view, so no "set date" call-to-action here) */}
+                    {dateText && (
+                      <text
+                        x={x + 2} y={y + h + 14}
+                        fontSize={10} fontWeight={500}
+                        fill={T.textSub}
+                        fontFamily="'Inter', sans-serif"
+                      >
+                        {dateText}
+                      </text>
+                    )}
 
                     {champion?.matchId === match.matchId && (
                       <foreignObject x={x + w / 2 - 8} y={y - 40} width={16} height={16} style={{ overflow: "visible", pointerEvents: "none" }}>
