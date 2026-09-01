@@ -598,6 +598,19 @@ const loadTeamMembership = useCallback(async (teamCode: string) => {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2500);
       await loadProfile();
+      // Keep Redux auth.user in sync — the create/join-team profile-completeness
+      // gates (useMinimalProfileComplete) read date-of-birth / name straight from
+      // there, so without this a freshly-saved DOB still reads as "missing" until
+      // the next full page load.
+      dispatch(updateUser({
+        firstName:   firstName.trim(),
+        lastName:    lastName.trim(),
+        dateOfBirth: dateOfBirth || undefined,
+        city:        city.trim(),
+        state:       state.trim(),
+        country:     country.trim(),
+        address:     address.trim(),
+      }));
     } catch (err: any) {
       setSaveSuccess(false);
       setError(
@@ -608,7 +621,7 @@ const loadTeamMembership = useCallback(async (teamCode: string) => {
       stopLoading("profileUpdate");
     }
   }, [
-    address, city, country, dateOfBirth,
+    address, city, country, dateOfBirth, dispatch,
     firstName, lastName, pincode,
     loadProfile, setError, startLoading, state, stopLoading,
   ]);
