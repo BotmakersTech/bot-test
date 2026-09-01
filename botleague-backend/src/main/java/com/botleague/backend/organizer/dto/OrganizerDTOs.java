@@ -23,6 +23,8 @@ public final class OrganizerDTOs {
         public int liveEvents;
         public int upcomingEvents;
         public int completedEvents;
+        public int totalSports;
+        public int completedSports;
         public long totalRegistrations;
         public long totalTeams;
         public long totalVolunteers;

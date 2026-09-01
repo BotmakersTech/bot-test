@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import {
   CalendarDays, Trophy, Users, Search, MapPin,
-  Activity, Clock, Zap, CheckCircle2, TrendingUp, Plus,
+  CheckCircle2, Plus, ChevronRight,
 } from "lucide-react"
 import {
   getMyEvents, getDashboardStats,
@@ -36,15 +36,22 @@ const fmt = (d?: string | null) => {
 
 // ── sub-components ────────────────────────────────────────────────────────────
 
-function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: number; color: string }) {
+function StatCard({ icon, label, value, color, onClick }: { icon: React.ReactNode; label: string; value: number; color: string; onClick: () => void }) {
   return (
-    <div style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: "14px", padding: "18px 22px", display: "flex", alignItems: "center", gap: "14px", flex: 1, minWidth: "150px" }}>
+    <button
+      type="button"
+      onClick={onClick}
+      style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: "14px", padding: "18px 22px", display: "flex", alignItems: "center", gap: "14px", flex: 1, minWidth: "180px", cursor: "pointer", textAlign: "left", fontFamily: "inherit", transition: "box-shadow 0.15s, border-color 0.15s" }}
+      onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = "0 6px 24px rgba(140,108,255,0.15)"; el.style.borderColor = "rgba(140,108,255,0.45)" }}
+      onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = "none"; el.style.borderColor = BORDER }}
+    >
       <span style={{ background: `${color}1A`, color, borderRadius: "10px", width: "44px", height: "44px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{icon}</span>
-      <div>
+      <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{ color: MUTED, fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", margin: 0 }}>{label}</p>
         <p style={{ color: TEXT, fontSize: "1.55rem", fontWeight: 700, fontFamily: "'Sarpanch',sans-serif", margin: 0, lineHeight: 1.2 }}>{value}</p>
       </div>
-    </div>
+      <ChevronRight size={16} style={{ color: MUTED, flexShrink: 0 }} />
+    </button>
   )
 }
 
@@ -124,21 +131,26 @@ export default function OrganizerDashboard() {
 
   return (
     <div className="p-8" style={{ minHeight: "100vh", background: BG, fontFamily: "'Inter',sans-serif" }}>
-      <div style={{ marginBottom: "24px" }}>
-        <h1 style={{ color: "#0162d1", fontFamily: "'Orbitron',sans-serif", fontSize: "clamp(20px,4vw,38px)", fontWeight: 500, margin: 0 }}>Techfects Dashboard</h1>
-        <p style={{ color: MUTED, fontSize: "0.85rem", margin: "4px 0 0" }}>
-          {loading ? "Loading…" : `${events.length} techfect${events.length !== 1 ? "s" : ""} assigned to you`}
-        </p>
+      <div style={{ marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px", flexWrap: "wrap" }}>
+        <div>
+          <h1 style={{ color: "#0162d1", fontFamily: "'Orbitron',sans-serif", fontSize: "clamp(20px,4vw,38px)", fontWeight: 500, margin: 0 }}>Techfects Dashboard</h1>
+          <p style={{ color: MUTED, fontSize: "0.85rem", margin: "4px 0 0" }}>
+            {loading ? "Loading…" : `${events.length} techfect${events.length !== 1 ? "s" : ""} assigned to you`}
+          </p>
+        </div>
+        <button
+          onClick={() => navigate("/organizer/events/create")}
+          style={{ background: `linear-gradient(135deg,${BLUE},${P})`, color: "#fff", border: "none", borderRadius: "10px", padding: "0 18px", height: "42px", fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}
+        >
+          <Plus size={15} /> Create Techfect
+        </button>
       </div>
 
       {stats && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "24px" }}>
-          <StatCard icon={<CalendarDays size={20} />} label="Total Techfects"    value={stats.totalEvents}        color={P}       />
-          <StatCard icon={<Zap size={20} />}           label="Live"           value={stats.liveEvents}         color="#10b981" />
-          <StatCard icon={<Clock size={20} />}          label="Upcoming"      value={stats.upcomingEvents}     color={BLUE}    />
-          <StatCard icon={<Users size={20} />}          label="Registrations" value={stats.totalRegistrations} color="#f59e0b" />
-          <StatCard icon={<Activity size={20} />}       label="Matches"       value={stats.totalMatches}       color="#ef4444" />
-          <StatCard icon={<CheckCircle2 size={20} />}   label="Completed"     value={stats.completedEvents}    color="#94a3b8" />
+          <StatCard icon={<Trophy size={20} />}      label="Total Sports"           value={stats.totalSports}       color={P}       onClick={() => navigate("/organizer/sports")}        />
+          <StatCard icon={<Users size={20} />}       label="Total Registrations"    value={stats.totalRegistrations} color="#f59e0b" onClick={() => navigate("/organizer/registrations")} />
+          <StatCard icon={<CheckCircle2 size={20} />} label="Completed Sports"      value={stats.completedSports}    color="#94a3b8" onClick={() => navigate("/organizer/sports")}        />
         </div>
       )}
 
@@ -152,18 +164,6 @@ export default function OrganizerDashboard() {
             style={{ width: "100%", paddingLeft: "36px", paddingRight: "12px", height: "40px", background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "10px", color: TEXT, fontSize: "0.85rem", outline: "none", boxSizing: "border-box" }}
           />
         </div>
-        <button
-          onClick={() => navigate("/organizer/events/create")}
-          style={{ background: `linear-gradient(135deg,${BLUE},${P})`, color: "#fff", border: "none", borderRadius: "10px", padding: "0 18px", height: "40px", fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
-        >
-          <Plus size={15} /> Create Techfect
-        </button>
-        <button
-          onClick={() => navigate("/organizer/events")}
-          style={{ background: "transparent", color: BLUE, border: `1.5px solid ${BORDER}`, borderRadius: "10px", padding: "0 18px", height: "40px", fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
-        >
-          <TrendingUp size={15} /> View All
-        </button>
       </div>
 
       <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "20px" }}>
