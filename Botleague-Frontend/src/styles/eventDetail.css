@@ -1218,7 +1218,24 @@
     justify-content: center;
 }
 .evd-page .bracket-graph-zoom button:hover { background: rgba(1, 98, 209, 0.16); }
+.evd-page .bracket-graph-zoom button:disabled { opacity: .4; cursor: not-allowed; }
+.evd-page .bracket-graph-zoom button:disabled:hover { background: rgba(1, 98, 209, 0.08); }
 .evd-page .bracket-graph-zoom span { font-size: 12px; font-weight: 600; color: #5d5d5d; width: 38px; text-align: center; }
+
+.evd-page .bracket-graph-print {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid #dfe8ff;
+    background: #fff;
+    color: #0162D1;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.evd-page .bracket-graph-print:hover { background: rgba(1, 98, 209, 0.08); }
 
 .evd-page .bracket-graph-third { margin-top: 28px; max-width: 320px; }
 .evd-page .bracket-graph-third-label { font-weight: 700; color: #a16207; margin-bottom: 10px; }

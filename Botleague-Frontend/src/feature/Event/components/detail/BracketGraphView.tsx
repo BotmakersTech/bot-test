@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { RefreshCw, Trophy, Medal } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { RefreshCw, Trophy, Medal, Printer, Maximize2 } from "lucide-react";
 import type { PublicMatchView } from "../../../Matches/api/matches.api";
 
 // Read-only rendering of the same connected-bracket graph the admin
@@ -200,17 +200,34 @@ interface BracketGraphViewProps {
 
 export default function BracketGraphView({ matches, loading, error }: BracketGraphViewProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
 
+  const ZOOM_MIN = 0.25;
+  const ZOOM_MAX = 2.5;
+  const ZOOM_STEP = 0.1;
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const dragStateRef = useRef({ startX: 0, startY: 0, panX: 0, panY: 0 });
 
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    setZoom((z) => Math.min(2.5, Math.max(0.25, Math.round((z + delta) * 100) / 100)));
-  };
+  const clampZoom = (z: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(z * 100) / 100));
+  const zoomIn = () => setZoom((z) => clampZoom(z + ZOOM_STEP));
+  const zoomOut = () => setZoom((z) => clampZoom(z - ZOOM_STEP));
+
+  // Wheel pans the canvas now; zoom is the +/− buttons only. It used to zoom,
+  // which meant an ordinary scroll over the graph kept yanking the view. Bound
+  // natively with { passive: false } so the page behind doesn't scroll too.
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      setPan((p) => ({ x: p.x - e.deltaX, y: p.y - e.deltaY }));
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [loading, error, matches.length]);
+
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsPanning(true);
     dragStateRef.current = { startX: e.clientX, startY: e.clientY, panX: pan.x, panY: pan.y };
@@ -231,6 +248,43 @@ export default function BracketGraphView({ matches, loading, error }: BracketGra
   }
 
   const { rounds, positions, svgW, svgH, roundLabels } = getBracketLayout(matches);
+
+  // Scale the whole bracket down to fit the visible canvas, then centre it.
+  const fitToView = () => {
+    const el = canvasRef.current;
+    if (!el) return;
+    const contentW = svgW + 60;
+    const contentH = svgH + 110;
+    if (contentW <= 0 || contentH <= 0) return;
+    const next = clampZoom(Math.min((el.clientWidth - 48) / contentW, (el.clientHeight - 48) / contentH, 1));
+    setZoom(next);
+    setPan({
+      x: Math.max(16, (el.clientWidth - contentW * next) / 2),
+      y: Math.max(16, (el.clientHeight - contentH * next) / 2),
+    });
+  };
+
+  const printBracket = () => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const clone = svg.cloneNode(true) as SVGSVGElement;
+    clone.removeAttribute("style");
+    clone.setAttribute("width", String(svgW + 60));
+    clone.setAttribute("height", String(svgH + 110));
+    const markup = new XMLSerializer().serializeToString(clone);
+    const win = window.open("", "_blank", "width=1200,height=800");
+    if (!win) return;
+    win.document.write(
+      `<!doctype html><html><head><meta charset="utf-8"><title>Tournament Bracket</title>` +
+      `<style>@page{size:landscape;margin:12mm}` +
+      `body{margin:0;padding:24px;font-family:'Inter',system-ui,sans-serif;color:#111}` +
+      `h1{font-size:16px;margin:0 0 16px}svg{max-width:100%;height:auto}</style></head>` +
+      `<body><h1>Tournament Bracket</h1>${markup}</body></html>`
+    );
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 350);
+  };
 
   // Winners feed forward only. Loser-routing (double elimination) lines are
   // deliberately not drawn — the losers bracket reads as its own tree, the
@@ -264,18 +318,28 @@ export default function BracketGraphView({ matches, loading, error }: BracketGra
             </span>
           ))}
         </div>
-        {champion && (
-          <div className="bracket-graph-champion">
-            <Trophy size={16} color={T.gold} />
-            Champion: {resolveWinnerName(champion) ?? "—"}
-          </div>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          {champion && (
+            <div className="bracket-graph-champion">
+              <Trophy size={16} color={T.gold} />
+              Champion: {resolveWinnerName(champion) ?? "—"}
+            </div>
+          )}
+          <button
+            type="button"
+            className="bracket-graph-print"
+            onClick={printBracket}
+            title="Print / save as PDF"
+          >
+            <Printer size={13} /> Print
+          </button>
+        </div>
       </div>
 
       <div
+        ref={canvasRef}
         className="bracket-graph-canvas"
         style={{ cursor: isPanning ? "grabbing" : "grab" }}
-        onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -285,7 +349,7 @@ export default function BracketGraphView({ matches, loading, error }: BracketGra
           ref={svgRef}
           width={svgW + 60}
           height={svgH + 110}
-          style={{ display: "block", overflow: "visible", transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "0 0" }}
+          style={{ display: "block", overflow: "visible", transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "0 0", transition: isPanning ? "none" : "transform 0.16s ease-out", willChange: "transform" }}
         >
           <g transform="translate(24, 46)">
             {/* Straight right-angle connectors — solid, winners only. */}
@@ -424,10 +488,11 @@ export default function BracketGraphView({ matches, loading, error }: BracketGra
         </svg>
 
         <div className="bracket-graph-zoom">
-          <button type="button" aria-label="Zoom out" onClick={() => setZoom((z) => Math.max(0.25, Math.round((z - 0.1) * 100) / 100))}>−</button>
+          <button type="button" aria-label="Zoom out" disabled={zoom <= ZOOM_MIN} onClick={zoomOut}>−</button>
           <span>{Math.round(zoom * 100)}%</span>
-          <button type="button" aria-label="Zoom in" onClick={() => setZoom((z) => Math.min(2.5, Math.round((z + 0.1) * 100) / 100))}>+</button>
-          <button type="button" onClick={resetView} title="Reset view" aria-label="Reset view"><RefreshCw size={12} /></button>
+          <button type="button" aria-label="Zoom in" disabled={zoom >= ZOOM_MAX} onClick={zoomIn}>+</button>
+          <button type="button" onClick={fitToView} title="Fit to screen" aria-label="Fit to screen"><Maximize2 size={12} /></button>
+          <button type="button" onClick={resetView} title="Reset to 100%" aria-label="Reset to 100%"><RefreshCw size={12} /></button>
         </div>
       </div>
 

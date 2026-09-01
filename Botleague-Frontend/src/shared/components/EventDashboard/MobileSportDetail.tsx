@@ -162,7 +162,7 @@ export default function MobileSportDetail({
   onEditSport, onToggleRegistration, registrationLoading, extraTitleActions,
   errorBanner, publishMsg, publishOk, topExtra,
   totalTeams, totalPlayers, maxTeams, entryFee, prizeMoney,
-  ageGroup, weightClass, weightLimitKg, teamSizeLabel, prizeDistribution,
+  ageGroup, weightClass, teamSizeLabel, prizeDistribution,
   registrationStartDate, registrationEndDate,
   matchActions, onCertificates, showPublish, onPublish, publishing,
   teams, regActionError, onTeamStatusChange, onMessageTeam, rosterLocked,
@@ -245,7 +245,6 @@ export default function MobileSportDetail({
         <div className="ssd-m-details-grid">
           <div className="ssd-m-detail-cell"><div className="label">League</div><div className="value">{ageGroupLabel(ageGroup)}</div></div>
           <div className="ssd-m-detail-cell"><div className="label">Weight Class</div><div className="value">{formatWeightClass(weightClass) || "—"}</div></div>
-          <div className="ssd-m-detail-cell"><div className="label">Weight Limit</div><div className="value">{weightLimitKg != null ? `${weightLimitKg} KG` : "—"}</div></div>
           <div className="ssd-m-detail-cell"><div className="label">Team Size</div><div className="value">{teamSizeLabel || "—"}</div></div>
         </div>
 

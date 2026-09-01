@@ -11,7 +11,7 @@ import {
   Clock, Swords, Shuffle, ChevronRight,
   AlertTriangle, RefreshCw, Calendar,
   BarChart2, Hand, Scale, Flag, Ban,
-  Lock, Unlock, PartyPopper, Medal
+  Lock, Unlock, PartyPopper, Medal, Printer, Maximize2
 } from "lucide-react"
 import type {
   MatchDTO,
@@ -342,18 +342,50 @@ export default function OrganizerBracketPage() {
   const [judgeWinnerId, setJudgeWinnerId] = useState<string>("")
 
   const svgRef = useRef<SVGSVGElement>(null)
+  const canvasRef = useRef<HTMLDivElement>(null)
 
-  // ── Pan / zoom canvas (Figma-style: wheel to zoom, drag to pan) ──
+  // ── Pan / zoom canvas — drag OR wheel to PAN; zoom is on the +/− buttons only ──
+  const ZOOM_MIN = 0.25
+  const ZOOM_MAX = 2.5
+  const ZOOM_STEP = 0.1
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [isPanning, setIsPanning] = useState(false)
   const dragStateRef = useRef({ startX: 0, startY: 0, panX: 0, panY: 0 })
   const hasDraggedRef = useRef(false)
 
-  const handleCanvasWheel = (e: React.WheelEvent) => {
-    e.preventDefault()
-    const delta = e.deltaY > 0 ? -0.1 : 0.1
-    setZoom(z => Math.min(2.5, Math.max(0.25, Math.round((z + delta) * 100) / 100)))
+  const clampZoom = (z: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(z * 100) / 100))
+  const zoomIn = () => setZoom(z => clampZoom(z + ZOOM_STEP))
+  const zoomOut = () => setZoom(z => clampZoom(z - ZOOM_STEP))
+
+  // The wheel PANS the canvas now (both axes). It used to zoom, which fired on
+  // an ordinary scroll and yanked the view around — zoom is the +/− buttons.
+  // Bound natively with { passive: false } so preventDefault is honoured and the
+  // page behind the canvas doesn't scroll at the same time.
+  useEffect(() => {
+    const el = canvasRef.current
+    if (!el) return
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      setPan(p => ({ x: p.x - e.deltaX, y: p.y - e.deltaY }))
+    }
+    el.addEventListener("wheel", onWheel, { passive: false })
+    return () => el.removeEventListener("wheel", onWheel)
+  }, [view, loading])
+
+  // Scale the whole bracket down to fit the visible canvas, then centre it.
+  const fitToView = () => {
+    const el = canvasRef.current
+    if (!el) return
+    const contentW = svgW + 40
+    const contentH = svgH + 60
+    if (contentW <= 0 || contentH <= 0) return
+    const next = clampZoom(Math.min((el.clientWidth - 48) / contentW, (el.clientHeight - 48) / contentH, 1))
+    setZoom(next)
+    setPan({
+      x: Math.max(24, (el.clientWidth - contentW * next) / 2),
+      y: Math.max(24, (el.clientHeight - contentH * next) / 2),
+    })
   }
 
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
@@ -643,6 +675,37 @@ export default function OrganizerBracketPage() {
 
   const { rounds, positions, svgW, svgH, roundLabels } = getBracketLayout(matches)
 
+  const bracketTitle =
+    rounds.length > 0
+      ? `${rounds[0].length * 2}-Team ${
+          matches[0]?.tournamentFormat === "DOUBLE_ELIMINATION" ? "Double Elimination" : "Single Elimination"
+        } · ${matchTypeLabel(matches[0]?.matchType)}`
+      : "Tournament Bracket"
+
+  // Open the bracket SVG in a clean window at natural size and print it
+  // (the browser's print dialog also covers "Save as PDF").
+  const printBracket = () => {
+    const svg = svgRef.current
+    if (!svg) return
+    const clone = svg.cloneNode(true) as SVGSVGElement
+    clone.removeAttribute("style")
+    clone.setAttribute("width", String(svgW + 40))
+    clone.setAttribute("height", String(svgH + 60))
+    const markup = new XMLSerializer().serializeToString(clone)
+    const win = window.open("", "_blank", "width=1200,height=800")
+    if (!win) return
+    win.document.write(
+      `<!doctype html><html><head><meta charset="utf-8"><title>${bracketTitle}</title>` +
+      `<style>@page{size:landscape;margin:12mm}` +
+      `body{margin:0;padding:24px;font-family:'Inter',system-ui,sans-serif;color:#111}` +
+      `h1{font-size:16px;margin:0 0 16px}svg{max-width:100%;height:auto}</style></head>` +
+      `<body><h1>${bracketTitle}</h1>${markup}</body></html>`
+    )
+    win.document.close()
+    win.focus()
+    setTimeout(() => win.print(), 350)
+  }
+
   // Connector lines — traditional straight right-angle elbows, solid.
   // Only winner-advancement (nextMatchId) edges are drawn; loser-routing
   // (loserNextMatchId, double elimination) is intentionally left un-lined so
@@ -866,15 +929,7 @@ export default function OrganizerBracketPage() {
       <div style={styles.header}>
         <div>
           <div style={styles.eyebrow}>Tournament Bracket</div>
-          <h2 style={styles.title}>
-            {rounds.length > 0
-              ? `${rounds[0].length * 2}-Team ${
-                  matches[0]?.tournamentFormat === "DOUBLE_ELIMINATION"
-                    ? "Double Elimination"
-                    : "Single Elimination"
-                } · ${matchTypeLabel(matches[0]?.matchType)}`
-              : "Bracket"}
-          </h2>
+          <h2 style={styles.title}>{bracketTitle}</h2>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" as const }}>
           <div style={styles.legend}>
@@ -889,6 +944,10 @@ export default function OrganizerBracketPage() {
               </div>
             ))}
           </div>
+          <button style={styles.regenBtn} onClick={printBracket} title="Print / save as PDF">
+            <Printer size={12} />
+            Print
+          </button>
           {!matches.some(m => m.status === "LIVE" || m.status === "COMPLETED") && (
             <button style={styles.regenBtn} onClick={() => setView("setup")}>
               <RefreshCw size={12} />
@@ -909,8 +968,9 @@ export default function OrganizerBracketPage() {
         </div>
       )}
 
-      {/* ── BRACKET SVG (pan/zoom canvas — wheel to zoom, drag to pan) ── */}
+      {/* ── BRACKET SVG (pan/zoom canvas — drag or wheel to pan; +/− to zoom) ── */}
       <div
+        ref={canvasRef}
         style={{
           ...styles.svgScroll,
           position: "relative",
@@ -925,7 +985,6 @@ export default function OrganizerBracketPage() {
           background: T.surface,
           boxShadow: "0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)",
         }}
-        onWheel={handleCanvasWheel}
         onMouseDown={handleCanvasMouseDown}
         onMouseMove={handleCanvasMouseMove}
         onMouseUp={handleCanvasMouseUp}
@@ -941,6 +1000,8 @@ export default function OrganizerBracketPage() {
             overflow: "visible",
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
             transformOrigin: "0 0",
+            transition: isPanning ? "none" : "transform 0.16s ease-out",
+            willChange: "transform",
           }}
         >
           {/* Round labels */}
@@ -1108,20 +1169,27 @@ export default function OrganizerBracketPage() {
           </g>
         </svg>
 
-        {/* Zoom controls (Figma-style, bottom-right) */}
+        {/* Zoom controls (bottom-right) — zoom lives here, not on the wheel */}
         <div style={styles.zoomControls}>
           <button
             type="button"
-            style={styles.zoomBtn}
-            onClick={() => setZoom(z => Math.max(0.25, Math.round((z - 0.1) * 100) / 100))}
+            style={{ ...styles.zoomBtn, opacity: zoom <= ZOOM_MIN ? 0.4 : 1, cursor: zoom <= ZOOM_MIN ? "not-allowed" : "pointer" }}
+            onClick={zoomOut}
+            disabled={zoom <= ZOOM_MIN}
+            title="Zoom out"
           >−</button>
           <span style={styles.zoomLabel}>{Math.round(zoom * 100)}%</span>
           <button
             type="button"
-            style={styles.zoomBtn}
-            onClick={() => setZoom(z => Math.min(2.5, Math.round((z + 0.1) * 100) / 100))}
+            style={{ ...styles.zoomBtn, opacity: zoom >= ZOOM_MAX ? 0.4 : 1, cursor: zoom >= ZOOM_MAX ? "not-allowed" : "pointer" }}
+            onClick={zoomIn}
+            disabled={zoom >= ZOOM_MAX}
+            title="Zoom in"
           >+</button>
-          <button type="button" style={styles.zoomResetBtn} onClick={resetCanvasView} title="Reset view">
+          <button type="button" style={styles.zoomResetBtn} onClick={fitToView} title="Fit to screen">
+            <Maximize2 size={12} />
+          </button>
+          <button type="button" style={styles.zoomResetBtn} onClick={resetCanvasView} title="Reset to 100%">
             <RefreshCw size={12} />
           </button>
         </div>
@@ -1930,24 +1998,24 @@ const styles: Record<string, React.CSSProperties> = {
     paddingBottom: 16, scrollbarWidth: "thin" as const,
   },
   zoomControls: {
-    position: "absolute" as const, bottom: 12, right: 12,
-    display: "flex", alignItems: "center", gap: 4,
-    background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8,
-    padding: "5px 6px", boxShadow: "0 2px 10px rgba(15,23,42,0.12)",
+    position: "absolute" as const, bottom: 14, right: 14,
+    display: "flex", alignItems: "center", gap: 5,
+    background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10,
+    padding: "6px 8px", boxShadow: "0 4px 16px rgba(15,23,42,0.16)",
   },
   zoomBtn: {
-    width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center",
-    background: T.surfaceHover, border: `1px solid ${T.border}`, borderRadius: 5,
-    color: T.text, fontSize: "0.9rem", fontWeight: 700, lineHeight: 1,
+    width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center",
+    background: T.surfaceHover, border: `1px solid ${T.border}`, borderRadius: 6,
+    color: T.text, fontSize: "1rem", fontWeight: 700, lineHeight: 1,
     cursor: "pointer", fontFamily: "inherit", padding: 0,
   },
   zoomLabel: {
-    fontSize: "0.7rem", fontWeight: 700, color: T.textSub,
-    minWidth: 34, textAlign: "center" as const, fontVariantNumeric: "tabular-nums" as const,
+    fontSize: "0.75rem", fontWeight: 700, color: T.textSub,
+    minWidth: 40, textAlign: "center" as const, fontVariantNumeric: "tabular-nums" as const,
   },
   zoomResetBtn: {
-    width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center",
-    background: T.surfaceHover, border: `1px solid ${T.border}`, borderRadius: 5,
+    width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center",
+    background: T.surfaceHover, border: `1px solid ${T.border}`, borderRadius: 6,
     color: T.textSub, cursor: "pointer", marginLeft: 2, padding: 0,
   },
 
