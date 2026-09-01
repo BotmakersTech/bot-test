@@ -132,11 +132,17 @@ export default function UserDashboard() {
   }, [stats.matchesTotal, stats.wins, winRate]);
 
   const shareDashboard = async () => {
+    // Share the public profile (…/user/<BotLeague id>), not the private
+    // /user-dashboard route, which only the signed-in owner can open.
+    const shareUrl =
+      botLeagueId && botLeagueId !== "Not assigned"
+        ? `${window.location.origin}/user/${botLeagueId}`
+        : window.location.href;
     try {
       if (navigator.share) {
-        await navigator.share({ title: `${profileName} dashboard`, url: window.location.href });
+        await navigator.share({ title: `${profileName} on BotLeague`, url: shareUrl });
       } else {
-        await navigator.clipboard.writeText(window.location.href);
+        await navigator.clipboard.writeText(shareUrl);
       }
     } catch {
       // Share cancellation is harmless.

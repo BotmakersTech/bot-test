@@ -1,8 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Plus, RefreshCw } from "lucide-react";
 
-import { useAppSelector } from "../../../app/hooks";
+import { useAppDispatch, useAppSelector } from "../../../app/hooks";
+import { getMyTeam } from "../../Team/api/team.api";
+import { setTeam } from "../../Team/store/TeamSlice";
 import Modal from "../../../shared/components/Modal";
 import useTeamMembership from "../../Team/TeamMembership/hooks/useTeamMembership";
 import CreateRobotForm from "../components/CreateRobotFrom";
@@ -67,18 +69,51 @@ function carouselSlots(images: string[], activeIndex: number) {
 
 export default function RobotsPage() {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const teamCode = useAppSelector((state) => state.team.teamCode);
   const { robots, loading, error, fetchRobots } = useRobots(teamCode ?? undefined);
   const { isAdmin: canManageRobots } = useTeamMembership(teamCode ?? "");
+
+  // Reaching /robots directly (deep link, refresh) may land before the shared
+  // team slice is hydrated. Resolve it here so we never wrongly show the
+  // "create or join a team" state to a user who actually has one.
+  const [teamChecked, setTeamChecked] = useState(!!teamCode);
+  useEffect(() => {
+    if (teamCode) { setTeamChecked(true); return; }
+    let cancelled = false;
+    getMyTeam()
+      .then((t) => {
+        if (cancelled) return;
+        if (t && t.teamCode && t.status !== "NO_TEAM") {
+          dispatch(setTeam({
+            id: t.id ?? null,
+            teamCode: t.teamCode ?? null,
+            teamName: t.teamName ?? null,
+            description: t.description ?? null,
+            logoUrl: t.logoUrl ?? null,
+            institutionName: t.institutionName ?? null,
+            city: t.city ?? null,
+            state: t.state ?? null,
+            country: t.country ?? null,
+          }));
+        }
+      })
+      .catch(() => { /* genuinely no team */ })
+      .finally(() => { if (!cancelled) setTeamChecked(true); });
+    return () => { cancelled = true; };
+  }, [teamCode, dispatch]);
 
   const [showCreate, setShowCreate] = useState(false);
   const [filter, setFilter] = useState<FilterKey>("ALL");
   const [activeHero, setActiveHero] = useState(0);
 
   const heroImages = useMemo(() => {
-    const uploaded = robots.map(robot => robot.robotIMG).filter(Boolean) as string[];
-    const unique = Array.from(new Set([...uploaded, ...heroFallbacks]));
-    return unique.length > 0 ? unique : heroFallbacks;
+    // Only the team's own uploaded robot photos — the stock placeholder set is
+    // used solely when the team has no robot images at all, never mixed in.
+    const uploaded = Array.from(
+      new Set(robots.map(robot => robot.robotIMG).filter(Boolean) as string[])
+    );
+    return uploaded.length > 0 ? uploaded : heroFallbacks;
   }, [robots]);
 
   const visibleRobots = useMemo(() => {
@@ -100,7 +135,7 @@ export default function RobotsPage() {
     setShowCreate(false);
   };
 
-  if (loading) {
+  if (loading || (!teamCode && !teamChecked)) {
     return (
       <div className="robot-build-page robot-build-state">
         <div className="robot-build-spinner" />
