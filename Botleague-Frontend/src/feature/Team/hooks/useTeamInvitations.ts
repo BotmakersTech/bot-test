@@ -6,7 +6,8 @@ import {
   useMemo,
   useState,
 } from "react";
-import { useMinimalProfileComplete } from "../../../shared/hooks/useProfileComplete";
+import { useProfileComplete, parseProfileIncomplete } from "../../../shared/hooks/useProfileComplete";
+import type { MissingField } from "../../../shared/components/ProfileIncompleteModal";
 
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -35,11 +36,15 @@ export default function useTeamInvitations() {
 
   const dispatch = useDispatch();
 
-  // Only username + DOB are strictly required to join a team.
-  const { isComplete, missingFields } = useMinimalProfileComplete();
+  // Full profile (name + DOB + username + photo) is required to join a team —
+  // this must match TeamInviteService.acceptInvite's server-side check.
+  const { isComplete, missingFields } = useProfileComplete();
 
-  // Controls the "complete your profile" gate modal for join-team action
+  // Controls the "complete your profile" gate modal for join-team action.
   const [showProfileGate, setShowProfileGate] = useState(false);
+  // Missing fields parsed from a server PROFILE_INCOMPLETE rejection, if the
+  // client check somehow passed but the backend still said no.
+  const [serverMissing, setServerMissing] = useState<MissingField[] | null>(null);
 
   // ======================================================
   // STATE
@@ -129,6 +134,7 @@ export default function useTeamInvitations() {
 
         // ── Profile completeness gate ─────────────────────────
         if (!isComplete) {
+          setServerMissing(null);
           setShowProfileGate(true);
           return;
         }
@@ -158,9 +164,18 @@ export default function useTeamInvitations() {
             err
           );
 
+          const serverMsg = err?.response?.data?.message as string | undefined;
+          const parsed = parseProfileIncomplete(serverMsg);
+          if (parsed) {
+            // Route a server-side PROFILE_INCOMPLETE into the same popup as the
+            // client gate instead of surfacing a raw error string on the card.
+            setServerMissing(parsed);
+            setShowProfileGate(true);
+            return;
+          }
+
           throw new Error(
-            err?.response?.data?.message ||
-            "Failed to accept invitation",
+            serverMsg || "Failed to accept invitation",
             { cause: err }
           );
 
@@ -169,7 +184,7 @@ export default function useTeamInvitations() {
           setActionLoadingId(null);
         }
       },
-      []
+      [isComplete]
     );
 
   // ======================================================
@@ -348,7 +363,7 @@ export default function useTeamInvitations() {
 
     // profile gate
     showProfileGate,
-    missingFields,
-    closeProfileGate: () => setShowProfileGate(false),
+    missingFields: serverMissing ?? missingFields,
+    closeProfileGate: () => { setShowProfileGate(false); setServerMissing(null); },
   };
 }
