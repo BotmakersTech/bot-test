@@ -1,5 +1,5 @@
 import { Pencil, Share2, CalendarDays, Swords, Percent } from "lucide-react";
-import bLogo from "../../../assets/Dashboard/B_LOGO.png";
+import robotFallback from "../../../assets/robot.png";
 
 /* ============================================================================
    MobileRobotProfile — mobile (<=900px) companion shared by both
@@ -77,7 +77,7 @@ export default function MobileRobotProfile({
             {imageUrl ? (
               <img className="mrp-robot-photo" src={imageUrl} alt={imageAlt} />
             ) : (
-              <img className="mrp-robot-photo" src={bLogo} alt="" style={{ opacity: 0.35, objectFit: "contain", padding: 20 }} />
+              <img className="mrp-robot-photo" src={robotFallback} alt={imageAlt} style={{ objectFit: "contain", padding: 16, opacity: 0.5 }} />
             )}
           </div>
         </div>

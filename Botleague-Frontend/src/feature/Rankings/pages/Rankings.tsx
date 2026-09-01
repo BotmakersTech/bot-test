@@ -145,43 +145,51 @@ export default function GlobalRankingsPage() {
   useEffect(() => {
     let cancelled = false;
 
-    const applyFallback = () => {
+    const apply = (s: string, ag: string, wc: string) => {
       if (cancelled) return;
-      setSport(FALLBACK_DEFAULT.sport);
-      setAgeGroup(FALLBACK_DEFAULT.ageGroup);
-      setWeightClass(FALLBACK_DEFAULT.weightClass);
+      setSport(s);
+      setAgeGroup(ag);
+      setWeightClass(wc);
     };
 
-    getDashboard()
-      .then((data) => {
-        if (cancelled) return;
+    // Prefer, in order: the pool the viewer has played the most *and* that has
+    // ranking rows → any pool that has ranking rows → the hard-coded fallback.
+    // This guarantees the page lands on a populated table whenever *any* sport
+    // has a global ranking, instead of an empty "no data for this pool" state.
+    Promise.all([
+      getDashboard().catch(() => null),
+      getAvailablePools().catch(() => [] as { sport: string; ageGroup: string }[]),
+    ]).then(([data, livePools]) => {
+      if (cancelled) return;
 
-        const tally = new Map<string, { sport: string; ageGroup: string; weightClass: string; count: number }>();
-        for (const ev of data.events ?? []) {
-          const s = ev.sport?.sport;
-          const ag = ev.sport?.ageGroup;
-          if (!s || !ag) continue;
-          const wc = ev.sport?.weightClass ?? "";
-          const key = `${s}::${ag}::${wc}`;
-          const existing = tally.get(key);
-          if (existing) existing.count += 1;
-          else tally.set(key, { sport: s, ageGroup: ag, weightClass: wc, count: 1 });
-        }
+      const tally = new Map<string, { sport: string; ageGroup: string; weightClass: string; count: number }>();
+      for (const ev of data?.events ?? []) {
+        const s = ev.sport?.sport;
+        const ag = ev.sport?.ageGroup;
+        if (!s || !ag) continue;
+        const wc = ev.sport?.weightClass ?? "";
+        const key = `${s}::${ag}::${wc}`;
+        const existing = tally.get(key);
+        if (existing) existing.count += 1;
+        else tally.set(key, { sport: s, ageGroup: ag, weightClass: wc, count: 1 });
+      }
 
-        let mostPlayed: { sport: string; ageGroup: string; weightClass: string; count: number } | null = null;
-        for (const entry of tally.values()) {
-          if (!mostPlayed || entry.count > mostPlayed.count) mostPlayed = entry;
-        }
+      let mostPlayed: { sport: string; ageGroup: string; weightClass: string; count: number } | null = null;
+      for (const entry of tally.values()) {
+        if (!mostPlayed || entry.count > mostPlayed.count) mostPlayed = entry;
+      }
 
-        if (mostPlayed) {
-          setSport(mostPlayed.sport);
-          setAgeGroup(mostPlayed.ageGroup);
-          setWeightClass(mostPlayed.weightClass);
-        } else {
-          applyFallback();
-        }
-      })
-      .catch(applyFallback);
+      const poolHasData = (s: string, ag: string) =>
+        livePools.some((p) => p.sport === s && p.ageGroup === ag);
+
+      if (mostPlayed && poolHasData(mostPlayed.sport, mostPlayed.ageGroup)) {
+        apply(mostPlayed.sport, mostPlayed.ageGroup, mostPlayed.weightClass);
+      } else if (livePools.length > 0) {
+        apply(livePools[0].sport, livePools[0].ageGroup, "");
+      } else {
+        apply(FALLBACK_DEFAULT.sport, FALLBACK_DEFAULT.ageGroup, FALLBACK_DEFAULT.weightClass);
+      }
+    });
 
     return () => { cancelled = true; };
   }, []);

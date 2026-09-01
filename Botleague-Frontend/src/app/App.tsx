@@ -7,6 +7,7 @@ import { loginStart, loginSuccess, loginFailure } from "../feature/Auth/store/au
 import { refreshToken, getCurrentUser } from "../feature/Auth/api/auth.api";
 import { getProfile } from "../feature/Profile/api/profile.api";
 import { getMyTeam } from "../feature/Team/api/team.api";
+import { setTeam } from "../feature/Team/store/TeamSlice";
 
 import Layout from "../routes/AppRouter";
 import ScrollToTop from "../shared/components/ScrollToTop";
@@ -87,7 +88,25 @@ function App() {
         // Schedule proactive refresh using the TTL the backend reported
         scheduleRefresh(result.expiresIn ?? 900);
 
-        try { await getMyTeam(); } catch { /* no team — non-fatal */ }
+        // Hydrate the shared team slice on session restore so any page that
+        // reads state.team (e.g. /robots) works no matter how it was reached —
+        // previously only pages that ran useTeam()/useProfile() populated it.
+        try {
+          const t = await getMyTeam();
+          if (t && t.teamCode && t.status !== "NO_TEAM") {
+            dispatch(setTeam({
+              id: t.id ?? null,
+              teamCode: t.teamCode ?? null,
+              teamName: t.teamName ?? null,
+              description: t.description ?? null,
+              logoUrl: t.logoUrl ?? null,
+              institutionName: t.institutionName ?? null,
+              city: t.city ?? null,
+              state: t.state ?? null,
+              country: t.country ?? null,
+            }));
+          }
+        } catch { /* no team — non-fatal */ }
       } catch {
         dispatch(loginFailure());
       }

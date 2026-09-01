@@ -10,9 +10,6 @@ import RobotEditPanel from "../components/RobotEditPanel";
 import MobileRobotProfile from "../components/MobileRobotProfile";
 import type { Robot } from "../types/types";
 import robotFallback from "../../../assets/robot.png";
-import flightDecoration from "../../../assets/Auth/flight.svg";
-import droneDecoration from "../../../assets/Auth/drone.svg";
-import bLogo from "../../../assets/Dashboard/B_LOGO.png";
 import "../../../styles/robotProfile.css";
 
 function OutlineStar({ className = "" }: { className?: string }) {
@@ -110,9 +107,6 @@ export default function RobotProfilePage() {
 
   return (
     <div className="rprofile-page">
-      <img className="rprofile-bg rprofile-bg-flight-left" src={flightDecoration} alt="" aria-hidden="true" />
-      <img className="rprofile-bg rprofile-bg-drone" src={droneDecoration} alt="" aria-hidden="true" />
-
       <div className="rprofile-shell">
         {editing ? (
           <RobotEditPanel
@@ -184,7 +178,6 @@ export default function RobotProfilePage() {
               </div>
 
               <div className="rprofile-avatar-stage">
-                <img src={bLogo} alt="" aria-hidden="true" className="rprofile-big-b" />
                 {robot.robotIMG && !imgErr ? (
                   <img
                     src={robot.robotIMG}
