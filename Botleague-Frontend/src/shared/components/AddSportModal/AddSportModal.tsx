@@ -229,7 +229,7 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
         <div className="ed-modal-head">
           <div>
             <h2 className="ed-modal-title">ADD TECHSPORT</h2>
-            <div className="asm-head-meta">Configure new sport(s) for this techfect</div>
+            <div className="asm-head-meta">Each add creates one techsport — one sport, one age category, one weight class</div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <div className="asm-step-dots">
@@ -290,6 +290,17 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
                     </div>
                   )}
 
+                  {leagueSports.some(sp => toWeightClasses(sp).length > 1) && (
+                    <div className="asm-classes-note">
+                      <Info size={12} />
+                      <span>
+                        Sports with more than one weight class (e.g. the pills above) run each class as its own
+                        techsport. You'll pick <strong>one</strong> class in the next step — repeat "Add Techsport"
+                        for any other class you want to run.
+                      </span>
+                    </div>
+                  )}
+
                   {selectedSports.length > 0 && (
                     <div className="asm-chip-row">
                       {selectedSports.map(s => (
@@ -320,21 +331,44 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
 
               {sportsNeedingWeightClass.length > 0 && (
                 <div className="asm-weight-section">
-                  {sportsNeedingWeightClass.map(sp => (
-                    <div key={sp.id}>
-                      <div className="asm-weight-row-label">{sp.sportName} — Weight Class <span className="asm-required">*</span></div>
-                      <div className="asm-weight-pills">
-                        {toWeightClasses(sp).map(wc => {
-                          const active = weightClassBySport[sp.id] === wc.value
-                          return (
-                            <button key={wc.value} type="button" className={`asm-weight-pill${active ? " asm-weight-pill--active" : ""}`} onClick={() => setWeightClassBySport(w => ({ ...w, [sp.id]: wc.value }))}>
-                              {formatWeightClass(wc.label)}
-                            </button>
-                          )
-                        })}
+                  <div className="asm-weight-intro">
+                    <Info size={13} />
+                    <span>
+                      This sport runs in more than one weight class. Pick <strong>one</strong> — submitting
+                      adds only that weight class as a techsport. To run another class, add a separate
+                      techsport for it after this one.
+                    </span>
+                  </div>
+                  {sportsNeedingWeightClass.map(sp => {
+                    const classes = toWeightClasses(sp)
+                    const picked = weightClassBySport[sp.id]
+                    const pickedLabel = classes.find(c => c.value === picked)?.label
+                    const otherLabels = classes.filter(c => c.value !== picked).map(c => formatWeightClass(c.label))
+                    return (
+                      <div key={sp.id}>
+                        <div className="asm-weight-row-label">{sp.sportName} — Weight Class <span className="asm-required">*</span></div>
+                        <div className="asm-weight-pills">
+                          {classes.map(wc => {
+                            const active = picked === wc.value
+                            return (
+                              <button key={wc.value} type="button" className={`asm-weight-pill${active ? " asm-weight-pill--active" : ""}`} onClick={() => setWeightClassBySport(w => ({ ...w, [sp.id]: wc.value }))}>
+                                {formatWeightClass(wc.label)}
+                              </button>
+                            )
+                          })}
+                        </div>
+                        {picked && (
+                          <div className="asm-weight-confirm">
+                            <Check size={12} />
+                            <span>
+                              Creates <strong>{sp.sportName} · {formatWeightClass(pickedLabel ?? picked)}</strong> only.
+                              {otherLabels.length > 0 && ` Need ${otherLabels.join(", ")}? Add ${otherLabels.length > 1 ? "them" : "it"} as ${otherLabels.length > 1 ? "separate techsports" : "a separate techsport"}.`}
+                            </span>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
 

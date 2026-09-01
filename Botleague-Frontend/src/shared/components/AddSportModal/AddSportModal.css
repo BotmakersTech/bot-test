@@ -326,6 +326,26 @@
     cursor: not-allowed;
 }
 
+.asm-classes-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    background: rgba(140, 108, 255, 0.06);
+    border: 1px solid rgba(140, 108, 255, 0.18);
+    border-radius: 8px;
+    padding: 9px 12px;
+    margin-top: 12px;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: var(--ed-ink-soft);
+}
+
+.asm-classes-note svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: var(--ed-purple);
+}
+
 /* ---------- Step 3: Configuration ---------- */
 .asm-weight-section {
     display: flex;
@@ -337,10 +357,44 @@
     padding: 12px 14px;
 }
 
+.asm-weight-intro {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: var(--ed-ink-soft);
+}
+
+.asm-weight-intro svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: var(--ed-purple);
+}
+
 .asm-weight-row-label {
     font-size: 0.72rem;
     font-weight: 700;
     color: var(--ed-ink);
+}
+
+.asm-weight-confirm {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin-top: 8px;
+    font-size: 0.7rem;
+    line-height: 1.5;
+    color: var(--ed-success);
+    background: rgba(31, 169, 82, 0.08);
+    border: 1px solid rgba(31, 169, 82, 0.22);
+    border-radius: 6px;
+    padding: 6px 10px;
+}
+
+.asm-weight-confirm svg {
+    flex-shrink: 0;
+    margin-top: 1px;
 }
 
 .asm-weight-pills {
