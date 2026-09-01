@@ -12,7 +12,7 @@ import {
 } from "../api/uploadTeamLogo.api";
 
 import { useNavigate } from "react-router-dom";
-import { useMinimalProfileComplete } from "../../../../shared/hooks/useProfileComplete";
+import { useProfileComplete } from "../../../../shared/hooks/useProfileComplete";
 
 // ======================================================
 // HOOK
@@ -22,7 +22,9 @@ export default function useCreateTeam() {
 
   const navigate = useNavigate();
 
-  const { isComplete, missingFields } = useMinimalProfileComplete();
+  // Full profile (name + DOB + username + photo) — must match TeamService's
+  // server-side check for team creation.
+  const { isComplete, missingFields } = useProfileComplete();
 
   // Controls the "complete your profile" gate modal for the create-team action
   const [showProfileGate, setShowProfileGate] = useState(false);
@@ -142,7 +144,7 @@ export default function useCreateTeam() {
 
   const handleSubmit = async () => {
 
-    // Minimum profile requirements gate — username + DOB must be set
+    // Profile-completeness gate — name, DOB, username and photo must be set
     // before a team can be created (mirrors the join-team gate).
     if (!isComplete) {
       setShowProfileGate(true);

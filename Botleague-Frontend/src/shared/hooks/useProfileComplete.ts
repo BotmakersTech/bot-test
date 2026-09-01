@@ -35,27 +35,23 @@ export function useProfileComplete(): {
 }
 
 /**
- * Narrower gate used specifically for create/join-team actions — only
- * username and date of birth are strictly required to form or join a team,
- * unlike the full profile (name + photo too) checked by useProfileComplete.
+ * Parses a backend `PROFILE_INCOMPLETE: ... Missing: A, B, C` message into the
+ * same `MissingField[]` the modal renders, so a server-side rejection can drive
+ * the exact same popup as the client-side gate. Returns null for any other error.
  */
-export function useMinimalProfileComplete(): {
-  isComplete:    boolean;
-  missingFields: MissingField[];
-} {
-  const user = useSelector((s: RootState) => s.auth.user);
-
-  const missingFields: MissingField[] = [];
-
-  if (!user?.userName?.trim()) {
-    missingFields.push({ key: "username", label: "Username",       icon: Tag });
-  }
-  if (!user?.dateOfBirth) {
-    missingFields.push({ key: "dob",      label: "Date of Birth",  icon: Cake });
-  }
-
-  return {
-    isComplete:    missingFields.length === 0,
-    missingFields,
+export function parseProfileIncomplete(message?: string | null): MissingField[] | null {
+  if (!message || !message.includes("PROFILE_INCOMPLETE")) return null;
+  const after = message.split("Missing:")[1];
+  if (!after) return [];
+  const known: Record<string, MissingField> = {
+    "full name":       { key: "name",     label: "Full Name (First & Last)", icon: User },
+    "date of birth":   { key: "dob",      label: "Date of Birth",            icon: Cake },
+    "username":        { key: "username", label: "Username",                 icon: Tag },
+    "profile picture": { key: "photo",    label: "Profile Picture",          icon: Camera },
   };
+  return after
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .map((s) => known[s])
+    .filter((f): f is MissingField => !!f);
 }
