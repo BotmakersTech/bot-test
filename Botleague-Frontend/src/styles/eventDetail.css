@@ -890,16 +890,17 @@
 .evd-page .match.left::before { clip-path: polygon(0 0, 92% 0, 82% 100%, 0 100%); }
 .evd-page .match.right::before { clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%); }
 
-.evd-page .match.winner::before { background: linear-gradient(90deg, #1B54C9, #6E38D6); }
+.evd-page .match.winner::before { background: linear-gradient(90deg, #3E71DC, #8355DE); }
 .evd-page .match.winner span { color: #fff; }
 .evd-page .match:not(.winner) span { color: #1b1b1b; }
 
-/* Decided match: the loser slice greys right down so the result reads at a
-   glance — a pale-lavender slice that isn't the vivid winner is clearly
-   "not the winner" instead of looking like an undecided/scheduled slot. */
+/* Decided match: the loser slice greys down so the result reads at a glance —
+   a pale-lavender slice that isn't the vivid winner is clearly "not the
+   winner" instead of looking like an undecided/scheduled slot. Kept legible:
+   the loser's name is a mid grey, not a near-invisible one. */
 .evd-page .match.loser::before { background: linear-gradient(90deg, #E7E5EE, #D9D4E3); }
-.evd-page .match.loser span { color: #9a9a9a; font-weight: 600; }
-.evd-page .match.loser .team-image { opacity: .45; }
+.evd-page .match.loser span { color: #5f5f5f; font-weight: 600; }
+.evd-page .match.loser .team-image { opacity: .62; }
 
 /* "Winner" pill pinned to the top edge of the winning slice. */
 .evd-page .match .match-won-badge {
