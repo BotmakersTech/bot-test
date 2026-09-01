@@ -2,7 +2,6 @@ import { useParams, useNavigate } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 import useLeaderboard from "../../Leaderboard/hook/useLeaderboard"
 import RankingsTab from "../../Leaderboard/components/Ranking"
-import RankingMatchesPanel from "../components/RankingMatchesPanel"
 import "../../../styles/organizerTheme.css"
 
 const TEXT = "#111111"
@@ -31,15 +30,6 @@ export default function AdminSportRankingPage() {
       </h1>
 
       <RankingsTab sportId={sportId ?? ""} leaderboard={leaderboard} loading={loading} error={error} onRefresh={refetch} />
-
-      {sportId && (
-        <div style={{ marginTop: "32px" }}>
-          <h2 className="font-display mb-4 text-[clamp(16px,3vw,24px)] font-medium text-[#0162d1] tracking-wide">
-            Matches
-          </h2>
-          <RankingMatchesPanel sportId={sportId} onChanged={refetch} />
-        </div>
-      )}
     </div>
   )
 }

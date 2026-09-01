@@ -177,7 +177,7 @@ export default function RankingMatchesPanel({ sportId, onChanged }: RankingMatch
           <div style={{ fontSize: "0.68rem", fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "8px" }}>
             Round {round || 1}
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "12px", alignItems: "start" }}>
             {roundMatches.map(m => {
               const teams = teamsOf(m)
               const st = STATUS_STYLE[m.status ?? "SCHEDULED"] ?? STATUS_STYLE.SCHEDULED
