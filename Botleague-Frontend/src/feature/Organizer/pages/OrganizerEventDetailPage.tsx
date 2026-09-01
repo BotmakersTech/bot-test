@@ -405,8 +405,17 @@ export default function OrganizerEventDetailPage() {
         onBack={() => navigate("/organizer/events")}
         backLabel="Back to My Techfects"
         errorBanner={actionError}
-        eventSponsors={canManageEvent ? <SponsorManager mode="event" entityId={eventId} title="Event Sponsors" /> : undefined}
-        extraSponsorSections={canManageEvent ? <SupportContactManager mode="event" eventId={eventId} title="Event Support & Emergency Contacts" /> : undefined}
+        eventSponsors={canManageEvent ? <SponsorManager mode="event" entityId={eventId} title="Techfect Sponsors" /> : undefined}
+        extraSponsorSections={canManageEvent ? (
+          <>
+            <SupportContactManager mode="event" eventId={eventId} title="Event Support & Emergency Contacts" />
+            <SponsorManager
+              mode="sport"
+              title="Techsport Sponsors"
+              sportOptions={sports.map(s => ({ id: s.id, label: s.sport.replace(/_/g, " ") }))}
+            />
+          </>
+        ) : undefined}
       />
     </>
   )

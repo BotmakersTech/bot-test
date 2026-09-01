@@ -506,15 +506,19 @@ export default function AdminEventPage() {
           errorBanner={actionError}
           canDelete={canDelete}
           onDelete={() => setShowDeleteConfirm(true)}
-          eventSponsors={canManageSponsors ? <SponsorManager mode="event" entityId={eventId} title="Event Sponsors" /> : undefined}
+          eventSponsors={canManageSponsors ? <SponsorManager mode="event" entityId={eventId} title="Techfect Sponsors" /> : undefined}
           extraSponsorSections={(canEdit || canManageSponsors) ? (
             <>
               {canEdit && (
                 <SupportContactManager mode="event" eventId={eventId} title="Event Support & Emergency Contacts" />
               )}
-              {canManageSponsors && sports.map(sport => (
-                <SponsorManager key={sport.id} mode="sport" entityId={sport.id} title={`Sponsors — ${toLabel(sport.sport)}`} />
-              ))}
+              {canManageSponsors && (
+                <SponsorManager
+                  mode="sport"
+                  title="Techsport Sponsors"
+                  sportOptions={sports.map(sport => ({ id: sport.id, label: toLabel(sport.sport) }))}
+                />
+              )}
             </>
           ) : undefined}
         />
