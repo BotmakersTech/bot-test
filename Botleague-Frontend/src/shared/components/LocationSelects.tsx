@@ -1,15 +1,19 @@
 import React from "react"
-import { COUNTRIES, getStatesForCountry, getCitiesForState } from "../data/locationData"
+import { INDIA_STATES, getCitiesForState } from "../data/locationData"
 
 interface LocationSelectsProps {
-  country: string
+  /** Kept for call-site compatibility — the platform is India-only, so this is
+   *  forced to "India" and the country field is never rendered. */
+  country?: string
   state: string
   city: string
-  onCountry: (v: string) => void
+  /** Called once on mount with "India" so the parent form submits the right
+   *  value even though there's no country field. Optional. */
+  onCountry?: (v: string) => void
   onState: (v: string) => void
   onCity: (v: string) => void
   required?: boolean
-  /** Hide the Country field — use when the page fixes country itself (e.g. always "India") and only wants State + City. */
+  /** No-op now (country is always hidden) — kept so existing call sites compile. */
   hideCountry?: boolean
   // Use className-based styling (e.g. "profile-input") — skips inline defaults
   selectClassName?: string
@@ -20,6 +24,9 @@ interface LocationSelectsProps {
   inputStyle?: React.CSSProperties
   labelStyle?: React.CSSProperties
   itemStyle?: React.CSSProperties
+  /** Class on each field's wrapper div — e.g. "adp-field" to inherit a form's
+   *  own input/label styling without per-control classes. */
+  itemClassName?: string
   gridStyle?: React.CSSProperties
 }
 
@@ -61,28 +68,36 @@ const DEFAULT_LBL: React.CSSProperties = {
 }
 
 export default function LocationSelects({
-  country, state, city,
+  state, city,
   onCountry, onState, onCity,
   required,
-  hideCountry,
   selectClassName, inputClassName, labelClassName,
   selectStyle, inputStyle, labelStyle,
-  itemStyle,
+  itemStyle, itemClassName,
   gridStyle,
 }: LocationSelectsProps) {
-  const states = getStatesForCountry(country)
-  const cities = getCitiesForState(country, state)
+  // Country is fixed — make sure the parent form ends up submitting "India".
+  React.useEffect(() => {
+    onCountry?.("India")
+    // once, on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const cities = getCitiesForState("India", state)
+
+  // Stable id for the <datalist> that backs the searchable city field.
+  const cityListId = `city-options-${React.useId()}`
 
   const useClasses = !!(selectClassName || inputClassName)
   const selStyle = useClasses ? undefined : (selectStyle ?? DEFAULT_SEL)
   const inpStyle = useClasses ? undefined : (inputStyle  ?? DEFAULT_INP)
   const lblStyle = useClasses ? undefined : (labelStyle  ?? DEFAULT_LBL)
 
-  function handleCountry(v: string) {
-    onCountry(v)
-    onState("")
-    onCity("")
-  }
+  // Show a stored value that isn't in the canonical list (legacy free-text)
+  // rather than silently dropping it.
+  const stateOptions = state && !INDIA_STATES.includes(state)
+    ? [state, ...INDIA_STATES]
+    : INDIA_STATES
 
   function handleState(v: string) {
     onState(v)
@@ -90,71 +105,42 @@ export default function LocationSelects({
   }
 
   return (
-    <div style={gridStyle ?? { display: "grid", gridTemplateColumns: `repeat(${hideCountry ? 2 : 3}, 1fr)`, gap: "18px" }}>
+    <div style={gridStyle ?? { display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "18px" }}>
 
-      {!hideCountry && (
-        <div style={itemStyle}>
-          <label style={lblStyle} className={labelClassName}>Country</label>
-          <select
-            required={required}
-            value={country}
-            onChange={e => handleCountry(e.target.value)}
-            style={selStyle}
-            className={selectClassName}
-          >
-            <option value="">Select country…</option>
-            {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </div>
-      )}
-
-      <div style={itemStyle}>
-        <label style={lblStyle} className={labelClassName}>State / Province</label>
-        {states.length > 0 ? (
-          <select
-            required={required}
-            value={state}
-            onChange={e => handleState(e.target.value)}
-            style={selStyle}
-            className={selectClassName}
-          >
-            <option value="">Select state…</option>
-            {states.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-        ) : (
-          <input
-            type="text"
-            placeholder="State / Province"
-            value={state}
-            onChange={e => handleState(e.target.value)}
-            style={inpStyle}
-            className={inputClassName}
-          />
-        )}
+      <div style={itemStyle} className={itemClassName}>
+        <label style={lblStyle} className={labelClassName}>State</label>
+        <select
+          required={required}
+          value={state}
+          onChange={e => handleState(e.target.value)}
+          style={selStyle}
+          className={selectClassName}
+        >
+          <option value="">Select state…</option>
+          {stateOptions.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
       </div>
 
-      <div style={itemStyle}>
+      <div style={itemStyle} className={itemClassName}>
         <label style={lblStyle} className={labelClassName}>City</label>
-        {cities.length > 0 ? (
-          <select
-            required={required}
-            value={city}
-            onChange={e => onCity(e.target.value)}
-            style={selStyle}
-            className={selectClassName}
-          >
-            <option value="">Select city…</option>
-            {cities.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-        ) : (
-          <input
-            type="text"
-            placeholder="City"
-            value={city}
-            onChange={e => onCity(e.target.value)}
-            style={inpStyle}
-            className={inputClassName}
-          />
+        {/* Searchable: type to filter ~hundreds of options; a value not in the
+            list is still accepted (kept for towns the dataset misses). */}
+        <input
+          type="text"
+          list={cities.length > 0 ? cityListId : undefined}
+          required={required}
+          value={city}
+          disabled={!state}
+          onChange={e => onCity(e.target.value)}
+          placeholder={state ? "Type or pick a city…" : "Select a state first"}
+          autoComplete="off"
+          style={inpStyle}
+          className={inputClassName ?? selectClassName}
+        />
+        {cities.length > 0 && (
+          <datalist id={cityListId}>
+            {cities.map(c => <option key={c} value={c} />)}
+          </datalist>
         )}
       </div>
 

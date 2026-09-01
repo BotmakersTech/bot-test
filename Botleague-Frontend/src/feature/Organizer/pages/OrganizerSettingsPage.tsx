@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { getMyEvents, updateEventInfo, type OrganizerEvent, type UpdateEventInfoRequest } from "../api/organizer.api"
+import LocationSelects from "../../../shared/components/LocationSelects"
 
 function Field({ label, value, onChange, type = "text", readOnly = false }:
   { label: string; value: string; onChange?: (v: string) => void; type?: string; readOnly?: boolean }) {
@@ -125,10 +126,18 @@ export default function OrganizerSettingsPage() {
             <h2 className="text-sm font-semibold text-[#111111]">Venue</h2>
             <Field label="Venue Name"    value={form.venueName    ?? ""} onChange={set("venueName")} />
             <Field label="Venue Address" value={form.venueAddress ?? ""} onChange={set("venueAddress")} />
-            <div className="grid gap-4 sm:grid-cols-3">
-              <Field label="City"    value={form.city    ?? ""} onChange={set("city")} />
-              <Field label="State"   value={form.state   ?? ""} onChange={set("state")} />
-              <Field label="Country" value={form.country ?? ""} onChange={set("country")} />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <LocationSelects
+                gridStyle={{ display: "contents" }}
+                state={form.state ?? ""}
+                city={form.city ?? ""}
+                onCountry={set("country")}
+                onState={set("state")}
+                onCity={set("city")}
+                labelClassName="text-xs text-[#5d5d5d] mb-1 block font-semibold"
+                selectClassName="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none focus:ring-[#8c6cff] transition-colors"
+                inputClassName="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none focus:ring-[#8c6cff] transition-colors"
+              />
             </div>
           </div>
 
