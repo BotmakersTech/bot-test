@@ -4,6 +4,7 @@ import { Search, Plus, ChevronLeft, ChevronRight, Users as UsersIcon } from "luc
 import { searchAdminTeams, createAdminTeam, type AdminTeamSummary } from "../api/teamManagement.api"
 import { getUsersWithoutTeam, type UserSummary } from "../api/userManagement.api"
 import TeamLogo from "../../../shared/components/TeamLogo"
+import LocationSelects from "../../../shared/components/LocationSelects"
 import { ORG } from "../../Organizer/theme/organizerTheme"
 import PrimaryButton from "../../Organizer/components/PrimaryButton"
 import MobileTeamManagement from "../components/MobileTeamManagement"
@@ -60,10 +61,18 @@ function CreateTeamModal({ onClose, onCreated }: { onClose: () => void; onCreate
             {users.length === 0 && <p className="mt-1 text-xs text-gray-400">No users available without a team.</p>}
           </div>
           <div><label className={lbl}>Institution / School</label><input className={inp} value={form.institutionName} onChange={e=>set("institutionName",e.target.value)} placeholder="IIT Bombay" /></div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div><label className={lbl}>City</label><input className={inp} value={form.city} onChange={e=>set("city",e.target.value)} placeholder="Mumbai" /></div>
-            <div><label className={lbl}>State</label><input className={inp} value={form.state} onChange={e=>set("state",e.target.value)} placeholder="MH" /></div>
-            <div><label className={lbl}>Country</label><input className={inp} value={form.country} onChange={e=>set("country",e.target.value)} /></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <LocationSelects
+              gridStyle={{ display: "contents" }}
+              state={form.state}
+              city={form.city}
+              onCountry={(v) => set("country", v)}
+              onState={(v) => set("state", v)}
+              onCity={(v) => set("city", v)}
+              labelClassName={lbl}
+              selectClassName={`${inp} cursor-pointer`}
+              inputClassName={inp}
+            />
           </div>
           <div><label className={lbl}>Description</label><textarea className={`${inp} resize-none`} rows={2} value={form.description} onChange={e=>set("description",e.target.value)} placeholder="Short team bio…" /></div>
           {err && <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">{err}</p>}

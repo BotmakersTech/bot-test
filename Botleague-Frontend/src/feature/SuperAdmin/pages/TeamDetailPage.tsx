@@ -11,6 +11,7 @@ import {
   type AdminTeamMember,
 } from "../api/teamManagement.api"
 import TeamLogo from "../../../shared/components/TeamLogo"
+import LocationSelects from "../../../shared/components/LocationSelects"
 import { resolveAvatarSrc } from "../../Profile/constants/avatars"
 import "../../../shared/styles/adminDetailPage.css"
 
@@ -212,9 +213,15 @@ export default function TeamDetailPage() {
               <div className="adp-form-grid">
                 <FormField label="Team Name" value={form.teamName} onChange={(v) => setForm((f) => ({ ...f, teamName: v }))} />
                 <FormField label="Institution / College" value={form.institutionName} onChange={(v) => setForm((f) => ({ ...f, institutionName: v }))} />
-                <FormField label="Country" value={form.country} onChange={(v) => setForm((f) => ({ ...f, country: v }))} />
-                <FormField label="City" value={form.city} onChange={(v) => setForm((f) => ({ ...f, city: v }))} />
-                <FormField label="State" value={form.state} onChange={(v) => setForm((f) => ({ ...f, state: v }))} />
+                <LocationSelects
+                  gridStyle={{ display: "contents" }}
+                  itemClassName="adp-field"
+                  state={form.state}
+                  city={form.city}
+                  onCountry={(v) => setForm((f) => ({ ...f, country: v }))}
+                  onState={(v) => setForm((f) => ({ ...f, state: v }))}
+                  onCity={(v) => setForm((f) => ({ ...f, city: v }))}
+                />
                 <div className="adp-field adp-full-width">
                   <label>Description</label>
                   <textarea

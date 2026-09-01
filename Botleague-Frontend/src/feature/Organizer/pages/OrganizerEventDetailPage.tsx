@@ -8,6 +8,7 @@ import {
   type OrganizerEvent, type UpdateEventInfoRequest, type CreateEventSportRequest,
 } from "../api/organizer.api"
 import EventMediaField from "../components/EventMediaField"
+import LocationSelects from "../../../shared/components/LocationSelects"
 import SponsorManager from "../../Admin/components/SponsorManager"
 import SupportContactManager from "../components/SupportContactManager"
 import EventDashboard from "../../../shared/components/EventDashboard/EventDashboard"
@@ -156,11 +157,17 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange }: {
           <FormField label="Location / Google Maps link">
             <input style={inputStyle} placeholder="https://maps.app.goo.gl/…" value={form.mapUrl ?? ""} onChange={e => set("mapUrl", e.target.value)} />
           </FormField>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
-            <FormField label="City"><input style={inputStyle} value={form.city} onChange={e => set("city", e.target.value)} /></FormField>
-            <FormField label="State"><input style={inputStyle} value={form.state} onChange={e => set("state", e.target.value)} /></FormField>
-            <FormField label="Country"><input style={inputStyle} value={form.country} onChange={e => set("country", e.target.value)} /></FormField>
-          </div>
+          <LocationSelects
+            state={form.state ?? ""}
+            city={form.city ?? ""}
+            onCountry={v => set("country", v)}
+            onState={v => set("state", v)}
+            onCity={v => set("city", v)}
+            gridStyle={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}
+            selectStyle={inputStyle}
+            inputStyle={inputStyle}
+            labelStyle={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: MUTED, display: "block", marginBottom: "6px" }}
+          />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
             <FormField label="Start Date"><input type="date" style={dateInputStyle} value={form.startDate} onChange={e => set("startDate", e.target.value)} /></FormField>
             <FormField label="End Date"><input type="date" style={dateInputStyle} value={form.endDate} min={form.startDate || undefined} onChange={e => set("endDate", e.target.value)} /></FormField>

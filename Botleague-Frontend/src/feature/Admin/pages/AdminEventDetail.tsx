@@ -218,7 +218,7 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange, limited
                 selectStyle={evSelectStyle}
                 inputStyle={evInputStyle}
                 labelStyle={evLabelStyle}
-                gridStyle={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}
+                gridStyle={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}
               />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div style={evGroupStyle}>

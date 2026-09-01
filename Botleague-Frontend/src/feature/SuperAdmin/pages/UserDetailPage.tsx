@@ -23,6 +23,7 @@ import {
   selectAvailableSports,
 } from "../store/userManagementSlice"
 import { AppRole } from "../../../shared/constants/roles"
+import LocationSelects from "../../../shared/components/LocationSelects"
 import { formatWeightClass } from "../../Robots/constants/weightClasses"
 import { ageGroupLabel } from "../../../shared/utils/ageGroup"
 import "../../../shared/styles/adminDetailPage.css"
@@ -276,12 +277,15 @@ export default function UserDetailPage() {
                 </div>
                 <ProfileField label="Date Of Birth" value={profileForm.dateOfBirth} type="date"
                   onChange={(v) => setProfileForm((f) => ({ ...f, dateOfBirth: v }))} />
-                <ProfileField label="Country" value={profileForm.country}
-                  onChange={(v) => setProfileForm((f) => ({ ...f, country: v }))} />
-                <ProfileField label="City" value={profileForm.city}
-                  onChange={(v) => setProfileForm((f) => ({ ...f, city: v }))} />
-                <ProfileField label="State" value={profileForm.state}
-                  onChange={(v) => setProfileForm((f) => ({ ...f, state: v }))} />
+                <LocationSelects
+                  gridStyle={{ display: "contents" }}
+                  itemClassName="adp-field"
+                  state={profileForm.state}
+                  city={profileForm.city}
+                  onCountry={(v) => setProfileForm((f) => ({ ...f, country: v }))}
+                  onState={(v) => setProfileForm((f) => ({ ...f, state: v }))}
+                  onCity={(v) => setProfileForm((f) => ({ ...f, city: v }))}
+                />
                 <div className="adp-field adp-full-width">
                   <label>Address</label>
                   <textarea
