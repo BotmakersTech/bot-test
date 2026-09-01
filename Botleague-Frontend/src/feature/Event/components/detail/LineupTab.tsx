@@ -60,10 +60,17 @@ export default function LineupTab({
   const hiddenForAge = teamMembers.length - eligibleMembers.length;
   const [lineupRole, setLineupRole] = useState("DRIVER");
 
+  // Fetch the active robot's lineup AND every sibling robot's — the member
+  // picker needs them all to grey out anyone already in another robot's lineup
+  // for this techsport. onFetch de-dupes, so this is cheap after the first pass.
   useEffect(() => {
     if (activeRegId) onFetch(activeRegId);
+    existingRegs.forEach((r) => {
+      const id = r.registrationId ?? r.id;
+      if (id && id !== activeRegId) onFetch(id);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeRegId]);
+  }, [activeRegId, existingRegs.length]);
 
   if (!isLoggedIn) {
     return (
@@ -100,12 +107,13 @@ export default function LineupTab({
   const driverTaken = currentLineup.some((m) => m.isActive && m.lineupRole === "DRIVER");
   const roleDisabled = (v: string) => v === "DRIVER" && driverTaken;
 
-  // Members who already DRIVE a different robot in this techsport — they can
-  // still be a support role here, but not the driver.
-  const drivesElsewhere = new Set(
+  // Members already in ANOTHER robot's lineup for this techsport — a person can
+  // be in only one robot per techsport (a different weight class is its own
+  // techsport and is fine). Hard-blocked from being picked here.
+  const assignedElsewhere = new Set(
     Object.entries(lineupsMap)
       .filter(([regId]) => regId !== activeRegId)
-      .flatMap(([, list]) => list.filter((e) => e.isActive && e.lineupRole === "DRIVER").map(memberKey))
+      .flatMap(([, list]) => list.filter((e) => e.isActive).map(memberKey))
   );
 
   return (
@@ -216,9 +224,9 @@ export default function LineupTab({
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 18 }}>
                 {eligibleMembers.map((m) => {
                   const isIn = inCurrentLineup.has(m.membershipId);
-                  const isDriverElsewhere = !isIn && drivesElsewhere.has(m.membershipId);
+                  const isAssignedElsewhere = !isIn && assignedElsewhere.has(m.membershipId);
                   const isInactive = !isIn && m.status !== "ACTIVE";
-                  const disabled = isIn || isInactive;
+                  const disabled = isIn || isInactive || isAssignedElsewhere;
                   return (
                     <button
                       key={m.membershipId}
@@ -239,7 +247,7 @@ export default function LineupTab({
                       {m.userName}{" "}
                       {isIn ? (
                         <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Check size={12} /> In lineup</span>
-                      ) : isInactive ? "(Inactive)" : isDriverElsewhere ? "(drives another robot)" : ""}
+                      ) : isInactive ? "(Inactive)" : isAssignedElsewhere ? "(in another robot's lineup)" : ""}
                     </button>
                   );
                 })}

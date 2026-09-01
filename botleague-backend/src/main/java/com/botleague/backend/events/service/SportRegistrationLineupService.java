@@ -52,8 +52,9 @@ import com.botleague.backend.team.repository.TeamMembershipRepository;
  *  3. Robot must exist, be ACTIVE, and match the registration's robotId
  *  4. TeamMembership must exist, be ACTIVE, and belong to the same team
  *  5. Duplicate check: same membership cannot be in the same robot's lineup twice
- *  5b. One driver per techsport: a person can DRIVE only one robot within an
- *      event sport (support roles may span several robots)
+ *  5b. One person per techsport: a person can be in only ONE robot's lineup
+ *      within an event sport, whatever the role (a different weight class is a
+ *      separate event sport and is allowed)
  *  6. Roster cap: active lineup count < EventSports.maxTeamSize
  *  7. Driver uniqueness: only DRIVER is one-per-robot; SECONDARY_DRIVER and
  *     BUILD_HEAD may each be held by more than one person
@@ -275,22 +276,22 @@ public class SportRegistrationLineupService {
         }
 
         // =================================================
-        // 5b. ONE DRIVER, ONE ROBOT PER TECHSPORT
-        //     A person may DRIVE only one robot within a given event sport
-        //     (e.g. one bot in RoboWar 1.5 kg) — but can still drive a
-        //     different bot in a different event sport (RoboWar 60 kg), and
-        //     can be a Secondary Driver / Build Head on several bots freely.
+        // 5b. ONE PERSON, ONE ROBOT PER TECHSPORT
+        //     A person may be in only ONE robot's lineup within a given event
+        //     sport (sport + age category + weight class), whatever the role —
+        //     no assigning the same person to two robots in RoboWar 1.5 kg.
+        //     They CAN still join a different robot in a different event sport
+        //     (e.g. RoboWar 60 kg) — that's a separate EventSports row.
         // =================================================
 
-        if (role == LineupRole.DRIVER) {
-            boolean drivesAnotherRobotSameSport = lineupRepository
-                    .existsByEventSportIdAndTeamMembershipIdAndLineupRoleAndRobotIdNotAndIsActive(
-                            registration.getEventSportId(), teamMembershipId, LineupRole.DRIVER, robotId, true);
-            if (drivesAnotherRobotSameSport) {
-                throw new IllegalStateException(
-                        "This team member is already the driver of another robot in this techsport. " +
-                        "A person can drive only one robot per techsport.");
-            }
+        boolean inAnotherRobotSameSport = lineupRepository
+                .existsByEventSportIdAndTeamMembershipIdAndRobotIdNotAndIsActive(
+                        registration.getEventSportId(), teamMembershipId, robotId, true);
+        if (inAnotherRobotSameSport) {
+            throw new IllegalStateException(
+                    "This team member is already in another robot's lineup for this techsport. " +
+                    "A person can be in only one robot per techsport — they can still join a " +
+                    "different robot in another weight class.");
         }
 
         // =================================================
