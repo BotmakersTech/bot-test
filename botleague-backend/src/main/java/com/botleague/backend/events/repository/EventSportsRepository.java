@@ -27,4 +27,10 @@ public interface EventSportsRepository extends JpaRepository<EventSports, UUID> 
 	 boolean existsByEventIdAndSportAndAgeGroupAndWeightClass(UUID eventId, String sport, String ageGroup,
 			String weightClass);
 
+	 // Row-returning counterpart of the exists check above — used where the
+	 // caller needs to inspect a candidate further (e.g. its extraRules) before
+	 // deciding whether it's a genuine duplicate. See EventSportsService.validateDuplicate.
+	 java.util.List<EventSports> findByEventIdAndSportAndAgeGroupAndWeightClass(UUID eventId, String sport,
+			String ageGroup, String weightClass);
+
 }

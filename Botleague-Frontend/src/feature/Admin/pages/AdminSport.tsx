@@ -8,7 +8,7 @@ import {
 import { useAdminEvents } from "../hooks/UseAdminEvent"
 import { useMatches } from "../hooks/useMatches"
 import { type CreateEventSportRequest } from "../api/admin.api"
-import { getPublicLeagueSports, toWeightClasses, type LeagueSport } from "../../../shared/api/catalog.api"
+import { getPublicLeagueSports, toWeightClasses, toScaleClasses, type LeagueSport } from "../../../shared/api/catalog.api"
 import { formatWeightClass, weightClassToKg } from "../../Robots/constants/weightClasses"
 import { ageGroupLabel } from "../../../shared/utils/ageGroup"
 import { constraintsFor } from "../../Event/utils/specPolicy"
@@ -482,6 +482,18 @@ function EditSportModal({
   const setNum = (field: keyof EditForm, raw: string) =>
     set(field, raw === "" ? undefined : Number(raw))
 
+  // extraRulesList is tracked as a plain key/value array (see EditForm) so
+  // free-form catalog rules round-trip untouched — these two helpers give the
+  // Scale field below a normal "one value" interface over that list.
+  const getExtraRule = (key: string) => form.extraRulesList.find(r => r.key === key)?.value ?? ""
+  const setExtraRule = (key: string, value: string) =>
+    setForm(prev => {
+      const rest = prev.extraRulesList.filter(r => r.key !== key)
+      return { ...prev, extraRulesList: value ? [...rest, { key, value }] : rest }
+    })
+
+  const scaleOptions = catalogSpec ? toScaleClasses(catalogSpec) : []
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setSaveError(null)
@@ -642,8 +654,8 @@ function EditSportModal({
             )
           })()}
 
-          {/* Row 3: Weight Class + Weight Limit (limit is derived from a numeric class) */}
-          {(() => {
+          {/* Row 3: Weight Class + Weight Limit (limit is derived from a numeric class) — only for weight-gated sports */}
+          {specs.weight && (() => {
             const wcs = Array.from(
               new Map(leagueSports.flatMap(s => toWeightClasses(s)).map(w => [w.value, w])).values()
             )
@@ -652,7 +664,7 @@ function EditSportModal({
             return (
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                 <div style={groupStyle}>
-                  <label style={labelStyle}>Weight Class{specs.weight ? "" : " (optional)"}</label>
+                  <label style={labelStyle}>Weight Class</label>
                   <select
                     style={inputStyle}
                     value={form.weightClass ?? ""}
@@ -671,28 +683,49 @@ function EditSportModal({
                   </select>
                 </div>
                 <div style={groupStyle}>
-                  <label style={labelStyle}>Weight Limit (kg){specs.weight ? "" : " (optional)"}</label>
+                  <label style={labelStyle}>Weight Limit (kg)</label>
                   {classKg != null ? (
                     <input type="text" readOnly style={{ ...inputStyle, background: "#f3f4f6", color: MUTED }} value={`${classKg} (from weight class)`} />
                   ) : (
-                    <input type="number" min={0} step="any" style={inputStyle} value={form.weightLimitKg ?? ""} onChange={e => setNum("weightLimitKg", e.target.value)} placeholder={specs.weight ? "e.g. 1.5" : "optional"} />
+                    <input type="number" min={0} step="any" style={inputStyle} value={form.weightLimitKg ?? ""} onChange={e => setNum("weightLimitKg", e.target.value)} placeholder="e.g. 1.5" />
                   )}
                 </div>
               </div>
             )
           })()}
 
-          {/* Row 5: Dimensions — the real constraint for some techsports, optional otherwise */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
-            {([["Max Length (cm)", "maxLengthCm"], ["Max Width (cm)", "maxWidthCm"], ["Max Height (cm)", "maxHeightCm"]] as const).map(([lbl, field]) => (
-              <div style={groupStyle} key={field}>
-                <label style={labelStyle}>{lbl}{specs.dimension ? "" : " (optional)"}</label>
-                <input type="number" min={0} style={inputStyle} value={form[field] ?? ""} placeholder={specs.dimension ? "" : "optional"} onChange={e => setNum(field, e.target.value)} />
-              </div>
-            ))}
-          </div>
+          {/* Row 5: Dimensions — only for dimension-gated sports */}
           {specs.dimension && (
-            <div style={{ fontSize: "0.72rem", color: MUTED, marginTop: -8 }}>Dimensions are this techsport's spec — pre-filled from the catalog, edit if this event differs.</div>
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
+                {([["Max Length (cm)", "maxLengthCm"], ["Max Width (cm)", "maxWidthCm"], ["Max Height (cm)", "maxHeightCm"]] as const).map(([lbl, field]) => (
+                  <div style={groupStyle} key={field}>
+                    <label style={labelStyle}>{lbl}</label>
+                    <input type="number" min={0} style={inputStyle} value={form[field] ?? ""} onChange={e => setNum(field, e.target.value)} />
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize: "0.72rem", color: MUTED, marginTop: -8 }}>Dimensions are this techsport's spec — pre-filled from the catalog, edit if this event differs.</div>
+            </>
+          )}
+
+          {/* Row 5b: Scale — only for scale-gated sports (RC Racing Car) */}
+          {specs.scale && (
+            <div style={groupStyle}>
+              <label style={labelStyle}>Scale</label>
+              {scaleOptions.length > 0 ? (
+                <select style={inputStyle} value={getExtraRule("scale")} onChange={e => setExtraRule("scale", e.target.value)}>
+                  <option value="">None</option>
+                  {!scaleOptions.some(s => s.value === getExtraRule("scale")) && getExtraRule("scale") && (
+                    <option value={getExtraRule("scale")}>{getExtraRule("scale")}</option>
+                  )}
+                  {scaleOptions.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                </select>
+              ) : (
+                <input type="text" style={inputStyle} value={getExtraRule("scale")} onChange={e => setExtraRule("scale", e.target.value)} placeholder="e.g. 1:8" />
+              )}
+              <span style={{ fontSize: "0.72rem", color: MUTED, marginTop: "4px" }}>This techsport's spec — a robot must be this scale to register.</span>
+            </div>
           )}
 
           {/* Row 6: Max team size */}

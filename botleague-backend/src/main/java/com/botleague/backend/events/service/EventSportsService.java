@@ -583,23 +583,35 @@ public class EventSportsService {
         // No restriction — admins can modify sports at any event status
     }
 
-    // Now includes weightClass so one sport can have several weight classes
+    // Includes weightClass so one sport can have several weight classes
     // (e.g. RoboWar 1.5 / 8 / 15 / 30 / 60 kg) without the duplicate check
-    // blocking the 2nd, 3rd, ... class.
+    // blocking the 2nd, 3rd, ... class. Scale-gated sports (RC Racing Car)
+    // have no weight class at all — AddSportModal.tsx sends the literal
+    // string "Open" for every one of them — so weightClass alone can't tell
+    // two different scales apart; also compare extraRules["scale"] so a
+    // second scale gets its own techsport the same way a second weight
+    // class already does.
     private void validateDuplicate(EventSportsRequestDTO dto) {
         String ageGroupCode = (dto.getAgeGroup() != null && !dto.getAgeGroup().isBlank())
                 ? dto.getAgeGroup().trim().toUpperCase()
                 : null;
-        boolean exists = eventSportsRepository.existsByEventIdAndSportAndAgeGroupAndWeightClass(
+
+        List<EventSports> candidates = eventSportsRepository.findByEventIdAndSportAndAgeGroupAndWeightClass(
                 dto.getEventId(),
                 dto.getSport(),
                 ageGroupCode,
                 dto.getWeightClass()
         );
 
-        if (exists) {
+        String incomingScale = dto.getExtraRules() != null ? dto.getExtraRules().get("scale") : null;
+        boolean duplicate = candidates.stream().anyMatch(existing -> {
+            String existingScale = existing.getExtraRules() != null ? existing.getExtraRules().get("scale") : null;
+            return java.util.Objects.equals(incomingScale, existingScale);
+        });
+
+        if (duplicate) {
             throw new IllegalStateException(
-                    "Sport already exists for this event, age group and weight class");
+                    "Sport already exists for this event, age group, weight class and scale");
         }
     }
 
