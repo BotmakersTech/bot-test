@@ -5,6 +5,7 @@ import { createRobot } from "../api/robot.api";
 import { uploadRobotImage } from "../api/uploadRobot.api";
 import { getPublicLeagueSports, type LeagueSport } from "../../../shared/api/catalog.api";
 import { useLeagues, formatAgeRange } from "../../../temp/pages/leagues/useLeagues";
+import { constraintsFor } from "../../Event/utils/specPolicy";
 
 type RobotCategoryKey =
   | "COMBAT_ROBOT" | "SOCCER_ROBOT" | "SUMO_ROBOT" | "LINE_FOLLOWER_ROBOT" | "RC_VEHICLE" | "DRONE";
@@ -58,6 +59,12 @@ function resolveSportBridge(catalogSportName: string, ageGroup: string, weightKg
     case "Drone Soccer":
       return { robotCategory: "DRONE", sportKey: "DRONE_SOCCER", controlType: "MANUAL", controlMode: "WIRELESS" };
     case "Robo Race":
+      // Distinct sportKey from RC Racing Car below — Robo Race is gated on
+      // weight/dimension (see SportSpecPolicy), not scale, and the two must
+      // never be treated as interchangeable when a robot registers for an
+      // event (a Robo Race robot tagged "RC_RACING" would fail the
+      // sport-compatibility check against a real "Robo Race" competition).
+      return { robotCategory: "RC_VEHICLE", sportKey: "ROBO_RACE", controlType: "MANUAL", controlMode: "WIRELESS" };
     case "RC Racing Car":
       return { robotCategory: "RC_VEHICLE", sportKey: "RC_RACING", controlType: "MANUAL", controlMode: "WIRELESS" };
     default:
@@ -161,7 +168,20 @@ export default function CreateRobotForm({ onSuccess, onCancel }: Props) {
   const bridge = selectedLeagueSport && selectedLeague
     ? resolveSportBridge(selectedLeagueSport.sportName, selectedLeague.ageGroupValue, selectedWeightOption?.weightKg ?? null)
     : null;
-  const extraFields = bridge ? EXTRA_FIELDS_BY_CATEGORY[bridge.robotCategory] ?? [] : [];
+
+  // The ONLY physical spec(s) this (league, sport) actually gates — e.g. RC
+  // Racing Car is scale-only (no weight/dimension fields shown), Robo Race is
+  // weight/dimension-only (no scale field), RoboWar is weight-only. Mirrors
+  // the same policy used for event registration eligibility (specPolicy.ts).
+  const specs = selectedLeagueSport && selectedLeague
+    ? constraintsFor(selectedLeague.ageGroupValue, selectedLeagueSport.sportName)
+    : { weight: true, dimension: true, scale: true };
+
+  // RC_VEHICLE covers both Robo Race and RC Racing Car, but only the latter
+  // needs the Scale Class field — drop it here rather than forking the whole
+  // category so Vehicle Type still applies to both.
+  const extraFields = (bridge ? EXTRA_FIELDS_BY_CATEGORY[bridge.robotCategory] ?? [] : [])
+    .filter((f) => f.key !== "scaleClass" || specs.scale);
 
   // Auto-pick the sport's single weight option (nothing to choose); force an
   // explicit pick when there's more than one (e.g. Robo War's weight tiers).
@@ -194,7 +214,7 @@ export default function CreateRobotForm({ onSuccess, onCancel }: Props) {
       setError("Robot name is required");
       return;
     }
-    if (weightOptions.length > 0 && !selectedWeightOption) {
+    if (specs.weight && weightOptions.length > 0 && !selectedWeightOption) {
       setError("Please select a weight class");
       return;
     }
@@ -314,71 +334,81 @@ export default function CreateRobotForm({ onSuccess, onCancel }: Props) {
               <input value={robotName} onChange={(event) => setRobotName(event.target.value)} placeholder="Enter Your Robot Name" />
             </label>
 
-            <label className="robot-create-field">
-              <span>Weight Class</span>
-              {weightOptions.length > 0 ? (
-                <select value={selectedWeightKgStr} onChange={(event) => setSelectedWeightKgStr(event.target.value)} disabled={weightOptions.length === 1}>
-                  {weightOptions.length > 1 && <option value="">Weight Class</option>}
-                  {weightOptions.map((w) => (
-                    <option key={w.weightKg} value={w.weightKg}>{w.label}</option>
-                  ))}
-                </select>
-              ) : (
-                <input readOnly placeholder="Weight Class" />
-              )}
-            </label>
+            {specs.weight && (
+              <label className="robot-create-field">
+                <span>Weight Class</span>
+                {weightOptions.length > 0 ? (
+                  <select value={selectedWeightKgStr} onChange={(event) => setSelectedWeightKgStr(event.target.value)} disabled={weightOptions.length === 1}>
+                    {weightOptions.length > 1 && <option value="">Weight Class</option>}
+                    {weightOptions.map((w) => (
+                      <option key={w.weightKg} value={w.weightKg}>{w.label}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input readOnly placeholder="Weight Class" />
+                )}
+              </label>
+            )}
 
-            <label className="robot-create-field">
-              <span>Height (in cm)</span>
-              <input
-                type="number"
-                min="0"
-                step="0.1"
-                max={selectedLeagueSport.maxHeightCm ?? undefined}
-                value={heightCm ?? ""}
-                onChange={(event) => setHeightCm(event.target.value ? parseFloat(event.target.value) : null)}
-                placeholder="Height"
-              />
-            </label>
+            {specs.dimension && (
+              <label className="robot-create-field">
+                <span>Height (in cm)</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  max={selectedLeagueSport.maxHeightCm ?? undefined}
+                  value={heightCm ?? ""}
+                  onChange={(event) => setHeightCm(event.target.value ? parseFloat(event.target.value) : null)}
+                  placeholder="Height"
+                />
+              </label>
+            )}
 
-            <label className="robot-create-field">
-              <span>Weight (in kg)</span>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                max={weightCeilingKg ?? undefined}
-                value={weightKg ?? ""}
-                onChange={(event) => setWeightKg(event.target.value ? parseFloat(event.target.value) : null)}
-                placeholder="Weight"
-              />
-            </label>
+            {specs.weight && (
+              <label className="robot-create-field">
+                <span>Weight (in kg)</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  max={weightCeilingKg ?? undefined}
+                  value={weightKg ?? ""}
+                  onChange={(event) => setWeightKg(event.target.value ? parseFloat(event.target.value) : null)}
+                  placeholder="Weight"
+                />
+              </label>
+            )}
 
-            <label className="robot-create-field">
-              <span>Width (in cm)</span>
-              <input
-                type="number"
-                min="0"
-                step="0.1"
-                max={selectedLeagueSport.maxWidthCm ?? undefined}
-                value={widthCm ?? ""}
-                onChange={(event) => setWidthCm(event.target.value ? parseFloat(event.target.value) : null)}
-                placeholder="Width"
-              />
-            </label>
+            {specs.dimension && (
+              <label className="robot-create-field">
+                <span>Width (in cm)</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  max={selectedLeagueSport.maxWidthCm ?? undefined}
+                  value={widthCm ?? ""}
+                  onChange={(event) => setWidthCm(event.target.value ? parseFloat(event.target.value) : null)}
+                  placeholder="Width"
+                />
+              </label>
+            )}
 
-            <label className="robot-create-field">
-              <span>Length (in cm)</span>
-              <input
-                type="number"
-                min="0"
-                step="0.1"
-                max={selectedLeagueSport.maxLengthCm ?? undefined}
-                value={lengthCm ?? ""}
-                onChange={(event) => setLengthCm(event.target.value ? parseFloat(event.target.value) : null)}
-                placeholder="Length"
-              />
-            </label>
+            {specs.dimension && (
+              <label className="robot-create-field">
+                <span>Length (in cm)</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  max={selectedLeagueSport.maxLengthCm ?? undefined}
+                  value={lengthCm ?? ""}
+                  onChange={(event) => setLengthCm(event.target.value ? parseFloat(event.target.value) : null)}
+                  placeholder="Length"
+                />
+              </label>
+            )}
 
             <label className="robot-create-field robot-create-field-full">
               <span>Description</span>

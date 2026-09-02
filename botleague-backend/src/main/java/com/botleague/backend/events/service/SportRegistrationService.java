@@ -910,7 +910,16 @@ public class SportRegistrationService {
         Map.entry("THEME_BASED_TASKING", Set.of("THEME_BASED_TASKING", "THEME_BASED_TASKING_OPEN")),
         Map.entry("DRONE_RACING",        Set.of("DRONE_RACING_FPV", "DRONE_RACING_SOCCER")),
         Map.entry("DRONE_SOCCER",        Set.of("DRONE_RACING_SOCCER")),
-        Map.entry("RC_RACING",           Set.of("RC_ROBO_RACING", "RC_RACING_NITRO")),
+        // "RC_ROBO_RACING"/"RC_RACING_NITRO" are legacy pre-catalog sport
+        // names kept for backward compatibility; the catalog's actual sport
+        // row is "RC Racing Car" (see V27__catalog_seed_data.sql), which
+        // normalizes to RC_RACING_CAR — without it every RC Racing Car robot
+        // failed this check against a real "RC Racing Car" competition.
+        Map.entry("RC_RACING",           Set.of("RC_ROBO_RACING", "RC_RACING_NITRO", "RC_RACING_CAR")),
+        // Distinct from RC_RACING above — see CreateRobotForm.tsx's
+        // resolveSportBridge, which used to (wrongly) tag Robo Race robots
+        // with the RC_RACING key too.
+        Map.entry("ROBO_RACE",           Set.of("ROBO_RACE")),
         Map.entry("AEROMODELLING",       Set.of("AEROMODELLING")),
         Map.entry("PROJECT_BASED",       Set.of("PROJECT_BASED"))
     );
