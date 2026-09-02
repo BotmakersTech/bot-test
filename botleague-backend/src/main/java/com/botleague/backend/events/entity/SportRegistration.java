@@ -166,9 +166,11 @@ public class SportRegistration {
             checkDimension("height", heightCm, eventSport.getMaxHeightCm());
         }
 
-        // SCALE (RC Racing Car): the Robot entity has no scale attribute, so
-        // there is nothing to validate on the robot side — the class/sport
-        // match in SportRegistrationService is the only gate that applies.
+        // SCALE (RC Racing Car): this row has no scale snapshot (scale isn't
+        // needed after registration the way weight/dimension are, for bracket
+        // logic) — the match is checked live, before this row is even built,
+        // in SportRegistrationService.registerRobot() against
+        // Robot.attributes["scaleClass"] / EventSports.extraRules["scale"].
 
         ControlMode allowed = eventSport.getControlType();
         if (allowed != null && allowed != ControlMode.ANY) {

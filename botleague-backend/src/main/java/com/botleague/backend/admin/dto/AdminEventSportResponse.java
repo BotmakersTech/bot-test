@@ -27,6 +27,16 @@ public class AdminEventSportResponse {
 
     private String weightClass;
 
+    private Double weightLimitKg;
+
+    private Double maxLengthCm;
+
+    private Double maxWidthCm;
+
+    private Double maxHeightCm;
+
+    private java.util.Map<String, String> extraRules;
+
     private java.math.BigDecimal entryFee;
 
     private Integer maxTeams;
@@ -135,6 +145,46 @@ public class AdminEventSportResponse {
 
 	public void setWeightClass(String weightClass) {
 		this.weightClass = weightClass;
+	}
+
+	public Double getWeightLimitKg() {
+		return weightLimitKg;
+	}
+
+	public void setWeightLimitKg(Double weightLimitKg) {
+		this.weightLimitKg = weightLimitKg;
+	}
+
+	public Double getMaxLengthCm() {
+		return maxLengthCm;
+	}
+
+	public void setMaxLengthCm(Double maxLengthCm) {
+		this.maxLengthCm = maxLengthCm;
+	}
+
+	public Double getMaxWidthCm() {
+		return maxWidthCm;
+	}
+
+	public void setMaxWidthCm(Double maxWidthCm) {
+		this.maxWidthCm = maxWidthCm;
+	}
+
+	public Double getMaxHeightCm() {
+		return maxHeightCm;
+	}
+
+	public void setMaxHeightCm(Double maxHeightCm) {
+		this.maxHeightCm = maxHeightCm;
+	}
+
+	public java.util.Map<String, String> getExtraRules() {
+		return extraRules;
+	}
+
+	public void setExtraRules(java.util.Map<String, String> extraRules) {
+		this.extraRules = extraRules;
 	}
 
 	public java.math.BigDecimal getEntryFee() {

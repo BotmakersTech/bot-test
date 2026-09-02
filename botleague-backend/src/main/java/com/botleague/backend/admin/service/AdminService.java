@@ -695,6 +695,11 @@ public class AdminService {
         dto.setFormatType(sport.getFormatType());
         dto.setAgeGroup(sport.getAgeGroup());
         dto.setWeightClass(sport.getWeightClass());
+        dto.setWeightLimitKg(sport.getWeightLimitKg());
+        dto.setMaxLengthCm(sport.getMaxLengthCm());
+        dto.setMaxWidthCm(sport.getMaxWidthCm());
+        dto.setMaxHeightCm(sport.getMaxHeightCm());
+        dto.setExtraRules(sport.getExtraRules());
         dto.setEntryFee(sport.getEntryFee());
         dto.setMaxTeams(sport.getMaxTeams());
         dto.setMinTeamSize(sport.getMinTeamSize());

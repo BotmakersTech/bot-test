@@ -184,6 +184,11 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
       maxHeightCm: sport.maxHeightCm ?? undefined,
       controlType: sport.controlType ?? undefined,
       maxBotsPerTeam: sport.maxBotsPerTeam ?? undefined,
+      // extraSpecs carries scale-only sports' real gate (RC Racing Car:
+      // {"scale":"1:8,1:12"}) — without this the techsport is created with
+      // no scale spec at all, so registration's scale-match check (see
+      // SportRegistrationService) has nothing to validate against.
+      extraRules: Object.keys(sport.extraSpecs).length > 0 ? sport.extraSpecs : undefined,
       formatType: config.formatType,
       minTeamSize: config.minTeamSize,
       maxTeamSize: config.maxTeamSize,

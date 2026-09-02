@@ -1103,6 +1103,7 @@ export default function AdminSport() {
                   : null
               }
             />
+            <Field label="Scale" value={sport.extraRules?.scale ?? null} />
             <Field label="Entry Fee" value={sport.entryFee != null ? formatCurrency(sport.entryFee) : null} />
             <Field label="Prize Pool" value={sport.prizeMoney != null ? formatCurrency(sport.prizeMoney) : null} />
           </div>

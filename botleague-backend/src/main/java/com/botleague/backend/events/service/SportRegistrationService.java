@@ -304,6 +304,34 @@ public class SportRegistrationService {
         }
 
         // =================================================
+        // 6.7  SCALE CHECK (RC Racing Car — SpecConstraint.SCALE)
+        //   Scale has no dedicated column on either side (see Robot.attributes'
+        //   and EventSports.extraRules' own doc comments) — the robot's scale
+        //   lives at attributes["scaleClass"], the competition's allowed
+        //   scale(s) at extraRules["scale"] as a comma-separated list (a
+        //   techsport can be seeded from a catalog row offering more than one
+        //   scale, e.g. "1:8,1:12"). Only enforced for SCALE-constraint sports
+        //   (SportSpecPolicy), and only when both sides actually have a value
+        //   — same "informational unless present" philosophy as weight/dimension.
+        // =================================================
+
+        if (specConstraints.contains(com.botleague.backend.events.enums.SpecConstraint.SCALE)) {
+            String robotScale = robot.getAttributes() != null ? robot.getAttributes().get("scaleClass") : null;
+            String allowedScales = eventSport.getRule("scale");
+            if (robotScale != null && !robotScale.isBlank() && allowedScales != null && !allowedScales.isBlank()) {
+                boolean matches = java.util.Arrays.stream(allowedScales.split(","))
+                        .map(String::trim)
+                        .anyMatch(s -> s.equalsIgnoreCase(robotScale.trim()));
+                if (!matches) {
+                    throw new IllegalStateException(
+                            "Scale mismatch: robot '" + robot.getRobotName()
+                            + "' is scale " + robotScale
+                            + " but this competition only allows " + allowedScales + ".");
+                }
+            }
+        }
+
+        // =================================================
         // 7. DUPLICATE REGISTRATION CHECK
         //    Check both REGISTERED and PENDING – a pending registration
         //    still holds a slot and must not be double-entered.
