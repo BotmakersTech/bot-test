@@ -89,6 +89,9 @@ public class SecurityConfig {
                 // tournament without an account, matching what the platform already
                 // does for live/completed event listings above.
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/matches/**").permitAll()
+                // Round-wise time trial results (Robo Race/RC Racing/Line Follower) —
+                // same spectator-visible reasoning as the bracket matches above.
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/race-rounds/**").permitAll()
                 // QR / shared-link certificate verification — the entire point is that
                 // anyone holding the link or scanning the code can check authenticity
                 // without an account.

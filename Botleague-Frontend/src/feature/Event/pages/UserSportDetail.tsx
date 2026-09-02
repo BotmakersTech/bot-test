@@ -38,6 +38,8 @@ import LeaderboardTab from "../components/detail/LeaderboardTab";
 import ScheduleTab from "../components/detail/ScheduleTab";
 import RegistrationTab from "../components/detail/RegistrationTab";
 import LineupTab from "../components/detail/LineupTab";
+import PublicRaceRoundsView from "../../RaceRounds/components/PublicRaceRoundsView";
+import { formatFor as matchFormatFor } from "../utils/matchFormatPolicy";
 
 function regId(r: EventRegistrationResponse): string {
   return r.registrationId ?? r.id ?? "";
@@ -247,11 +249,15 @@ export default function UserSportDetail() {
         />
         <SportDetailsHeader sport={sport} contacts={contacts} />
 
+        {(() => {
+          const isRoundTimeTrial = matchFormatFor(sport.sport) === "ROUND_TIME_TRIAL";
+          const roundsView = <PublicRaceRoundsView sportId={sportId!} />;
+          return (
         <TournamentTabs
           isRegistered={existingRegs.length > 0}
-          matches={<MatchesTab matches={matches} loading={matchesLoading} error={matchesError} />}
+          matches={isRoundTimeTrial ? roundsView : <MatchesTab matches={matches} loading={matchesLoading} error={matchesError} />}
           rankings={<LeaderboardTab leaderboard={leaderboard} loading={lbLoading} error={lbError} />}
-          schedule={<ScheduleTab matches={matches} loading={matchesLoading} error={matchesError} sportLabel={sport.sport?.replace(/_/g, " ") ?? "Sport"} />}
+          schedule={isRoundTimeTrial ? roundsView : <ScheduleTab matches={matches} loading={matchesLoading} error={matchesError} sportLabel={sport.sport?.replace(/_/g, " ") ?? "Sport"} />}
           registration={
             <RegistrationTab
               sport={sport}
@@ -290,6 +296,8 @@ export default function UserSportDetail() {
             />
           }
         />
+          );
+        })()}
       </div>
     );
   }

@@ -26,12 +26,19 @@ export interface LeaderboardEntryDTO {
   pointsAgainst:      number;
   pointDifferential:  number;
   bonusPoints:        number;
+
+  // ── Round-wise time trial only (null for bracket sports) ──
+  bestTimeMillis:     number | null;
+  latestTimeMillis:   number | null;
+  latestRoundNumber:  number | null;
 }
 
 export interface LeaderboardResponseDTO {
   eventSportId:            string;
   tournamentFormat:        string | null;
   matchType:               string | null;
+  /** "BRACKET" | "ROUND_TIME_TRIAL" */
+  matchFormat?:            string | null;
   isFinal:                 boolean;
   totalTeams:              number;
   championRegistrationId:  string | null;

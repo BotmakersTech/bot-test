@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import {
   ArrowLeft, Users, Trophy, Calendar, CalendarRange, Swords, IndianRupee, Award, Bot,
   Edit2, X, FileEdit, PlayCircle, RefreshCw, CheckCircle2, XCircle, Lock, Unlock, Globe, MessageCircle,
-  AlertTriangle, ChevronUp, ChevronDown,
+  AlertTriangle, ChevronUp, ChevronDown, Printer,
 } from "lucide-react"
 import { useAdminEvents } from "../hooks/UseAdminEvent"
 import { useMatches } from "../hooks/useMatches"
@@ -319,7 +319,7 @@ function TeamCard({
               alignItems: "center",
               gap: "3px",
             }}>
-              {open ? <><ChevronUp size={11} /> hide</> : <><ChevronDown size={11} /> lineup</>}
+              {open ? <><ChevronUp size={11} /> hide</> : <ChevronDown size={11} />}
             </span>
           )}
         </div>
@@ -340,20 +340,18 @@ function TeamCard({
               style={{
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                gap: "10px",
                 padding: "6px 10px",
                 background: "rgba(75,134,232,0.04)",
                 borderRadius: "7px"
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontSize: "0.65rem", color: MUTED, fontWeight: 700, width: "18px" }}>
-                  #{pi + 1}
-                </span>
-                <span style={{ fontSize: "0.82rem", fontWeight: 600, color: TEXT }}>
-                  {p.fullName}
-                </span>
-              </div>
+              <span style={{ fontSize: "0.65rem", color: MUTED, fontWeight: 700, width: "18px" }}>
+                #{pi + 1}
+              </span>
+              <span style={{ fontSize: "0.82rem", fontWeight: 600, color: TEXT }}>
+                {p.fullName}
+              </span>
               {p.role && (
                 <span style={{
                   background: "rgba(140,108,255,0.1)",
@@ -1036,13 +1034,36 @@ export default function AdminSport() {
             {sport.sportsDescription}
           </p>
         )}
+
+        {/* ── BRACKET / SCORING / RANKING / CERTIFICATES / PRINT ── */}
+        <div className="sdt-action-row" style={{ marginTop: "16px" }}>
+          {!isOpen && (
+            <>
+              <button onClick={() => navigate(`${location.pathname}/create-match`)} className="sdt-action-btn sdt-action-create">
+                <Swords size={14} /> {hasMatches ? "Manage Matches" : "Create Match"}
+              </button>
+              <button onClick={() => navigate(`${location.pathname}/update-score`)} className="sdt-action-btn sdt-action-update">
+                <RefreshCw size={14} /> Update Score
+              </button>
+              <button onClick={() => navigate(`${location.pathname}/ranking`)} className="sdt-action-btn sdt-action-rank">
+                <Trophy size={14} /> Ranking
+              </button>
+            </>
+          )}
+          <button onClick={() => navigate(`/admin/certificates?eventSportId=${sportId}`)} className="sdt-action-btn sdt-action-update">
+            <Award size={14} /> Certificates
+          </button>
+          <button onClick={() => window.print()} className="sdt-action-btn sdt-action-update">
+            <Printer size={14} /> Print
+          </button>
+        </div>
       </div>
 
       {/* ── STAT BOXES ── */}
       <div className="sdt-stat-row">
         <div className="sdt-stat-card">
           <span className="sdt-stat-icon"><Trophy size={20} /></span>
-          <div><div className="sdt-stat-value">{totalTeams}</div><div className="sdt-stat-label">Teams</div></div>
+          <div><div className="sdt-stat-value">{totalTeams}</div><div className="sdt-stat-label">Registrations</div></div>
         </div>
         <div className="sdt-stat-card">
           <span className="sdt-stat-icon"><Users size={20} /></span>
@@ -1113,26 +1134,6 @@ export default function AdminSport() {
             </div>
           )}
         </div>
-      </div>
-
-      {/* ── BRACKET / SCORING / RANKING / CERTIFICATES ── */}
-      <div className="sdt-action-row">
-        {!isOpen && (
-          <>
-            <button onClick={() => navigate(`${location.pathname}/create-match`)} className="sdt-action-btn sdt-action-create">
-              <Swords size={14} /> {hasMatches ? "Manage Matches" : "Create Match"}
-            </button>
-            <button onClick={() => navigate(`${location.pathname}/update-score`)} className="sdt-action-btn sdt-action-update">
-              <RefreshCw size={14} /> Update Score
-            </button>
-            <button onClick={() => navigate(`${location.pathname}/ranking`)} className="sdt-action-btn sdt-action-rank">
-              <Trophy size={14} /> Ranking
-            </button>
-          </>
-        )}
-        <button onClick={() => navigate(`/admin/certificates?eventSportId=${sportId}`)} className="sdt-action-btn sdt-action-update">
-          <Award size={14} /> Certificates
-        </button>
       </div>
 
       {/* ── REGISTERED TEAMS ── */}

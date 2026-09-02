@@ -15,7 +15,11 @@ import org.springframework.stereotype.Service;
 
 
 import com.botleague.backend.common.security.AuthorizationService;
+import com.botleague.backend.events.entity.EventSports;
+import com.botleague.backend.events.enums.MatchFormatKind;
+import com.botleague.backend.events.repository.EventSportsRepository;
 import com.botleague.backend.events.repository.SportRegistrationRepository;
+import com.botleague.backend.events.service.MatchFormatPolicy;
 import com.botleague.backend.team.repository.TeamRepository;
 import com.botleague.backend.matches.dto.AwardBonusPointsRequest;
 import com.botleague.backend.matches.dto.LeaderboardEntryDTO;
@@ -29,6 +33,12 @@ import com.botleague.backend.matches.enums.MatchType;
 import com.botleague.backend.matches.enums.TournamentFormat;
 import com.botleague.backend.matches.repository.MatchRepository;
 import com.botleague.backend.matches.repository.RankingBonusPointRepository;
+import com.botleague.backend.timetrial.entity.TimeTrialEntry;
+import com.botleague.backend.timetrial.entity.TimeTrialRound;
+import com.botleague.backend.timetrial.enums.RoundParticipantStatus;
+import com.botleague.backend.timetrial.enums.RoundStatus;
+import com.botleague.backend.timetrial.repository.TimeTrialEntryRepository;
+import com.botleague.backend.timetrial.repository.TimeTrialRoundRepository;
 
 /**
  * Builds the leaderboard for a single bracket (one event-sport).
@@ -75,19 +85,28 @@ public class LeaderboardService {
     private final TeamRepository teamRepository;
     private final RankingBonusPointRepository bonusPointRepository;
     private final AuthorizationService authorizationService;
+    private final EventSportsRepository eventSportsRepository;
+    private final TimeTrialRoundRepository timeTrialRoundRepository;
+    private final TimeTrialEntryRepository timeTrialEntryRepository;
 
     public LeaderboardService(
             MatchRepository matchRepository,
             SportRegistrationRepository eventRegistrationRepository,
             TeamRepository teamRepository,
             RankingBonusPointRepository bonusPointRepository,
-            AuthorizationService authorizationService
+            AuthorizationService authorizationService,
+            EventSportsRepository eventSportsRepository,
+            TimeTrialRoundRepository timeTrialRoundRepository,
+            TimeTrialEntryRepository timeTrialEntryRepository
     ) {
         this.matchRepository = matchRepository;
         this.eventRegistrationRepository = eventRegistrationRepository;
         this.teamRepository = teamRepository;
         this.bonusPointRepository = bonusPointRepository;
         this.authorizationService = authorizationService;
+        this.eventSportsRepository = eventSportsRepository;
+        this.timeTrialRoundRepository = timeTrialRoundRepository;
+        this.timeTrialEntryRepository = timeTrialEntryRepository;
     }
 
     // =====================================================
@@ -97,6 +116,12 @@ public class LeaderboardService {
 
     public LeaderboardResponseDTO getLeaderboard(UUID eventSportId) {
 
+        EventSports eventSports = eventSportsRepository.findById(eventSportId).orElse(null);
+        if (eventSports != null
+                && MatchFormatPolicy.formatFor(eventSports.getSport()) == MatchFormatKind.ROUND_TIME_TRIAL) {
+            return buildRaceLeaderboard(eventSportId);
+        }
+
         List<Match> matches =
                 matchRepository
                         .findByEventSportIdAndDeletedAtIsNullOrderByRoundNumberAscMatchNumberAsc(
@@ -105,6 +130,7 @@ public class LeaderboardService {
 
         LeaderboardResponseDTO response = new LeaderboardResponseDTO();
         response.setEventSportId(eventSportId);
+        response.setMatchFormat("BRACKET");
         response.setTournamentFormat(firstNonNullFormat(matches));
         response.setMatchType(firstNonNullMatchType(matches));
 
@@ -180,6 +206,178 @@ public class LeaderboardService {
         }
 
         return response;
+    }
+
+    // =====================================================
+    // ROUND-WISE TIME TRIAL LEADERBOARD
+    //
+    // A race format has no bracket graph — it's a flat sequence of rounds,
+    // each with an arbitrary-N field, ranked by time rather than win/loss.
+    // Every bot's CURRENT standing is derived from its most recent
+    // TimeTrialEntry (the round it's furthest into): a sort key of
+    // {-latestRoundNumber, rankInRound} puts "went furthest" first and then
+    // "fastest within that round" — the same lower-is-better, tie-sharing
+    // competition-ranking idea the bracket leaderboard above uses, just with
+    // a 2-key instead of a 3-key. wins/losses/points don't apply to a
+    // placement-only format (see RaceRoundService/RankingEngineService.
+    // finalizeRaceLeaderboard) and are left at 0 rather than fabricated.
+    // =====================================================
+
+    private LeaderboardResponseDTO buildRaceLeaderboard(UUID eventSportId) {
+        LeaderboardResponseDTO response = new LeaderboardResponseDTO();
+        response.setEventSportId(eventSportId);
+        response.setMatchFormat("ROUND_TIME_TRIAL");
+
+        List<TimeTrialRound> rounds = timeTrialRoundRepository
+                .findByEventSportIdAndDeletedAtIsNullOrderByRoundNumberAsc(eventSportId);
+
+        if (rounds.isEmpty()) {
+            response.setEntries(new ArrayList<>());
+            response.setTotalTeams(0);
+            response.setIsFinal(true);
+            return response;
+        }
+
+        Map<UUID, Integer> roundNumberById = new HashMap<>();
+        for (TimeTrialRound r : rounds) roundNumberById.put(r.getId(), r.getRoundNumber());
+
+        boolean isFinal = rounds.get(rounds.size() - 1).getStatus() == RoundStatus.FINALIZED;
+
+        List<TimeTrialEntry> allEntries = timeTrialEntryRepository.findByEventSportIdOrderByRoundIdAsc(eventSportId);
+        Map<UUID, List<TimeTrialEntry>> byRegistration = new LinkedHashMap<>();
+        for (TimeTrialEntry e : allEntries) {
+            byRegistration.computeIfAbsent(e.getRegistrationId(), k -> new ArrayList<>()).add(e);
+        }
+        for (List<TimeTrialEntry> history : byRegistration.values()) {
+            history.sort(Comparator.comparingInt(e -> roundNumberById.getOrDefault(e.getRoundId(), 0)));
+        }
+
+        List<RaceStanding> standings = new ArrayList<>();
+        for (Map.Entry<UUID, List<TimeTrialEntry>> e : byRegistration.entrySet()) {
+            List<TimeTrialEntry> history = e.getValue();
+            TimeTrialEntry latest = history.get(history.size() - 1);
+            int latestRoundNumber = roundNumberById.getOrDefault(latest.getRoundId(), 0);
+
+            Long best = null;
+            for (TimeTrialEntry h : history) {
+                if (h.getTimeMillis() != null && (best == null || h.getTimeMillis() < best)) best = h.getTimeMillis();
+            }
+
+            LeaderboardStatus status;
+            Integer eliminatedInRound = null;
+            boolean champion = false;
+            if (latest.getStatus() == RoundParticipantStatus.FINISHED) {
+                if (latest.getRankInRound() != null && latest.getRankInRound() == 1) {
+                    status = LeaderboardStatus.CHAMPION;
+                    champion = true;
+                } else {
+                    status = LeaderboardStatus.ELIMINATED;
+                    eliminatedInRound = latestRoundNumber;
+                }
+            } else if (latest.getStatus() == RoundParticipantStatus.ELIMINATED) {
+                status = LeaderboardStatus.ELIMINATED;
+                eliminatedInRound = latestRoundNumber;
+            } else {
+                // PENDING / TIMED / DNF / ADVANCED — round still in progress,
+                // or (ADVANCED) a newer entry should exist and this can't
+                // actually be "latest"; ACTIVE is the safe fallback either way.
+                status = LeaderboardStatus.ACTIVE;
+            }
+
+            RaceStanding rs = new RaceStanding();
+            rs.registrationId = e.getKey();
+            rs.played = history.size();
+            rs.bestTimeMillis = best;
+            rs.latestTimeMillis = latest.getTimeMillis();
+            rs.latestRoundNumber = latestRoundNumber;
+            rs.status = status;
+            rs.eliminatedInRound = eliminatedInRound;
+            rs.champion = champion;
+            rs.primaryKey = -latestRoundNumber;
+            rs.secondaryKey = latest.getRankInRound() != null ? latest.getRankInRound() : Integer.MAX_VALUE;
+            standings.add(rs);
+        }
+
+        standings.sort(Comparator
+                .comparingInt((RaceStanding s) -> s.primaryKey)
+                .thenComparingInt(s -> s.secondaryKey));
+        assignRaceRanks(standings);
+
+        Set<UUID> registrationIds = byRegistration.keySet();
+        Map<UUID, String[]> names = resolveNames(registrationIds);
+
+        List<LeaderboardEntryDTO> entries = new ArrayList<>();
+        UUID championId = null;
+        for (RaceStanding s : standings) {
+            if (s.champion && championId == null) championId = s.registrationId;
+            String[] pair = names.getOrDefault(s.registrationId, new String[]{null, null});
+            entries.add(toRaceEntry(s, pair[0], pair[1]));
+        }
+
+        response.setEntries(entries);
+        response.setTotalTeams(registrationIds.size());
+        response.setIsFinal(isFinal);
+        if (championId != null) {
+            response.setChampionRegistrationId(championId);
+            String[] pair = names.getOrDefault(championId, new String[]{null, null});
+            response.setChampionRobotName(pair[0]);
+            response.setChampionTeamName(pair[1]);
+        }
+
+        return response;
+    }
+
+    private void assignRaceRanks(List<RaceStanding> ordered) {
+        for (int i = 0; i < ordered.size(); i++) {
+            RaceStanding cur = ordered.get(i);
+            if (i > 0 && sameRaceKey(ordered.get(i - 1), cur)) {
+                cur.rank = ordered.get(i - 1).rank;
+            } else {
+                cur.rank = i + 1;
+            }
+        }
+        for (int i = 0; i < ordered.size(); i++) {
+            RaceStanding cur = ordered.get(i);
+            boolean prevSame = i > 0 && ordered.get(i - 1).rank.equals(cur.rank);
+            boolean nextSame = i < ordered.size() - 1 && ordered.get(i + 1).rank.equals(cur.rank);
+            cur.tied = prevSame || nextSame;
+        }
+    }
+
+    private boolean sameRaceKey(RaceStanding a, RaceStanding b) {
+        return a.primaryKey == b.primaryKey && a.secondaryKey == b.secondaryKey;
+    }
+
+    private LeaderboardEntryDTO toRaceEntry(RaceStanding s, String robotName, String teamName) {
+        LeaderboardEntryDTO dto = new LeaderboardEntryDTO();
+        dto.setRank(s.rank);
+        dto.setTied(s.tied);
+        dto.setRegistrationId(s.registrationId);
+        dto.setRobotName(robotName);
+        dto.setTeamName(teamName);
+        dto.setStatus(s.status);
+        dto.setEliminatedInRound(s.eliminatedInRound);
+        dto.setPlayed(s.played);
+        dto.setBestTimeMillis(s.bestTimeMillis);
+        dto.setLatestTimeMillis(s.latestTimeMillis);
+        dto.setLatestRoundNumber(s.latestRoundNumber);
+        return dto;
+    }
+
+    /** Per-bot working state for buildRaceLeaderboard() — the race-format analog of Standing below. */
+    private static class RaceStanding {
+        UUID registrationId;
+        int played;
+        Long bestTimeMillis;
+        Long latestTimeMillis;
+        Integer latestRoundNumber;
+        LeaderboardStatus status;
+        Integer eliminatedInRound;
+        boolean champion;
+        int primaryKey;
+        int secondaryKey;
+        Integer rank;
+        boolean tied;
     }
 
     // =====================================================

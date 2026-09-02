@@ -256,7 +256,10 @@
   border-radius: 12px;
   padding: 1.2rem;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  /* auto-fit (not auto-fill) collapses empty tracks instead of leaving them
+     blank, so the fields that ARE present stretch to share the box's full
+     width evenly instead of hugging the left edge. */
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px;
 }
 
@@ -440,4 +443,16 @@
   .sdt-btn { font-size: 0.72rem; padding: 6px 12px; }
   .sdt-panel-body { padding: 14px; }
   .sdt-fields-box { padding: 1rem; }
+}
+
+/* ---------------- Print ---------------- */
+
+@media print {
+  .sdt-back-btn,
+  .sdt-actions-row,
+  .sdt-action-row,
+  .sdt-reg-actions,
+  .sdt-banner {
+    display: none !important;
+  }
 }

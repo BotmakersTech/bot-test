@@ -45,18 +45,19 @@ function SmallCard({
   title, value, href, linkLabel, loading,
 }: { title: string; value: number; href: string; linkLabel: string; loading: boolean }) {
   return (
-    <div
-      className="flex h-[210px] flex-col justify-between rounded-[20px] p-[22px] shadow-[0_8px_20px_rgba(0,0,0,0.07)] transition-all duration-300 hover:-translate-y-[3px]"
+    <Link
+      to={href}
+      className="group flex h-[210px] flex-col justify-between rounded-[20px] p-[22px] shadow-[0_8px_20px_rgba(0,0,0,0.07)] transition-all duration-300 hover:-translate-y-[3px] hover:shadow-[0_8px_18px_rgba(1,98,209,0.12)]"
       style={{ background: "linear-gradient(135deg, #eef6ff, #f5efff)" }}
     >
       <div>
         <h3 className="mb-4 text-[22px] font-semibold text-[#1d1d1d]">{title}</h3>
         <div className="text-[52px] font-semibold leading-none text-[#111]">{loading ? "—" : value}</div>
       </div>
-      <Link to={href} className="text-lg font-semibold text-[#0162D1] transition-all hover:tracking-wide">
+      <span className="text-lg font-semibold text-[#0162D1] transition-all group-hover:tracking-wide">
         {linkLabel} →
-      </Link>
-    </div>
+      </span>
+    </Link>
   )
 }
 
