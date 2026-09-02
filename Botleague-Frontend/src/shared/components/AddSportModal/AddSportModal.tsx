@@ -3,7 +3,7 @@ import { X, Info, Calendar, Plus, ArrowLeft, Check, Sparkles, Cpu, Brain, AlertT
 import { getPublicLeagueSports, toWeightClasses, type LeagueSport } from "../../api/catalog.api"
 import PrizeDistributionEditor from "../PrizeDistributionEditor"
 import { prizeDistributionBalanced, sumPrizeMoney, formatINR, type PrizePosition } from "../../utils/prize"
-import { formatWeightClass } from "../../../feature/Robots/constants/weightClasses"
+import { formatWeightClass, weightClassToKg } from "../../../feature/Robots/constants/weightClasses"
 import { useLeagues, formatAgeRange } from "../../../temp/pages/leagues/useLeagues"
 import type { CreateEventSportRequest } from "../../../feature/Admin/api/admin.api"
 import "../EventDashboard/EventDashboard.css"
@@ -165,21 +165,36 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
     setConfirmedSports(true)
   }
 
-  const buildRequest = (sport: LeagueSport): CreateEventSportRequest => ({
-    sport: sport.sportName,
-    ageGroup,
-    sportData: config.sportData,
-    weightClass: weightClassBySport[sport.id] || toWeightClasses(sport)[0]?.value || "Open",
-    formatType: config.formatType,
-    minTeamSize: config.minTeamSize,
-    maxTeamSize: config.maxTeamSize,
-    maxTeams: config.maxTeams,
-    entryFee: config.entryFee === "" ? 0 : config.entryFee,
-    prizeMoney: config.prizeMoney === "" ? 0 : config.prizeMoney,
-    prizeDistribution: config.prizeDistribution,
-    registrationStartDate: config.registrationStartDate,
-    registrationEndDate: config.registrationEndDate,
-  })
+  const buildRequest = (sport: LeagueSport): CreateEventSportRequest => {
+    const weightClass = weightClassBySport[sport.id] || toWeightClasses(sport)[0]?.value || "Open"
+    return {
+      sport: sport.sportName,
+      ageGroup,
+      sportData: config.sportData,
+      // Physical specs ride along from this (league, sport)'s catalog row —
+      // the same numbers already shown as the spec hint/pills above — instead
+      // of asking the organiser to retype them. weightClass is the only real
+      // choice (sports with more than one class); the rest is fixed by the
+      // catalog so it can't drift from what SportSpecPolicy enforces at
+      // registration (see specPolicy.ts / SportSpecPolicy.java).
+      weightClass,
+      weightLimitKg: weightClassToKg(weightClass) ?? sport.weightLimitKg ?? undefined,
+      maxLengthCm: sport.maxLengthCm ?? undefined,
+      maxWidthCm: sport.maxWidthCm ?? undefined,
+      maxHeightCm: sport.maxHeightCm ?? undefined,
+      controlType: sport.controlType ?? undefined,
+      maxBotsPerTeam: sport.maxBotsPerTeam ?? undefined,
+      formatType: config.formatType,
+      minTeamSize: config.minTeamSize,
+      maxTeamSize: config.maxTeamSize,
+      maxTeams: config.maxTeams,
+      entryFee: config.entryFee === "" ? 0 : config.entryFee,
+      prizeMoney: config.prizeMoney === "" ? 0 : config.prizeMoney,
+      prizeDistribution: config.prizeDistribution,
+      registrationStartDate: config.registrationStartDate,
+      registrationEndDate: config.registrationEndDate,
+    }
+  }
 
   const handleSubmit = async () => {
     if (selectedSports.length === 0) { setError("Please select at least one sport."); return }
