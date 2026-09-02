@@ -78,7 +78,7 @@ import AdminSponsorsPage from "../feature/Admin/pages/AdminSponsorsPage";
 import AdminSupportTicketsPage from "../feature/Admin/pages/AdminSupportTicketsPage";
 import AdminCertificatesPage from "../feature/Admin/pages/AdminCertificatesPage";
 import CreateEvent from "../feature/Admin/components/CreateEvent";
-import CreateMatch from "../feature/Admin/components/Creatematch";
+import CreateMatchDispatch from "../feature/Admin/components/CreateMatchDispatch";
 
 // ============================
 // NOTIFICATION PAGES
@@ -112,7 +112,7 @@ import OrganizerCreateEventPage   from "../feature/Organizer/pages/OrganizerCrea
 import OrganizerIncidentsPage     from "../feature/Organizer/pages/OrganizerIncidentsPage";
 import OrganizerEventDetailPage   from "../feature/Organizer/pages/OrganizerEventDetailPage";
 import OrganizerSportDetailPage   from "../feature/Organizer/pages/OrganizerSportDetailPage";
-import OrganizerBracketPage       from "../feature/Organizer/pages/OrganizerBracketPage";
+import OrganizerBracketDispatch   from "../feature/Organizer/pages/OrganizerBracketDispatch";
 import OrganizerSportsPage        from "../feature/Organizer/pages/OrganizerSportsPage";
 import OrganizerMatchesPage       from "../feature/Organizer/pages/OrganizerMatchesPage";
 import OrganizerRegistrationsPage from "../feature/Organizer/pages/OrganizerRegistrationsPage";
@@ -787,7 +787,7 @@ function AppRoutes() {
         />
         <Route
           path="/admin/events/:eventId/sports/:sportId/create-match"
-          element={<RoleRoute roles={SPORT_HEAD_AND_UP}><CreateMatch /></RoleRoute>}
+          element={<RoleRoute roles={SPORT_HEAD_AND_UP}><CreateMatchDispatch /></RoleRoute>}
         />
 
         {/* ── User Management (SUPER_ADMIN only) ── */}
@@ -820,7 +820,7 @@ function AppRoutes() {
         />
         <Route
           path="/organizer/events/:eventId/sports/:sportId/create-match"
-          element={<RoleRoute roles={SPORT_HEAD_AND_UP}><OrganizerBracketPage /></RoleRoute>}
+          element={<RoleRoute roles={SPORT_HEAD_AND_UP}><OrganizerBracketDispatch /></RoleRoute>}
         />
         <Route path="/organizer/sports"          element={<RoleRoute roles={EVENT_HEAD_AND_UP}><OrganizerSportsPage /></RoleRoute>} />
         <Route path="/organizer/matches"         element={<RoleRoute roles={SPORT_HEAD_AND_UP}><OrganizerMatchesPage /></RoleRoute>} />

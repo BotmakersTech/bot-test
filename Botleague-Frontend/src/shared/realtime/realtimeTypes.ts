@@ -18,6 +18,11 @@ export type RealtimeEventType =
   | 'MATCH_COMPLETED'
   | 'MATCH_UPDATED'
   | 'BRACKET_CREATED'
+  // Round-wise time trial (see feature/RaceRounds)
+  | 'ROUND_GENERATED'
+  | 'ROUND_TIMES_UPDATED'
+  | 'ROUND_SHORTLISTED'
+  | 'ROUND_FINALIZED'
   // Rankings
   | 'RANKINGS_UPDATED'
   // Achievements

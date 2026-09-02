@@ -251,6 +251,34 @@ public class RankingEngineService {
     }
 
     // =========================================================================
+    // ROUND-WISE TIME TRIAL — write final standings directly
+    //
+    // A placement-ranked format (round-wise time trial — see MatchFormatKind.
+    // ROUND_TIME_TRIAL) has no win/loss or points concept, so the points-based
+    // sort/tie-break machinery in recalculateLeaderboardRanks()/
+    // finalizeEventLeaderboard() doesn't apply. Called once by
+    // RaceRoundService.finalize() instead of that pair — writes each robot's
+    // final round-rank straight onto its (already-seeded) EventLeaderboardEntry.
+    // =========================================================================
+
+    public void finalizeRaceLeaderboard(UUID eventSportId, Map<UUID, Integer> eventRankByRobotId) {
+        for (Map.Entry<UUID, Integer> e : eventRankByRobotId.entrySet()) {
+            leaderboardEntryRepository.findByEventSportIdAndRobotId(eventSportId, e.getKey())
+                    .ifPresent(entry -> {
+                        entry.setEventRank(e.getValue());
+                        entry.setIsFinalized(true);
+                        leaderboardEntryRepository.save(entry);
+                    });
+        }
+
+        try {
+            realtimePublisher.pushRankingsUpdated(eventSportId);
+        } catch (Exception ignored) {}
+
+        log.info("[RankingEngine] Finalized race leaderboard for eventSportId={}", eventSportId);
+    }
+
+    // =========================================================================
     // STEP 3 — Finalize event leaderboard (call when all bracket matches done)
     // =========================================================================
 

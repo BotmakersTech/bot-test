@@ -57,6 +57,15 @@ public class LeaderboardEntryDTO {
     private int pointDifferential;
     private int bonusPoints;
 
+    // ── Round-wise time trial only (null for bracket sports) ──────────────
+    // See LeaderboardService.buildRaceLeaderboard(). bestTimeMillis is this
+    // bot's fastest recorded time across every round it ran; latestTimeMillis/
+    // latestRoundNumber are its time and round number from the most recent
+    // round it appeared in (its final result once the sport is finalized).
+    private Long bestTimeMillis;
+    private Long latestTimeMillis;
+    private Integer latestRoundNumber;
+
     public LeaderboardEntryDTO() {
     }
 
@@ -183,5 +192,29 @@ public class LeaderboardEntryDTO {
 
     public void setBonusPoints(int bonusPoints) {
         this.bonusPoints = bonusPoints;
+    }
+
+    public Long getBestTimeMillis() {
+        return bestTimeMillis;
+    }
+
+    public void setBestTimeMillis(Long bestTimeMillis) {
+        this.bestTimeMillis = bestTimeMillis;
+    }
+
+    public Long getLatestTimeMillis() {
+        return latestTimeMillis;
+    }
+
+    public void setLatestTimeMillis(Long latestTimeMillis) {
+        this.latestTimeMillis = latestTimeMillis;
+    }
+
+    public Integer getLatestRoundNumber() {
+        return latestRoundNumber;
+    }
+
+    public void setLatestRoundNumber(Integer latestRoundNumber) {
+        this.latestRoundNumber = latestRoundNumber;
     }
 }

@@ -162,6 +162,16 @@ public class MatchService {
                 .findById(request.getEventSportId())
                 .orElseThrow(() -> new ResourceNotFoundException("Event sport not found"));
 
+        // This sport uses round-wise time trial (Robo Race/RC Racing/Line
+        // Follower), not the elimination bracket — see MatchFormatPolicy.
+        // Blocks a raw API call from generating the wrong format even though
+        // the frontend UI already routes these sports elsewhere.
+        if (com.botleague.backend.events.service.MatchFormatPolicy.formatFor(eventSports.getSport())
+                != com.botleague.backend.events.enums.MatchFormatKind.BRACKET) {
+            throw ApiException.badRequest(
+                    "This sport uses round-wise time trial, not the bracket system. Use /api/v1/race-rounds/generate instead.");
+        }
+
         if (eventSports.getStatus() != SportEventStatus.REGISTRATION_CLOSED) {
             throw ApiException.conflict(
                     "Bracket can only be generated once registration is closed. Current status: "

@@ -19,6 +19,12 @@ public enum RealtimeEventType {
     MATCH_UPDATED,   // participant slots filled after winner advancement
     BRACKET_CREATED, // admin just generated a full bracket
 
+    // ── Round-wise time trial (see com.botleague.backend.timetrial) ─────────────
+    ROUND_GENERATED,
+    ROUND_TIMES_UPDATED,
+    ROUND_SHORTLISTED,
+    ROUND_FINALIZED,
+
     // ── Rankings (leaderboard) ────────────────────────────────────────────────
     RANKINGS_UPDATED,
 

@@ -79,6 +79,11 @@ public class RealtimePublisher {
                 java.util.Map.of("eventSportId", eventSportId.toString()));
     }
 
+    /** Round-wise time trial lifecycle (generate/record-times/shortlist/finalize) — see RaceRoundService. */
+    public void pushRoundUpdate(UUID eventSportId, RealtimeEventType type, Object payload) {
+        toTopic("/topic/sports/" + eventSportId, type, payload);
+    }
+
     /**
      * Notify clients that rankings for a sport have changed.
      * Pushes to both the sport topic (consumed by useSportMatchRealtime)

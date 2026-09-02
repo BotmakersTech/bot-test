@@ -29,6 +29,9 @@ public class LeaderboardResponseDTO {
     private TournamentFormat tournamentFormat;
     private MatchType matchType;
 
+    /** "BRACKET" | "ROUND_TIME_TRIAL" — see MatchFormatPolicy. tournamentFormat/matchType are null for the latter. */
+    private String matchFormat;
+
     private Boolean isFinal;
     private int totalTeams;
 
@@ -67,6 +70,14 @@ public class LeaderboardResponseDTO {
 
     public void setMatchType(MatchType matchType) {
         this.matchType = matchType;
+    }
+
+    public String getMatchFormat() {
+        return matchFormat;
+    }
+
+    public void setMatchFormat(String matchFormat) {
+        this.matchFormat = matchFormat;
     }
 
     /** Jackson serialises this as "isFinal". */

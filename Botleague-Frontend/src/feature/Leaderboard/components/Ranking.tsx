@@ -59,6 +59,14 @@ function rankMedal(rank: number): { Icon: LucideIcon; color: string } | null {
   return null;
 }
 
+function formatMillis(ms?: number | null): string {
+  if (ms == null) return "—";
+  const minutes = Math.floor(ms / 60000);
+  const seconds = (ms % 60000) / 1000;
+  const secStr = seconds.toFixed(3).padStart(6, "0");
+  return minutes > 0 ? `${minutes}:${secStr}` : `${seconds.toFixed(3)}s`;
+}
+
 const STATUS_CONFIG: Record<LeaderboardStatus, { bg: string; border: string; color: string; label: string; icon: LucideIcon }> = {
   CHAMPION:   { bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.35)", color: GOLD,    label: "Champion",   icon: Trophy },
   ACTIVE:     { bg: "rgba(31,169,82,0.08)",  border: "rgba(31,169,82,0.25)",  color: SUCCESS, label: "Active",     icon: Zap },
@@ -187,7 +195,8 @@ export default function RankingsTab({
     );
   }
 
-  const { entries, isFinal, totalTeams, championRobotName, championTeamName, tournamentFormat, matchType } = leaderboard;
+  const { entries, isFinal, totalTeams, championRobotName, championTeamName, tournamentFormat, matchType, matchFormat } = leaderboard;
+  const isRace = matchFormat === "ROUND_TIME_TRIAL";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -277,13 +286,16 @@ export default function RankingsTab({
         {/* Header row */}
         <div style={{
           display: "grid",
-          gridTemplateColumns: "52px 1fr 100px 72px 72px 72px 80px 34px",
+          gridTemplateColumns: isRace ? "52px 1fr 100px 100px 100px 64px" : "52px 1fr 100px 72px 72px 72px 80px 34px",
           gap: "4px",
           padding: "10px 18px",
           borderBottom: `1px solid ${BORDER}`,
           background: CARD2,
         }}>
-          {["Rank", "Robot / Team", "Status", "W", "L", "P", "+/−", ""].map((h, i) => (
+          {(isRace
+            ? ["Rank", "Robot / Team", "Status", "Best Time", "Latest Time", "Round"]
+            : ["Rank", "Robot / Team", "Status", "W", "L", "P", "+/−", ""]
+          ).map((h, i) => (
             <div key={i} style={{
               fontSize: "0.58rem", color: MUTED, fontWeight: 700,
               textTransform: "uppercase", letterSpacing: "0.1em",
@@ -295,12 +307,14 @@ export default function RankingsTab({
 
         {/* Entry rows */}
         {entries.map((entry, i) => (
-          <EntryRow key={entry.registrationId} entry={entry} index={i} onAwardBonus={() => openBonusModal(entry)} />
+          isRace
+            ? <RaceEntryRow key={entry.registrationId} entry={entry} index={i} />
+            : <EntryRow key={entry.registrationId} entry={entry} index={i} onAwardBonus={() => openBonusModal(entry)} />
         ))}
       </div>
 
       {/* ── Stats detail cards (top 3) ─────────────── */}
-      {entries.length > 0 && (
+      {!isRace && entries.length > 0 && (
         <div style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
@@ -501,6 +515,63 @@ function EntryRow({ entry, index, onAwardBonus }: { entry: LeaderboardEntryDTO; 
       >
         <Gift size={13} />
       </button>
+    </div>
+  );
+}
+
+// ─── Race Entry Row (round-wise time trial) ───────────
+function RaceEntryRow({ entry, index }: { entry: LeaderboardEntryDTO; index: number }) {
+  const medal   = rankMedal(entry.rank);
+  const sCfg    = STATUS_CONFIG[entry.status] ?? STATUS_CONFIG.ELIMINATED;
+  const isChamp = entry.status === "CHAMPION";
+  const isElim  = entry.status === "ELIMINATED";
+  const rowBg   = isChamp
+    ? "rgba(245,158,11,0.04)"
+    : index % 2 === 0 ? "transparent" : "rgba(75,134,232,0.025)";
+
+  return (
+    <div style={{
+      display: "grid",
+      gridTemplateColumns: "52px 1fr 100px 100px 100px 64px",
+      gap: "4px",
+      padding: "11px 18px",
+      borderBottom: `1px solid ${BORDER}`,
+      borderLeft: `2px solid ${isChamp ? "rgba(245,158,11,0.3)" : "transparent"}`,
+      background: rowBg,
+      alignItems: "center",
+      opacity: isElim ? 0.75 : 1,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+        {medal ? <medal.Icon size={18} color={medal.color} /> : (
+          <span style={{ fontSize: "0.95rem", fontWeight: 800, color: LABEL, fontFamily: ORG.fontHeading }}>{entry.rank}</span>
+        )}
+        {entry.tied && (
+          <span style={{ fontSize: "0.52rem", color: MUTED, fontWeight: 600, background: "rgba(75,134,232,0.08)", borderRadius: "3px", padding: "1px 4px", lineHeight: 1.3 }}>T</span>
+        )}
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "1px", minWidth: 0 }}>
+        <span style={{ fontWeight: isChamp ? 800 : 600, color: isChamp ? GOLD : TEXT, fontSize: "0.88rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {entry.robotName || entry.teamName || "—"}
+        </span>
+        {entry.robotName && entry.teamName && (
+          <span style={{ fontSize: "0.62rem", color: MUTED, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.teamName}</span>
+        )}
+        {entry.eliminatedInRound != null && (
+          <span style={{ fontSize: "0.62rem", color: MUTED }}>Eliminated R{entry.eliminatedInRound}</span>
+        )}
+      </div>
+
+      <div>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: sCfg.bg, border: `1px solid ${sCfg.border}`, color: sCfg.color, borderRadius: "999px", fontSize: "0.6rem", padding: "2px 8px", fontWeight: 700, whiteSpace: "nowrap" }}>
+          <sCfg.icon size={10} />
+          {sCfg.label}
+        </span>
+      </div>
+
+      <span style={{ fontSize: "0.85rem", fontWeight: 700, color: TEXT, fontFamily: ORG.fontHeading }}>{formatMillis(entry.bestTimeMillis)}</span>
+      <span style={{ fontSize: "0.85rem", fontWeight: 600, color: LABEL, fontFamily: ORG.fontHeading }}>{formatMillis(entry.latestTimeMillis)}</span>
+      <span style={{ fontSize: "0.85rem", fontWeight: 600, color: MUTED, fontFamily: ORG.fontHeading }}>{entry.latestRoundNumber ?? "—"}</span>
     </div>
   );
 }
