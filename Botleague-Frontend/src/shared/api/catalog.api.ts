@@ -112,3 +112,13 @@ export function toWeightClasses(ls: LeagueSport): { value: string; label: string
   }
   return [];
 }
+
+/** LeagueSport.extraSpecs.scale — RC Racing Car's real gate (SportSpecPolicy.SCALE),
+ *  same role toWeightClasses plays for weight-gated sports. Stored as a single
+ *  free-text value on the catalog row ("1:8") or a comma list when the sport
+ *  runs more than one scale ("1:8,1:10,1:12") — edit it via Admin > Catalog. */
+export function toScaleClasses(ls: LeagueSport): { value: string; label: string }[] {
+  const raw = ls.extraSpecs?.scale;
+  if (!raw) return [];
+  return raw.split(",").map((s) => s.trim()).filter(Boolean).map((s) => ({ value: s, label: s }));
+}

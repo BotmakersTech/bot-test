@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react"
 import { X, Info, Calendar, Plus, ArrowLeft, Check, Sparkles, Cpu, Brain, AlertTriangle } from "lucide-react"
-import { getPublicLeagueSports, toWeightClasses, type LeagueSport } from "../../api/catalog.api"
+import { getPublicLeagueSports, toWeightClasses, toScaleClasses, type LeagueSport } from "../../api/catalog.api"
 import PrizeDistributionEditor from "../PrizeDistributionEditor"
 import { prizeDistributionBalanced, sumPrizeMoney, formatINR, type PrizePosition } from "../../utils/prize"
 import { formatWeightClass, weightClassToKg } from "../../../feature/Robots/constants/weightClasses"
@@ -116,6 +116,7 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
   const [sportsLoading, setSportsLoading] = useState(false)
   const [selectedSports, setSelectedSports] = useState<LeagueSport[]>([])
   const [weightClassBySport, setWeightClassBySport] = useState<Record<string, string>>({})
+  const [scaleBySport, setScaleBySport] = useState<Record<string, string>>({})
   const [confirmedSports, setConfirmedSports] = useState(false)
   const [config, setConfig] = useState<ConfigState>(INITIAL_CONFIG)
   const [error, setError] = useState<string | null>(null)
@@ -125,6 +126,7 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
   const step = !ageGroup ? 1 : !confirmedSports ? 2 : 3
   const busy = submitting || bulkProgress !== null
   const sportsNeedingWeightClass = selectedSports.filter(s => toWeightClasses(s).length > 1)
+  const sportsNeedingScale = selectedSports.filter(s => toScaleClasses(s).length > 1)
 
   const setCfg = <K extends keyof ConfigState>(key: K, value: ConfigState[K]) => setConfig(c => ({ ...c, [key]: value }))
 
@@ -141,6 +143,7 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
     setAgeGroup(value)
     setSelectedSports([])
     setWeightClassBySport({})
+    setScaleBySport({})
     setConfirmedSports(false)
     setError(null)
   }
@@ -152,6 +155,8 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
       if (prev.some(s => s.id === sport.id)) return []
       const classes = toWeightClasses(sport)
       setWeightClassBySport(classes.length === 1 ? { [sport.id]: classes[0].value } : {})
+      const scales = toScaleClasses(sport)
+      setScaleBySport(scales.length === 1 ? { [sport.id]: scales[0].value } : {})
       return [sport]
     })
     setError(null)
@@ -167,16 +172,26 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
 
   const buildRequest = (sport: LeagueSport): CreateEventSportRequest => {
     const weightClass = weightClassBySport[sport.id] || toWeightClasses(sport)[0]?.value || "Open"
+    const scaleClass = scaleBySport[sport.id] || toScaleClasses(sport)[0]?.value
+
+    // extraRules carries scale-gated sports' real spec (RC Racing Car) —
+    // starts from whatever else the catalog row sets (e.g. fuel type), then
+    // overrides "scale" with the ONE class picked above (like weightClass,
+    // an "each add = one class" choice) rather than the catalog's raw,
+    // possibly multi-value list.
+    const extraRules: Record<string, string> = { ...sport.extraSpecs }
+    if (scaleClass) extraRules.scale = scaleClass
+
     return {
       sport: sport.sportName,
       ageGroup,
       sportData: config.sportData,
       // Physical specs ride along from this (league, sport)'s catalog row —
       // the same numbers already shown as the spec hint/pills above — instead
-      // of asking the organiser to retype them. weightClass is the only real
-      // choice (sports with more than one class); the rest is fixed by the
-      // catalog so it can't drift from what SportSpecPolicy enforces at
-      // registration (see specPolicy.ts / SportSpecPolicy.java).
+      // of asking the organiser to retype them. weightClass/scale are the only
+      // real choices (sports with more than one class/scale); the rest is
+      // fixed by the catalog so it can't drift from what SportSpecPolicy
+      // enforces at registration (see specPolicy.ts / SportSpecPolicy.java).
       weightClass,
       weightLimitKg: weightClassToKg(weightClass) ?? sport.weightLimitKg ?? undefined,
       maxLengthCm: sport.maxLengthCm ?? undefined,
@@ -184,11 +199,7 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
       maxHeightCm: sport.maxHeightCm ?? undefined,
       controlType: sport.controlType ?? undefined,
       maxBotsPerTeam: sport.maxBotsPerTeam ?? undefined,
-      // extraSpecs carries scale-only sports' real gate (RC Racing Car:
-      // {"scale":"1:8,1:12"}) — without this the techsport is created with
-      // no scale spec at all, so registration's scale-match check (see
-      // SportRegistrationService) has nothing to validate against.
-      extraRules: Object.keys(sport.extraSpecs).length > 0 ? sport.extraSpecs : undefined,
+      extraRules: Object.keys(extraRules).length > 0 ? extraRules : undefined,
       formatType: config.formatType,
       minTeamSize: config.minTeamSize,
       maxTeamSize: config.maxTeamSize,
@@ -205,6 +216,8 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
     if (selectedSports.length === 0) { setError("Please select at least one sport."); return }
     const missingWeightClass = sportsNeedingWeightClass.filter(s => !weightClassBySport[s.id])
     if (missingWeightClass.length > 0) { setError(`Please select a weight class for: ${missingWeightClass.map(s => s.sportName).join(", ")}.`); return }
+    const missingScale = sportsNeedingScale.filter(s => !scaleBySport[s.id])
+    if (missingScale.length > 0) { setError(`Please select a scale for: ${missingScale.map(s => s.sportName).join(", ")}.`); return }
     if (!config.registrationStartDate) { setError("Please set a registration start date."); return }
     if (config.registrationStartDate < TODAY) { setError("Registration start date can't be in the past."); return }
     if (!config.registrationEndDate) { setError("Please set a registration end date."); return }
@@ -294,6 +307,7 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
                         const active = selectedSports.some(s => s.id === sp.id)
                         const hint = formatSpecHint(sp)
                         const classes = toWeightClasses(sp)
+                        const scales = toScaleClasses(sp)
                         return (
                           <button key={sp.id} type="button" className={`asm-sport-card${active ? " asm-sport-card--active" : ""}`} onClick={() => toggleSport(sp)}>
                             <span className={`asm-sport-checkbox${active ? " asm-sport-checkbox--active" : ""}`}>{active && <Check size={11} />}</span>
@@ -304,19 +318,24 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
                                 {classes.map(wc => <span key={wc.value} className="asm-sport-pill">{formatWeightClass(wc.label)}</span>)}
                               </span>
                             )}
+                            {scales.length > 1 && (
+                              <span className="asm-sport-pills">
+                                {scales.map(sc => <span key={sc.value} className="asm-sport-pill">{sc.label}</span>)}
+                              </span>
+                            )}
                           </button>
                         )
                       })}
                     </div>
                   )}
 
-                  {leagueSports.some(sp => toWeightClasses(sp).length > 1) && (
+                  {leagueSports.some(sp => toWeightClasses(sp).length > 1 || toScaleClasses(sp).length > 1) && (
                     <div className="asm-classes-note">
                       <Info size={12} />
                       <span>
-                        Sports with more than one weight class (e.g. the pills above) run each class as its own
-                        techsport. You'll pick <strong>one</strong> class in the next step — repeat "Add Techsport"
-                        for any other class you want to run.
+                        Sports with more than one weight class or scale (e.g. the pills above) run each as its own
+                        techsport. You'll pick <strong>one</strong> in the next step — repeat "Add Techsport"
+                        for any other class/scale you want to run.
                       </span>
                     </div>
                   )}
@@ -382,6 +401,48 @@ export default function AddSportModal({ onAddSport, submitting, onClose }: AddSp
                             <Check size={12} />
                             <span>
                               Creates <strong>{sp.sportName} · {formatWeightClass(pickedLabel ?? picked)}</strong> only.
+                              {otherLabels.length > 0 && ` Need ${otherLabels.join(", ")}? Add ${otherLabels.length > 1 ? "them" : "it"} as ${otherLabels.length > 1 ? "separate techsports" : "a separate techsport"}.`}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {sportsNeedingScale.length > 0 && (
+                <div className="asm-weight-section">
+                  <div className="asm-weight-intro">
+                    <Info size={13} />
+                    <span>
+                      This sport runs in more than one scale. Pick <strong>one</strong> — submitting
+                      adds only that scale as a techsport. To run another scale, add a separate
+                      techsport for it after this one.
+                    </span>
+                  </div>
+                  {sportsNeedingScale.map(sp => {
+                    const scales = toScaleClasses(sp)
+                    const picked = scaleBySport[sp.id]
+                    const otherLabels = scales.filter(c => c.value !== picked).map(c => c.label)
+                    return (
+                      <div key={sp.id}>
+                        <div className="asm-weight-row-label">{sp.sportName} — Scale <span className="asm-required">*</span></div>
+                        <div className="asm-weight-pills">
+                          {scales.map(sc => {
+                            const active = picked === sc.value
+                            return (
+                              <button key={sc.value} type="button" className={`asm-weight-pill${active ? " asm-weight-pill--active" : ""}`} onClick={() => setScaleBySport(w => ({ ...w, [sp.id]: sc.value }))}>
+                                {sc.label}
+                              </button>
+                            )
+                          })}
+                        </div>
+                        {picked && (
+                          <div className="asm-weight-confirm">
+                            <Check size={12} />
+                            <span>
+                              Creates <strong>{sp.sportName} · {picked}</strong> only.
                               {otherLabels.length > 0 && ` Need ${otherLabels.join(", ")}? Add ${otherLabels.length > 1 ? "them" : "it"} as ${otherLabels.length > 1 ? "separate techsports" : "a separate techsport"}.`}
                             </span>
                           </div>
