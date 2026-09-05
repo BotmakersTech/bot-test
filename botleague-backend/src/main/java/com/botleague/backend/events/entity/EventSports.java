@@ -182,6 +182,23 @@ public class EventSports {
     @Column(name = "bracket_generated", nullable = false, columnDefinition = "boolean DEFAULT false")
     private boolean bracketGenerated = false;
 
+    /**
+     * The match type the organiser generated this sport's bracket with —
+     * ONE_VS_ONE, TRIPLE_THREAT or FATAL_FOUR.
+     *
+     * <p>This has to be stored rather than read back off the matches. A
+     * partitioned Triple Threat / Fatal Four bracket contains matches of
+     * several sizes, each row tagged with its own participant count, and the
+     * organiser's choice is not always recoverable from them: 6 teams in Fatal
+     * Four produces rounds of 3+3 then 2, so the bracket contains no 4-way
+     * match at all to infer the format from.
+     *
+     * <p>Null for brackets generated before this column existed; callers fall
+     * back to sampling the match rows for those.
+     */
+    @Column(name = "bracket_match_type", length = 20)
+    private String bracketMatchType;
+
     @Column(name = "rejection_reason", length = 500)
     private String rejectionReason;
 
@@ -370,6 +387,9 @@ public class EventSports {
 
     public boolean isBracketGenerated() { return bracketGenerated; }
     public void setBracketGenerated(boolean bracketGenerated) { this.bracketGenerated = bracketGenerated; }
+
+    public String getBracketMatchType() { return bracketMatchType; }
+    public void setBracketMatchType(String bracketMatchType) { this.bracketMatchType = bracketMatchType; }
 
     public boolean isGlobalRankingsPushed() { return globalRankingsPushed; }
     public void setGlobalRankingsPushed(boolean globalRankingsPushed) { this.globalRankingsPushed = globalRankingsPushed; }

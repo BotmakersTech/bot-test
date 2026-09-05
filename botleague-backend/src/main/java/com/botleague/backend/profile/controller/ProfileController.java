@@ -205,6 +205,21 @@ public class ProfileController {
                     });
                 });
 
+        // ── Career stats + tournament history ────────────────────────────────
+        // Reuses the aggregation behind the authenticated /api/profile/{userId}
+        // rather than keeping a second copy of the same SQL here, so the public
+        // page and the in-app one can never drift apart. Every field taken is
+        // already public (event names, placements, team, lineup role); the
+        // private profile's contact fields live on a different DTO entirely and
+        // are not reachable from here.
+        PublicProfileResponseDTO stats = publicProfileService.publicProfileView(user.getId());
+        profile.put("tournamentsPlayed", stats.getTournamentsPlayed());
+        profile.put("matchesPlayed",     stats.getMatchesPlayed());
+        profile.put("wins",              stats.getWins());
+        profile.put("losses",            stats.getLosses());
+        profile.put("winRate",           stats.getWinRate());
+        profile.put("playerHistory",     stats.getPlayerHistory());
+
         return ResponseEntity.ok(profile);
     }
     

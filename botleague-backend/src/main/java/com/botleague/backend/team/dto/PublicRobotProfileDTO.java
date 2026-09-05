@@ -1,6 +1,7 @@
 package com.botleague.backend.team.dto;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class PublicRobotProfileDTO {
@@ -24,6 +25,11 @@ public class PublicRobotProfileDTO {
     private Double lengthCm;
     private Double widthCm;
     private Double heightCm;
+    // Sport-specific fields with no dedicated column — e.g. RC Racing Car's
+    // scale lives at attributes["scaleClass"] (see Robot.attributes' own doc
+    // comment). Needed so the public profile can show Scale instead of a
+    // meaningless "Weight -" line for scale-gated sports.
+    private Map<String, String> attributes;
 
     // ── Team ─────────────────────────────────────────────────────────────────
     private UUID   teamId;
@@ -117,6 +123,8 @@ public class PublicRobotProfileDTO {
     public void   setWidthCm(Double v)      { this.widthCm = v; }
     public Double getHeightCm()             { return heightCm; }
     public void   setHeightCm(Double v)     { this.heightCm = v; }
+    public Map<String, String> getAttributes()       { return attributes; }
+    public void   setAttributes(Map<String, String> v) { this.attributes = v; }
     public UUID   getTeamId()               { return teamId; }
     public void   setTeamId(UUID v)         { this.teamId = v; }
     public String getTeamName()             { return teamName; }

@@ -5,6 +5,12 @@ import java.util.UUID;
 
 public class PublicTeamProfileDTO {
 
+    // ── Roster — active members, for a clickable link to each one's own
+    // public profile. Only what that public profile page itself already
+    // shows (id, name, avatar) — no contact info. ───────────────────────────
+    private List<TeamMemberSummary> members;
+
+
     // ── Identity ──────────────────────────────────────────────────────────────
     private UUID    teamId;
     private String  teamCode;
@@ -74,10 +80,37 @@ public class PublicTeamProfileDTO {
         public void    setRobotName(String v)  { this.robotName = v; }
     }
 
+    public static class TeamMemberSummary {
+        private UUID   userId;
+        private String botleagueId;
+        private String username;
+        private String firstName;
+        private String lastName;
+        private String profilePhotoUrl;
+        private String teamRole;     // CAPTAIN / VICE_CAPTAIN / MEMBER / MENTOR
+
+        public UUID   getUserId()                { return userId; }
+        public void   setUserId(UUID v)          { this.userId = v; }
+        public String getBotleagueId()           { return botleagueId; }
+        public void   setBotleagueId(String v)   { this.botleagueId = v; }
+        public String getUsername()              { return username; }
+        public void   setUsername(String v)      { this.username = v; }
+        public String getFirstName()             { return firstName; }
+        public void   setFirstName(String v)     { this.firstName = v; }
+        public String getLastName()              { return lastName; }
+        public void   setLastName(String v)      { this.lastName = v; }
+        public String getProfilePhotoUrl()       { return profilePhotoUrl; }
+        public void   setProfilePhotoUrl(String v){ this.profilePhotoUrl = v; }
+        public String getTeamRole()              { return teamRole; }
+        public void   setTeamRole(String v)      { this.teamRole = v; }
+    }
+
     // ── Getters & Setters ─────────────────────────────────────────────────────
 
     public UUID    getTeamId()               { return teamId; }
     public void    setTeamId(UUID v)         { this.teamId = v; }
+    public List<TeamMemberSummary> getMembers()          { return members; }
+    public void    setMembers(List<TeamMemberSummary> v) { this.members = v; }
     public String  getTeamCode()             { return teamCode; }
     public void    setTeamCode(String v)     { this.teamCode = v; }
     public String  getTeamName()             { return teamName; }

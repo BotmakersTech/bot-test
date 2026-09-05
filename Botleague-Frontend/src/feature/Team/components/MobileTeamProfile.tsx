@@ -1,30 +1,20 @@
-import { Pencil, Share2, CalendarDays, Swords, Percent } from "lucide-react";
-import robotFallback from "../../../assets/robot.png";
+import { Share2, CalendarDays, Swords, Percent, Crown } from "lucide-react";
+import teamDefault from "../../../assets/TeamDefault.png";
 
 /* ============================================================================
-   MobileRobotProfile — mobile (<=900px) companion shared by both
-   RobotProfilePage.tsx (own team's robot, Edit button for captain/vice-
-   captain) and RobotPublicPage.tsx (public, view-only). Same real-data/
-   CSS-toggle pattern as the rest of the app's Mobile* components: the
-   desktop tree renders alongside this one off the same page state, a CSS
-   media query at 900px picks which is visible. Ported pixel-for-pixel from
-   the pasted "Robotdetailpage.jsx" mock (Roboto/Sarpanch/Poppins/Inter, the
-   #0162d1->#8c6cff gradient, translucent "B" watermark, stat-card/table
-   treatment) — no page-level top bar or bottom nav, since the real
-   Navbar/PublicNavbar and MobileBottomNav/PublicBottomNav already provide
-   those everywhere in the app.
+   MobileTeamProfile — mobile (<=900px) companion for TeamPublicPage.tsx, the
+   team-shaped sibling of MobileRobotProfile.tsx / MobileUserProfile.tsx. Same
+   `mrp-*` card/stats/table markup as those two; only the Team Members list
+   below the stats card is new (a team has a roster, a robot/person doesn't),
+   using its own `mtp-member-*` classes in robotProfile.css.
 
-   Differs from the mock on purpose:
-   - The mock's decorative "stars" are plain unshaped square outlines (a
-     placeholder, not an actual star) — reused the app's own proper star
-     shape (.rprofile-outline-star's clip-path) instead for visual quality.
-   - Table columns are Tournament/Points/Sport/Position, matching the mock,
-     using the real RobotTournamentRecord.sport field (the mock's static
-     data happened to repeat "Robowar" for every row, which reads as a
-     placeholder rather than a deliberate single-sport-only design).
+   Records reuse the exact same four columns as MobileRobotProfile
+   (Tournament / Points / Techsports / Position) rather than the six-column
+   desktop table — a team's EventRecord is the same shape as a robot's, so
+   there's no reason for the two mobile tables to disagree.
    ============================================================================ */
 
-export interface MobileRobotProfileRecord {
+export interface MobileTeamProfileRecord {
   key: string;
   tournament: string;
   points: number;
@@ -32,42 +22,43 @@ export interface MobileRobotProfileRecord {
   position: string;
 }
 
-export interface MobileRobotProfileProps {
-  robotName: string;
-  botId: string;
-  /** "Weight" / "Dimensions" / "Scale" / "Weight / Dimensions" — whichever this robot's sport actually gates. */
-  specLabel: string;
-  specValue: string;
-  sportLabel: string;
-  active: boolean;
+export interface MobileTeamProfileMember {
+  key: string;
+  name: string;
+  botleagueId: string;
   imageUrl?: string | null;
-  imageAlt: string;
-  eventsPlayed: number;
-  totalMatches: number;
-  winRate: number;
-  records: MobileRobotProfileRecord[];
-  onShare: () => void;
-  /** Omitted entirely (not just disabled) for viewers who can't manage this
-   * robot — public visitors, or a teammate who isn't captain/vice-captain. */
-  onEdit?: () => void;
+  initials: string;
+  isLead: boolean;
+  onClick?: () => void;
 }
 
-export default function MobileRobotProfile({
-  robotName,
-  botId,
-  specLabel,
-  specValue,
-  sportLabel,
+export interface MobileTeamProfileProps {
+  teamName: string;
+  teamCode: string;
+  location: string;
+  active: boolean;
+  logoUrl?: string | null;
+  eventsPlayed: number;
+  matchesPlayed: number;
+  winRate: number;
+  members: MobileTeamProfileMember[];
+  records: MobileTeamProfileRecord[];
+  onShare: () => void;
+}
+
+export default function MobileTeamProfile({
+  teamName,
+  teamCode,
+  location,
   active,
-  imageUrl,
-  imageAlt,
+  logoUrl,
   eventsPlayed,
-  totalMatches,
+  matchesPlayed,
   winRate,
+  members,
   records,
   onShare,
-  onEdit,
-}: MobileRobotProfileProps) {
+}: MobileTeamProfileProps) {
   return (
     <div className="mrp-root">
       <section className="mrp-profile-card">
@@ -77,16 +68,12 @@ export default function MobileRobotProfile({
         <div className="mrp-robot-wrap">
           <span className="mrp-brand-letter" aria-hidden="true">B</span>
           <div className="mrp-robot-frame">
-            {imageUrl ? (
-              <img className="mrp-robot-photo" src={imageUrl} alt={imageAlt} />
-            ) : (
-              <img className="mrp-robot-photo" src={robotFallback} alt={imageAlt} style={{ objectFit: "contain", padding: 16, opacity: 0.5 }} />
-            )}
+            <img className="mrp-robot-photo" src={logoUrl || teamDefault} alt={teamName} style={{ objectFit: "contain", padding: 8 }} />
           </div>
         </div>
 
         <div className="mrp-profile-top">
-          <h2 className="mrp-bot-name">{robotName}</h2>
+          <h2 className="mrp-bot-name">{teamName}</h2>
           <span className={active ? "mrp-status-badge" : "mrp-status-badge inactive"}>
             <span className="mrp-status-dot" />
             <span className="mrp-status-text">{active ? "Active" : "Inactive"}</span>
@@ -95,21 +82,14 @@ export default function MobileRobotProfile({
 
         <div className="mrp-profile-body">
           <div className="mrp-info-list">
-            <p className="mrp-info-item">BotID - <b>{botId || "-"}</b></p>
-            <p className="mrp-info-item">{specLabel} - <b>{specValue}</b></p>
-            <p className="mrp-info-item">Techsports - <b>{sportLabel}</b></p>
+            <p className="mrp-info-item">Team Code - <b>{teamCode || "-"}</b></p>
+            <p className="mrp-info-item">Location - <b>{location}</b></p>
 
             <div className="mrp-actions">
               <button type="button" className="mrp-action-btn" onClick={onShare}>
                 <Share2 size={12} />
                 Share
               </button>
-              {onEdit && (
-                <button type="button" className="mrp-action-btn" onClick={onEdit}>
-                  <Pencil size={12} />
-                  Edit
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -127,7 +107,7 @@ export default function MobileRobotProfile({
         <div className="mrp-stat">
           <Swords size={22} className="mrp-stat-icon" />
           <div>
-            <p className="mrp-stat-num">{totalMatches}</p>
+            <p className="mrp-stat-num">{matchesPlayed}</p>
             <p className="mrp-stat-label">Matches</p>
           </div>
         </div>
@@ -140,6 +120,28 @@ export default function MobileRobotProfile({
           </div>
         </div>
       </section>
+
+      <h3 className="mrp-section-title">Team Members</h3>
+
+      {members.length === 0 ? (
+        <div className="mrp-records-empty">No members yet.</div>
+      ) : (
+        <div className="mtp-member-list">
+          {members.map((m) => (
+            <button type="button" className="mtp-member-row" key={m.key} onClick={m.onClick}>
+              {m.imageUrl ? (
+                <img className="mtp-member-avatar" src={m.imageUrl} alt={m.name} />
+              ) : (
+                <span className="mtp-member-avatar mtp-member-avatar-fallback">{m.initials}</span>
+              )}
+              <span className="mtp-member-text">
+                <span className="mtp-member-name">{m.name}{m.isLead && <Crown size={11} className="mtp-member-crown" />}</span>
+                <span className="mtp-member-id">{m.botleagueId}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
 
       <h3 className="mrp-section-title">Tournament Records</h3>
 

@@ -1,7 +1,10 @@
 package com.botleague.backend.team.service;
 
 import java.util.ArrayList;
+import com.botleague.backend.auth.entity.User;
+import com.botleague.backend.auth.repository.UserRepository;
 import com.botleague.backend.common.exception.ApiException;
+import com.botleague.backend.common.service.GetFileService;
 import com.botleague.backend.events.repository.EventRepository;
 import com.botleague.backend.ranking.entity.EventLeaderboardEntry;
 import com.botleague.backend.ranking.entity.Ranking;
@@ -9,6 +12,10 @@ import com.botleague.backend.ranking.repository.EventLeaderboardEntryRepository;
 import com.botleague.backend.ranking.repository.RankingRepository;
 import com.botleague.backend.team.dto.PublicTeamProfileDTO;
 import com.botleague.backend.team.entity.Team;
+import com.botleague.backend.team.entity.TeamMembership;
+import com.botleague.backend.team.enums.TeamMembershipStatus;
+import com.botleague.backend.team.enums.TeamRole;
+import com.botleague.backend.team.repository.TeamMembershipRepository;
 import com.botleague.backend.team.repository.TeamRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,16 +33,30 @@ public class PublicTeamService {
     private final RankingRepository              rankingRepository;
     private final EventLeaderboardEntryRepository leaderboardEntryRepository;
     private final EventRepository                eventRepository;
+    private final TeamMembershipRepository       teamMembershipRepository;
+    private final UserRepository                 userRepository;
+    private final GetFileService                 getFileService;
+
+    // Same CAPTAIN > VICE_CAPTAIN > MENTOR > MEMBER seniority every other
+    // member listing in the app sorts by (MyTeam.tsx, member management).
+    private static final List<TeamRole> ROLE_ORDER =
+            List.of(TeamRole.CAPTAIN, TeamRole.VICE_CAPTAIN, TeamRole.MENTOR, TeamRole.MEMBER);
 
     public PublicTeamService(
             TeamRepository teamRepository,
             RankingRepository rankingRepository,
             EventLeaderboardEntryRepository leaderboardEntryRepository,
-            EventRepository eventRepository) {
+            EventRepository eventRepository,
+            TeamMembershipRepository teamMembershipRepository,
+            UserRepository userRepository,
+            GetFileService getFileService) {
         this.teamRepository              = teamRepository;
         this.rankingRepository           = rankingRepository;
         this.leaderboardEntryRepository  = leaderboardEntryRepository;
         this.eventRepository             = eventRepository;
+        this.teamMembershipRepository    = teamMembershipRepository;
+        this.userRepository              = userRepository;
+        this.getFileService              = getFileService;
     }
 
     public PublicTeamProfileDTO getPublicProfileByCode(String teamCode) {
@@ -124,6 +145,34 @@ public class PublicTeamService {
 
         dto.setEventRecords(records);
 
+        // ── Roster — active members only, captain first. Every field here is
+        // already shown on that member's own public profile page
+        // (/user/:botleagueId), so nothing new is exposed by listing it here. ──
+        List<TeamMembership> memberships =
+                teamMembershipRepository.findByTeamIdAndStatus(team.getId(), TeamMembershipStatus.ACTIVE);
+
+        List<PublicTeamProfileDTO.TeamMemberSummary> members = memberships.stream()
+                .sorted(Comparator.comparingInt(m -> ROLE_ORDER.indexOf(m.getRoleInTeam())))
+                .map(membership -> userRepository.findById(membership.getUserId())
+                        .map(user -> toMemberSummary(user, membership))
+                        .orElse(null))
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toList());
+
+        dto.setMembers(members);
+
         return dto;
+    }
+
+    private PublicTeamProfileDTO.TeamMemberSummary toMemberSummary(User user, TeamMembership membership) {
+        PublicTeamProfileDTO.TeamMemberSummary m = new PublicTeamProfileDTO.TeamMemberSummary();
+        m.setUserId(user.getId());
+        m.setBotleagueId(user.getBotleagueId());
+        m.setUsername(user.getUsername());
+        m.setFirstName(user.getFirstName());
+        m.setLastName(user.getLastName());
+        m.setProfilePhotoUrl(getFileService.resolveProfileImage(user.getProfilePhotoUrl()));
+        m.setTeamRole(membership.getRoleInTeam() != null ? membership.getRoleInTeam().name() : null);
+        return m;
     }
 }

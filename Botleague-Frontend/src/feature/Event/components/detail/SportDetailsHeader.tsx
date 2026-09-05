@@ -1,4 +1,4 @@
-import { Weight, Wallet, Trophy, GraduationCap, Layers } from "lucide-react";
+import { Weight, Wallet, Trophy, GraduationCap, Layers, Ruler } from "lucide-react";
 import { formatPrizePosition } from "../../../../shared/utils/prize";
 import type { ComponentType } from "react";
 import type { EventSportResponse, SupportContact } from "../../api/event.api";
@@ -6,6 +6,7 @@ import plane from "../../../../assets/Auth/plane.svg";
 import star from "../../../../assets/Auth/Star-two.svg";
 import { formatWeightClass } from "../../../Robots/constants/weightClasses";
 import { ageGroupLabel } from "../../../../shared/utils/ageGroup";
+import { constraintsFor } from "../../utils/specPolicy";
 
 interface SportDetailsHeaderProps {
   sport: EventSportResponse;
@@ -29,19 +30,23 @@ interface SpecItem {
 }
 
 export default function SportDetailsHeader({ sport, contacts }: SportDetailsHeaderProps) {
-  // Only the specs this sport actually has — a RoboWar shows Weight, a drone
-  // shows nothing where weight would be. Anything with no value is dropped.
-  const weight = sport.weightLimitKg != null
-    ? `${sport.weightLimitKg} KG`
-    : (formatWeightClass(sport.weightClass) || null);
-  const dims = sport.maxLengthCm != null && sport.maxWidthCm != null && sport.maxHeightCm != null
+  // Only the spec(s) this (league, sport) actually gates get a stat box — a
+  // RoboWar shows Weight, RC Racing Car shows Scale (never a leftover
+  // "Weight: Open" placeholder), a drone shows neither. See specPolicy.ts.
+  const gates = constraintsFor(sport.ageGroup, sport.sport);
+  const weight = gates.weight
+    ? (sport.weightLimitKg != null ? `${sport.weightLimitKg} KG` : (formatWeightClass(sport.weightClass) || null))
+    : null;
+  const dims = gates.dimension && sport.maxLengthCm != null && sport.maxWidthCm != null && sport.maxHeightCm != null
     ? `${sport.maxLengthCm}×${sport.maxWidthCm}×${sport.maxHeightCm} cm`
     : null;
+  const scale = gates.scale ? (sport.extraRules?.scale || null) : null;
 
   const specs: SpecItem[] = [
     { icon: GraduationCap, label: "League", value: ageGroupLabel(sport.ageGroup) || null },
     { icon: Weight, label: "Weight", value: weight },
     { icon: Layers, label: "Dimensions", value: dims },
+    { icon: Ruler, label: "Scale", value: scale },
     { icon: Wallet, label: "Entry Fee", value: sport.entryFee != null ? formatCurrency(sport.entryFee) : null },
     { icon: Trophy, label: "Prize Pool", value: sport.prizeMoney != null ? formatCurrency(sport.prizeMoney) : null },
   ].filter((s) => s.value && s.value !== "—") as SpecItem[];

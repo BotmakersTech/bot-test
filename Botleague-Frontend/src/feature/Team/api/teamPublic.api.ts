@@ -16,6 +16,16 @@ export interface EventRecord {
   robotName:    string | null;
 }
 
+export interface TeamMemberSummary {
+  userId:          string;
+  botleagueId:     string | null;
+  username:        string | null;
+  firstName:       string | null;
+  lastName:        string | null;
+  profilePhotoUrl: string | null;
+  teamRole:        string | null;
+}
+
 export interface PublicTeamProfile {
   teamId:          string;
   teamCode:        string;
@@ -37,6 +47,7 @@ export interface PublicTeamProfile {
   silverMedals:    number;
   bronzeMedals:    number;
   eventRecords:    EventRecord[];
+  members:         TeamMemberSummary[];
 }
 
 // Look up by UUID (internal links)

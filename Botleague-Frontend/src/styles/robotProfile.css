@@ -161,6 +161,29 @@
   cursor: pointer;
 }
 
+/* TeamPublicPage.tsx only — a robot/person has no medal tally, a team does. */
+.rprofile-medal-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.rprofile-medal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid currentColor;
+}
+
+.rprofile-medal-chip.gold   { color: #b8860b; background: rgba(245, 158, 11, 0.1); }
+.rprofile-medal-chip.silver { color: #6b7280; background: rgba(107, 114, 128, 0.1); }
+.rprofile-medal-chip.bronze { color: #b45309; background: rgba(180, 83, 9, 0.1); }
+
 .rprofile-avatar-stage {
   position: relative;
   z-index: 2;
@@ -197,6 +220,39 @@
   height: 360px;
   object-fit: contain;
   bottom: -28px;
+}
+
+/* UserPublicPage.tsx — a person who hasn't set an avatar gets their initials
+   in the slot the robot page fills with artwork, so the hero's middle column
+   never collapses to empty space. A disc rather than the artwork's full
+   rectangle, so the "B" watermark it floats over still reads around it —
+   the robot and avatar PNGs are transparent and let it through, a solid
+   fallback card would not. */
+.rprofile-avatar-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 232px;
+  height: 232px;
+  bottom: auto;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: linear-gradient(160deg, #4c8ee7, #8c6cff);
+  color: #ffffff;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
+  font-size: 74px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+/* The 1180px breakpoint re-centres .rprofile-avatar with translateX(-50%);
+   the disc needs both axes, which that rule's transform would otherwise
+   overwrite. */
+@media (max-width: 1180px) {
+  .rprofile-avatar-initials {
+    transform: translate(-50%, -50%);
+  }
 }
 
 .rprofile-outline-star {
@@ -300,6 +356,107 @@
   color: #7e7e7e;
   font-size: 16px;
   font-weight: 600;
+}
+
+/* =========================================================================
+   TeamPublicPage.tsx only — Team Members. Neither a robot nor a person has
+   a roster, so this section (and its mobile mtp-member-* counterpart further
+   down) doesn't exist on those two pages. Card grid rather than the
+   Tournament Records' row-table, since each entry needs a photo, not just
+   text columns.
+   ========================================================================= */
+.rprofile-members {
+  margin-bottom: 34px;
+}
+
+.rprofile-members h2 {
+  margin: 0 0 18px;
+  color: #536be9;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.rprofile-member-grid {
+  border: 1.5px solid #7c66ff;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.rprofile-member-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #ece9ff;
+  border-radius: 10px;
+  background: rgba(140, 108, 255, 0.045);
+  padding: 12px 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.rprofile-member-card:hover {
+  border-color: #7c66ff;
+  background: rgba(140, 108, 255, 0.09);
+}
+
+.rprofile-member-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid #ece9ff;
+}
+
+.rprofile-member-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #4c8ee7, #8c6cff);
+  color: #ffffff;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.rprofile-member-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.rprofile-member-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 800;
+  color: #2c2c2c;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rprofile-member-crown {
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.rprofile-member-meta {
+  font-size: 12px;
+  color: #7e7e7e;
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .rprofile-table {
@@ -656,6 +813,19 @@
   border-radius: 10px;
 }
 
+/* MobileUserProfile.tsx — mobile counterpart of .rprofile-avatar-initials. */
+.mrp-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #0162d1, #8c6cff);
+  color: #ffffff;
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: clamp(26px, 7vw, 44px);
+  letter-spacing: 1px;
+}
+
 .mrp-brand-letter {
   position: absolute;
   right: clamp(-40px, -8.4vw, -22px);
@@ -757,6 +927,13 @@
 .mrp-col-sport { flex: 0 0 24%; }
 .mrp-col-position { flex: 0 0 26%; }
 
+/* MobileUserProfile.tsx holds different facts in the same four slots — named
+   for what they carry there rather than reusing the robot table's names. */
+.mup-col-tournament { flex: 0 0 27%; }
+.mup-col-team { flex: 0 0 23%; }
+.mup-col-role { flex: 0 0 24%; }
+.mup-col-position { flex: 0 0 26%; }
+
 .mrp-record-row {
   box-sizing: border-box;
   width: 100%;
@@ -778,4 +955,78 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   padding-right: 6px;
+}
+
+/* MobileTeamProfile.tsx — Team Members list. Its own row style rather than
+   reusing .mrp-record-row: a member row needs a round photo, which that
+   text-only row has no slot for. */
+.mtp-member-list {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.6vw, 12px);
+  margin-top: clamp(10px, 2vw, 16px);
+}
+
+.mtp-member-row {
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f7f7f7;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 8px;
+  padding: 9px clamp(8px, 1.6vw, 14px);
+  cursor: pointer;
+  text-align: left;
+}
+
+.mtp-member-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.mtp-member-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #0162d1, #8c6cff);
+  color: #ffffff;
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.mtp-member-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mtp-member-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-size: clamp(11px, 1.8vw, 13px);
+  color: #1a1a1a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mtp-member-crown {
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.mtp-member-id {
+  font-family: monospace;
+  font-size: clamp(9px, 1.4vw, 11px);
+  color: rgba(0, 0, 0, 0.45);
 }

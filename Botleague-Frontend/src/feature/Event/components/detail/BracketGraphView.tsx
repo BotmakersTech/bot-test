@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { RefreshCw, Trophy, Medal, Printer, Maximize2 } from "lucide-react";
 import type { PublicMatchView } from "../../../Matches/api/matches.api";
+import { getBracketLayout, getTeams } from "../../../Matches/bracketLayout";
 
 // Read-only rendering of the same connected-bracket graph the admin
 // Organizer Bracket page uses (see OrganizerBracketPage.tsx) — same layout
@@ -27,21 +28,13 @@ const T = {
   line: "#c9d4ec",        // idle connector
 };
 
-const BOX_W_1V1 = 200;
-const BOX_W_MULTI = 220;
-const BOX_H_1V1 = 72;
-const BOX_H_TRIPLE = 100;
-const BOX_H_FATAL = 126;
+// Box sizes and the layout math are shared with the admin bracket pages —
+// see feature/Matches/bracketLayout. The gaps below are this view's own
+// visual rhythm, so they are passed in as parameters.
 const H_GAP = 92;
 // Each box also paints a round tag ~15px above it and a date line ~16px below
 // it — the vertical gap has to clear both so stacked matches never touch.
 const V_GAP = 44;
-
-function getBoxDimensions(matchType?: PublicMatchView["matchType"]) {
-  if (matchType === "FATAL_FOUR") return { w: BOX_W_MULTI, h: BOX_H_FATAL };
-  if (matchType === "TRIPLE_THREAT") return { w: BOX_W_MULTI, h: BOX_H_TRIPLE };
-  return { w: BOX_W_1V1, h: BOX_H_1V1 };
-}
 
 function resolveWinnerName(m: PublicMatchView): string | null {
   if (!m.winnerRegistrationId) return null;
@@ -50,20 +43,6 @@ function resolveWinnerName(m: PublicMatchView): string | null {
   if (m.winnerRegistrationId === m.teamCRegistrationId) return m.teamCRobotName ?? m.teamCName ?? null;
   if (m.winnerRegistrationId === m.teamDRegistrationId) return m.teamDRobotName ?? m.teamDName ?? null;
   return null;
-}
-
-function getTeams(m: PublicMatchView) {
-  const teams: { id: string | undefined; name: string | undefined; score: number | undefined; slot: 1 | 2 | 3 | 4 }[] = [
-    { id: m.teamARegistrationId, name: m.teamARobotName || m.teamAName, score: m.teamAScore, slot: 1 },
-    { id: m.teamBRegistrationId, name: m.teamBRobotName || m.teamBName, score: m.teamBScore, slot: 2 },
-  ];
-  if (m.matchType === "TRIPLE_THREAT" || m.matchType === "FATAL_FOUR") {
-    teams.push({ id: m.teamCRegistrationId, name: m.teamCRobotName || m.teamCName, score: m.teamCScore, slot: 3 });
-  }
-  if (m.matchType === "FATAL_FOUR") {
-    teams.push({ id: m.teamDRegistrationId, name: m.teamDRobotName || m.teamDName, score: m.teamDScore, slot: 4 });
-  }
-  return teams;
 }
 
 function statusColor(status?: string) {
@@ -103,95 +82,6 @@ function fmtDateTime(iso?: string | null): string | null {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
   return d.toLocaleString(undefined, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
-}
-
-/** Lays out one bracket track (a flat list of same-bracketSide rounds) as round-columns. */
-function layoutTrack(matches: PublicMatchView[], yOffset: number, labelPrefix: string) {
-  const roundMap: Record<number, PublicMatchView[]> = {};
-  matches.forEach((m) => {
-    if (m.leaderboardPosition === 3) return;
-    const r = m.roundNumber ?? 0;
-    if (!roundMap[r]) roundMap[r] = [];
-    roundMap[r].push(m);
-  });
-
-  const roundNums = Object.keys(roundMap).map(Number).sort((a, b) => a - b);
-  const rounds = roundNums.map((r) => [...roundMap[r]].sort((a, b) => (a.matchNumber ?? 0) - (b.matchNumber ?? 0)));
-
-  const maxMatchesR1 = rounds[0]?.length || 1;
-  const roundBoxH = rounds.map((round) => round.reduce((acc, m) => Math.max(acc, getBoxDimensions(m.matchType).h), BOX_H_1V1));
-  const roundBoxW = rounds.map((round) => round.reduce((acc, m) => Math.max(acc, getBoxDimensions(m.matchType).w), BOX_W_1V1));
-
-  const positions: Record<string, { x: number; y: number; w: number; h: number }> = {};
-  const xOffsets: number[] = [];
-  let xCursor = 0;
-  rounds.forEach((_, ri) => {
-    xOffsets.push(xCursor);
-    xCursor += roundBoxW[ri] + H_GAP;
-  });
-
-  rounds.forEach((round, ri) => {
-    const x = xOffsets[ri];
-    const boxH = roundBoxH[ri];
-    const spacingFactor = Math.pow(2, ri);
-    const slotH = boxH + V_GAP;
-    const firstOffset = ((spacingFactor - 1) * slotH) / 2;
-
-    round.forEach((match, mi) => {
-      const y = yOffset + firstOffset + mi * spacingFactor * slotH;
-      const { w, h } = getBoxDimensions(match.matchType);
-      positions[match.matchId] = { x, y, w, h };
-    });
-  });
-
-  const svgW = Math.max(0, xCursor - H_GAP);
-  const svgH = maxMatchesR1 * ((roundBoxH[0] || BOX_H_1V1) + V_GAP);
-  const roundLabels = rounds.map((_, ri) => (labelPrefix ? `${labelPrefix} ${roundLabel(ri, rounds.length)}` : roundLabel(ri, rounds.length)));
-
-  return { rounds, positions, svgW, svgH, roundLabels };
-}
-
-function getBracketLayout(matches: PublicMatchView[]) {
-  if (!matches.length) {
-    return { rounds: [] as PublicMatchView[][], positions: {} as Record<string, { x: number; y: number; w: number; h: number }>, svgW: 0, svgH: 0, roundLabels: [] as string[] };
-  }
-
-  const isDoubleElim = matches.some((m) => m.bracketSide === "LOSERS");
-
-  if (!isDoubleElim) {
-    const t = layoutTrack(matches, 0, "");
-    return { rounds: t.rounds, positions: t.positions, svgW: t.svgW + 40, svgH: t.svgH + 20, roundLabels: t.roundLabels };
-  }
-
-  const winners = matches.filter((m) => m.bracketSide === "WINNERS");
-  const losers = matches.filter((m) => m.bracketSide === "LOSERS");
-  const grandFinals = [...matches.filter((m) => m.bracketSide === "GRAND_FINAL")].sort(
-    (a, b) => (a.isBracketReset ? 1 : 0) - (b.isBracketReset ? 1 : 0)
-  );
-
-  const w = layoutTrack(winners, 0, "Winners");
-  const gapY = 70;
-  const l = layoutTrack(losers, w.svgH + gapY, "Losers");
-
-  const positions = { ...w.positions, ...l.positions };
-  const rounds = [...w.rounds, ...l.rounds];
-  const roundLabels = [...w.roundLabels, ...l.roundLabels];
-
-  const gfX = Math.max(w.svgW, l.svgW) + H_GAP;
-  const gfY = (w.svgH + gapY + l.svgH) / 2 - BOX_H_1V1 / 2;
-  grandFinals.forEach((m, i) => {
-    const { w: bw, h: bh } = getBoxDimensions(m.matchType);
-    positions[m.matchId] = { x: gfX + i * (bw + H_GAP), y: gfY, w: bw, h: bh };
-  });
-  if (grandFinals.length) {
-    rounds.push(grandFinals);
-    roundLabels.push(grandFinals.length > 1 || grandFinals[0]?.isBracketReset ? "Grand Final · Bracket Reset" : "Grand Final");
-  }
-
-  const svgW = gfX + grandFinals.length * (BOX_W_1V1 + H_GAP) + 40;
-  const svgH = w.svgH + gapY + l.svgH + 20;
-
-  return { rounds, positions, svgW, svgH, roundLabels };
 }
 
 interface BracketGraphViewProps {
@@ -249,7 +139,7 @@ export default function BracketGraphView({ matches, loading, error }: BracketGra
     return <p style={{ textAlign: "center", padding: "40px 0", color: "#666" }}>No matches have been scheduled for this sport yet.</p>;
   }
 
-  const { rounds, positions, svgW, svgH, roundLabels } = getBracketLayout(matches);
+  const { rounds, positions, svgW, svgH, roundLabels } = getBracketLayout(matches, { hGap: H_GAP, vGap: V_GAP, roundLabel });
 
   // Scale the whole bracket down to fit the visible canvas, then centre it.
   const fitToView = () => {

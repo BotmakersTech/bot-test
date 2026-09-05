@@ -77,6 +77,7 @@ public class PublicRobotService {
         dto.setLengthCm(robot.getLengthCm());
         dto.setWidthCm(robot.getWidthCm());
         dto.setHeightCm(robot.getHeightCm());
+        dto.setAttributes(robot.getAttributes());
 
         // ── Team ──────────────────────────────────────────────────────────────
         dto.setTeamId(robot.getTeamId());
