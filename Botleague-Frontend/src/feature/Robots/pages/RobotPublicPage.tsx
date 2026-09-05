@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Percent, Share2, Swords, Trophy } from "lucide-react";
 
 import { getPublicRobotProfile, getPublicRobotProfileByCode, type PublicRobotProfile } from "../api/robotPublic.api";
+import { robotSpecDisplay } from "../utils/robotSpec";
 import robotFallback from "../../../assets/robot.png";
 import flightDecoration from "../../../assets/Auth/flight.svg";
 import droneDecoration from "../../../assets/Auth/drone.svg";
@@ -87,6 +88,15 @@ export default function RobotPublicPage() {
     );
   } else {
   const active = profile.status === "ACTIVE";
+  const spec = robotSpecDisplay({
+    sport: profile.sport,
+    ageGroup: profile.ageCategory,
+    weightKg: profile.weightKg,
+    lengthCm: profile.lengthCm,
+    widthCm: profile.widthCm,
+    heightCm: profile.heightCm,
+    scaleClass: profile.attributes?.scaleClass,
+  });
 
   body = (
     <div className="rprofile-page">
@@ -98,7 +108,8 @@ export default function RobotPublicPage() {
           <MobileRobotProfile
             robotName={profile.robotName}
             botId={profile.robotCode || "-"}
-            weightLabel={profile.weightKg != null ? `${profile.weightKg} Kg` : "-"}
+            specLabel={spec.label}
+            specValue={spec.value}
             sportLabel={profile.sport?.replace(/_/g, " ") || "-"}
             active={active}
             imageUrl={!imgErr ? profile.imageUrl : null}
@@ -129,6 +140,7 @@ export default function RobotPublicPage() {
               </span>
             </div>
             <p><span className="rprofile-info-label">BotID</span> - <span className="rprofile-info-value">{profile.robotCode || "-"}</span></p>
+            <p><span className="rprofile-info-label">{spec.label}</span> - <span className="rprofile-info-value">{spec.value}</span></p>
             <p>
               <span className="rprofile-info-label">Team Name</span> -{" "}
               {profile.teamName ? (

@@ -9,6 +9,7 @@ import { getPublicRobotProfile, type PublicRobotProfile } from "../api/robotPubl
 import RobotEditPanel from "../components/RobotEditPanel";
 import MobileRobotProfile from "../components/MobileRobotProfile";
 import type { Robot } from "../types/types";
+import { robotSpecDisplay } from "../utils/robotSpec";
 import robotFallback from "../../../assets/robot.png";
 import "../../../styles/robotProfile.css";
 
@@ -104,6 +105,15 @@ export default function RobotProfilePage() {
 
   const active = robot.status === "ACTIVE";
   const teamName = robot.teamName || profile?.teamName;
+  const spec = robotSpecDisplay({
+    sport: robot.sport,
+    ageGroup: robot.eligibleCategories?.[0],
+    weightKg: robot.weightKg,
+    lengthCm: robot.lengthCm,
+    widthCm: robot.widthCm,
+    heightCm: robot.heightCm,
+    scaleClass: robot.attributes?.scaleClass,
+  });
 
   return (
     <div className="rprofile-page">
@@ -128,7 +138,8 @@ export default function RobotProfilePage() {
               <MobileRobotProfile
                 robotName={robot.robotName}
                 botId={robot.robotCode || "-"}
-                weightLabel={profile?.weightKg != null ? `${profile.weightKg} Kg` : "-"}
+                specLabel={spec.label}
+                specValue={spec.value}
                 sportLabel={profile?.sport?.replace(/_/g, " ") || "-"}
                 active={active}
                 imageUrl={!imgErr ? robot.robotIMG : null}
@@ -161,6 +172,7 @@ export default function RobotProfilePage() {
                 </div>
                 <p><span className="rprofile-info-label">BotID</span> - <span className="rprofile-info-value">{robot.robotCode || "-"}</span></p>
                 <p><span className="rprofile-info-label">Team Name</span> - <span className="rprofile-info-value">{teamName || "No Team"}</span></p>
+                <p><span className="rprofile-info-label">{spec.label}</span> - <span className="rprofile-info-value">{spec.value}</span></p>
                 <p><span className="rprofile-info-label">Created on</span> - <span className="rprofile-info-value">{formatDate(robot.createdAt)}</span></p>
 
                 <div className="rprofile-actions">

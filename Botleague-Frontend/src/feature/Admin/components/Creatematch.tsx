@@ -18,6 +18,17 @@ import type {
   SubmitMatchResultDTO
 } from "../api/adminMatches.api"
 
+import {
+  getBracketLayout,
+  getTeams,
+  BOX_W_1V1,
+  slotCount,
+  largestMatchType,
+  previewBracket,
+  headlineMatchWarning,
+} from "../../Matches/bracketLayout"
+import { getLeaderboard } from "../../Leaderboard/api/leaderboard.api"
+
 // =====================================================
 // TOKENS
 // =====================================================
@@ -49,19 +60,11 @@ const T = {
 // LAYOUT CONSTANTS
 // =====================================================
 
-const BOX_W_1V1 = 200
-const BOX_W_MULTI = 220
-const BOX_H_1V1 = 72
-const BOX_H_TRIPLE = 100
-const BOX_H_FATAL = 126
+// Box sizes and the layout math are shared with the other bracket
+// renderers — see feature/Matches/bracketLayout. The gaps below are this
+// screen's own visual rhythm, so they are passed in as parameters.
 const H_GAP = 80
 const V_GAP = 20
-
-function getBoxDimensions(matchType?: MatchType) {
-  if (matchType === "FATAL_FOUR") return { w: BOX_W_MULTI, h: BOX_H_FATAL }
-  if (matchType === "TRIPLE_THREAT") return { w: BOX_W_MULTI, h: BOX_H_TRIPLE }
-  return { w: BOX_W_1V1, h: BOX_H_1V1 }
-}
 
 // =====================================================
 // HELPERS
@@ -83,137 +86,6 @@ function resolveWinnerName(m: MatchDTO): string | null {
   if (m.winnerRegistrationId === m.teamCRegistrationId) return m.teamCRobotName ?? m.teamCName ?? null
   if (m.winnerRegistrationId === m.teamDRegistrationId) return m.teamDRobotName ?? m.teamDName ?? null
   return null
-}
-
-function getTeams(m: MatchDTO) {
-  const teams: {
-    id: string | undefined
-    name: string | undefined
-    score: number | undefined
-    slot: 1 | 2 | 3 | 4
-  }[] = [
-    { id: m.teamARegistrationId, name: m.teamARobotName || m.teamAName, score: m.teamAScore, slot: 1 },
-    { id: m.teamBRegistrationId, name: m.teamBRobotName || m.teamBName, score: m.teamBScore, slot: 2 },
-  ]
-  if (m.matchType === "TRIPLE_THREAT" || m.matchType === "FATAL_FOUR") {
-    teams.push({ id: m.teamCRegistrationId, name: m.teamCRobotName || m.teamCName, score: m.teamCScore, slot: 3 })
-  }
-  if (m.matchType === "FATAL_FOUR") {
-    teams.push({ id: m.teamDRegistrationId, name: m.teamDRobotName || m.teamDName, score: m.teamDScore, slot: 4 })
-  }
-  return teams
-}
-
-// =====================================================
-// BRACKET LAYOUT
-// Excludes leaderboardPosition === 3 (3rd place match)
-// from the main grid — rendered separately in HTML.
-//
-// Double elimination lays out the winners and losers brackets as two
-// independent, vertically-stacked round-column tracks (bracketSide
-// WINNERS / LOSERS have their own round-number sequences, which can
-// overlap or exceed each other — merging them into one column grid by
-// raw roundNumber would collide/interleave the two brackets), with the
-// grand final (and bracket-reset rematch, if present) appended as a
-// trailing column positioned after whichever track is wider.
-// =====================================================
-
-/** Lays out one bracket track (a flat list of same-bracketSide rounds) as round-columns. */
-function layoutTrack(matches: MatchDTO[], yOffset: number, labelPrefix: string) {
-  const roundMap: Record<number, MatchDTO[]> = {}
-  matches.forEach(m => {
-    if (m.leaderboardPosition === 3) return
-    const r = m.roundNumber ?? 0
-    if (!roundMap[r]) roundMap[r] = []
-    roundMap[r].push(m)
-  })
-
-  const roundNums = Object.keys(roundMap).map(Number).sort((a, b) => a - b)
-  const rounds = roundNums.map(r =>
-    [...roundMap[r]].sort((a, b) => (a.matchNumber ?? 0) - (b.matchNumber ?? 0))
-  )
-
-  const maxMatchesR1 = rounds[0]?.length || 1
-  const roundBoxH = rounds.map(round => round.reduce((acc, m) => Math.max(acc, getBoxDimensions(m.matchType).h), BOX_H_1V1))
-  const roundBoxW = rounds.map(round => round.reduce((acc, m) => Math.max(acc, getBoxDimensions(m.matchType).w), BOX_W_1V1))
-
-  const positions: Record<string, { x: number; y: number; w: number; h: number }> = {}
-  const xOffsets: number[] = []
-  let xCursor = 0
-  rounds.forEach((_, ri) => {
-    xOffsets.push(xCursor)
-    xCursor += roundBoxW[ri] + H_GAP
-  })
-
-  rounds.forEach((round, ri) => {
-    const x = xOffsets[ri]
-    const boxH = roundBoxH[ri]
-    const spacingFactor = Math.pow(2, ri)
-    const slotH = boxH + V_GAP
-    const firstOffset = (spacingFactor - 1) * slotH / 2
-
-    round.forEach((match, mi) => {
-      const y = yOffset + firstOffset + mi * spacingFactor * slotH
-      const { w, h } = getBoxDimensions(match.matchType)
-      positions[match.matchId] = { x, y, w, h }
-    })
-  })
-
-  const svgW = Math.max(0, xCursor - H_GAP)
-  const svgH = maxMatchesR1 * (roundBoxH[0] || BOX_H_1V1 + V_GAP)
-  const roundLabels = rounds.map((_, ri) =>
-    labelPrefix ? `${labelPrefix} ${roundLabel(ri, rounds.length)}` : roundLabel(ri, rounds.length)
-  )
-
-  return { rounds, positions, svgW, svgH, roundLabels }
-}
-
-function getBracketLayout(matches: MatchDTO[]) {
-  if (!matches.length) return {
-    rounds: [] as MatchDTO[][],
-    positions: {} as Record<string, { x: number; y: number; w: number; h: number }>,
-    svgW: 0,
-    svgH: 0,
-    roundLabels: [] as string[],
-  }
-
-  const isDoubleElim = matches.some(m => m.bracketSide === "LOSERS")
-
-  if (!isDoubleElim) {
-    const t = layoutTrack(matches, 0, "")
-    return { rounds: t.rounds, positions: t.positions, svgW: t.svgW + 40, svgH: t.svgH + 20, roundLabels: t.roundLabels }
-  }
-
-  const winners = matches.filter(m => m.bracketSide === "WINNERS")
-  const losers = matches.filter(m => m.bracketSide === "LOSERS")
-  const grandFinals = [...matches.filter(m => m.bracketSide === "GRAND_FINAL")]
-    .sort((a, b) => (a.isBracketReset ? 1 : 0) - (b.isBracketReset ? 1 : 0))
-
-  const w = layoutTrack(winners, 0, "Winners")
-  const gapY = 70
-  const l = layoutTrack(losers, w.svgH + gapY, "Losers")
-
-  const positions = { ...w.positions, ...l.positions }
-  const rounds = [...w.rounds, ...l.rounds]
-  const roundLabels = [...w.roundLabels, ...l.roundLabels]
-
-  const gfX = Math.max(w.svgW, l.svgW) + H_GAP
-  const gfY = (w.svgH + gapY + l.svgH) / 2 - BOX_H_1V1 / 2
-  grandFinals.forEach((m, i) => {
-    const { w: bw, h: bh } = getBoxDimensions(m.matchType)
-    positions[m.matchId] = { x: gfX + i * (bw + H_GAP), y: gfY, w: bw, h: bh }
-  })
-  if (grandFinals.length) {
-    rounds.push(grandFinals)
-    roundLabels.push(
-      grandFinals.length > 1 || grandFinals[0]?.isBracketReset ? "Grand Final · Bracket Reset" : "Grand Final"
-    )
-  }
-
-  const svgW = gfX + grandFinals.length * (BOX_W_1V1 + H_GAP) + 40
-  const svgH = w.svgH + gapY + l.svgH + 20
-
-  return { rounds, positions, svgW, svgH, roundLabels }
 }
 
 function statusColor(status?: string) {
@@ -252,10 +124,20 @@ const TOURNAMENT_FORMAT_OPTIONS: { value: TournamentFormat; label: string; desc:
   { value: "DOUBLE_ELIMINATION", label: "Double Elimination", desc: "Two losses to be eliminated" },
 ]
 
+// minTeams is 2 for EVERY type, matching handleGenerateBracket's own < 2 guard.
+// Triple Threat and Fatal Four no longer need 3 or 4 entrants: the backend
+// partitions each round into matches of 2..S competitors, so any field of 2 or
+// more generates cleanly and without byes.
+//
+// The real hazard is different and is surfaced as a WARNING rather than a
+// block: for some small fields the chosen format never actually occurs (Triple
+// Threat with 4 teams is all 1v1; Fatal Four with 5, 6 or 9 teams produces no
+// 4-way at all). That is computed from the simulated partition — see
+// headlineMatchWarning — never from a hardcoded list of team counts.
 const MATCH_TYPE_OPTIONS: { value: MatchType; label: string; desc: string; minTeams: number }[] = [
   { value: "ONE_VS_ONE",    label: "1v1",           desc: "Head-to-head",          minTeams: 2 },
-  { value: "TRIPLE_THREAT", label: "Triple Threat", desc: "3-way match",           minTeams: 3 },
-  { value: "FATAL_FOUR",    label: "Fatal Four",    desc: "4-way match",           minTeams: 4 },
+  { value: "TRIPLE_THREAT", label: "Triple Threat", desc: "Up to 3 per match",     minTeams: 2 },
+  { value: "FATAL_FOUR",    label: "Fatal Four",    desc: "Up to 4 per match",     minTeams: 2 },
 ]
 
 // =====================================================
@@ -307,6 +189,13 @@ export default function TournamentBracket() {
   const [tournamentFormat, setTournamentFormat] = useState<TournamentFormat>("SINGLE_ELIMINATION")
   const [matchType, setMatchType] = useState<MatchType>("ONE_VS_ONE")
   const [generateError, setGenerateError] = useState<string | null>(null)
+
+  // The organiser's chosen tournament-wide match type is persisted on
+  // EventSports.bracketMatchType and surfaced on the leaderboard response. It
+  // is NOT recoverable from any single match row — a partitioned bracket tags
+  // every row with its own participant count — so the bracket header reads it
+  // from here, falling back to the widest type present if the fetch fails.
+  const [persistedBracketType, setPersistedBracketType] = useState<MatchType | null>(null)
 
   // ── Match popup state ──
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null)
@@ -406,6 +295,15 @@ export default function TournamentBracket() {
   const isMultiTeam = selectedMatch?.matchType === "TRIPLE_THREAT" || selectedMatch?.matchType === "FATAL_FOUR"
   const isFatalFour = selectedMatch?.matchType === "FATAL_FOUR"
 
+  // A match may only start once EVERY one of its own slots is filled. Gating on
+  // teamA && teamB alone let a Triple Threat / Fatal Four match go LIVE with an
+  // empty C or D slot, showing "TBD" as a competitor.
+  const selectedMatchSlots = selectedMatch ? slotCount(selectedMatch.matchType) : 0
+  const selectedMatchFilledSlots = selectedMatch
+    ? getTeams(selectedMatch).filter(t => !!t.id).length
+    : 0
+  const selectedMatchIsFull = !!selectedMatch && selectedMatchFilledSlots === selectedMatchSlots
+
   // ── Init ordered teams ──
   useEffect(() => {
     if (registrations.length) {
@@ -419,6 +317,26 @@ export default function TournamentBracket() {
       setView("setup")
     }
   }, [loading, matches.length, registrations.length])
+
+  // ── Persisted tournament-wide match type (for the bracket header) ──
+  // Best-effort: the leaderboard response carries EventSports.bracketMatchType.
+  // A failure here is not worth surfacing — the header falls back to the widest
+  // match type actually present, which is the backend's own fallback too.
+  const hasBracket = matches.length > 0
+  useEffect(() => {
+    if (!sportId || !hasBracket) return
+    let cancelled = false
+    getLeaderboard("", sportId)
+      .then(res => {
+        const t = res?.matchType
+        if (cancelled) return
+        if (t === "ONE_VS_ONE" || t === "TRIPLE_THREAT" || t === "FATAL_FOUR") {
+          setPersistedBracketType(t)
+        }
+      })
+      .catch(() => { /* fall back to largest-present */ })
+    return () => { cancelled = true }
+  }, [sportId, hasBracket])
 
   // ── Sync score inputs when popup opens or match data changes ──
   useEffect(() => {
@@ -623,13 +541,25 @@ export default function TournamentBracket() {
   // BRACKET LAYOUT
   // =====================================================
 
-  const { rounds, positions, svgW, svgH, roundLabels } = getBracketLayout(matches)
+  const { rounds, positions, svgW, svgH, roundLabels } = getBracketLayout(matches, { hGap: H_GAP, vGap: V_GAP, roundLabel })
+
+  // The bracket's identity cannot be read off an arbitrary row any more.
+  //   • Team count is NOT rounds[0].length * 2 — a partitioned round holds
+  //     ceil(teams / S) matches of 2..S competitors, so the field size is the
+  //     sum of each round-1 match's OWN slot count.
+  //   • The label is NOT matches[0].matchType — round 1 match 1 is deliberately
+  //     the SMALLEST match of the round, so a 10-team Triple Threat bracket
+  //     would report itself as 1v1.
+  // Prefer the persisted tournament-wide type; fall back to the widest type
+  // actually present, exactly as LeaderboardService does for legacy brackets.
+  const bracketTeamCount = (rounds[0] ?? []).reduce((n, m) => n + slotCount(m.matchType), 0)
+  const bracketType = persistedBracketType ?? largestMatchType(matches)
 
   const bracketTitle =
     rounds.length > 0
-      ? `${rounds[0].length * 2}-Team ${
+      ? `${bracketTeamCount}-Team ${
           matches[0]?.tournamentFormat === "DOUBLE_ELIMINATION" ? "Double Elimination" : "Single Elimination"
-        } · ${matchTypeLabel(matches[0]?.matchType)}`
+        } · ${matchTypeLabel(bracketType)}`
       : "Tournament Bracket"
 
   // Open the bracket SVG in a clean window at natural size and print it
@@ -690,6 +620,11 @@ export default function TournamentBracket() {
 
   const minTeams = MATCH_TYPE_OPTIONS.find(o => o.value === matchType)?.minTeams ?? 2
 
+  // What the backend will ACTUALLY generate for the current selection, and the
+  // warning (if any) that the chosen format will never occur in it.
+  const preview = previewBracket(orderedTeams.length, matchType)
+  const formatWarning = headlineMatchWarning(preview)
+
   // =====================================================
   // SETUP VIEW
   // =====================================================
@@ -737,6 +672,10 @@ export default function TournamentBracket() {
                 const tooFewTeams = orderedTeams.length < opt.minTeams
                 const notOneVsOneInDoubleElim = tournamentFormat === "DOUBLE_ELIMINATION" && opt.value !== "ONE_VS_ONE"
                 const disabled = tooFewTeams || notOneVsOneInDoubleElim
+                // Not a reason to disable the option — just a heads-up on it.
+                const noHeadlineMatch = disabled
+                  ? null
+                  : headlineMatchWarning(previewBracket(orderedTeams.length, opt.value))
                 return (
                   <button
                     key={opt.value}
@@ -750,12 +689,17 @@ export default function TournamentBracket() {
                     disabled={disabled}
                     title={
                       notOneVsOneInDoubleElim ? "Double Elimination only supports 1v1 matches"
-                        : tooFewTeams ? `Requires at least ${opt.minTeams} teams`
-                        : undefined
+                        : tooFewTeams ? `A bracket needs at least ${opt.minTeams} teams`
+                        : noHeadlineMatch ?? undefined
                     }
                   >
                     <span style={styles.optionBtnLabel}>{opt.label}</span>
                     <span style={styles.optionBtnDesc}>{opt.desc}</span>
+                    {noHeadlineMatch && (
+                      <span style={{ ...styles.optionBtnDesc, color: T.gold, marginTop: 2 }}>
+                        Never occurs at {orderedTeams.length} teams
+                      </span>
+                    )}
                   </button>
                 )
               })}
@@ -793,28 +737,54 @@ export default function TournamentBracket() {
             </div>
           </div>
 
+          {/* What will ACTUALLY be generated. Size / Rounds / Byes are
+              power-of-2 facts and belong to 1v1 only. Triple Threat and Fatal
+              Four are partitioned — ceil(field / S) matches per round, sizes
+              differing by at most 1, and no byes — so they show their real
+              round-1 shape, round count and match count instead. */}
           <div style={styles.bracketPreviewInfo}>
-            {(() => {
-              let b = 1
-              while (b < orderedTeams.length) b *= 2
-              return [
-                { label: "Teams",   val: orderedTeams.length },
-                { label: "Size",    val: b },
-                { label: "Rounds",  val: Math.log2(b) },
-                { label: "Byes",    val: b - orderedTeams.length },
-              ]
-            })().map((item, i, arr) => (
-              <>
-                <div key={item.label} style={styles.previewInfoItem}>
-                  <span style={styles.previewInfoLabel}>{item.label}</span>
-                  <span style={styles.previewInfoVal}>{item.val}</span>
-                </div>
-                {i < arr.length - 1 && (
-                  <ChevronRight key={`sep-${i}`} size={14} color={T.textMuted} />
-                )}
-              </>
-            ))}
+            {(preview.powerOfTwo
+              ? [
+                  { label: "Teams",   val: String(preview.teams) },
+                  { label: "Size",    val: String(preview.bracketSize) },
+                  { label: "Rounds",  val: String(preview.totalRounds) },
+                  { label: "Byes",    val: String(preview.byes) },
+                ]
+              : [
+                  { label: "Teams",   val: String(preview.teams) },
+                  { label: "Round 1", val: preview.firstRoundShape || "—" },
+                  { label: "Rounds",  val: String(preview.totalRounds) },
+                  { label: "Matches", val: String(preview.totalMatches) },
+                  { label: "Byes",    val: "No byes" },
+                ]
+            ).flatMap((item, i, arr) => [
+              <div key={item.label} style={styles.previewInfoItem}>
+                <span style={styles.previewInfoLabel}>{item.label}</span>
+                <span style={styles.previewInfoVal}>{item.val}</span>
+              </div>,
+              ...(i < arr.length - 1
+                ? [<ChevronRight key={`sep-${item.label}`} size={14} color={T.textMuted} />]
+                : []),
+            ])}
           </div>
+
+          {/* The whole shape, round by round — makes it plain that the fan-in
+              is not 2 and that a 4-way format can still end in a 1v1 final. */}
+          {!preview.powerOfTwo && preview.roundSizes.length > 1 && (
+            <p style={{ margin: "-8px 0 16px", textAlign: "center", fontSize: "0.75rem", color: T.textMuted }}>
+              {preview.roundSizes.map(r => r.join(" + ")).join("  →  ")}
+            </p>
+          )}
+
+          {/* A warning, not a block: the bracket generates fine and every match
+              is a real contest — it just will not contain the format that was
+              picked. Derived from the simulated partition above. */}
+          {formatWarning && (
+            <div style={{ ...styles.errorBanner, background: T.goldDim, borderColor: T.goldBorder, color: T.gold }}>
+              <AlertTriangle size={14} />
+              {formatWarning}
+            </div>
+          )}
 
           {generateError && (
             <div style={styles.errorBanner}>
@@ -846,7 +816,7 @@ export default function TournamentBracket() {
 
           {orderedTeams.length < minTeams && (
             <p style={{ color: T.textMuted, fontSize: "0.8rem", textAlign: "center", marginTop: 12 }}>
-              At least {minTeams} registered teams are required for {matchTypeLabel(matchType)}.
+              At least {minTeams} registered teams are required to generate a bracket.
             </p>
           )}
         </div>
@@ -1691,22 +1661,21 @@ export default function TournamentBracket() {
 
               {/* Start */}
               {selectedMatch.status === "SCHEDULED" && !selectedMatch.isBye && (
+                <>
                 <button
                   style={{
                     ...styles.actionBtn,
                     background: T.accentDim,
                     borderColor: T.accentBorder,
                     color: T.accent,
-                    opacity: updateLoading
-                      || !selectedMatch.teamARegistrationId
-                      || !selectedMatch.teamBRegistrationId
-                      ? 0.5 : 1,
+                    opacity: updateLoading || !selectedMatchIsFull ? 0.5 : 1,
                   }}
                   onClick={handleStart}
-                  disabled={
-                    updateLoading
-                    || !selectedMatch.teamARegistrationId
-                    || !selectedMatch.teamBRegistrationId
+                  disabled={updateLoading || !selectedMatchIsFull}
+                  title={
+                    selectedMatchIsFull
+                      ? undefined
+                      : `${matchTypeLabel(selectedMatch.matchType)} needs ${selectedMatchSlots} competitors — ${selectedMatchFilledSlots} of ${selectedMatchSlots} slots filled.`
                   }
                 >
                   {updateLoading
@@ -1714,6 +1683,12 @@ export default function TournamentBracket() {
                     : <><Play size={14} /> Start Match</>
                   }
                 </button>
+                {!selectedMatchIsFull && (
+                  <p style={{ width: "100%", margin: 0, fontSize: "0.72rem", color: T.textMuted, textAlign: "center" }}>
+                    {selectedMatchFilledSlots} of {selectedMatchSlots} slots filled — every competitor must be resolved before this match can start.
+                  </p>
+                )}
+                </>
               )}
 
               {/* Cancel */}

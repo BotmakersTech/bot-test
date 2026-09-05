@@ -35,7 +35,9 @@ export interface MobileRobotProfileRecord {
 export interface MobileRobotProfileProps {
   robotName: string;
   botId: string;
-  weightLabel: string;
+  /** "Weight" / "Dimensions" / "Scale" / "Weight / Dimensions" — whichever this robot's sport actually gates. */
+  specLabel: string;
+  specValue: string;
   sportLabel: string;
   active: boolean;
   imageUrl?: string | null;
@@ -53,7 +55,8 @@ export interface MobileRobotProfileProps {
 export default function MobileRobotProfile({
   robotName,
   botId,
-  weightLabel,
+  specLabel,
+  specValue,
   sportLabel,
   active,
   imageUrl,
@@ -93,7 +96,7 @@ export default function MobileRobotProfile({
         <div className="mrp-profile-body">
           <div className="mrp-info-list">
             <p className="mrp-info-item">BotID - <b>{botId || "-"}</b></p>
-            <p className="mrp-info-item">Weight - <b>{weightLabel}</b></p>
+            <p className="mrp-info-item">{specLabel} - <b>{specValue}</b></p>
             <p className="mrp-info-item">Techsports - <b>{sportLabel}</b></p>
 
             <div className="mrp-actions">

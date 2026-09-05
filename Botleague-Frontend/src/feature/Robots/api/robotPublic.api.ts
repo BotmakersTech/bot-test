@@ -32,6 +32,7 @@ export interface PublicRobotProfile {
   lengthCm:    number | null;
   widthCm:     number | null;
   heightCm:    number | null;
+  attributes:  Record<string, string> | null;
   teamId:      string | null;
   teamName:    string | null;
   teamCode:    string | null;

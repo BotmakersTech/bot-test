@@ -302,6 +302,10 @@ public class MatchService {
                     m.setAgeGroupSnapshot(ageGroupSnapshot);
                 }
 
+                // Double elimination is 1v1 only (the generator enforces it),
+                // but record it the same way so every generated bracket has a
+                // stored format rather than only the single-elimination ones.
+                sport.setBracketMatchType(MatchType.ONE_VS_ONE.name());
                 sport.setBracketGenerated(true);
                 eventSportsRepository.save(sport);
             });
@@ -367,6 +371,11 @@ public class MatchService {
                             m.setAgeGroupSnapshot(ageGroupSnapshot);
                         }
 
+                        // The organiser's chosen format, recorded once. A
+                        // partitioned bracket's rows each carry their own
+                        // participant count, so the choice cannot be read back
+                        // off them — see EventSports.bracketMatchType.
+                        sport.setBracketMatchType(matchType.name());
                         sport.setBracketGenerated(true);
                         eventSportsRepository.save(sport);
                     });
@@ -1065,7 +1074,12 @@ public class MatchService {
         realtimePublisher.pushRankingsUpdated(savedMatch.getEventSportId());
 
         if (tournamentNotificationService != null) {
-            if (savedMatch.getNextMatchId() == null && resetMatch == null && !hasBracketResetMatch(savedMatch)) {
+            // The 3rd-place match also has no next match, so "nothing follows
+            // this" alone would crown its winner as champion — and in a
+            // partitioned bracket the consolation match is frequently played
+            // after the final.
+            if (savedMatch.getNextMatchId() == null && !savedMatch.isThirdPlaceMatch()
+                    && resetMatch == null && !hasBracketResetMatch(savedMatch)) {
                 tournamentNotificationService.onTournamentWinner(savedMatch, savedMatch.getEventSportId());
             } else {
                 tournamentNotificationService.onMatchCompleted(savedMatch);
@@ -1181,7 +1195,9 @@ public class MatchService {
         realtimePublisher.pushRankingsUpdated(savedMatch.getEventSportId());
 
         if (tournamentNotificationService != null) {
-            if (savedMatch.getNextMatchId() == null && resetMatch2 == null && !hasBracketResetMatch(savedMatch)) {
+            // Same 3rd-place exclusion as in submitMatchResult above.
+            if (savedMatch.getNextMatchId() == null && !savedMatch.isThirdPlaceMatch()
+                    && resetMatch2 == null && !hasBracketResetMatch(savedMatch)) {
                 tournamentNotificationService.onTournamentWinner(savedMatch, savedMatch.getEventSportId());
             } else {
                 tournamentNotificationService.onMatchCompleted(savedMatch);
@@ -1518,6 +1534,16 @@ public class MatchService {
                 ? match.getMatchType()
                 : MatchType.ONE_VS_ONE;
 
+        // positionFirst is checked for EVERY type, not just the multi-way ones.
+        // A partitioned Triple Threat / Fatal Four bracket contains genuine
+        // 2-competitor matches tagged ONE_VS_ONE, and the judge scoring them is
+        // working through the same finish-position UI as the rest of the round;
+        // ignoring the position they recorded and falling back to a tied 0-0
+        // score would reject a perfectly well-specified result.
+        if (match.getPositionFirstRegistrationId() != null) {
+            return match.getPositionFirstRegistrationId();
+        }
+
         switch (matchType) {
 
             case ONE_VS_ONE: {
@@ -1529,12 +1555,8 @@ public class MatchService {
             }
 
             case TRIPLE_THREAT:
-            case FATAL_FOUR: {
-                if (match.getPositionFirstRegistrationId() != null) {
-                    return match.getPositionFirstRegistrationId();
-                }
-                return highestScoringTeam(match, matchType);
-            }
+            case FATAL_FOUR:
+                return highestScoringTeam(match);
 
             default:
                 return null;
@@ -1551,20 +1573,19 @@ public class MatchService {
      * inferWinner's ONE_VS_ONE branch (and its own javadoc) exactly: null
      * means manual resolution is needed, not "whoever's slot came first."
      */
-    private UUID highestScoringTeam(Match match, MatchType matchType) {
+    private UUID highestScoringTeam(Match match) {
 
         List<UUID> registrationIds = new ArrayList<>();
         List<Integer> scores = new ArrayList<>();
 
+        // Driven by which slots are occupied, not by the match's type tag. The
+        // two agree whenever the bracket is well-formed, and addScoredParticipant
+        // already skips nulls — but if they ever disagree, counting the teams
+        // that are actually in the match is the safe direction to be wrong in.
         addScoredParticipant(registrationIds, scores, match.getTeamARegistrationId(), match.getTeamAScore());
         addScoredParticipant(registrationIds, scores, match.getTeamBRegistrationId(), match.getTeamBScore());
-
-        if (matchType == MatchType.TRIPLE_THREAT || matchType == MatchType.FATAL_FOUR) {
-            addScoredParticipant(registrationIds, scores, match.getTeamCRegistrationId(), match.getTeamCScore());
-        }
-        if (matchType == MatchType.FATAL_FOUR) {
-            addScoredParticipant(registrationIds, scores, match.getTeamDRegistrationId(), match.getTeamDScore());
-        }
+        addScoredParticipant(registrationIds, scores, match.getTeamCRegistrationId(), match.getTeamCScore());
+        addScoredParticipant(registrationIds, scores, match.getTeamDRegistrationId(), match.getTeamDScore());
 
         if (registrationIds.isEmpty()) return null;
 
@@ -1695,11 +1716,16 @@ public class MatchService {
 
         if (match.getWinnerRegistrationId() == null) return null;
 
-        MatchType matchType = match.getMatchType() != null
-                ? match.getMatchType()
-                : MatchType.ONE_VS_ONE;
+        if (match.getPositionSecondRegistrationId() != null) {
+            return match.getPositionSecondRegistrationId();
+        }
 
-        switch (matchType) {
+        // Occupancy, not the stored tag: a match tagged TRIPLE_THREAT that was
+        // actually played by two teams (its third feeder cancelled) has no
+        // positionSecond a judge would have recorded, and returning null there
+        // leaves the 3rd-place match permanently short a team — which in turn
+        // stops the bracket ever being detected as finished.
+        switch (effectiveMatchType(match)) {
 
             case ONE_VS_ONE: {
                 UUID winner = match.getWinnerRegistrationId();
@@ -1710,13 +1736,49 @@ public class MatchService {
 
             case TRIPLE_THREAT:
             case FATAL_FOUR:
-                // positionSecond must be supplied via submitMatchResult;
-                // completeMatch() cannot determine runner-up for these types
-                return match.getPositionSecondRegistrationId();
+                // No recorded finish order — fall back to the highest scorer
+                // among the teams that did not win, mirroring how inferWinner
+                // resolves first place from scores.
+                return highestScoringExcept(match, match.getWinnerRegistrationId());
 
             default:
                 return null;
         }
+    }
+
+    /**
+     * The highest-scoring participant other than {@code excluded}, or null if
+     * the remaining teams are tied. Same tie rule as
+     * {@link #highestScoringTeam} — an ambiguous placing is reported as
+     * unknown rather than guessed from slot order.
+     */
+    private UUID highestScoringExcept(Match match, UUID excluded) {
+
+        List<UUID> registrationIds = new ArrayList<>();
+        List<Integer> scores = new ArrayList<>();
+
+        addScoredParticipant(registrationIds, scores, match.getTeamARegistrationId(), match.getTeamAScore());
+        addScoredParticipant(registrationIds, scores, match.getTeamBRegistrationId(), match.getTeamBScore());
+        addScoredParticipant(registrationIds, scores, match.getTeamCRegistrationId(), match.getTeamCScore());
+        addScoredParticipant(registrationIds, scores, match.getTeamDRegistrationId(), match.getTeamDScore());
+
+        UUID leader = null;
+        int best = Integer.MIN_VALUE;
+        int leaders = 0;
+
+        for (int i = 0; i < registrationIds.size(); i++) {
+            if (registrationIds.get(i).equals(excluded)) continue;
+            int score = scores.get(i);
+            if (score > best) {
+                best = score;
+                leader = registrationIds.get(i);
+                leaders = 1;
+            } else if (score == best) {
+                leaders++;
+            }
+        }
+
+        return leaders == 1 ? leader : null;
     }
 
     // =====================================================
@@ -1759,11 +1821,10 @@ public class MatchService {
         UUID winner = match.getWinnerRegistrationId();
         if (winner == null) return null;
 
-        MatchType matchType = match.getMatchType() != null
-                ? match.getMatchType()
-                : MatchType.ONE_VS_ONE;
-
-        switch (matchType) {
+        // Occupancy rather than the stored tag, for the same reason as
+        // resolveRunnerUp: last place in a match played by two teams is the
+        // non-winner, whatever the match was originally built to hold.
+        switch (effectiveMatchType(match)) {
 
             case ONE_VS_ONE:
                 return winner.equals(match.getTeamARegistrationId())
@@ -1951,6 +2012,20 @@ public class MatchService {
 
     private void assignToSlot(Match match, Integer slot, UUID registrationId) {
         if (slot == null) return;
+
+        // A bracket can now hold matches of different sizes side by side (see
+        // SingleEliminationBracketGenerator), so a target's capacity is no
+        // longer implied by the tournament. Writing a winner into slot C of a
+        // ONE_VS_ONE match would park them somewhere inferWinner never looks —
+        // a team that silently vanishes from the bracket. Fail loudly instead.
+        int capacity = slotCapacity(match.getMatchType());
+        if (slot < 1 || slot > capacity) {
+            throw ApiException.conflict(
+                    "Cannot advance into slot " + slot + " of match " + match.getId()
+                            + ": a " + match.getMatchType() + " match has only "
+                            + capacity + " slots");
+        }
+
         switch (slot) {
             case 1 -> match.setTeamARegistrationId(registrationId);
             case 2 -> match.setTeamBRegistrationId(registrationId);
@@ -1958,6 +2033,41 @@ public class MatchService {
             case 4 -> match.setTeamDRegistrationId(registrationId);
             default -> throw new RuntimeException("Invalid match slot: " + slot);
         }
+    }
+
+    /** How many team slots a match type uses. Null defaults to ONE_VS_ONE, as everywhere else. */
+    private int slotCapacity(MatchType matchType) {
+        if (matchType == null) return 2;
+        return switch (matchType) {
+            case TRIPLE_THREAT -> 3;
+            case FATAL_FOUR    -> 4;
+            default            -> 2;
+        };
+    }
+
+    /**
+     * The match type implied by how many slots are actually occupied, which is
+     * not always the type the match is tagged with. A 3-competitor match whose
+     * third feeder was cancelled is played by two teams, and asking it for a
+     * positionSecond that no judge had reason to record would strand the
+     * bracket. Used for result resolution; the stored tag still drives
+     * rendering, so the UI keeps showing the slots the match was built with.
+     */
+    private MatchType effectiveMatchType(Match match) {
+        int present = 0;
+        if (match.getTeamARegistrationId() != null) present++;
+        if (match.getTeamBRegistrationId() != null) present++;
+        if (match.getTeamCRegistrationId() != null) present++;
+        if (match.getTeamDRegistrationId() != null) present++;
+
+        MatchType tagged = match.getMatchType() != null ? match.getMatchType() : MatchType.ONE_VS_ONE;
+        if (present >= slotCapacity(tagged)) return tagged;
+
+        return switch (present) {
+            case 4  -> MatchType.FATAL_FOUR;
+            case 3  -> MatchType.TRIPLE_THREAT;
+            default -> MatchType.ONE_VS_ONE;
+        };
     }
 
     // =====================================================

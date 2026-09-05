@@ -132,7 +132,7 @@ public class LeaderboardService {
         response.setEventSportId(eventSportId);
         response.setMatchFormat("BRACKET");
         response.setTournamentFormat(firstNonNullFormat(matches));
-        response.setMatchType(firstNonNullMatchType(matches));
+        response.setMatchType(bracketMatchType(eventSports, matches));
 
         // ── N = 0 : nothing to rank ───────────────────────────────────
         if (matches == null || matches.isEmpty()) {
@@ -954,12 +954,48 @@ public class LeaderboardService {
         return null;
     }
 
-    private MatchType firstNonNullMatchType(List<Match> matches) {
-        if (matches == null) return null;
-        for (Match m : matches) {
-            if (m.getMatchType() != null) return m.getMatchType();
+    /**
+     * The match type the bracket was generated with.
+     *
+     * <p>Read from the sport, not sampled from the matches. A partitioned
+     * Triple Threat / Fatal Four bracket tags each row with its own
+     * participant count, so the first row is whatever the smallest match of
+     * round 1 happens to be — for a 10-team Triple Threat that is a 2-team
+     * match, which would report the whole tournament as 1v1.
+     *
+     * <p>Brackets generated before {@code bracket_match_type} existed have no
+     * stored value; those are uniform by construction, so falling back to the
+     * largest type present recovers them correctly.
+     */
+    private MatchType bracketMatchType(EventSports eventSports, List<Match> matches) {
+
+        if (eventSports != null && eventSports.getBracketMatchType() != null) {
+            try {
+                return MatchType.valueOf(eventSports.getBracketMatchType());
+            } catch (IllegalArgumentException ignored) {
+                // Unrecognised stored value — fall through to the row scan.
+            }
         }
-        return null;
+
+        if (matches == null) return null;
+
+        MatchType widest = null;
+        for (Match m : matches) {
+            MatchType type = m.getMatchType();
+            if (type == null) continue;
+            if (widest == null || slotCount(type) > slotCount(widest)) {
+                widest = type;
+            }
+        }
+        return widest;
+    }
+
+    private int slotCount(MatchType type) {
+        return switch (type) {
+            case TRIPLE_THREAT -> 3;
+            case FATAL_FOUR    -> 4;
+            default            -> 2;
+        };
     }
 
     private int orZero(Integer value) {

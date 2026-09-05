@@ -13,22 +13,41 @@ import java.util.stream.Collectors;
 /**
  * Generates a single-elimination bracket for three match types:
  *
- *   ONE_VS_ONE   — 2 teams per match, bracket size = next power of 2
- *   TRIPLE_THREAT — 3 teams per match, bracket size = next power of 3
- *   FATAL_FOUR   — 4 teams per match, bracket size = next power of 4
+ *   ONE_VS_ONE    — 2 teams per match; power-of-2 bracket padded with byes
+ *   TRIPLE_THREAT — up to 3 teams per match; balanced partition, no byes
+ *   FATAL_FOUR    — up to 4 teams per match; balanced partition, no byes
+ *
+ * <h2>Two different geometries, deliberately</h2>
+ * 1v1 keeps the classic scheme: round up to the next power of 2 and let the
+ * empty slots become byes. It is well understood, it is what every bracket
+ * renderer expects, and it is unchanged here.
+ *
+ * <p>The multi-way types do NOT use the analogous next-power-of-3/4 scheme,
+ * because padding grows far too fast: 10 teams in Triple Threat would need a
+ * 27-slot bracket in which 17 slots are byes and most first-round matches have
+ * a single real competitor. Instead each round is partitioned into matches of
+ * 2..N competitors — see {@link MultiWayBracketPlanner} for the geometry, the
+ * seeding and the proofs. Byes then only exist for a field of one.
+ *
+ * <p>Because a partitioned round can hold matches of different sizes, every
+ * generated row is tagged with the MatchType matching <em>its own</em>
+ * participant count rather than the tournament-wide request. A 2-competitor
+ * match inside a Fatal Four bracket is stored as ONE_VS_ONE, so the scoring,
+ * advancement and rendering code that already switches on matchType handles it
+ * correctly with no special cases. The organiser's chosen format is recorded on
+ * EventSports, not inferred back from the rows.
  *
  * ── Edge cases handled ────────────────────────────────────────────────
  *  • N = 0                     → empty list
  *  • N = 1                     → single completed bye match (team is champion)
- *  • N < bracketSize           → null slots become byes; isBye = true
+ *  • 1v1 with N &lt; bracketSize  → null slots become byes; isBye = true
  *  • Exactly 1 real team in a match → auto-advance (COMPLETED, autoAdvanced=true)
  *  • 2+ real teams with ≥1 null slot → match is flagged isBye but NOT auto-advanced
  *    (teams still compete; the "bye" just means a slot is empty)
  *  • Cascading byes            → re-resolved in a loop until stable
- *  • 3rd-place match           → only when totalRounds ≥ 2; source matches =
- *    the two semi-final matches (last round before the final)
- *  • matchType propagated      → every generated Match carries the same MatchType
- *    so the service layer can score it correctly
+ *  • 3rd-place match           → only when the final is a 2-competitor match;
+ *    a 3- or 4-way final already ranks 3rd place itself, so adding a
+ *    consolation match there would award 3rd twice
  * ──────────────────────────────────────────────────────────────────────
  */
 @Component
@@ -67,7 +86,15 @@ public class SingleEliminationBracketGenerator {
             ));
         }
 
-        // ── BRACKET GEOMETRY ──────────────────────────────────────────
+        // ── MULTI-WAY (TRIPLE_THREAT / FATAL_FOUR) ────────────────────
+        // Forked here rather than by convention: the balanced partition is
+        // only valid for 3+ slots (at 2 it would have to emit single-competitor
+        // matches), so 1v1 must never reach it.
+        if (slotsPerMatch > 2) {
+            return generatePartitioned(eventSportId, request, teamIds, slotsPerMatch);
+        }
+
+        // ── BRACKET GEOMETRY (1v1) ────────────────────────────────────
         int bracketSize  = nextPowerOf(slotsPerMatch, teamCount);
         int totalRounds  = logBase(slotsPerMatch, bracketSize);
         int matchesInR1  = bracketSize / slotsPerMatch;
@@ -102,6 +129,135 @@ public class SingleEliminationBracketGenerator {
         if (thirdPlace != null) all.add(thirdPlace);
 
         return all;
+    }
+
+    // =====================================================
+    // MULTI-WAY PATH — BALANCED PARTITION
+    //
+    // The whole bracket is planned up front by MultiWayBracketPlanner, then
+    // realised as Match rows. Every structural decision — how many matches per
+    // round, how big each one is, who is seeded where, which match feeds which
+    // — comes from the plan; nothing is re-derived here.
+    // =====================================================
+
+    private List<Match> generatePartitioned(
+            UUID eventSportId,
+            GenerateBracketRequestDTO request,
+            List<UUID> teamIds,
+            int slotsPerMatch
+    ) {
+        List<List<MultiWayBracketPlanner.PlannedMatch>> plan =
+                MultiWayBracketPlanner.plan(teamIds.size(), slotsPerMatch);
+
+        int totalRounds = plan.size();
+        List<List<Match>> rounds = new ArrayList<>(totalRounds);
+
+        // ── SHELLS, ONE PER PLANNED MATCH ─────────────────────────────
+        for (int r = 0; r < totalRounds; r++) {
+
+            List<MultiWayBracketPlanner.PlannedMatch> plannedRound = plan.get(r);
+            List<Match> round = new ArrayList<>(plannedRound.size());
+
+            for (int p = 0; p < plannedRound.size(); p++) {
+                // Tagged by the match's OWN size, not the tournament's — see
+                // the class javadoc.
+                round.add(newPartitionedShell(
+                        eventSportId, request,
+                        matchTypeFor(plannedRound.get(p).size()),
+                        r + 1, p + 1
+                ));
+            }
+            rounds.add(round);
+        }
+
+        // ── SEED ROUND 1 ──────────────────────────────────────────────
+        List<Match> firstRound = rounds.get(0);
+        for (int p = 0; p < firstRound.size(); p++) {
+            int[] seeds = plan.get(0).get(p).seeds();
+            for (int slot = 0; slot < seeds.length; slot++) {
+                // seeds are 1-based ranks into the caller's ordering, which is
+                // the seeding — see MultiWayBracketPlanner.seatByRank.
+                assignToSlot(firstRound.get(p), slot + 1, teamIds.get(seeds[slot] - 1));
+            }
+        }
+
+        // ── WIRE WINNERS FORWARD ──────────────────────────────────────
+        for (int r = 1; r < totalRounds; r++) {
+
+            List<Match> previous = rounds.get(r - 1);
+            List<Match> current  = rounds.get(r);
+
+            for (int p = 0; p < current.size(); p++) {
+
+                Match target = current.get(p);
+                int[] feeders = plan.get(r).get(p).feederPositions();
+
+                for (int slot = 0; slot < feeders.length; slot++) {
+                    Match feeder = previous.get(feeders[slot]);
+                    feeder.setNextMatchId(target.getId());
+                    feeder.setNextMatchSlot(slot + 1);
+                    setSourceMatchForSlot(target, slot + 1, feeder.getId());
+                }
+            }
+        }
+
+        // ── 3RD-PLACE MATCH ───────────────────────────────────────────
+        // Only meaningful when the final is a straight duel. A 3- or 4-way
+        // final already produces a 3rd place of its own (positionThird), so a
+        // consolation match alongside it would rank two different teams 3rd.
+        List<Match> all = new ArrayList<>();
+        rounds.forEach(all::addAll);
+
+        if (totalRounds >= 2 && plan.get(totalRounds - 1).get(0).size() == 2) {
+            Match thirdPlace = buildThirdPlaceMatch(
+                    rounds, totalRounds, eventSportId, request,
+                    matchTypeFor(rounds.get(totalRounds - 2).size())
+            );
+            if (thirdPlace != null) {
+                all.add(thirdPlace);
+            }
+        }
+
+        return all;
+    }
+
+    /** A scheduled, bye-free shell for the partitioned path. */
+    private Match newPartitionedShell(
+            UUID eventSportId,
+            GenerateBracketRequestDTO request,
+            MatchType matchType,
+            int roundNumber,
+            int matchNumber
+    ) {
+        Match m = new Match();
+        m.setId(UUID.randomUUID());
+        m.setEventSportId(eventSportId);
+        m.setTournamentFormat(request.getTournamentFormat());
+        m.setMatchType(matchType);
+        m.setRoundNumber(roundNumber);
+        m.setMatchNumber(matchNumber);
+        m.setBracketPosition(matchNumber);
+        m.setStatus(MatchStatus.SCHEDULED);
+        // The partition guarantees every match has 2..4 real competitors, so
+        // nothing on this path is ever a bye.
+        m.setIsBye(false);
+        m.setAutoAdvanced(false);
+        m.setTeamAScore(0);
+        m.setTeamBScore(0);
+        m.setTeamCScore(0);
+        m.setTeamDScore(0);
+        return m;
+    }
+
+    /** The MatchType whose slot count is exactly {@code participants}. */
+    private MatchType matchTypeFor(int participants) {
+        return switch (participants) {
+            case 2 -> MatchType.ONE_VS_ONE;
+            case 3 -> MatchType.TRIPLE_THREAT;
+            case 4 -> MatchType.FATAL_FOUR;
+            default -> throw new IllegalStateException(
+                    "No match type holds " + participants + " participants");
+        };
     }
 
     // =====================================================
@@ -542,7 +698,13 @@ public class SingleEliminationBracketGenerator {
             GenerateBracketRequestDTO request,
             UUID teamId
     ) {
-        MatchType matchType = resolveMatchType(request);
+        // Tagged by participant count like every other row, not by the
+        // requested tournament type: this match holds one team in slot A and
+        // nothing else, so calling it a FATAL_FOUR would make resolveRunnerUp
+        // and resolveLoser hunt for finish positions that can never exist.
+        // DoubleEliminationBracketGenerator delegates its own N=1 case here and
+        // only ever requests ONE_VS_ONE, so nothing changes for it.
+        MatchType matchType = MatchType.ONE_VS_ONE;
 
         Match m = new Match();
         m.setId(UUID.randomUUID());
