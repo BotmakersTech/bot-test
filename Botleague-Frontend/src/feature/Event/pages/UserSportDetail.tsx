@@ -254,48 +254,41 @@ export default function UserSportDetail() {
           const roundsView = <PublicRaceRoundsView sportId={sportId!} />;
           return (
         <TournamentTabs
-          isRegistered={existingRegs.length > 0}
-          matches={isRoundTimeTrial ? roundsView : <MatchesTab matches={matches} loading={matchesLoading} error={matchesError} />}
-          rankings={<LeaderboardTab leaderboard={leaderboard} loading={lbLoading} error={lbError} />}
-          schedule={isRoundTimeTrial ? roundsView : <ScheduleTab matches={matches} loading={matchesLoading} error={matchesError} sportLabel={sport.sport?.replace(/_/g, " ") ?? "Sport"} />}
-          registration={
-            <RegistrationTab
-              sport={sport}
-              teamId={teamId}
-              teamCode={teamCode}
-              isCaptain={isCaptain}
-              isLoggedIn={isAuthenticated}
-              existingRegs={existingRegs}
-              busyReg={busyReg}
-              regError={regError}
-              eligibility={eligibility}
-              teamMembers={teamMembers}
-              onRegister={handleRegister}
-              onCancel={handleCancel}
-              onManageLineup={(id) => setActiveRegId(id)}
-              onDismissError={() => setRegError(null)}
-              onRequireLogin={requireLogin}
-            />
-          }
-          lineup={
-            <LineupTab
-              sport={sport}
-              existingRegs={existingRegs}
-              activeRegId={activeRegId || (existingRegs[0] ? regId(existingRegs[0]) : "")}
-              setActiveRegId={setActiveRegId}
-              isCaptain={isCaptain}
-              isLoggedIn={isAuthenticated}
-              teamMembers={teamMembers}
-              lineupsMap={lineupsMap}
-              lineupLoading={lineupLoading}
-              lineupError={lineupError}
-              onFetch={handleFetchLineup}
-              onAdd={handleAddMember}
-              onRemove={handleRemoveMember}
-              onRequireLogin={requireLogin}
-            />
-          }
-        />
+              isRegistered={existingRegs.length > 0}
+              matches={isRoundTimeTrial ? roundsView : <MatchesTab matches={matches} loading={matchesLoading} error={matchesError} />}
+              rankings={<LeaderboardTab leaderboard={leaderboard} loading={lbLoading} error={lbError} />}
+              schedule={isRoundTimeTrial ? roundsView : <ScheduleTab matches={matches} loading={matchesLoading} error={matchesError} sportLabel={sport.sport?.replace(/_/g, " ") ?? "Sport"} />}
+              registration={<RegistrationTab
+                sport={sport}
+                teamId={teamId}
+                teamCode={teamCode}
+                isCaptain={isCaptain}
+                isLoggedIn={isAuthenticated}
+                existingRegs={existingRegs}
+                busyReg={busyReg}
+                regError={regError}
+                eligibility={eligibility}
+                teamMembers={teamMembers}
+                onRegister={handleRegister}
+                onCancel={handleCancel}
+                onManageLineup={(id) => setActiveRegId(id)}
+                onDismissError={() => setRegError(null)}
+                onRequireLogin={requireLogin} />}
+              lineup={<LineupTab
+                sport={sport}
+                existingRegs={existingRegs}
+                activeRegId={activeRegId || (existingRegs[0] ? regId(existingRegs[0]) : "")}
+                setActiveRegId={setActiveRegId}
+                isCaptain={isCaptain}
+                isLoggedIn={isAuthenticated}
+                teamMembers={teamMembers}
+                lineupsMap={lineupsMap}
+                lineupLoading={lineupLoading}
+                lineupError={lineupError}
+                onFetch={handleFetchLineup}
+                onAdd={handleAddMember}
+                onRemove={handleRemoveMember}
+                onRequireLogin={requireLogin} />} isLoggedIn={false}        />
           );
         })()}
       </div>
