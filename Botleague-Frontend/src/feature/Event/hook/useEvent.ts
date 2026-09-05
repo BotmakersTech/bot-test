@@ -340,93 +340,90 @@ const memberships = useAppSelector(
     },
     []
   );
+// ======================================================
+// REGISTER TEAM
+// ======================================================
 
-  // ======================================================
-  // REGISTER TEAM
-  // ======================================================
+const registerTeam = useCallback(
+  async (
+    request: RegisterTeamRequest
+  ): Promise<EventRegistrationResponse | null> => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  const registerTeam = useCallback(
-    async (
-      request: RegisterTeamRequest
-    ): Promise<EventRegistrationResponse | null> => {
-      try {
-        setLoading(true);
-        setError(null);
+      const response = await registerTeamToEvent(request);
+      console.log("registerTeam response:", response); // ✅ added here
 
-        return await registerTeamToEvent(
-          request
-        );
-      } catch (err: any) {
-        setError(
-          err?.response?.data?.error ??
-            err?.message ??
-            "Failed to register team."
-        );
+      return response;
+    } catch (err: any) {
+      console.error("registerTeam error:", err); // ✅ added here
+      setError(
+        err?.response?.data?.error ??
+          err?.message ??
+          "Failed to register team."
+      );
 
-        return null;
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  },
+  []
+);
 
-  // ======================================================
-  // FETCH TEAM REGISTRATIONS
-  // ======================================================
+// ======================================================
+// FETCH TEAM REGISTRATIONS
+// ======================================================
 
-  const fetchTeamRegistrations =
-    useCallback(async (teamId: string) => {
-      const version = ++fetchRegVersionRef.current;
-      try {
-        setLoading(true);
-        setError(null);
+const fetchTeamRegistrations = useCallback(async (teamId: string) => {
+  const version = ++fetchRegVersionRef.current;
+  try {
+    setLoading(true);
+    setError(null);
 
-        const response =
-          await getTeamRegistrations(teamId);
+    const response = await getTeamRegistrations(teamId);
+    console.log("fetchTeamRegistrations response:", response); // ✅ fixed label
 
-        // Discard if a newer call has already started (cancel → re-fetch race)
-        if (version !== fetchRegVersionRef.current) return;
+    if (version !== fetchRegVersionRef.current) return;
+    setRegistrations(response);
+  } catch (err: any) {
+    if (version !== fetchRegVersionRef.current) return;
+    console.error("fetchTeamRegistrations error:", err);
+    setError(
+      err?.response?.data?.error ??
+        err?.message ??
+        "Failed to fetch registrations."
+    );
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
-        setRegistrations(response);
-      } catch (err: any) {
-        if (version !== fetchRegVersionRef.current) return;
-        setError(
-          err?.response?.data?.error ??
-            err?.message ??
-            "Failed to fetch registrations."
-        );
-      } finally {
-        setLoading(false);
-      }
-    }, []);
+// ======================================================
+// FETCH EVENT SPORT REGISTRATIONS
+// ======================================================
 
-  // ======================================================
-  // FETCH EVENT SPORT REGISTRATIONS
-  // ======================================================
+const fetchEventSportRegistrations = useCallback(async (eventSportId: string) => {
+  try {
+    setLoading(true);
+    setError(null);
 
-  const fetchEventSportRegistrations =
-    useCallback(async (eventSportId: string) => {
-      try {
-        setLoading(true);
-        setError(null);
+    const response = await getEventSportRegistrations(eventSportId);
+    console.log("fetchEventSportRegistrations response:", response); // ✅ fixed label
 
-        const response =
-          await getEventSportRegistrations(
-            eventSportId
-          );
-
-        setRegistrations(response);
-      } catch (err: any) {
-        setError(
-          err?.response?.data?.error ??
-            err?.message ??
-            "Failed to fetch registrations."
-        );
-      } finally {
-        setLoading(false);
-      }
-    }, []);
+    setRegistrations(response);
+  } catch (err: any) {
+    console.error("fetchEventSportRegistrations error:", err);
+    setError(
+      err?.response?.data?.error ??
+        err?.message ??
+        "Failed to fetch registrations."
+    );
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   // ======================================================
   // CANCEL REGISTRATION

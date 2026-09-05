@@ -1,7 +1,7 @@
-import { CalendarDays, MapPin, Building2, Layers, Navigation } from "lucide-react";
+import { CalendarDays, MapPin, Building2, Layers } from "lucide-react";
 import type { ComponentType } from "react";
 import type { EventResponse } from "../../api/event.api";
-import { directionsHref, viewOnMapHref } from "../../../../shared/utils/maps";
+import { viewOnMapHref } from "../../../../shared/utils/maps";
 
 interface EventInfoGridProps {
   event: EventResponse;
@@ -36,9 +36,10 @@ function venueLabel(event: EventResponse): string {
  * disappears when data is missing reads as broken, a placeholder reads as
  * "not set yet" and keeps the 2x2 grid stable.
  *
- * When the event has a location (a saved Google Maps link, or enough of an
- * address to build one) a directions link + a "view on map" link are shown
- * under the grid.
+ * "View on map" reuses the exact same bordered "sport-stat" card styling
+ * (border, icon, font) as the grid above, centered directly beneath it with
+ * no extra vertical gap, when the event has a saved Google Maps link or
+ * enough of an address to build one.
  */
 export default function EventInfoGrid({ event, sportsCount }: EventInfoGridProps) {
   const items: InfoItem[] = [
@@ -48,7 +49,6 @@ export default function EventInfoGrid({ event, sportsCount }: EventInfoGridProps
     { icon: Layers, label: "Techsports Offered", value: sportsCount > 0 ? `${sportsCount} techsport${sportsCount !== 1 ? "s" : ""}` : "—" },
   ];
 
-  const dir = directionsHref({ mapUrl: event.mapUrl, venueName: event.venueName, city: event.city, state: event.state, country: event.country });
   const view = event.mapUrl || viewOnMapHref({ mapUrl: event.mapUrl, venueName: event.venueName, city: event.city, state: event.state, country: event.country });
 
   return (
@@ -65,28 +65,33 @@ export default function EventInfoGrid({ event, sportsCount }: EventInfoGridProps
         ))}
       </div>
 
-      {(dir || view) && (
-        <div style={{ display: "flex", gap: 18, flexWrap: "wrap", marginTop: 16 }}>
-          {dir && (
-            <a
-              href={dir}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#0162D1", fontWeight: 700, textDecoration: "none" }}
-            >
-              <Navigation size={15} /> Get Directions
-            </a>
-          )}
-          {view && view !== dir && (
-            <a
-              href={view}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#0162D1", fontWeight: 500, textDecoration: "none" }}
-            >
-              <MapPin size={15} /> View on map
-            </a>
-          )}
+      {view && (
+        <div style={{ display: "flex", justifyContent: "center", paddingTop: "10px" }}>
+          <a
+            href={view}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sport-stat"
+            style={{ textDecoration: "none", color: "#0162D1" }}
+          >
+            <MapPin size={20} />
+            <div>
+              <div
+                className="sport-stat-value"
+                style={{
+                  fontFamily: "Inter, sans-serif",
+                  fontSize: "19px",
+                  fontWeight: 700,
+                  color: "#111111",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                View on map
+              </div>
+            </div>
+          </a>
         </div>
       )}
     </section>
