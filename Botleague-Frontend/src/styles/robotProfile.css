@@ -199,6 +199,39 @@
   bottom: -28px;
 }
 
+/* UserPublicPage.tsx — a person who hasn't set an avatar gets their initials
+   in the slot the robot page fills with artwork, so the hero's middle column
+   never collapses to empty space. A disc rather than the artwork's full
+   rectangle, so the "B" watermark it floats over still reads around it —
+   the robot and avatar PNGs are transparent and let it through, a solid
+   fallback card would not. */
+.rprofile-avatar-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 232px;
+  height: 232px;
+  bottom: auto;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: linear-gradient(160deg, #4c8ee7, #8c6cff);
+  color: #ffffff;
+  font-family: "Orbitron", "Inter", system-ui, sans-serif;
+  font-size: 74px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+/* The 1180px breakpoint re-centres .rprofile-avatar with translateX(-50%);
+   the disc needs both axes, which that rule's transform would otherwise
+   overwrite. */
+@media (max-width: 1180px) {
+  .rprofile-avatar-initials {
+    transform: translate(-50%, -50%);
+  }
+}
+
 .rprofile-outline-star {
   position: absolute;
   width: 106px;
@@ -656,6 +689,19 @@
   border-radius: 10px;
 }
 
+/* MobileUserProfile.tsx — mobile counterpart of .rprofile-avatar-initials. */
+.mrp-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #0162d1, #8c6cff);
+  color: #ffffff;
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: clamp(26px, 7vw, 44px);
+  letter-spacing: 1px;
+}
+
 .mrp-brand-letter {
   position: absolute;
   right: clamp(-40px, -8.4vw, -22px);
@@ -756,6 +802,13 @@
 .mrp-col-points { flex: 0 0 23%; }
 .mrp-col-sport { flex: 0 0 24%; }
 .mrp-col-position { flex: 0 0 26%; }
+
+/* MobileUserProfile.tsx holds different facts in the same four slots — named
+   for what they carry there rather than reusing the robot table's names. */
+.mup-col-tournament { flex: 0 0 27%; }
+.mup-col-team { flex: 0 0 23%; }
+.mup-col-role { flex: 0 0 24%; }
+.mup-col-position { flex: 0 0 26%; }
 
 .mrp-record-row {
   box-sizing: border-box;
