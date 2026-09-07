@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, Clock3, XCircle, TrendingUp } from "lucide-react";
+import { CheckCircle2, Clock3, XCircle, TrendingUp, Trophy } from "lucide-react";
 import type { EventLeaderboard } from "../../../Rankings/api/rankings.api";
 import { useRaceRounds } from "../../../../feature/RaceRounds/hooks/useRaceRounds";
-import type { RoundParticipantStatus } from "../../../../feature/RaceRounds/api/raceRounds.api";
+import type { RoundEntryDTO, RoundParticipantStatus } from "../../../../feature/RaceRounds/api/raceRounds.api";
 
 interface LeaderboardTabProps {
   leaderboard: EventLeaderboard | null;
@@ -39,43 +39,64 @@ const STATUS_META: Record<RoundParticipantStatus, { text: string; className: str
   FINISHED: { text: "Finished", className: "finished", icon: CheckCircle2 },
 };
 
+/** One robot's time for one round — "—" if it never ran that round, "DNF" if it started but didn't finish. */
+function RoundTimeCell({ entry }: { entry?: RoundEntryDTO }) {
+  if (!entry) return <span className="lb-round-value muted">—</span>;
+  if (entry.dnf) return <span className="lb-round-value dnf">DNF</span>;
+  return <span className="lb-round-value">{formatMillis(entry.timeMillis)}</span>;
+}
+
 export default function LeaderboardTab({ leaderboard, loading, error }: LeaderboardTabProps) {
   const navigate = useNavigate();
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const { rounds } = useRaceRounds(leaderboard?.eventSportId ?? "");
 
-  // Build a per-robot lookup of best (fastest) recorded time and its most
-  // recent round status, joined by robot/team name — RoundEntryDTO has no
-  // robotId to match against LeaderboardEntry.robotId, so name is the only
-  // shared key available across both DTOs.
-  const timeByRobot = useMemo(() => {
-    const map = new Map<string, { timeMillis: number | null; status: RoundParticipantStatus; roundNumber: number }>();
+  // Round numbers this techsport actually has, oldest first (Round 1 leftmost)
+  // — empty for a non-time-trial sport, which just renders zero round columns.
+  const roundNumbers = useMemo(
+    () => Array.from(new Set(rounds.map((r) => r.roundNumber))).sort((a, b) => a - b),
+    [rounds]
+  );
+
+  // The round marked FINALIZED (if any) is the one whose ranking decides the
+  // event's actual winner — mirrors PublicRaceRoundsView's own "which round
+  // is the champion round" logic.
+  const finalRoundNumber = useMemo(
+    () => rounds.find((r) => r.status === "FINALIZED")?.roundNumber ?? null,
+    [rounds]
+  );
+
+  // Per-robot: every round's entry (for the per-round time columns), plus
+  // its rank in the final round specifically (for who actually won) and its
+  // most recent status (for the Status column). RoundEntryDTO carries no
+  // robotId to match against LeaderboardEntry.robotId, so normalized
+  // robot/team name is the only join key available across both DTOs.
+  const dataByRobot = useMemo(() => {
+    const map = new Map<
+      string,
+      { roundTimes: Map<number, RoundEntryDTO>; latestStatus: RoundParticipantStatus | null; latestRound: number; finalRank: number | null }
+    >();
     for (const round of rounds) {
       for (const entry of round.entries) {
         const key = normalize(entry.robotName) || normalize(entry.teamName);
         if (!key) continue;
-        const existing = map.get(key);
-        const hasBetterTime =
-          entry.timeMillis != null &&
-          (existing?.timeMillis == null || entry.timeMillis < existing.timeMillis);
-        const isMoreRecent = !existing || round.roundNumber >= existing.roundNumber;
-        if (hasBetterTime || (isMoreRecent && !existing)) {
-          map.set(key, {
-            timeMillis: hasBetterTime ? entry.timeMillis! : existing?.timeMillis ?? null,
-            status: entry.status,
-            roundNumber: round.roundNumber,
-          });
-        } else if (isMoreRecent) {
-          map.set(key, {
-            timeMillis: existing?.timeMillis ?? null,
-            status: entry.status,
-            roundNumber: round.roundNumber,
-          });
+        let rec = map.get(key);
+        if (!rec) {
+          rec = { roundTimes: new Map(), latestStatus: null, latestRound: -1, finalRank: null };
+          map.set(key, rec);
+        }
+        rec.roundTimes.set(round.roundNumber, entry);
+        if (round.roundNumber >= rec.latestRound) {
+          rec.latestRound = round.roundNumber;
+          rec.latestStatus = entry.status;
+        }
+        if (finalRoundNumber != null && round.roundNumber === finalRoundNumber) {
+          rec.finalRank = entry.rankInRound ?? null;
         }
       }
     }
     return map;
-  }, [rounds]);
+  }, [rounds, finalRoundNumber]);
 
   if (loading) return <p style={{ textAlign: "center", padding: "40px 0" }}>Loading leaderboard…</p>;
   if (error) return <p style={{ textAlign: "center", padding: "40px 0", color: "#dc2626" }}>{error}</p>;
@@ -83,24 +104,34 @@ export default function LeaderboardTab({ leaderboard, loading, error }: Leaderbo
     return <p style={{ textAlign: "center", padding: "40px 0", color: "#666" }}>Standings will appear here once the bracket is generated.</p>;
   }
 
-  // Time decides who's leading: entries with a recorded race time are
-  // sorted fastest-first. Entries with no time yet keep their original
-  // leaderboard rank order and sink to the bottom.
-  const withTime = leaderboard.entries.map((entry) => {
+  const withRounds = leaderboard.entries.map((entry) => {
     const key = normalize(entry.robotName) || normalize(entry.teamName);
-    const match = timeByRobot.get(key);
-    return { entry, timeMillis: match?.timeMillis ?? null, status: match?.status ?? null };
+    const match = dataByRobot.get(key);
+    return {
+      entry,
+      roundTimes: match?.roundTimes ?? new Map<number, RoundEntryDTO>(),
+      status: match?.latestStatus ?? null,
+      finalRank: match?.finalRank ?? null,
+    };
   });
 
-  const ranked = [...withTime].sort((a, b) => {
-    if (a.timeMillis == null && b.timeMillis == null) return a.entry.rank - b.entry.rank;
-    if (a.timeMillis == null) return 1;
-    if (b.timeMillis == null) return -1;
-    return a.timeMillis - b.timeMillis;
+  // The final round's own ranking decides placement whenever one exists —
+  // that's the actual competition result. Entries that never reached the
+  // final round (eliminated earlier, or DNF) sink to the bottom, ordered by
+  // the leaderboard's own rank. Before any round is finalized, standings
+  // simply follow the leaderboard's rank order.
+  const ranked = [...withRounds].sort((a, b) => {
+    if (a.finalRank != null && b.finalRank != null) return a.finalRank - b.finalRank;
+    if (a.finalRank != null) return -1;
+    if (b.finalRank != null) return 1;
+    return a.entry.rank - b.entry.rank;
   });
 
   const visible = ranked.slice(0, visibleCount);
   const hasMore = visibleCount < ranked.length;
+
+  const roundColTemplate = roundNumbers.map(() => "minmax(84px, 100px)").join(" ");
+  const gridColumns = `64px minmax(0, 1.5fr) ${roundColTemplate}${roundNumbers.length ? " " : ""}minmax(0, 0.9fr) 130px 100px`;
 
   return (
     <div className="lb-page">
@@ -128,8 +159,7 @@ export default function LeaderboardTab({ leaderboard, loading, error }: Leaderbo
 
         .lb-heading {
           display: grid;
-          grid-template-columns: 64px minmax(0, 1.6fr) minmax(0, 0.9fr) minmax(0, 1fr) 130px 100px;
-          column-gap: 32px;
+          column-gap: 24px;
           align-items: center;
           padding: 24px 40px;
           background: linear-gradient(90deg, rgba(233,240,250,0.9), rgba(247,249,253,0.9));
@@ -148,8 +178,7 @@ export default function LeaderboardTab({ leaderboard, loading, error }: Leaderbo
 
         .lb-row {
           display: grid;
-          grid-template-columns: 64px minmax(0, 1.6fr) minmax(0, 0.9fr) minmax(0, 1fr) 130px 100px;
-          column-gap: 32px;
+          column-gap: 24px;
           align-items: center;
           padding: 26px 40px;
           border-bottom: 1px solid #e3e9f0;
@@ -170,11 +199,24 @@ export default function LeaderboardTab({ leaderboard, loading, error }: Leaderbo
           background: linear-gradient(90deg, rgba(255,246,225,0.95), rgba(250,253,255,1));
         }
 
-        .lb-rank {
+        .lb-rank { display: flex; align-items: center; }
+        .lb-medal {
+          width: 38px;
+          height: 38px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #eef1f6;
+          color: #5d6a7b;
           font-family: var(--lb-font-body);
-          font-size: 16px;
           font-weight: 700;
-          color: #263241;
+          font-size: 15px;
+          border-radius: 10px;
+        }
+        .lb-medal.gold {
+          background: linear-gradient(180deg, #e8a700, #c98600);
+          color: #fff;
+          box-shadow: 0 3px 8px rgba(201, 134, 0, 0.35);
         }
 
         .lb-robot {
@@ -199,6 +241,7 @@ export default function LeaderboardTab({ leaderboard, loading, error }: Leaderbo
           transition: transform 0.18s ease;
         }
         .lb-row:hover .lb-avatar { transform: scale(1.06); }
+        .lb-robot-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
         .lb-robot-name {
           font-family: var(--lb-font-body);
           font-size: clamp(14px, 1.6vw, 16px);
@@ -209,23 +252,34 @@ export default function LeaderboardTab({ leaderboard, loading, error }: Leaderbo
           white-space: nowrap;
         }
 
-        .lb-time {
-          font-family: var(--lb-font-body);
-          font-size: 14px;
-          font-weight: 700;
-          color: #263241;
-        }
-        .lb-time-label,
-        .lb-mobile-label {
-          display: none;
+        .lb-round-cell { display: flex; flex-direction: column; gap: 3px; }
+        .lb-round-cell .lb-time-label {
           font-family: var(--lb-font-body);
           color: #8b96a6;
           font-size: 9.5px;
           font-weight: 700;
           letter-spacing: 1px;
-          margin-bottom: 4px;
         }
-        .lb-time-label { display: block; }
+        .lb-round-value {
+          font-family: var(--lb-font-body);
+          font-size: 14px;
+          font-weight: 700;
+          color: #263241;
+        }
+        .lb-round-value.muted { color: #b8c0cc; font-weight: 600; }
+        .lb-round-value.dnf { color: #c2483f; }
+
+        /* Compact round-time chips — shown only under the robot name on
+           narrow screens, where a real column per round has no room. */
+        .lb-rounds-mobile { display: none; flex-wrap: wrap; gap: 6px 10px; margin-top: 2px; }
+        .lb-round-chip {
+          display: inline-flex;
+          align-items: baseline;
+          gap: 4px;
+          font-family: var(--lb-font-body);
+          font-size: 11.5px;
+        }
+        .lb-round-chip-label { color: #8b96a6; font-weight: 700; }
 
         .lb-status {
           font-family: var(--lb-font-body);
@@ -278,13 +332,8 @@ export default function LeaderboardTab({ leaderboard, loading, error }: Leaderbo
         .lb-profile-btn:active:not(:disabled) { transform: translateY(0); }
         .lb-profile-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .lb-point {
-          text-align: right;
-          font-family: var(--lb-font-body);
-          font-size: 16px;
-          font-weight: 700;
-          color: #263241;
-        }
+        .lb-point { text-align: right; font-family: var(--lb-font-body); font-size: 16px; font-weight: 700; color: #263241; }
+        .lb-point-label { display: none; }
 
         .lb-more {
           text-align: center;
@@ -302,70 +351,95 @@ export default function LeaderboardTab({ leaderboard, loading, error }: Leaderbo
 
         @media (max-width: 991.98px) {
           .lb-page { padding: 18px 16px 32px; }
-          .lb-heading, .lb-row {
-            grid-template-columns: 46px minmax(0,1.5fr) minmax(0,0.8fr) minmax(0,0.9fr) 108px 76px;
-            column-gap: 20px;
-            padding: 20px 26px;
-          }
+          .lb-heading, .lb-row { column-gap: 16px; padding: 20px 26px; }
         }
 
         @media (max-width: 767.98px) {
           .lb-page { padding: 0 12px 24px; }
           .lb-heading { display: none; }
           .lb-row {
-            grid-template-columns: 36px 1fr auto;
-            grid-template-areas:
-              "rank robot profile"
-              "rank time status"
-              "rank point point";
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
             row-gap: 12px;
             padding: 20px 20px;
           }
-          .lb-rank { grid-area: rank; align-self: start; }
-          .lb-robot { grid-area: robot; }
-          .lb-time { grid-area: time; }
-          .lb-status { grid-area: status; justify-self: end; align-items: flex-end; height: auto; }
-          .lb-view-cell { grid-area: profile; justify-self: end; align-items: flex-end; height: auto; }
+          .lb-round-cell { display: none; }
+          .lb-rounds-mobile { display: flex; }
+          .lb-rank { order: 1; }
+          .lb-robot { order: 2; flex: 1; min-width: 0; }
+          .lb-view-cell { order: 3; margin-left: auto; flex-direction: row; }
+          .lb-status { order: 4; flex-direction: row; gap: 6px; justify-content: flex-start; height: auto; width: 100%; }
+          .lb-point { order: 5; text-align: left; width: 100%; }
+          .lb-point::before { content: attr(data-label) ": "; color: #8b96a6; font-weight: 700; font-size: 11px; text-transform: uppercase; }
           .lb-profile-btn { padding: 7px 16px; }
-          .lb-point { grid-area: point; text-align: left; margin-top: 4px; }
           .lb-avatar { width: 32px; height: 32px; font-size: 11px; }
+          .lb-medal { width: 32px; height: 32px; font-size: 13px; }
           .lb-robot-name { font-size: 13.5px; }
-          .lb-mobile-label { display: block; }
         }
       `}</style>
 
       <div className="lb-card">
-        <div className="lb-heading">
+        <div className="lb-heading" style={{ gridTemplateColumns: gridColumns }}>
           <span>Rank</span>
           <span>Robot name</span>
-          <span>Time</span>
+          {roundNumbers.map((rn) => (
+            <span key={rn} className="lb-h-center">Round {rn}</span>
+          ))}
           <span className="lb-h-center">Status</span>
           <span className="lb-h-center">View</span>
           <span className="lb-h-right">Points</span>
         </div>
 
-        {visible.map(({ entry, timeMillis, status }, idx) => {
+        {visible.map(({ entry, roundTimes, status, finalRank }, idx) => {
           const displayRank = idx + 1;
-          const leading = displayRank === 1 && timeMillis != null;
+          // Only a genuine final-round win earns the trophy — never show it
+          // while standings are still provisional (rounds in progress).
+          const isChampion = displayRank === 1 && finalRoundNumber != null && finalRank === 1;
           const meta = status ? STATUS_META[status] : null;
           const StatusIcon = meta?.icon ?? Clock3;
 
           return (
-            <div className={`lb-row${leading ? " leading" : ""}`} key={`${entry.teamId}-${entry.robotId ?? entry.rank}`}>
-              <div className="lb-rank">{displayRank}</div>
+            <div
+              className={`lb-row${isChampion ? " leading" : ""}`}
+              key={`${entry.teamId}-${entry.robotId ?? entry.rank}`}
+              style={{ gridTemplateColumns: gridColumns }}
+            >
+              <div className="lb-rank">
+                {isChampion ? (
+                  <span className="lb-medal gold" title="Winner">
+                    <Trophy size={18} strokeWidth={2.3} />
+                  </span>
+                ) : (
+                  <span className="lb-medal">{displayRank}</span>
+                )}
+              </div>
 
               <div className="lb-robot">
                 <div className="lb-avatar">{initials(entry.robotName ?? entry.teamName)}</div>
-                <span className="lb-robot-name">{entry.robotName ?? entry.teamName ?? "—"}</span>
+                <div className="lb-robot-text">
+                  <span className="lb-robot-name">{entry.robotName ?? entry.teamName ?? "—"}</span>
+                  {roundNumbers.length > 0 && (
+                    <div className="lb-rounds-mobile">
+                      {roundNumbers.map((rn) => (
+                        <span className="lb-round-chip" key={rn}>
+                          <span className="lb-round-chip-label">R{rn}</span>
+                          <RoundTimeCell entry={roundTimes.get(rn)} />
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="lb-time">
-                <span className="lb-time-label">TIME</span>
-                {formatMillis(timeMillis)}
-              </div>
+              {roundNumbers.map((rn) => (
+                <div className="lb-round-cell" key={rn}>
+                  <span className="lb-time-label">ROUND {rn}</span>
+                  <RoundTimeCell entry={roundTimes.get(rn)} />
+                </div>
+              ))}
 
               <div className={`lb-status ${meta?.className ?? "progress"}`}>
-                <span className="lb-mobile-label">STATUS</span>
                 <span className="lb-status-value">
                   <StatusIcon size={14} strokeWidth={2.3} aria-hidden="true" />
                   {meta?.text ?? "Not started"}
@@ -373,7 +447,6 @@ export default function LeaderboardTab({ leaderboard, loading, error }: Leaderbo
               </div>
 
               <div className="lb-view-cell">
-                <span className="lb-mobile-label">VIEW</span>
                 <button
                   type="button"
                   className="lb-profile-btn"
@@ -384,7 +457,7 @@ export default function LeaderboardTab({ leaderboard, loading, error }: Leaderbo
                 </button>
               </div>
 
-              <div className="lb-point">{entry.pointsEarned}</div>
+              <div className="lb-point" data-label="Points">{entry.pointsEarned}</div>
             </div>
           );
         })}
