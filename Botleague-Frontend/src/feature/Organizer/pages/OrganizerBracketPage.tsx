@@ -916,16 +916,16 @@ export default function OrganizerBracketPage() {
               </div>
             ))}
           </div>
-          <button style={styles.regenBtn} onClick={printBracket} title="Print / save as PDF">
-            <Printer size={12} />
-            Print
-          </button>
           {!matches.some(m => m.status === "LIVE" || m.status === "COMPLETED") && (
             <button style={styles.regenBtn} onClick={() => setView("setup")}>
               <RefreshCw size={12} />
               Regenerate
             </button>
           )}
+          <button style={styles.regenBtn} onClick={printBracket} title="Print / save as PDF">
+            <Printer size={12} />
+            Print
+          </button>
         </div>
       </div>
 

@@ -4,7 +4,7 @@ import { useSelector } from "react-redux"
 import {
   ArrowLeft, Users, Trophy, Calendar, CalendarRange, Swords, IndianRupee, Award, Bot,
   Edit2, X, Megaphone, FileEdit, PlayCircle, RefreshCw, CheckCircle2, XCircle, Lock, Unlock, Globe,
-  AlertTriangle, MessageCircle, Check, Ban, Clock, ChevronUp, ChevronDown, Printer,
+  AlertTriangle, MessageCircle, Check, Ban, Clock, ChevronUp, ChevronDown,
 } from "lucide-react"
 import { useOrganizerSportDetail } from "../hooks/useOrganizerSportDetail"
 import { useMatches } from "../../Admin/hooks/useMatches"
@@ -1271,15 +1271,28 @@ export default function OrganizerSportDetailPage() {
             <Megaphone size={13} /> Send Announcement
           </button>
 
-          {/* TOGGLE REGISTRATION BUTTON */}
+          {/* OPEN / CLOSE REGISTRATION — two explicit buttons instead of one
+              toggling label; each disabled when it's not a valid action for
+              the sport's current status (backend only supports flipping
+              from whatever the current state is). */}
           <button
             onClick={handleToggleRegistration}
-            disabled={registrationLoading}
-            className={`sdt-btn ${isOpen ? "sdt-btn-close" : "sdt-btn-open"}`}
+            disabled={registrationLoading || isOpen}
+            className="sdt-btn sdt-btn-open"
           >
-            {registrationLoading
+            {registrationLoading && !isOpen
               ? <><Spinner size={12} color="currentColor" />Updating…</>
-              : isOpen ? <><Lock size={13} />Close Registration</> : <><Unlock size={13} />Open Registration</>
+              : <><Unlock size={13} />Open Registration</>
+            }
+          </button>
+          <button
+            onClick={handleToggleRegistration}
+            disabled={registrationLoading || !isOpen}
+            className="sdt-btn sdt-btn-close"
+          >
+            {registrationLoading && isOpen
+              ? <><Spinner size={12} color="currentColor" />Updating…</>
+              : <><Lock size={13} />Close Registration</>
             }
           </button>
 
@@ -1316,7 +1329,7 @@ export default function OrganizerSportDetailPage() {
           </p>
         )}
 
-        {/* ── BRACKET / SCORING / RANKING / CERTIFICATES / PRINT ── */}
+        {/* ── BRACKET / SCORING / RANKING / CERTIFICATES ── */}
         <div className="sdt-action-row" style={{ marginTop: "16px" }}>
           {!isOpen && (
             <>
@@ -1333,9 +1346,6 @@ export default function OrganizerSportDetailPage() {
           )}
           <button onClick={() => navigate(`/organizer/certificates?eventSportId=${sportId}`)} className="sdt-action-btn sdt-action-update">
             <Award size={14} /> Certificates
-          </button>
-          <button onClick={() => window.print()} className="sdt-action-btn sdt-action-update">
-            <Printer size={14} /> Print
           </button>
         </div>
       </div>

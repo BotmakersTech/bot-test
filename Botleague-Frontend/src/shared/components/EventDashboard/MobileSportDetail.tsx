@@ -197,8 +197,11 @@ export default function MobileSportDetail({
         <button type="button" className="ssd-m-btn-outline-gradient" onClick={onEditSport}>
           <Edit2 size={13} /> Edit Sport
         </button>
-        <button type="button" className="ssd-m-btn-outline-gradient" onClick={onToggleRegistration} disabled={registrationLoading}>
-          {isOpen ? <Lock size={13} /> : <Unlock size={13} />} {registrationLoading ? "…" : isOpen ? "Close Reg" : "Open Reg"}
+        <button type="button" className="ssd-m-btn-outline-gradient" onClick={onToggleRegistration} disabled={registrationLoading || isOpen}>
+          <Unlock size={13} /> {registrationLoading && !isOpen ? "…" : "Open Reg"}
+        </button>
+        <button type="button" className="ssd-m-btn-outline-gradient" onClick={onToggleRegistration} disabled={registrationLoading || !isOpen}>
+          <Lock size={13} /> {registrationLoading && isOpen ? "…" : "Close Reg"}
         </button>
         {showPublish && onPublish && (
           <button type="button" className="ssd-m-btn-outline-gradient" onClick={onPublish} disabled={publishing}>

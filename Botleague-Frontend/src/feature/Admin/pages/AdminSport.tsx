@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import {
   ArrowLeft, Users, Trophy, Calendar, CalendarRange, Swords, IndianRupee, Award, Bot,
   Edit2, X, FileEdit, PlayCircle, RefreshCw, CheckCircle2, XCircle, Lock, Unlock, Globe, MessageCircle,
-  AlertTriangle, ChevronUp, ChevronDown, Printer,
+  AlertTriangle, ChevronUp, ChevronDown,
 } from "lucide-react"
 import { useAdminEvents } from "../hooks/UseAdminEvent"
 import { useMatches } from "../hooks/useMatches"
@@ -1025,15 +1025,28 @@ export default function AdminSport() {
             <Edit2 size={13} /> Edit Sport
           </button>
 
-          {/* TOGGLE REGISTRATION BUTTON */}
+          {/* OPEN / CLOSE REGISTRATION — two explicit buttons instead of one
+              toggling label; each disabled when it's not a valid action for
+              the sport's current status (backend only supports flipping
+              from whatever the current state is). */}
           <button
             onClick={handleToggleRegistration}
-            disabled={registrationLoading}
-            className={`sdt-btn ${isOpen ? "sdt-btn-close" : "sdt-btn-open"}`}
+            disabled={registrationLoading || isOpen}
+            className="sdt-btn sdt-btn-open"
           >
-            {registrationLoading
+            {registrationLoading && !isOpen
               ? <><Spinner size={12} color="currentColor" />Updating…</>
-              : isOpen ? <><Lock size={13} />Close Registration</> : <><Unlock size={13} />Open Registration</>
+              : <><Unlock size={13} />Open Registration</>
+            }
+          </button>
+          <button
+            onClick={handleToggleRegistration}
+            disabled={registrationLoading || !isOpen}
+            className="sdt-btn sdt-btn-close"
+          >
+            {registrationLoading && isOpen
+              ? <><Spinner size={12} color="currentColor" />Updating…</>
+              : <><Lock size={13} />Close Registration</>
             }
           </button>
 
@@ -1068,7 +1081,7 @@ export default function AdminSport() {
           </p>
         )}
 
-        {/* ── BRACKET / SCORING / RANKING / CERTIFICATES / PRINT ── */}
+        {/* ── BRACKET / SCORING / RANKING / CERTIFICATES ── */}
         <div className="sdt-action-row" style={{ marginTop: "16px" }}>
           {!isOpen && (
             <>
@@ -1085,9 +1098,6 @@ export default function AdminSport() {
           )}
           <button onClick={() => navigate(`/admin/certificates?eventSportId=${sportId}`)} className="sdt-action-btn sdt-action-update">
             <Award size={14} /> Certificates
-          </button>
-          <button onClick={() => window.print()} className="sdt-action-btn sdt-action-update">
-            <Printer size={14} /> Print
           </button>
         </div>
       </div>
