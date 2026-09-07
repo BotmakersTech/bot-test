@@ -943,8 +943,13 @@ public class SportRegistrationService {
         Map.entry("LINE_FOLLOWER_AUTO",  Set.of("LINE_FOLLOWER", "LINE_FOLLOWER_AUTO")),
         Map.entry("MANUAL_TASK",         Set.of("MANUAL_TASK")),
         Map.entry("THEME_BASED_TASKING", Set.of("THEME_BASED_TASKING", "THEME_BASED_TASKING_OPEN")),
-        Map.entry("DRONE_RACING",        Set.of("DRONE_RACING_FPV", "DRONE_RACING_SOCCER")),
-        Map.entry("DRONE_SOCCER",        Set.of("DRONE_RACING_SOCCER")),
+        // "DRONE_RACING_FPV"/"DRONE_RACING_SOCCER" were the old per-league event
+        // sport names from before the catalog migration; the catalog's actual
+        // sport row is "Drone Soccer" (see V27__catalog_seed_data.sql), which
+        // normalizes to DRONE_SOCCER — without it every Drone Soccer robot
+        // failed this check against a real "Drone Soccer" competition.
+        Map.entry("DRONE_RACING",        Set.of("DRONE_RACING_FPV", "DRONE_RACING_SOCCER", "DRONE_SOCCER")),
+        Map.entry("DRONE_SOCCER",        Set.of("DRONE_RACING_SOCCER", "DRONE_SOCCER")),
         // "RC_ROBO_RACING"/"RC_RACING_NITRO" are legacy pre-catalog sport
         // names kept for backward compatibility; the catalog's actual sport
         // row is "RC Racing Car" (see V27__catalog_seed_data.sql), which
