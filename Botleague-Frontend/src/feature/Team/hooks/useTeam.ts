@@ -88,6 +88,10 @@ export default function useTeam() {
     useState("");
 
 
+  const [pincode, setPincode] =
+    useState("");
+
+
   const [status, setStatus] =
     useState("");
 
@@ -130,6 +134,7 @@ export default function useTeam() {
         setCity("");
         setState("");
         setCountry("");
+        setPincode("");
         setStatus("NO_TEAM");
 
         dispatch(clearTeam());
@@ -165,6 +170,10 @@ export default function useTeam() {
 
       setCountry(
         data.country || ""
+      );
+
+      setPincode(
+        data.pincode || ""
       );
 
       setStatus(
@@ -438,6 +447,7 @@ dispatch(
         city?: string;
         state?: string;
         country?: string;
+        pincode?: string;
       }
     ) => {
 
@@ -472,6 +482,10 @@ dispatch(
           country:
             payload?.country ??
             country,
+
+          pincode:
+            payload?.pincode ??
+            pincode,
         });
 
         await loadTeam();
@@ -532,6 +546,8 @@ dispatch(
         setState("");
 
         setCountry("");
+
+        setPincode("");
 
         setStatus("");
 
@@ -601,6 +617,9 @@ dispatch(
 
     country,
     setCountry,
+
+    pincode,
+    setPincode,
 
     status,
 

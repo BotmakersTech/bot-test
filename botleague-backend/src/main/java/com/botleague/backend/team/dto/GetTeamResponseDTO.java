@@ -18,6 +18,7 @@ public class GetTeamResponseDTO {
     private String city;
     private String state;
     private String country;
+    private String pincode;
     private String status;
 
     
@@ -92,6 +93,14 @@ public class GetTeamResponseDTO {
 
     public void setCountry(String country) {
         this.country = country;
+    }
+
+    public String getPincode() {
+        return pincode;
+    }
+
+    public void setPincode(String pincode) {
+        this.pincode = pincode;
     }
 
     public String getStatus() {

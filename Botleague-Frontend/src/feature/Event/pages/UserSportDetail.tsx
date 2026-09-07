@@ -255,6 +255,7 @@ export default function UserSportDetail() {
           return (
         <TournamentTabs
               isRegistered={existingRegs.length > 0}
+              isLoggedIn={isAuthenticated}
               matches={isRoundTimeTrial ? roundsView : <MatchesTab matches={matches} loading={matchesLoading} error={matchesError} />}
               rankings={<LeaderboardTab leaderboard={leaderboard} loading={lbLoading} error={lbError} />}
               schedule={isRoundTimeTrial ? roundsView : <ScheduleTab matches={matches} loading={matchesLoading} error={matchesError} sportLabel={sport.sport?.replace(/_/g, " ") ?? "Sport"} />}
@@ -288,7 +289,8 @@ export default function UserSportDetail() {
                 onFetch={handleFetchLineup}
                 onAdd={handleAddMember}
                 onRemove={handleRemoveMember}
-                onRequireLogin={requireLogin} />} isLoggedIn={false}        />
+                onRequireLogin={requireLogin} />}
+        />
           );
         })()}
       </div>

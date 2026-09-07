@@ -125,6 +125,7 @@ public class TeamService {
         team.setCity(request.getCity());
         team.setState(request.getState());
         team.setCountry(request.getCountry());
+        team.setPincode(request.getPincode());
         team.setCreatedBy(userId);
         team.setStatus("PENDING");
         teamRepository.save(team);
@@ -195,6 +196,9 @@ public class TeamService {
         if (request.getCountry() != null) {
             team.setCountry(request.getCountry());
         }
+        if (request.getPincode() != null) {
+            team.setPincode(request.getPincode());
+        }
 
         teamRepository.save(team);
 
@@ -206,6 +210,7 @@ public class TeamService {
         response.setCity(team.getCity());
         response.setState(team.getState());
         response.setCountry(team.getCountry());
+        response.setPincode(team.getPincode());
         response.setStatus(team.getStatus());
 
         return response;
@@ -249,6 +254,7 @@ public class TeamService {
         response.setCity(team.getCity());
         response.setState(team.getState());
         response.setCountry(team.getCountry());
+        response.setPincode(team.getPincode());
         response.setStatus(team.getStatus());
 
         return response;
@@ -347,6 +353,7 @@ public class TeamService {
             response.setCity(null);
             response.setState(null);
             response.setCountry(null);
+            response.setPincode(null);
             response.setStatus("NO_TEAM");
 
             return response;
@@ -380,6 +387,7 @@ public class TeamService {
         response.setCity(team.getCity());
         response.setState(team.getState());
         response.setCountry(team.getCountry());
+        response.setPincode(team.getPincode());
         response.setStatus(team.getStatus());
 
         return response;

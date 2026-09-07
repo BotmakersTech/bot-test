@@ -39,6 +39,9 @@ public class Team {
     private String state;
     private String country;
 
+    @Column(name = "pincode", length = 20)
+    private String pincode;
+
     @Column(nullable = false)
     private String status;   // PENDING / ACTIVE / REJECTED
 
@@ -81,6 +84,9 @@ public class Team {
 
     public String getCountry() { return country; }
     public void setCountry(String country) { this.country = country; }
+
+    public String getPincode() { return pincode; }
+    public void setPincode(String pincode) { this.pincode = pincode; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

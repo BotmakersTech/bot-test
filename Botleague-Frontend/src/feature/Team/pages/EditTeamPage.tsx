@@ -183,9 +183,6 @@ export default function EditTeamPage() {
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState("");
-  // Not backed by the team API yet — kept local so the field still matches
-  // the mockup visually without silently pretending it persists.
-  const [pinCode, setPinCode] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -205,6 +202,7 @@ export default function EditTeamPage() {
         city: t.city,
         state: t.state,
         country: t.country || "India",
+        pincode: t.pincode,
       });
       if (logoFile && t.team?.id) {
         await uploadTeamLogo(t.team.id, logoFile);
@@ -380,8 +378,8 @@ export default function EditTeamPage() {
                     type="text"
                     id="pin"
                     placeholder="e.g. 411001"
-                    value={pinCode}
-                    onChange={(e) => setPinCode(e.target.value)}
+                    value={t.pincode}
+                    onChange={(e) => t.setPincode(e.target.value)}
                     className="etm-field-input"
                   />
                 </div>

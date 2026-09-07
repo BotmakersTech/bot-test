@@ -1,4 +1,3 @@
-import { useState } from "react";
 import useCreateTeam from "../hooks/useCreateTeam";
 import LocationSelects from "../../../../shared/components/LocationSelects";
 import ProfileIncompleteModal from "../../../../shared/components/ProfileIncompleteModal";
@@ -68,9 +67,6 @@ export default function CreateTeamForm() {
   } = useCreateTeam();
 
   const isNameConflict = error?.toLowerCase().includes("team name") ?? false;
-  // Not backed by the team API yet — kept local so the field still matches
-  // the mockup visually without silently pretending it persists.
-  const [pinCode, setPinCode] = useState("");
 
   return (
     <div className="etm-page min-h-screen">
@@ -181,8 +177,8 @@ export default function CreateTeamForm() {
                     <label className="etm-field-label block mb-2">PIN CODE</label>
                     <input
                       type="text"
-                      value={pinCode}
-                      onChange={(e) => setPinCode(e.target.value)}
+                      value={form.pincode || ""}
+                      onChange={(e) => setField("pincode", e.target.value)}
                       placeholder="e.g. 411001"
                       className="etm-field-input"
                     />

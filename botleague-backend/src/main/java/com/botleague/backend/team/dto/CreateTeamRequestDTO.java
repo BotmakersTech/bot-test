@@ -27,6 +27,9 @@ public class CreateTeamRequestDTO {
     @Size(max = 100, message = "Country must be at most 100 characters")
     private String country;
 
+    @Size(max = 20, message = "Pin code must be at most 20 characters")
+    private String pincode;
+
     public CreateTeamRequestDTO() {}
 
     public String getTeamName() {
@@ -83,5 +86,13 @@ public class CreateTeamRequestDTO {
 
     public void setCountry(String country) {
         this.country = country;
+    }
+
+    public String getPincode() {
+        return pincode;
+    }
+
+    public void setPincode(String pincode) {
+        this.pincode = pincode;
     }
 }

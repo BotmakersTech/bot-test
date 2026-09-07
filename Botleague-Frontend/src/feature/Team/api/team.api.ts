@@ -18,6 +18,7 @@ export interface CreateTeamPayload {
   city?: string;
   state?: string;
   country?: string;
+  pincode?: string;
 }
 
 export interface TeamResponse {
@@ -36,6 +37,7 @@ export interface TeamResponse {
   city?: string;
   state?: string;
   country?: string;
+  pincode?: string;
 
   memberRole?: string;
 

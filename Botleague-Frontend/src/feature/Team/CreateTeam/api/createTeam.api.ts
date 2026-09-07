@@ -11,6 +11,7 @@ export interface CreateTeamPayload {
   city?: string;
   state?: string;
   country?: string;
+  pincode?: string;
 }
 
 export interface CreateTeamResponse {
