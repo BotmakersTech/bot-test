@@ -69,7 +69,16 @@
   color: #1fa952;
 }
 
-.memmgmt-role-pill {
+.memmgmt-pill-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.memmgmt-role-pill,
+.memmgmt-league-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -80,8 +89,17 @@
   font-weight: 800;
   border: 1.5px solid;
   width: fit-content;
-  margin-top: 4px;
   letter-spacing: 0.3px;
+  text-transform: none;
+}
+
+/* The league a member's age currently qualifies them for (Ignite / Inferno /
+ * Apex) — informational, not an assignable state like the role pill next to
+ * it, so it gets its own neutral teal rather than reusing any role color. */
+.memmgmt-league-pill {
+  color: #0e8f8a;
+  border-color: #0e8f8a;
+  background: rgba(14, 143, 138, 0.08);
 }
 
 .memmgmt-role-pill.captain {

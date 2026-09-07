@@ -37,6 +37,8 @@ export interface MobileMemberManagementRow {
   photoSrc: string | null;
   roleLabel: string;
   roleClass: string;
+  /** League (Ignite/Inferno/Apex) this member's age currently qualifies them for — "—" if unknown. */
+  league: string;
   featured: boolean;
 
   showActions: boolean;
@@ -200,8 +202,9 @@ export default function MobileMemberManagement({
                 <span className="mmm-member-avatar">{m.initials}</span>
               )}
               <p className="mmm-member-name">{m.name}</p>
-              <span className={`memmgmt-role-pill ${m.roleClass}`} style={{ marginLeft: "auto", marginTop: 0 }}>
-                {m.roleLabel}
+              <span className="memmgmt-pill-row" style={{ marginLeft: "auto", marginTop: 0 }}>
+                <span className={`memmgmt-role-pill ${m.roleClass}`}>{m.roleLabel}</span>
+                <span className="memmgmt-league-pill">{m.league}</span>
               </span>
             </div>
 

@@ -5,6 +5,8 @@ import { RefreshCw } from "lucide-react";
 import useTeam from "../../hooks/useTeam";
 import useTeamMembership from "../hooks/useTeamMembership";
 import { resolveAvatarSrc } from "../../../Profile/constants/avatars";
+import { ageCategoryFromDob } from "../../../../shared/utils/ageCategory";
+import { ageGroupLabel } from "../../../../shared/utils/ageGroup";
 import type { TeamMember, TeamRole } from "../api/teamMembership.api";
 import MobileMemberManagement, { type MobileMemberManagementRow } from "../components/MobileMemberManagement";
 import "../../../../styles/teamDashboard.css";
@@ -29,6 +31,13 @@ function memberInitials(name: string): string {
 
 function roleLabel(role?: TeamRole | string): string {
   return String(role ?? "").replace("_", " ");
+}
+
+/** The league (Ignite/Inferno/Apex) this member's age currently qualifies
+ * them for, derived from date of birth the same way techsport eligibility
+ * is — "—" when DOB isn't on file. */
+function eligibleLeague(member: TeamMember): string {
+  return ageGroupLabel(ageCategoryFromDob(member.dateOfBirth));
 }
 
 export default function MemberManagementPage() {
@@ -149,6 +158,7 @@ export default function MemberManagementPage() {
       photoSrc: resolveAvatarSrc(member.profilePhotoUrl),
       roleLabel: roleLabel(member.teamRole),
       roleClass: (member.teamRole || "").toLowerCase(),
+      league: eligibleLeague(member),
       featured: isTargetCaptain,
 
       showActions,
@@ -258,8 +268,11 @@ export default function MemberManagementPage() {
                     )}
                     <div className="teamdash-member-info">
                       <strong>{name}</strong>
-                      <span className={`memmgmt-role-pill ${(member.teamRole || "").toLowerCase()}`}>
-                        {roleLabel(member.teamRole)}
+                      <span className="memmgmt-pill-row">
+                        <span className={`memmgmt-role-pill ${(member.teamRole || "").toLowerCase()}`}>
+                          {roleLabel(member.teamRole)}
+                        </span>
+                        <span className="memmgmt-league-pill">{eligibleLeague(member)}</span>
                       </span>
                     </div>
 

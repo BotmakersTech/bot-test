@@ -493,6 +493,7 @@ function DevPreviewNOTIF() {
 // needed. Remove once the styling review is done.
 function DevPreviewMMM() {
   const baseRow = {
+    league: "Ignite",
     actionLoading: false,
     onChangeRole: () => {},
     confirmingRoleChange: false,
