@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams, useNavigate, useLocation } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 import RankingMatchesPanel from "../components/RankingMatchesPanel"
 import "../../../styles/organizerTheme.css"
@@ -10,16 +10,20 @@ const MUTED = "#6b7280"
 // page) rather than a third copy of score/result-editing UI — same
 // per-match Edit Score / Change Result actions, just without a leaderboard
 // above it since there's nothing to refresh here.
+// Shared by both /admin/.../update-score and /organizer/.../update-score —
+// back-nav derives from the current path instead of hardcoding /admin/.
 export default function AdminUpdateScorePage() {
-  const { eventId, sportId } = useParams<{ eventId: string; sportId: string }>()
+  const { sportId } = useParams<{ eventId: string; sportId: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
+  const backPath = location.pathname.replace(/\/update-score$/, "")
 
   return (
     <div className="org-page-bg p-8" style={{ minHeight: "100vh", color: "#111111" }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       <button
-        onClick={() => navigate(`/admin/events/${eventId}/sports/${sportId}`)}
+        onClick={() => navigate(backPath)}
         className="mb-4 flex items-center gap-1.5 text-sm font-semibold"
         style={{ color: MUTED }}
       >

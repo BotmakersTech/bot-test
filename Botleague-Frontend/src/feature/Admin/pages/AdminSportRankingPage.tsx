@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams, useNavigate, useLocation } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 import useLeaderboard from "../../Leaderboard/hook/useLeaderboard"
 import RankingsTab from "../../Leaderboard/components/Ranking"
@@ -7,9 +7,15 @@ import "../../../styles/organizerTheme.css"
 const TEXT = "#111111"
 const MUTED = "#6b7280"
 
+// Shared by both /admin/.../ranking and /organizer/.../ranking (same
+// component, SPORT_HEAD_AND_UP gate in both places) — back-nav derives
+// from the current path instead of hardcoding /admin/ so it works under
+// either prefix.
 export default function AdminSportRankingPage() {
   const { eventId, sportId } = useParams<{ eventId: string; sportId: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
+  const backPath = location.pathname.replace(/\/ranking$/, "")
 
   const { leaderboard, loading, error, refetch } = useLeaderboard(eventId ?? "", sportId ?? "")
 
@@ -18,7 +24,7 @@ export default function AdminSportRankingPage() {
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       <button
-        onClick={() => navigate(`/admin/events/${eventId}/sports/${sportId}`)}
+        onClick={() => navigate(backPath)}
         className="mb-4 flex items-center gap-1.5 text-sm font-semibold"
         style={{ color: MUTED }}
       >

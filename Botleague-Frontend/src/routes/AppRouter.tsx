@@ -823,6 +823,14 @@ function AppRoutes() {
           path="/organizer/events/:eventId/sports/:sportId/create-match"
           element={<RoleRoute roles={SPORT_HEAD_AND_UP}><OrganizerBracketDispatch /></RoleRoute>}
         />
+        <Route
+          path="/organizer/events/:eventId/sports/:sportId/ranking"
+          element={<RoleRoute roles={SPORT_HEAD_AND_UP}><AdminSportRankingPage /></RoleRoute>}
+        />
+        <Route
+          path="/organizer/events/:eventId/sports/:sportId/update-score"
+          element={<RoleRoute roles={SPORT_HEAD_AND_UP}><AdminUpdateScorePage /></RoleRoute>}
+        />
         <Route path="/organizer/sports"          element={<RoleRoute roles={EVENT_HEAD_AND_UP}><OrganizerSportsPage /></RoleRoute>} />
         <Route path="/organizer/matches"         element={<RoleRoute roles={SPORT_HEAD_AND_UP}><OrganizerMatchesPage /></RoleRoute>} />
         <Route path="/organizer/registrations"   element={<RoleRoute roles={SPORT_HEAD_AND_UP}><OrganizerRegistrationsPage /></RoleRoute>} />

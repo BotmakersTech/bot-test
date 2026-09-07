@@ -4,7 +4,7 @@ import { useSelector } from "react-redux"
 import {
   ArrowLeft, Users, Trophy, Calendar, CalendarRange, Swords, IndianRupee, Award, Bot,
   Edit2, X, Megaphone, FileEdit, PlayCircle, RefreshCw, CheckCircle2, XCircle, Lock, Unlock, Globe,
-  AlertTriangle, MessageCircle, Check, Ban, Clock, ChevronUp, ChevronDown,
+  AlertTriangle, MessageCircle, Check, Ban, Clock, ChevronUp, ChevronDown, Printer,
 } from "lucide-react"
 import { useOrganizerSportDetail } from "../hooks/useOrganizerSportDetail"
 import { useMatches } from "../../Admin/hooks/useMatches"
@@ -14,7 +14,7 @@ import {
   getSportChangeRequests, approveSportChangeRequest, rejectSportChangeRequest,
   updateRegistrationStatus,
 } from "../api/organizer.api"
-import { getPublicLeagueSports, toWeightClasses, type LeagueSport } from "../../../shared/api/catalog.api"
+import { getPublicLeagueSports, toWeightClasses, toScaleClasses, type LeagueSport } from "../../../shared/api/catalog.api"
 import { formatWeightClass, weightClassToKg } from "../../Robots/constants/weightClasses"
 import PrizeDistributionEditor from "../../../shared/components/PrizeDistributionEditor"
 import { constraintsFor } from "../../Event/utils/specPolicy"
@@ -157,7 +157,7 @@ function Spinner({ size = 16, color = ACCENT }: { size?: number; color?: string 
 
 function StatusPill({ status }: { status?: string }) {
   const MAP: Record<string, { cls: string; icon: React.ReactNode }> = {
-    PUBLISHED:           { cls: "is-published", icon: <Megaphone size={11} /> },
+    PUBLISHED:           { cls: "is-published", icon: <Globe size={11} /> },
     DRAFT:               { cls: "is-draft",     icon: <FileEdit size={11} /> },
     LIVE:                { cls: "is-live",      icon: <PlayCircle size={11} /> },
     ONGOING:             { cls: "is-live",      icon: <RefreshCw size={11} /> },
@@ -343,7 +343,7 @@ function TeamCard({
               alignItems: "center",
               gap: "3px",
             }}>
-              {open ? <><ChevronUp size={11} /> hide</> : <><ChevronDown size={11} /> lineup</>}
+              {open ? <><ChevronUp size={11} /> hide</> : <ChevronDown size={11} />}
             </span>
           )}
         </div>
@@ -364,20 +364,18 @@ function TeamCard({
               style={{
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                gap: "10px",
                 padding: "6px 10px",
                 background: "rgba(75,134,232,0.04)",
                 borderRadius: "7px"
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontSize: "0.65rem", color: MUTED, fontWeight: 700, width: "18px" }}>
-                  #{pi + 1}
-                </span>
-                <span style={{ fontSize: "0.82rem", fontWeight: 600, color: TEXT }}>
-                  {p.fullName}
-                </span>
-              </div>
+              <span style={{ fontSize: "0.65rem", color: MUTED, fontWeight: 700, width: "18px" }}>
+                #{pi + 1}
+              </span>
+              <span style={{ fontSize: "0.82rem", fontWeight: 600, color: TEXT }}>
+                {p.fullName}
+              </span>
               {p.role && (
                 <span style={{
                   background: "rgba(140,108,255,0.1)",
@@ -507,6 +505,18 @@ function EditSportModal({
 
   const setNum = (field: keyof EditForm, raw: string) =>
     set(field, raw === "" ? undefined : Number(raw))
+
+  // extraRulesList is tracked as a plain key/value array (see EditForm) so
+  // free-form catalog rules round-trip untouched — these two helpers give the
+  // Scale field below a normal "one value" interface over that list.
+  const getExtraRule = (key: string) => form.extraRulesList.find(r => r.key === key)?.value ?? ""
+  const setExtraRule = (key: string, value: string) =>
+    setForm(prev => {
+      const rest = prev.extraRulesList.filter(r => r.key !== key)
+      return { ...prev, extraRulesList: value ? [...rest, { key, value }] : rest }
+    })
+
+  const scaleOptions = catalogSpec ? toScaleClasses(catalogSpec) : []
 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -668,8 +678,8 @@ function EditSportModal({
             )
           })()}
 
-          {/* Row 3: Weight Class + Weight Limit (limit is derived from a numeric class) */}
-          {(() => {
+          {/* Row 3: Weight Class + Weight Limit (limit is derived from a numeric class) — only for weight-gated sports */}
+          {specs.weight && (() => {
             const wcs = Array.from(
               new Map(leagueSports.flatMap(s => toWeightClasses(s)).map(w => [w.value, w])).values()
             )
@@ -678,7 +688,7 @@ function EditSportModal({
             return (
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                 <div style={groupStyle}>
-                  <label style={labelStyle}>Weight Class{specs.weight ? "" : " (optional)"}</label>
+                  <label style={labelStyle}>Weight Class</label>
                   <select
                     style={inputStyle}
                     value={form.weightClass ?? ""}
@@ -697,28 +707,49 @@ function EditSportModal({
                   </select>
                 </div>
                 <div style={groupStyle}>
-                  <label style={labelStyle}>Weight Limit (kg){specs.weight ? "" : " (optional)"}</label>
+                  <label style={labelStyle}>Weight Limit (kg)</label>
                   {classKg != null ? (
                     <input type="text" readOnly style={{ ...inputStyle, background: "#f3f4f6", color: MUTED }} value={`${classKg} (from weight class)`} />
                   ) : (
-                    <input type="number" min={0} step="any" style={inputStyle} value={form.weightLimitKg ?? ""} onChange={e => setNum("weightLimitKg", e.target.value)} placeholder={specs.weight ? "e.g. 1.5" : "optional"} />
+                    <input type="number" min={0} step="any" style={inputStyle} value={form.weightLimitKg ?? ""} onChange={e => setNum("weightLimitKg", e.target.value)} placeholder="e.g. 1.5" />
                   )}
                 </div>
               </div>
             )
           })()}
 
-          {/* Row 5: Dimensions — the real constraint for some techsports, optional otherwise */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
-            {([["Max Length (cm)", "maxLengthCm"], ["Max Width (cm)", "maxWidthCm"], ["Max Height (cm)", "maxHeightCm"]] as const).map(([lbl, field]) => (
-              <div style={groupStyle} key={field}>
-                <label style={labelStyle}>{lbl}{specs.dimension ? "" : " (optional)"}</label>
-                <input type="number" min={0} style={inputStyle} value={form[field] ?? ""} placeholder={specs.dimension ? "" : "optional"} onChange={e => setNum(field, e.target.value)} />
-              </div>
-            ))}
-          </div>
+          {/* Row 5: Dimensions — only for dimension-gated sports */}
           {specs.dimension && (
-            <div style={{ fontSize: "0.72rem", color: MUTED, marginTop: -8 }}>Dimensions are this techsport's spec — pre-filled from the catalog, edit if this event differs.</div>
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
+                {([["Max Length (cm)", "maxLengthCm"], ["Max Width (cm)", "maxWidthCm"], ["Max Height (cm)", "maxHeightCm"]] as const).map(([lbl, field]) => (
+                  <div style={groupStyle} key={field}>
+                    <label style={labelStyle}>{lbl}</label>
+                    <input type="number" min={0} style={inputStyle} value={form[field] ?? ""} onChange={e => setNum(field, e.target.value)} />
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize: "0.72rem", color: MUTED, marginTop: -8 }}>Dimensions are this techsport's spec — pre-filled from the catalog, edit if this event differs.</div>
+            </>
+          )}
+
+          {/* Row 5b: Scale — only for scale-gated sports (RC Racing Car) */}
+          {specs.scale && (
+            <div style={groupStyle}>
+              <label style={labelStyle}>Scale</label>
+              {scaleOptions.length > 0 ? (
+                <select style={inputStyle} value={getExtraRule("scale")} onChange={e => setExtraRule("scale", e.target.value)}>
+                  <option value="">None</option>
+                  {!scaleOptions.some(s => s.value === getExtraRule("scale")) && getExtraRule("scale") && (
+                    <option value={getExtraRule("scale")}>{getExtraRule("scale")}</option>
+                  )}
+                  {scaleOptions.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                </select>
+              ) : (
+                <input type="text" style={inputStyle} value={getExtraRule("scale")} onChange={e => setExtraRule("scale", e.target.value)} placeholder="e.g. 1:8" />
+              )}
+              <span style={{ fontSize: "0.72rem", color: MUTED, marginTop: "4px" }}>This techsport's spec — a robot must be this scale to register.</span>
+            </div>
           )}
 
           {/* Row 6: Max team size */}
@@ -1268,6 +1299,7 @@ export default function OrganizerSportDetailPage() {
         {/* finalize feedback */}
         {finalizeMsg && (
           <div className={`sdt-banner ${finalizeOk ? "ok" : "error"}`}>
+            {finalizeOk ? <CheckCircle2 size={15} /> : <AlertTriangle size={15} />}
             {finalizeMsg}
           </div>
         )}
@@ -1283,13 +1315,36 @@ export default function OrganizerSportDetailPage() {
             {sport.sportsDescription}
           </p>
         )}
+
+        {/* ── BRACKET / SCORING / RANKING / CERTIFICATES / PRINT ── */}
+        <div className="sdt-action-row" style={{ marginTop: "16px" }}>
+          {!isOpen && (
+            <>
+              <button onClick={() => navigate(`${location.pathname}/create-match`)} className="sdt-action-btn sdt-action-create">
+                <Swords size={14} /> {hasMatches ? "Manage Matches" : "Create Match"}
+              </button>
+              <button onClick={() => navigate(`${location.pathname}/update-score`)} className="sdt-action-btn sdt-action-update">
+                <RefreshCw size={14} /> Update Score
+              </button>
+              <button onClick={() => navigate(`${location.pathname}/ranking`)} className="sdt-action-btn sdt-action-rank">
+                <Trophy size={14} /> Ranking
+              </button>
+            </>
+          )}
+          <button onClick={() => navigate(`/organizer/certificates?eventSportId=${sportId}`)} className="sdt-action-btn sdt-action-update">
+            <Award size={14} /> Certificates
+          </button>
+          <button onClick={() => window.print()} className="sdt-action-btn sdt-action-update">
+            <Printer size={14} /> Print
+          </button>
+        </div>
       </div>
 
       {/* ── STAT BOXES ── */}
       <div className="sdt-stat-row">
         <div className="sdt-stat-card">
           <span className="sdt-stat-icon"><Trophy size={20} /></span>
-          <div><div className="sdt-stat-value">{totalTeams}</div><div className="sdt-stat-label">Teams</div></div>
+          <div><div className="sdt-stat-value">{totalTeams}</div><div className="sdt-stat-label">Registrations</div></div>
         </div>
         <div className="sdt-stat-card">
           <span className="sdt-stat-icon"><Users size={20} /></span>
@@ -1319,7 +1374,7 @@ export default function OrganizerSportDetailPage() {
 
           {/* meta fields — real sport specs, styled in the fields-box treatment */}
           <div className="sdt-fields-box">
-            <Field label="League" value={sport.ageGroup ? ageGroupLabel(sport.ageGroup) : null} />
+            <Field label="Age Group" value={sport.ageGroup ? ageGroupLabel(sport.ageGroup) : null} />
             <Field label="Weight Class" value={sport.weightClass ? formatWeightClass(sport.weightClass) : null} />
             <Field
               label="Dimensions (L×W×H)"
@@ -1329,6 +1384,7 @@ export default function OrganizerSportDetailPage() {
                   : null
               }
             />
+            <Field label="Scale" value={sport.extraRules?.scale ?? null} />
             <Field label="Entry Fee" value={sport.entryFee != null ? formatCurrency(sport.entryFee) : null} />
             <Field label="Prize Pool" value={sport.prizeMoney != null ? formatCurrency(sport.prizeMoney) : null} />
           </div>
@@ -1365,18 +1421,6 @@ export default function OrganizerSportDetailPage() {
       {eventId && sportId && (
         <SupportContactManager mode="sport" eventId={eventId} sportId={sportId} />
       )}
-
-      {/* ── BRACKET / MATCHES / RANKING / CERTIFICATES ── */}
-      <div className="sdt-action-row">
-        {!isOpen && (
-          <button onClick={() => navigate(`${location.pathname}/create-match`)} className="sdt-action-btn sdt-action-create">
-            <Swords size={14} /> {hasMatches ? "Manage Matches" : "Create Match"}
-          </button>
-        )}
-        <button onClick={() => navigate(`/organizer/certificates?eventSportId=${sportId}`)} className="sdt-action-btn sdt-action-update">
-          <Award size={14} /> Certificates
-        </button>
-      </div>
 
       {/* ── REGISTERED TEAMS ── */}
       <div className="sdt-panel" style={{ marginBottom: 0 }}>
@@ -1450,6 +1494,8 @@ export default function OrganizerSportDetailPage() {
         registrationEndDate={sport.registrationEndDate ?? null}
         matchActions={[
           { label: hasMatches ? "Manage Matches" : "Create Match", onClick: () => navigate(`${location.pathname}/create-match`), variant: "solid" },
+          { label: "Update Score", onClick: () => navigate(`${location.pathname}/update-score`), variant: "outline" },
+          { label: "Ranking", onClick: () => navigate(`${location.pathname}/ranking`), variant: "solid" },
         ]}
         onCertificates={() => navigate(`/organizer/certificates?eventSportId=${sportId}`)}
         showPublish={isAdmin}
