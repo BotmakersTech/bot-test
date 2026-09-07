@@ -4,6 +4,7 @@ import { CheckCircle2, Clock3, XCircle, TrendingUp, Trophy } from "lucide-react"
 import type { EventLeaderboard } from "../../../Rankings/api/rankings.api";
 import { useRaceRounds } from "../../../../feature/RaceRounds/hooks/useRaceRounds";
 import type { RoundEntryDTO, RoundParticipantStatus } from "../../../../feature/RaceRounds/api/raceRounds.api";
+import { formatFor } from "../../utils/matchFormatPolicy";
 
 interface LeaderboardTabProps {
   leaderboard: EventLeaderboard | null;
@@ -104,6 +105,14 @@ export default function LeaderboardTab({ leaderboard, loading, error }: Leaderbo
     return <p style={{ textAlign: "center", padding: "40px 0", color: "#666" }}>Standings will appear here once the bracket is generated.</p>;
   }
 
+  // Match-based sports (Robo War, Robo Sumo, ...) run on the elimination
+  // bracket, not the round-wise time trial — there's no per-round time and
+  // "status" here would just be the meaningless placeholder "Not started"
+  // every entry gets before rounds ever apply to it. Only round-wise sports
+  // (Robo Race, RC Racing Car, Line Follower) get those columns; a bracket
+  // sport's leaderboard is just rank, robot, and points.
+  const isBracket = formatFor(leaderboard.sport) === "BRACKET";
+
   const withRounds = leaderboard.entries.map((entry) => {
     const key = normalize(entry.robotName) || normalize(entry.teamName);
     const match = dataByRobot.get(key);
@@ -115,23 +124,29 @@ export default function LeaderboardTab({ leaderboard, loading, error }: Leaderbo
     };
   });
 
-  // The final round's own ranking decides placement whenever one exists —
-  // that's the actual competition result. Entries that never reached the
-  // final round (eliminated earlier, or DNF) sink to the bottom, ordered by
-  // the leaderboard's own rank. Before any round is finalized, standings
-  // simply follow the leaderboard's rank order.
-  const ranked = [...withRounds].sort((a, b) => {
-    if (a.finalRank != null && b.finalRank != null) return a.finalRank - b.finalRank;
-    if (a.finalRank != null) return -1;
-    if (b.finalRank != null) return 1;
-    return a.entry.rank - b.entry.rank;
-  });
+  // Bracket sports already carry their real standing on entry.rank (the
+  // ranking engine's own output) — round/time data doesn't apply to them at
+  // all. Round-wise sports place by the final round's own ranking whenever
+  // one exists — that's the actual competition result; entries that never
+  // reached the final round (eliminated earlier, or DNF) sink to the bottom,
+  // ordered by the leaderboard's own rank. Before any round is finalized,
+  // standings simply follow the leaderboard's rank order.
+  const ranked = isBracket
+    ? [...withRounds].sort((a, b) => a.entry.rank - b.entry.rank)
+    : [...withRounds].sort((a, b) => {
+        if (a.finalRank != null && b.finalRank != null) return a.finalRank - b.finalRank;
+        if (a.finalRank != null) return -1;
+        if (b.finalRank != null) return 1;
+        return a.entry.rank - b.entry.rank;
+      });
 
   const visible = ranked.slice(0, visibleCount);
   const hasMore = visibleCount < ranked.length;
 
   const roundColTemplate = roundNumbers.map(() => "minmax(84px, 100px)").join(" ");
-  const gridColumns = `64px minmax(0, 1.5fr) ${roundColTemplate}${roundNumbers.length ? " " : ""}minmax(0, 0.9fr) 130px 100px`;
+  const gridColumns = isBracket
+    ? "64px minmax(0, 1.6fr) 120px"
+    : `64px minmax(0, 1.5fr) ${roundColTemplate}${roundNumbers.length ? " " : ""}minmax(0, 0.9fr) 130px 100px`;
 
   return (
     <div className="lb-page">
@@ -383,19 +398,20 @@ export default function LeaderboardTab({ leaderboard, loading, error }: Leaderbo
         <div className="lb-heading" style={{ gridTemplateColumns: gridColumns }}>
           <span>Rank</span>
           <span>Robot name</span>
-          {roundNumbers.map((rn) => (
+          {!isBracket && roundNumbers.map((rn) => (
             <span key={rn} className="lb-h-center">Round {rn}</span>
           ))}
-          <span className="lb-h-center">Status</span>
-          <span className="lb-h-center">View</span>
+          {!isBracket && <span className="lb-h-center">Status</span>}
+          {!isBracket && <span className="lb-h-center">View</span>}
           <span className="lb-h-right">Points</span>
         </div>
 
         {visible.map(({ entry, roundTimes, status, finalRank }, idx) => {
           const displayRank = idx + 1;
-          // Only a genuine final-round win earns the trophy — never show it
-          // while standings are still provisional (rounds in progress).
-          const isChampion = displayRank === 1 && finalRoundNumber != null && finalRank === 1;
+          // Only a genuine final result earns the trophy — never show it
+          // while standings are still provisional (bracket incomplete, or
+          // round-wise rounds still in progress).
+          const isChampion = displayRank === 1 && (isBracket ? leaderboard.isFinalized : finalRoundNumber != null && finalRank === 1);
           const meta = status ? STATUS_META[status] : null;
           const StatusIcon = meta?.icon ?? Clock3;
 
@@ -419,7 +435,7 @@ export default function LeaderboardTab({ leaderboard, loading, error }: Leaderbo
                 <div className="lb-avatar">{initials(entry.robotName ?? entry.teamName)}</div>
                 <div className="lb-robot-text">
                   <span className="lb-robot-name">{entry.robotName ?? entry.teamName ?? "—"}</span>
-                  {roundNumbers.length > 0 && (
+                  {!isBracket && roundNumbers.length > 0 && (
                     <div className="lb-rounds-mobile">
                       {roundNumbers.map((rn) => (
                         <span className="lb-round-chip" key={rn}>
@@ -432,30 +448,34 @@ export default function LeaderboardTab({ leaderboard, loading, error }: Leaderbo
                 </div>
               </div>
 
-              {roundNumbers.map((rn) => (
+              {!isBracket && roundNumbers.map((rn) => (
                 <div className="lb-round-cell" key={rn}>
                   <span className="lb-time-label">ROUND {rn}</span>
                   <RoundTimeCell entry={roundTimes.get(rn)} />
                 </div>
               ))}
 
-              <div className={`lb-status ${meta?.className ?? "progress"}`}>
-                <span className="lb-status-value">
-                  <StatusIcon size={14} strokeWidth={2.3} aria-hidden="true" />
-                  {meta?.text ?? "Not started"}
-                </span>
-              </div>
+              {!isBracket && (
+                <div className={`lb-status ${meta?.className ?? "progress"}`}>
+                  <span className="lb-status-value">
+                    <StatusIcon size={14} strokeWidth={2.3} aria-hidden="true" />
+                    {meta?.text ?? "Not started"}
+                  </span>
+                </div>
+              )}
 
-              <div className="lb-view-cell">
-                <button
-                  type="button"
-                  className="lb-profile-btn"
-                  disabled={!entry.robotId}
-                  onClick={() => entry.robotId && navigate(`/robot/${entry.robotId}`)}
-                >
-                  Profile
-                </button>
-              </div>
+              {!isBracket && (
+                <div className="lb-view-cell">
+                  <button
+                    type="button"
+                    className="lb-profile-btn"
+                    disabled={!entry.robotId}
+                    onClick={() => entry.robotId && navigate(`/robot/${entry.robotId}`)}
+                  >
+                    Profile
+                  </button>
+                </div>
+              )}
 
               <div className="lb-point" data-label="Points">{entry.pointsEarned}</div>
             </div>

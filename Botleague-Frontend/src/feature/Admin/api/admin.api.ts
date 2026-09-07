@@ -39,6 +39,8 @@ export interface AdminRegisteredTeamResponse {
   id: string
   teamName: string
   teamLogoUrl?: string
+  robotId?: string
+  robotName?: string
   lineup?: AdminRegistrationLineupResponse[]
 }
 

@@ -725,7 +725,7 @@ export default function TournamentBracket() {
               {orderedTeams.map((team, i) => (
                 <div key={team.id} style={styles.seedRow}>
                   <div style={styles.seedNum}>{i + 1}</div>
-                  <div style={styles.seedName}>{team.teamName}</div>
+                  <div style={styles.seedName}>{team.robotName || team.teamName}</div>
                   {i === 0 && (
                     <div style={styles.seedBadge}>Top Seed</div>
                   )}
