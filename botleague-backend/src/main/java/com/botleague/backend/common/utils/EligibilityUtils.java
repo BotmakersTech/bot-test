@@ -43,11 +43,17 @@ public final class EligibilityUtils {
         return required.equals(getCategoryFromDob(dob));
     }
 
-    /** Under-18 participants must provide guardian info before registering. */
+    /**
+     * Guardian consent is no longer a registration gate — under-18
+     * participants register the same way as anyone else, no guardian
+     * confirmation required. Kept as a named check (always false) rather
+     * than deleted outright, since both call sites (EligibilityController,
+     * SportRegistrationLineupService) branch on it and this keeps their
+     * guardian-specific code paths inert instead of requiring surgery in
+     * two places if this ever needs to come back.
+     */
     public static boolean requiresGuardian(LocalDate dob) {
-        if (dob == null) return false;
-        int age = calculateAge(dob);
-        return age >= 0 && age < 18;
+        return false;
     }
 
     // Display names only — these now match the branded League names
