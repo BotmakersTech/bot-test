@@ -290,9 +290,16 @@ public class SportRegistrationService {
         //   The robot's weight class must match the event sport's weight class.
         //   We normalise both sides (replace '.' → '_', uppercase) before
         //   comparing, so "1.5KG" == "1_5KG".
+        //   Only enforced for WEIGHT-constraint sports (SportSpecPolicy) — a
+        //   scale-gated sport like RC Racing Car still has a weightClass value
+        //   on its row (AddSportModal sends the literal "Open" for every
+        //   scale-gated sport, since the column has no null-weight-class
+        //   concept), so comparing it unconditionally rejected robots whose
+        //   own weightClass wasn't also exactly "Open".
         // =================================================
 
-        if (robot.getWeightClass() != null && eventSport.getWeightClass() != null) {
+        if (specConstraints.contains(com.botleague.backend.events.enums.SpecConstraint.WEIGHT)
+                && robot.getWeightClass() != null && eventSport.getWeightClass() != null) {
             String robotWc = normalizeWeightClass(robot.getWeightClass());
             String sportWc = normalizeWeightClass(eventSport.getWeightClass());
             if (!robotWc.equals(sportWc)) {

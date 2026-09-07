@@ -117,8 +117,19 @@ export default function RegistrationTab({
           const allowed = ROBOT_TO_EVENT_SPORT[normSport(robot.sport)];
           if (allowed && !allowed.some((s) => normSport(s) === normSport(sport.sport))) return false;
         }
-        if (robot.weightClass && sport.weightClass) {
+        // Weight class only gates sports whose spec policy actually cares about
+        // weight (see specPolicy.ts). RC Racing Car etc. are scale-gated —
+        // their event-sport row still carries a weightClass value (AddSportModal
+        // sends the literal "Open" for every scale-gated sport, since the DB
+        // column has no null-weight-class concept), so comparing it unconditionally
+        // rejected every robot whose own weightClass wasn't also exactly "Open".
+        if (specs.weight && robot.weightClass && sport.weightClass) {
           if (normWc(robot.weightClass) !== normWc(sport.weightClass)) return false;
+        }
+        if (specs.scale) {
+          const requiredScale = sport.extraRules?.scale;
+          const robotScale = robot.attributes?.scaleClass;
+          if (requiredScale && robotScale && normWc(robotScale) !== normWc(requiredScale)) return false;
         }
         const sportControl = (sport.controlType ?? "").toUpperCase();
         if (sportControl && sportControl !== "ANY" && robot.controlMode) {
@@ -305,7 +316,7 @@ export default function RegistrationTab({
                     {robots.length === 0 ? (
                       <><AlertTriangle size={16} /><span>Your team has no robots yet. Add a robot from your team dashboard first.</span></>
                     ) : eligibleRobots.length === 0 ? (
-                      <><AlertTriangle size={16} /><span>None of your robots are eligible for this competition. Robots must be built for "{sport.sport?.replace(/_/g, " ")}" with matching weight class.</span></>
+                      <><AlertTriangle size={16} /><span>None of your robots are eligible for this competition. Robots must be built for "{sport.sport?.replace(/_/g, " ")}" with matching {specs.scale ? "scale" : specs.weight && specs.dimension ? "weight class and dimensions" : specs.weight ? "weight class" : specs.dimension ? "dimensions" : "specs"}.</span></>
                     ) : (
                       <><CheckCircle2 size={16} /><span>All eligible robots are already registered in this sport.</span></>
                     )}
