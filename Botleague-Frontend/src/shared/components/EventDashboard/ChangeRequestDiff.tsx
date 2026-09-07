@@ -1,4 +1,5 @@
 import type { SportChangeRequest } from "../../../feature/Organizer/api/organizer.api"
+import { ageGroupLabel } from "../../utils/ageGroup"
 
 // Minimal shape of "the sport as it stands today" needed to diff against a
 // change request's proposedChanges — deliberately loose (not the full
@@ -54,12 +55,17 @@ export function ChangeFieldDiff({ request, sport }: { request: SportChangeReques
     <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "6px" }}>
       {changes.map(([key, value]) => {
         const currentVal = sport[CURRENT_KEY[key]]
+        // Age group is stored as its raw catalog code (JUNIOR_INNOVATORS,
+        // ROBO_MINDS, ...) — show the league name a reviewer actually
+        // recognizes (Ignite, Apex, ...) instead of the internal key.
+        const displayOld = key === "ageGroup" ? ageGroupLabel(currentVal as string | null) : String(currentVal ?? "—")
+        const displayNew = key === "ageGroup" ? ageGroupLabel(value as string) : String(value)
         return (
           <div key={key} className="ed-uc-diff-row">
             <span className="ed-uc-diff-label">{LABELS[key]}:</span>
-            <span className="ed-uc-diff-old">{String(currentVal ?? "—")}</span>
+            <span className="ed-uc-diff-old">{displayOld}</span>
             <span style={{ color: "var(--ed-ink-mute)" }}>→</span>
-            <span className="ed-uc-diff-new">{String(value)}</span>
+            <span className="ed-uc-diff-new">{displayNew}</span>
           </div>
         )
       })}

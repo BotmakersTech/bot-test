@@ -149,13 +149,19 @@ const MATCH_TYPE_OPTIONS: { value: MatchType; label: string; desc: string; minTe
 // RESULT METHOD OPTIONS (1v1 matches)
 // =====================================================
 
+// SCORE and JUDGE_DECISION used to be two separate tabs — Score let you
+// record a score but never named a winner explicitly (the backend inferred
+// one from whichever side had more), Judge Decision let you name a winner
+// but had nowhere to put a score. Merged into one "Judge Decision" tab that
+// does both at once: pick the winner AND record the score, submitted
+// together as one JUDGE_DECISION result — see the merged render block below
+// and handleSubmitResult's JUDGE_DECISION branch.
 const RESULT_METHODS: {
   value: MatchResultType
   label: string
   loserQuestion: string | null
   icon: React.ReactNode
 }[] = [
-  { value: "SCORE",            label: "Score",          loserQuestion: null,                          icon: <BarChart2 size={13} /> },
   { value: "TAPOUT",           label: "Tapout",         loserQuestion: "Which team tapped out?",      icon: <Hand size={13} /> },
   { value: "JUDGE_DECISION",   label: "Judge Decision", loserQuestion: null,                          icon: <Scale size={13} /> },
   { value: "FORFEIT",          label: "Forfeit",        loserQuestion: "Which team forfeited?",       icon: <Flag size={13} /> },
@@ -179,7 +185,6 @@ export default function OrganizerBracketPage() {
     startMatch,
     updateMatchScore,
     submitMatchResult,
-    completeMatch,
     lockMatchScore,
     unlockMatchScore,
     cancelMatch,
@@ -226,7 +231,7 @@ export default function OrganizerBracketPage() {
   const [scheduleTime, setScheduleTime] = useState<string>("")
 
   // ── Result method state (1v1 LIVE) ──
-  const [resultMethod, setResultMethod] = useState<MatchResultType>("SCORE")
+  const [resultMethod, setResultMethod] = useState<MatchResultType>("JUDGE_DECISION")
   const [losingTeamId, setLosingTeamId] = useState<string>("")
   const [judgeWinnerId, setJudgeWinnerId] = useState<string>("")
 
@@ -375,7 +380,7 @@ export default function OrganizerBracketPage() {
 
   // ── Reset result method when a different match is opened ──
   useEffect(() => {
-    setResultMethod("SCORE")
+    setResultMethod("JUDGE_DECISION")
     setLosingTeamId("")
     setJudgeWinnerId("")
   }, [selectedMatch?.matchId])
@@ -482,10 +487,7 @@ export default function OrganizerBracketPage() {
 
     try {
       if (!isMultiTeam) {
-        if (resultMethod === "SCORE") {
-          // infer winner from scores
-          await completeMatch(selectedMatchId)
-        } else if (resultMethod === "JUDGE_DECISION") {
+        if (resultMethod === "JUDGE_DECISION") {
           if (!judgeWinnerId) return
           await submitMatchResult(selectedMatchId, {
             teamAScore: scoreA,
@@ -1482,47 +1484,10 @@ export default function OrganizerBracketPage() {
                   ))}
                 </div>
 
-                {/* SCORE — counters + save + complete */}
-                {resultMethod === "SCORE" && (
-                  <>
-                    <div style={styles.scoreGrid}>
-                      {[
-                        { label: selectedMatch.teamARobotName || selectedMatch.teamAName || "Team A", val: scoreA, set: setScoreA },
-                        { label: selectedMatch.teamBRobotName || selectedMatch.teamBName || "Team B", val: scoreB, set: setScoreB },
-                      ].map(({ label, val, set }) => (
-                        <div key={label} style={styles.scoreInputWrap}>
-                          <div style={styles.scoreInputLabel}>{label}</div>
-                          <div style={styles.scoreCounter}>
-                            <button style={styles.counterBtn} onClick={() => set(s => Math.max(0, s - 1))}>−</button>
-                            <span style={styles.counterVal}>{val}</span>
-                            <button style={styles.counterBtn} onClick={() => set(s => s + 1)}>+</button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <button
-                        style={{ ...styles.actionBtn, flex: 1, background: "rgba(75,134,232,0.12)", borderColor: "rgba(75,134,232,0.3)", color: T.blue, opacity: updateLoading ? 0.5 : 1 }}
-                        onClick={handleSaveScore}
-                        disabled={updateLoading}
-                      >
-                        <Swords size={14} /> Save Score
-                      </button>
-                      <button
-                        style={{ ...styles.actionBtn, flex: 1, background: "rgba(31,169,82,0.12)", borderColor: "rgba(31,169,82,0.3)", color: T.green, opacity: updateLoading ? 0.5 : 1 }}
-                        onClick={handleSubmitResult}
-                        disabled={updateLoading}
-                      >
-                        {updateLoading ? <><div style={styles.actionSpinner} /> Submitting…</> : <><CheckCircle2 size={14} /> Complete &amp; Advance</>}
-                      </button>
-                    </div>
-                  </>
-                )}
-
-                {/* JUDGE DECISION — pick winner */}
+                {/* JUDGE DECISION — pick winner AND record the score together */}
                 {resultMethod === "JUDGE_DECISION" && (
                   <>
-                    <div style={styles.resultSubLabel}>Select the winner by judges' decision</div>
+                    <div style={styles.resultSubLabel}>Select the winner</div>
                     <div style={styles.teamPickGrid}>
                       {getTeams(selectedMatch).map(team => (
                         <button
@@ -1538,13 +1503,39 @@ export default function OrganizerBracketPage() {
                         </button>
                       ))}
                     </div>
-                    <button
-                      style={{ ...styles.actionBtn, background: "rgba(31,169,82,0.12)", borderColor: "rgba(31,169,82,0.3)", color: T.green, opacity: updateLoading || !judgeWinnerId ? 0.5 : 1 }}
-                      onClick={handleSubmitResult}
-                      disabled={updateLoading || !judgeWinnerId}
-                    >
-                      {updateLoading ? <><div style={styles.actionSpinner} /> Submitting…</> : <><CheckCircle2 size={14} /> Submit Decision &amp; Advance</>}
-                    </button>
+
+                    <div style={styles.scoreGrid}>
+                      {[
+                        { label: selectedMatch.teamARobotName || selectedMatch.teamAName || "Team A", val: scoreA, set: setScoreA },
+                        { label: selectedMatch.teamBRobotName || selectedMatch.teamBName || "Team B", val: scoreB, set: setScoreB },
+                      ].map(({ label, val, set }) => (
+                        <div key={label} style={styles.scoreInputWrap}>
+                          <div style={styles.scoreInputLabel}>{label}</div>
+                          <div style={styles.scoreCounter}>
+                            <button style={styles.counterBtn} onClick={() => set(s => Math.max(0, s - 1))}>−</button>
+                            <span style={styles.counterVal}>{val}</span>
+                            <button style={styles.counterBtn} onClick={() => set(s => s + 1)}>+</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button
+                        style={{ ...styles.actionBtn, flex: 1, background: "rgba(75,134,232,0.12)", borderColor: "rgba(75,134,232,0.3)", color: T.blue, opacity: updateLoading ? 0.5 : 1 }}
+                        onClick={handleSaveScore}
+                        disabled={updateLoading}
+                      >
+                        <Swords size={14} /> Save Score
+                      </button>
+                      <button
+                        style={{ ...styles.actionBtn, flex: 1, background: "rgba(31,169,82,0.12)", borderColor: "rgba(31,169,82,0.3)", color: T.green, opacity: updateLoading || !judgeWinnerId ? 0.5 : 1 }}
+                        onClick={handleSubmitResult}
+                        disabled={updateLoading || !judgeWinnerId}
+                      >
+                        {updateLoading ? <><div style={styles.actionSpinner} /> Submitting…</> : <><CheckCircle2 size={14} /> Submit Decision &amp; Advance</>}
+                      </button>
+                    </div>
                   </>
                 )}
 
