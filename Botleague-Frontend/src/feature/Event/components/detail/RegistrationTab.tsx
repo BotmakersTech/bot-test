@@ -8,36 +8,12 @@ import type { EligibilityResponse } from "../../../Eligibility/api/eligibility.a
 import { ageGroupLabel } from "../../../../shared/utils/ageGroup";
 import { fitsAgeGroup } from "../../../../shared/utils/ageCategory";
 import { weightClassToKg } from "../../../Robots/constants/weightClasses";
-import { constraintsFor } from "../../utils/specPolicy";
+import { constraintsFor, sportKey } from "../../utils/specPolicy";
 
 // Age groups that mean "open to all" — no category restriction
 const OPEN_AGE_GROUPS = new Set(["OPEN", "ALL", "ALL_AGES", "UNRESTRICTED", ""]);
 
-// Mirrors backend ROBOT_SPORT_TO_EVENT_SPORTS
-const ROBOT_TO_EVENT_SPORT: Record<string, string[]> = {
-  ROBOWAR_1_5KG: ["ROBO_WAR", "ROBO_WAR_OPEN"],
-  ROBOWAR_8KG: ["ROBO_WAR", "ROBO_WAR_OPEN"],
-  ROBOWAR_15KG: ["ROBO_WAR", "ROBO_WAR_OPEN"],
-  ROBOWAR_30KG: ["ROBO_WAR", "ROBO_WAR_OPEN"],
-  ROBOWAR_60KG: ["ROBO_WAR", "ROBO_WAR_OPEN"],
-  ROBO_SOCCER: ["ROBO_SOCCER", "ROBO_SOCCER_OPEN"],
-  ROBO_SUMO: ["ROBO_SUMO"],
-  LINE_FOLLOWER: ["LINE_FOLLOWER"],
-  LINE_FOLLOWER_AUTO: ["LINE_FOLLOWER", "LINE_FOLLOWER_AUTO"],
-  DRONE_RACING: ["DRONE_RACING_FPV", "DRONE_RACING_SOCCER"],
-  DRONE_SOCCER: ["DRONE_RACING_SOCCER"],
-  RC_RACING: ["RC_ROBO_RACING", "RC_RACING_NITRO"],
-};
-
 const normWc = (wc?: string | null) => (wc ?? "").toUpperCase().replace(/\./g, "_");
-
-// The event sport is stored as its catalog display name ("Robo War"), a robot
-// as a legacy key ("ROBOWAR_15KG"), and ROBOT_TO_EVENT_SPORT's values as
-// canonical tokens ("ROBO_WAR"). Fold all three to one shape before matching —
-// without this, `"Robo War".toUpperCase()` ("ROBO WAR") never equals the
-// "ROBO_WAR" token and every robot fails the sport-compatibility check.
-const normSport = (s?: string | null) =>
-  (s ?? "").toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 
 const REG_ROLES = [
   { value: "DRIVER", label: "Driver" },
@@ -113,10 +89,15 @@ export default function RegistrationTab({
           if (sport.maxHeightCm != null && robot.heightCm != null && robot.heightCm > sport.maxHeightCm) return false;
         }
         if (sport.ageGroup && robot.eligibleCategories?.length && !robot.eligibleCategories.includes(sport.ageGroup as Robot["eligibleCategories"][number])) return false;
-        if (robot.sport && sport.sport) {
-          const allowed = ROBOT_TO_EVENT_SPORT[normSport(robot.sport)];
-          if (allowed && !allowed.some((s) => normSport(s) === normSport(sport.sport))) return false;
-        }
+        // A robot only belongs in a competition for the SAME real sport it was
+        // built for — Robo Race and RC Racing Car are both RC vehicles but
+        // gated on different specs (weight/dimension vs scale) and must never
+        // be treated as interchangeable. sportKey() buckets every naming
+        // variant on both sides (event's catalog name, robot's legacy key)
+        // to one canonical token, so this can't drift the way a hand-
+        // maintained name-to-name allowlist did (mirrors the backend's own
+        // ROBOT_SPORT_TO_EVENT_SPORTS check in SportRegistrationService).
+        if (robot.sport && sport.sport && sportKey(robot.sport) !== sportKey(sport.sport)) return false;
         // Weight class only gates sports whose spec policy actually cares about
         // weight (see specPolicy.ts). RC Racing Car etc. are scale-gated —
         // their event-sport row still carries a weightClass value (AddSportModal
@@ -127,9 +108,18 @@ export default function RegistrationTab({
           if (normWc(robot.weightClass) !== normWc(sport.weightClass)) return false;
         }
         if (specs.scale) {
-          const requiredScale = sport.extraRules?.scale;
+          // A techsport can offer more than one scale (extraRules.scale is a
+          // comma-separated list, e.g. "1:10,1:12") — the robot only needs to
+          // match ONE of them. Mirrors the backend's own check in
+          // SportRegistrationService.registerRobot(); comparing the robot's
+          // single scale against the raw CSV string (instead of splitting it
+          // first) rejected every robot whenever a sport allowed more than one.
+          const allowedScales = sport.extraRules?.scale;
           const robotScale = robot.attributes?.scaleClass;
-          if (requiredScale && robotScale && normWc(robotScale) !== normWc(requiredScale)) return false;
+          if (allowedScales && robotScale) {
+            const matches = allowedScales.split(",").some((s) => normWc(s) === normWc(robotScale));
+            if (!matches) return false;
+          }
         }
         const sportControl = (sport.controlType ?? "").toUpperCase();
         if (sportControl && sportControl !== "ANY" && robot.controlMode) {

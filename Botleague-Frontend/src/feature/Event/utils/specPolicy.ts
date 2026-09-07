@@ -34,7 +34,16 @@ const WEIGHT_DIM: SpecConstraints = { weight: true, dimension: true, scale: fals
 
 const norm = (s?: string | null) => (s ?? "").toUpperCase().replace(/[^A-Z0-9]+/g, "");
 
-function sportKey(sport?: string | null): string {
+/**
+ * Canonical bucket for "which real sport is this" — RCRACINGCAR and ROBORACE
+ * are deliberately distinct results (both are RC vehicles, but gated on
+ * different specs: scale vs weight/dimension — see the matrix below). Used
+ * to compare a robot's sport against an event-sport's, instead of a
+ * hand-maintained name-to-name allowlist that has to be kept in sync with
+ * every naming variant on both sides and silently drifts when it isn't
+ * (see git history on RegistrationTab.tsx's old ROBOT_TO_EVENT_SPORT map).
+ */
+export function sportKey(sport?: string | null): string {
   const n = norm(sport);
   if (n.includes("ROBOWAR") || n.includes("ROBOTWAR") || n.includes("COMBAT")) return "ROBOWAR";
   if (n.includes("ROBOSUMO") || n.includes("SUMO")) return "ROBOSUMO";
