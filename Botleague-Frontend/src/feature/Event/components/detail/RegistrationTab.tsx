@@ -355,15 +355,16 @@ export default function RegistrationTab({
                   <div className="white-select">
                     <select value={regMember} onChange={(e) => setRegMember(e.target.value)}>
                       <option value="">Select member…</option>
-                      {eligibleMembers.map((m) => {
-                        const added = assignedMemberIds.has(m.membershipId);
-                        const inactive = m.status !== "ACTIVE";
-                        return (
-                          <option key={m.membershipId} value={m.membershipId} disabled={added || inactive}>
-                            {m.userName}{added ? " (Added)" : inactive ? " (Inactive)" : ""}
-                          </option>
-                        );
-                      })}
+                      {eligibleMembers
+                        .filter((m) => !assignedMemberIds.has(m.membershipId))
+                        .map((m) => {
+                          const inactive = m.status !== "ACTIVE";
+                          return (
+                            <option key={m.membershipId} value={m.membershipId} disabled={inactive}>
+                              {m.userName}{inactive ? " (Inactive)" : ""}
+                            </option>
+                          );
+                        })}
                     </select>
                   </div>
                   <div className="white-select">
