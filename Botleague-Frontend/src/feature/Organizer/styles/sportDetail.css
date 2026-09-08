@@ -321,6 +321,13 @@
   margin-bottom: 16px;
 }
 
+/* All four action buttons (Create/Manage Match, Update Score, Ranking,
+   Certificates) share one look now, on both Admin and Organiser — they used
+   to be three different treatments (permanent gradient, white-outline,
+   solid-blue) with no visual link between them despite doing the same kind
+   of thing. White by default, blue fill on hover, and the gradient that
+   used to live permanently on Create Match now marks the moment of the
+   click itself. */
 .sdt-action-btn {
   display: inline-flex;
   align-items: center;
@@ -330,31 +337,25 @@
   font-family: "Poppins", sans-serif;
   font-weight: 600;
   font-size: 0.84rem;
-  border: 2px solid transparent;
+  border: 2px solid var(--sdt-primary);
   cursor: pointer;
   transition: all 0.2s ease;
-}
-
-.sdt-action-create {
-  background: linear-gradient(180deg, #0162d1 0%, #8c6cff 100%);
-  color: #fff;
-  border-color: var(--sdt-purple);
-}
-.sdt-action-create:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(140, 108, 255, 0.35); }
-
-.sdt-action-update {
   background: #fff;
   color: var(--sdt-primary);
-  border-color: var(--sdt-primary);
 }
-.sdt-action-update:hover { background: var(--sdt-primary); color: #fff; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(1, 98, 209, 0.3); }
-
-.sdt-action-rank {
+.sdt-action-btn:hover {
   background: var(--sdt-primary);
   color: #fff;
-  border-color: var(--sdt-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(1, 98, 209, 0.3);
 }
-.sdt-action-rank:hover { background: #024fac; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(1, 98, 209, 0.35); }
+.sdt-action-btn:active {
+  background: linear-gradient(180deg, #0162d1 0%, #8c6cff 100%);
+  border-color: var(--sdt-purple);
+  color: #fff;
+  transform: translateY(0);
+  box-shadow: 0 4px 10px rgba(140, 108, 255, 0.35);
+}
 
 /* ---------------- Registered teams / robots (list view) ---------------- */
 

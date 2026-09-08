@@ -1333,18 +1333,18 @@ export default function OrganizerSportDetailPage() {
         <div className="sdt-action-row" style={{ marginTop: "16px" }}>
           {!isOpen && (
             <>
-              <button onClick={() => navigate(`${location.pathname}/create-match`)} className="sdt-action-btn sdt-action-create">
+              <button onClick={() => navigate(`${location.pathname}/create-match`)} className="sdt-action-btn">
                 <Swords size={14} /> {hasMatches ? "Manage Matches" : "Create Match"}
               </button>
-              <button onClick={() => navigate(`${location.pathname}/update-score`)} className="sdt-action-btn sdt-action-update">
+              <button onClick={() => navigate(`${location.pathname}/update-score`)} className="sdt-action-btn">
                 <RefreshCw size={14} /> Update Score
               </button>
-              <button onClick={() => navigate(`${location.pathname}/ranking`)} className="sdt-action-btn sdt-action-rank">
+              <button onClick={() => navigate(`${location.pathname}/ranking`)} className="sdt-action-btn">
                 <Trophy size={14} /> Ranking
               </button>
             </>
           )}
-          <button onClick={() => navigate(`/organizer/certificates?eventSportId=${sportId}`)} className="sdt-action-btn sdt-action-update">
+          <button onClick={() => navigate(`/organizer/certificates?eventSportId=${sportId}`)} className="sdt-action-btn">
             <Award size={14} /> Certificates
           </button>
         </div>

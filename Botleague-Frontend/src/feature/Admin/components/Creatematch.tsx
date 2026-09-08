@@ -1115,12 +1115,13 @@ export default function TournamentBracket() {
             <RefreshCw size={12} />
           </button>
         </div>
-      </div>
 
-      {/* ── 3RD PLACE MATCH (below bracket SVG) ── */}
-      {thirdPlaceMatch && (
-        <div style={styles.thirdPlaceWrap}>
-          <div style={{ ...styles.thirdPlaceLabel, display: "flex", alignItems: "center", gap: 5 }}><Medal size={13} /> 3rd Place Match</div>
+        {/* ── 3RD PLACE MATCH — floating card inside the bracket canvas
+            (bottom-left, mirroring the zoom controls at bottom-right) rather
+            than a separate section below it. ── */}
+        {thirdPlaceMatch && (
+          <div style={styles.thirdPlaceWrap}>
+            <div style={{ ...styles.thirdPlaceLabel, display: "flex", alignItems: "center", gap: 5 }}><Medal size={13} /> 3rd Place Match</div>
 
           <div
             onClick={() => setSelectedMatchId(thirdPlaceMatch.matchId)}
@@ -1220,7 +1221,8 @@ export default function TournamentBracket() {
             )}
           </div>
         </div>
-      )}
+        )}
+      </div>
 
       {/* ── MATCH POPUP ── */}
       {selectedMatch && (
@@ -1929,12 +1931,18 @@ const styles: Record<string, React.CSSProperties> = {
     color: T.textSub, cursor: "pointer", marginLeft: 2, padding: 0,
   },
 
-  // ── 3rd place match ──
+  // ── 3rd place match — floating card inside the bracket canvas, bottom-left
+  // (zoomControls owns bottom-right), instead of a section below the canvas.
   thirdPlaceWrap: {
-    marginTop: 32,
-    paddingTop: 24,
-    borderTop: "1px solid rgba(140,108,255,0.15)",
-    display: "flex", flexDirection: "column" as const, gap: 10,
+    position: "absolute" as const,
+    bottom: 14, left: 14,
+    zIndex: 5,
+    display: "flex", flexDirection: "column" as const, gap: 8,
+    background: T.surface,
+    border: `1px solid ${T.border}`,
+    borderRadius: 12,
+    padding: "10px 12px 12px",
+    boxShadow: "0 4px 16px rgba(15,23,42,0.16)",
   },
   thirdPlaceLabel: {
     fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em",
