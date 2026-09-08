@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Eye, AlertTriangle, Info, User, Lock, Ban, X, CheckCircle2, Zap, LogIn } from "lucide-react";
-import type { EventSportResponse, EventRegistrationResponse } from "../../api/event.api";
+import type { EventSportResponse, EventRegistrationResponse, TeamLineUpResponse } from "../../api/event.api";
 import type { TeamMember } from "../../hook/useEvent";
 import useRobots from "../../../Robots/hooks/useRobots";
 import type { Robot } from "../../../Robots/types/types";
@@ -32,6 +32,10 @@ interface RegistrationTabProps {
   regError: string | null;
   eligibility: EligibilityResponse | null;
   teamMembers: TeamMember[];
+  /** Lineups of every robot already registered in this techsport, keyed by
+   *  registration id — used to keep people who are already taken out of the
+   *  member picker (one person, one robot per techsport). */
+  lineupsMap: Record<string, TeamLineUpResponse[]>;
   onRegister: (botId: string, robotName: string, lineup: { membershipId: string; role: string }[]) => Promise<void>;
   onCancel: (regId: string) => void;
   onManageLineup: (registrationId: string) => void;
@@ -50,6 +54,7 @@ export default function RegistrationTab({
   regError,
   eligibility,
   teamMembers,
+  lineupsMap,
   onRegister,
   onCancel,
   onManageLineup,
@@ -175,6 +180,26 @@ export default function RegistrationTab({
     [teamMembers, sport.ageGroup]
   );
   const hiddenForAge = teamMembers.length - eligibleMembers.length;
+
+  // A person may be in only one robot's lineup per techsport. The robot being
+  // registered here has no lineup of its own yet, so EVERY member already in a
+  // registered robot's lineup for this techsport is unavailable — offering them
+  // only gets the pick rejected on submit.
+  const assignedElsewhere = useMemo(
+    () => new Set(
+      Object.values(lineupsMap)
+        .flat()
+        .filter((e) => e.isActive)
+        .map((e) => e.teamMembershipId ?? "")
+    ),
+    [lineupsMap]
+  );
+
+  const selectableMembers = useMemo(
+    () => eligibleMembers.filter((m) => !assignedElsewhere.has(m.membershipId)),
+    [eligibleMembers, assignedElsewhere]
+  );
+  const hiddenForOtherRobot = eligibleMembers.length - selectableMembers.length;
 
   const resetForm = () => {
     setSelectedRobotId("");
@@ -354,7 +379,7 @@ export default function RegistrationTab({
                   <div className="white-select">
                     <select value={regMember} onChange={(e) => setRegMember(e.target.value)}>
                       <option value="">Select member…</option>
-                      {eligibleMembers
+                      {selectableMembers
                         .filter((m) => !assignedMemberIds.has(m.membershipId))
                         .map((m) => {
                           const inactive = m.status !== "ACTIVE";
@@ -385,6 +410,20 @@ export default function RegistrationTab({
                   <p style={{ fontSize: 12.5, color: "#6b7280", marginTop: -6, marginBottom: 14 }}>
                     <Info size={12} style={{ verticalAlign: -2, marginRight: 4 }} />
                     {hiddenForAge} team member{hiddenForAge > 1 ? "s are" : " is"} hidden — not in the {ageGroupLabel(sport.ageGroup)} age group for this techsport.
+                  </p>
+                )}
+
+                {hiddenForOtherRobot > 0 && (
+                  <p style={{ fontSize: 12.5, color: "#6b7280", marginTop: -6, marginBottom: 14 }}>
+                    <Info size={12} style={{ verticalAlign: -2, marginRight: 4 }} />
+                    {hiddenForOtherRobot} team member{hiddenForOtherRobot > 1 ? "s are" : " is"} hidden — already in another robot's lineup for this techsport. A person can be in only one robot here, but is free to join a robot in another weight class.
+                  </p>
+                )}
+
+                {selectableMembers.length === 0 && (
+                  <p style={{ fontSize: 12.5, color: "#6b7280", marginTop: -6, marginBottom: 14 }}>
+                    <Info size={12} style={{ verticalAlign: -2, marginRight: 4 }} />
+                    No team members are available for this robot's lineup — everyone eligible is already in another robot for this techsport.
                   </p>
                 )}
 

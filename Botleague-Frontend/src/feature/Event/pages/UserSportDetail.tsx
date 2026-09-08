@@ -122,6 +122,21 @@ export default function UserSportDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existingRegs.length]);
 
+  // Load every registered robot's lineup for this techsport up front, not just
+  // the one the Lineup tab happens to be showing. Both tabs need the full
+  // picture to know who is already taken: a person may be in only one robot's
+  // lineup per techsport, and the Register tab builds a lineup for a robot that
+  // has no registration of its own yet, so it has nothing to look at otherwise.
+  // handleFetchLineup skips anything already loaded, so this costs one request
+  // per robot for the life of the page.
+  useEffect(() => {
+    existingRegs.forEach((r) => {
+      const id = regId(r);
+      if (id) handleFetchLineup(id);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existingRegs.length, sportId]);
+
   const requireLogin = () => navigate("/login", { state: { from: window.location.pathname } });
 
   const handleRegister = async (botId: string, _robotName: string, lineup: { membershipId: string; role: string }[]) => {
@@ -270,6 +285,7 @@ export default function UserSportDetail() {
                 regError={regError}
                 eligibility={eligibility}
                 teamMembers={teamMembers}
+                lineupsMap={lineupsMap}
                 onRegister={handleRegister}
                 onCancel={handleCancel}
                 onManageLineup={(id) => setActiveRegId(id)}
