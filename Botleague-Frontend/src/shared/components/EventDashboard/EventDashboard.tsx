@@ -85,12 +85,16 @@ function formatDate(d?: string | null): string {
   return d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"
 }
 
+// The registration window dates are informational only — closing
+// registration is a deliberate action (see the sport-detail page's
+// Open/Close Registration buttons), not something that flips on its own
+// when a date passes. Deriving "open" from today falling inside the window
+// showed "Registration Open" on sports the organiser had already closed
+// (or that were never opened at all), whenever the stored end date simply
+// hadn't arrived yet. sport.status is the actual source of truth — the
+// same field every registration check in the app already gates on.
 function isRegistrationOpen(sport: EventDashboardSport): boolean {
-  if (!sport.registrationStartDate || !sport.registrationEndDate) return false
-  const now = Date.now()
-  const start = new Date(sport.registrationStartDate).getTime()
-  const end = new Date(sport.registrationEndDate).getTime()
-  return now >= start && now <= end
+  return sport.status?.toUpperCase() === "REGISTRATION_OPEN"
 }
 
 function teamCount(sport: EventDashboardSport): number {

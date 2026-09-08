@@ -24,12 +24,12 @@ function formatDate(d?: string | null): string {
   return d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"
 }
 
+// sport.status is the real source of truth (see EventDashboard.tsx's
+// identical fix) — the date window is informational only, closing
+// registration is a deliberate action, not something that flips on its
+// own when the stored end date passes.
 function isRegistrationOpen(sport: EventDashboardSport): boolean {
-  if (!sport.registrationStartDate || !sport.registrationEndDate) return false
-  const now = Date.now()
-  const start = new Date(sport.registrationStartDate).getTime()
-  const end = new Date(sport.registrationEndDate).getTime()
-  return now >= start && now <= end
+  return sport.status?.toUpperCase() === "REGISTRATION_OPEN"
 }
 
 function teamCount(sport: EventDashboardSport): number {
