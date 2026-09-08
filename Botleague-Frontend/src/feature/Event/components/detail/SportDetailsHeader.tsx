@@ -81,7 +81,7 @@ export default function SportDetailsHeader({ sport, contacts }: SportDetailsHead
       <style>{TAB_CSS}</style>
 
       <div className="event-info" style={{ width: "100%" }}>
-        <div className="rw-page-title">{sport.sport?.replace(/_/g, " ") ?? "Techsport"}</div>
+        {/* No title here — the Hero directly above already states the sport name. */}
         <div className="rw-tab-layout">
           <div className="rw-tab-nav">
             {tabs.map((t) => (
@@ -269,15 +269,6 @@ const TAB_CSS = `
   max-width: 1200px;
   margin: 0 auto;
 }
-.rw-page-title {
-  font-family: 'Sarpanch', sans-serif;
-  font-weight: 600;
-  color: #0162D1;
-  text-align: center;
-  font-size: clamp(2rem, 4vw, 3.2rem);
-  margin: 0 auto 3rem;
-  max-width: 1200px;
-}
 .rw-tab-nav { display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem; height: 100%; }
 .rw-tab-btn {
   text-align: left;
@@ -299,16 +290,16 @@ const TAB_CSS = `
   min-width: 0;
   background: linear-gradient(180deg, rgba(1,98,209,0.05), rgba(140,108,255,0.05));
   border-radius: 20px;
-  padding: 3rem 2.5rem;
+  padding: 2.25rem 2rem;
   height: 100%;
   min-height: 320px;
   box-sizing: border-box;
 }
 .rw-tab-heading {
   font-family: 'Sarpanch', sans-serif;
-  font-weight: 500;
+  font-weight: 600;
   color: #0162D1;
-  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  font-size: clamp(1.3rem, 1.8vw, 1.75rem);
   margin: 0 0 1.25rem;
   text-transform: capitalize;
 }
