@@ -13,6 +13,9 @@ import { constraintsFor, sportKey } from "../../utils/specPolicy";
 // Age groups that mean "open to all" — no category restriction
 const OPEN_AGE_GROUPS = new Set(["OPEN", "ALL", "ALL_AGES", "UNRESTRICTED", ""]);
 
+// Same amber the Lineup tab uses for the identical Driver requirement.
+const WARNING = "#f59e0b";
+
 const normWc = (wc?: string | null) => (wc ?? "").toUpperCase().replace(/\./g, "_");
 
 const REG_ROLES = [
@@ -373,7 +376,27 @@ export default function RegistrationTab({
               </>
             ) : (
               <>
-                <p style={{ marginBottom: 16, fontWeight: 600 }}>Robot: {selectedRobot?.robotName}</p>
+                <p style={{ marginBottom: 10, fontWeight: 600 }}>Robot: {selectedRobot?.robotName}</p>
+
+                {/* Same requirement the Lineup tab states, worded identically —
+                    a robot cannot be registered without a Driver, and the submit
+                    button below stays disabled until one is added. Said up front
+                    rather than only on the button, so it reads as a rule of the
+                    form instead of an explanation for why nothing happens. */}
+                <p style={{
+                  marginBottom: 16,
+                  fontSize: 13,
+                  color: driverTaken ? "#15803d" : WARNING,
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}>
+                  {driverTaken ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}
+                  {driverTaken
+                    ? "Driver assigned — this robot is ready to register."
+                    : "A Driver is required to register this robot. Secondary Driver and Build Head are optional."}
+                </p>
 
                 <div className="register-row" style={{ marginBottom: 16 }}>
                   <div className="white-select">
@@ -466,7 +489,7 @@ export default function RegistrationTab({
                     {busyReg
                       ? "Registering…"
                       : !lineupComplete
-                        ? "Assign a Driver to register"
+                        ? "Register"
                         : <><Zap size={14} /> Complete Registration</>}
                   </button>
                 </div>
