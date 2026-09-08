@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from "react"
-import { Timer, Flag, ChevronRight, AlertTriangle, CheckCircle2, Trash2, Trophy } from "lucide-react"
+import { useLocation, useNavigate } from "react-router-dom"
+import { Flag, ChevronRight, AlertTriangle, CheckCircle2, Trash2, Trophy, ArrowLeft } from "lucide-react"
 
 import { useRaceRounds } from "../hooks/useRaceRounds"
 import { ORG } from "../../Organizer/theme/organizerTheme"
 import type { RoundEntryDTO } from "../api/raceRounds.api"
+
+const MUTED = "#6b7280"
 
 // ─────────────────────────────────────────────────────────────
 // TIME HELPERS — accepts "12.345" (seconds) or "1:02.345" (mm:ss.sss)
@@ -46,7 +49,6 @@ function Spinner({ size = 14, color = "#fff" }: { size?: number; color?: string 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "#9ca3af",
   TIMED: ORG.blue,
-  DNF: ORG.danger,
   ADVANCED: ORG.success,
   ELIMINATED: "#9ca3af",
   FINISHED: ORG.violet,
@@ -72,12 +74,14 @@ export interface RaceRoundManagerProps {
 
 export default function RaceRoundManager({ sportId, isRegistrationClosed }: RaceRoundManagerProps) {
   const { rounds, loading, actionLoading, error, generateFirstRound, recordTimes, shortlistRound, finalizeRound, deleteRound } = useRaceRounds(sportId)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const backPath = location.pathname.replace(/\/create-match$/, "")
 
   const currentRound = rounds.length > 0 ? rounds[rounds.length - 1] : null
   const historyRounds = rounds.length > 1 ? rounds.slice(0, -1) : []
 
   const [timeInputs, setTimeInputs] = useState<Record<string, string>>({})
-  const [dnfFlags, setDnfFlags] = useState<Record<string, boolean>>({})
   const [cutoffInput, setCutoffInput] = useState("")
   const [localError, setLocalError] = useState<string | null>(null)
 
@@ -86,13 +90,10 @@ export default function RaceRoundManager({ sportId, isRegistrationClosed }: Race
   useEffect(() => {
     if (!currentRound) return
     const times: Record<string, string> = {}
-    const dnfs: Record<string, boolean> = {}
     currentRound.entries.forEach(e => {
       times[e.registrationId] = e.timeMillis != null ? String(e.timeMillis / 1000) : ""
-      dnfs[e.registrationId] = !!e.dnf
     })
     setTimeInputs(times)
-    setDnfFlags(dnfs)
     setCutoffInput("")
     setLocalError(null)
   }, [currentRound?.roundId, currentRound?.entries.length])
@@ -121,15 +122,13 @@ export default function RaceRoundManager({ sportId, isRegistrationClosed }: Race
     if (!currentRound) return
     setLocalError(null)
     const entries = currentRound.entries.map(e => {
-      const dnf = !!dnfFlags[e.registrationId]
-      if (dnf) return { registrationId: e.registrationId, dnf: true }
       const raw = timeInputs[e.registrationId] ?? ""
       const timeMillis = parseTimeToMillis(raw)
-      return { registrationId: e.registrationId, timeMillis: timeMillis ?? undefined, dnf: false }
+      return { registrationId: e.registrationId, timeMillis: timeMillis ?? undefined }
     })
-    const missing = entries.some(e => !e.dnf && e.timeMillis == null)
+    const missing = entries.some(e => e.timeMillis == null)
     if (missing) {
-      setLocalError("Enter a time or mark DNF for every bot before saving.")
+      setLocalError("Enter a time for every bot before saving.")
       return
     }
     try {
@@ -169,29 +168,36 @@ export default function RaceRoundManager({ sportId, isRegistrationClosed }: Race
   const timedCount = currentRound?.entries.filter(e => e.status === "TIMED" || e.status === "DNF").length ?? 0
   const totalCount = currentRound?.entries.length ?? 0
 
-  if (loading && rounds.length === 0) {
-    return (
-      <div style={{ textAlign: "center", padding: "60px 0", color: ORG.muted }}>
-        <Spinner size={28} color={ORG.blue} />
-        <div style={{ marginTop: 10, fontSize: "0.85rem" }}>Loading rounds…</div>
-      </div>
-    )
-  }
-
+  // Same page chrome as its sibling destinations from the sport-detail
+  // action row (Update Score, Ranking) — org-page-bg wrapper, "← Back to
+  // Sport", and a font-display heading at the same clamp size and blue —
+  // instead of this page's own smaller inline h2 with no way back.
   return (
-    <div style={{ padding: "24px", maxWidth: 880, margin: "0 auto" }}>
+    <div className="org-page-bg p-8" style={{ minHeight: "100vh", color: "#111111" }}>
       <style>{`@keyframes rrm-spin { to { transform: rotate(360deg); } }`}</style>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-        <Timer size={20} color={ORG.blue} />
-        <h2 style={{ margin: 0, fontFamily: ORG.fontHeading, fontSize: "1.3rem", color: ORG.text }}>
-          Round-Wise Time Trial
-        </h2>
-      </div>
+      <button
+        onClick={() => navigate(backPath)}
+        className="mb-4 flex items-center gap-1.5 text-sm font-semibold"
+        style={{ color: MUTED }}
+      >
+        <ArrowLeft size={15} /> Back to Sport
+      </button>
+
+      <h1 className="font-display mb-2 text-[clamp(20px,4vw,38px)] font-medium text-[#0162d1] tracking-wide">
+        Round-Wise Time Trial
+      </h1>
       <p style={{ color: ORG.muted, fontSize: "0.85rem", marginTop: 0, marginBottom: 20 }}>
         Every bot runs each round and gets a time. Shortlist the fastest to the next round, or finalize to lock final standings.
       </p>
 
+      {loading && rounds.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "60px 0", color: ORG.muted }}>
+          <Spinner size={28} color={ORG.blue} />
+          <div style={{ marginTop: 10, fontSize: "0.85rem" }}>Loading rounds…</div>
+        </div>
+      ) : (
+      <>
       {(error || localError) && (
         <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(224,75,75,0.08)", border: "1px solid rgba(224,75,75,0.25)", borderRadius: 10, padding: "10px 14px", color: ORG.danger, fontSize: "0.82rem", fontWeight: 600, marginBottom: 16 }}>
           <AlertTriangle size={15} /> {localError || error}
@@ -246,7 +252,6 @@ export default function RaceRoundManager({ sportId, isRegistrationClosed }: Race
                   <th style={{ padding: "8px 18px" }}>Rank</th>
                   <th style={{ padding: "8px 8px" }}>Bot / Team</th>
                   <th style={{ padding: "8px 8px" }}>Time</th>
-                  <th style={{ padding: "8px 18px" }}>DNF</th>
                   <th style={{ padding: "8px 18px" }}>Status</th>
                 </tr>
               </thead>
@@ -263,24 +268,12 @@ export default function RaceRoundManager({ sportId, isRegistrationClosed }: Race
                         <input
                           type="text"
                           placeholder="12.345 or 1:02.345"
-                          disabled={!!dnfFlags[entry.registrationId]}
                           value={timeInputs[entry.registrationId] ?? ""}
                           onChange={e => setTimeInputs(prev => ({ ...prev, [entry.registrationId]: e.target.value }))}
-                          style={{ width: 130, padding: "6px 8px", border: `1px solid ${ORG.borderColor}`, borderRadius: 7, fontSize: "0.8rem", background: dnfFlags[entry.registrationId] ? "#f3f4f6" : "#fff" }}
+                          style={{ width: 130, padding: "6px 8px", border: `1px solid ${ORG.borderColor}`, borderRadius: 7, fontSize: "0.8rem", background: "#fff" }}
                         />
                       ) : (
                         <span style={{ fontSize: "0.85rem", color: ORG.text }}>{formatMillis(entry.timeMillis)}</span>
-                      )}
-                    </td>
-                    <td style={{ padding: "8px 18px" }}>
-                      {isEditable ? (
-                        <input
-                          type="checkbox"
-                          checked={!!dnfFlags[entry.registrationId]}
-                          onChange={e => setDnfFlags(prev => ({ ...prev, [entry.registrationId]: e.target.checked }))}
-                        />
-                      ) : (
-                        entry.dnf ? "Yes" : "—"
                       )}
                     </td>
                     <td style={{ padding: "8px 18px" }}><EntryStatusBadge status={entry.status} /></td>
@@ -375,6 +368,8 @@ export default function RaceRoundManager({ sportId, isRegistrationClosed }: Race
             </details>
           ))}
         </div>
+      )}
+      </>
       )}
     </div>
   )
