@@ -457,6 +457,82 @@
     opacity: .85;
 }
 
+/* League filter above the techsport grid. The Tournament tab bar is white
+   pills on a white page; this row sits on the section's blue/purple gradient,
+   so it inverts — translucent white pills, and the selected one goes solid
+   white with the gradient's own blue as its text. The h2 above carries a 70px
+   bottom margin, so the row pulls up into that gap rather than adding to it. */
+.evd-page .sports-filter {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin: -42px 0 44px;
+}
+
+.evd-page .sports-filter button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    border-radius: 999px;
+    border: 1.5px solid rgba(255, 255, 255, .55);
+    background: rgba(255, 255, 255, .12);
+    color: #fff;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: .3px;
+    cursor: pointer;
+    transition: background .25s, color .25s, border-color .25s;
+}
+
+.evd-page .sports-filter button:hover {
+    background: rgba(255, 255, 255, .24);
+    border-color: #fff;
+}
+
+.evd-page .sports-filter button.active {
+    background: #fff;
+    border-color: #fff;
+    color: #0162d1;
+}
+
+.evd-page .sports-filter button:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+}
+
+/* Count rides inside the pill so an empty-looking league is obvious before
+   the click, not after. */
+.evd-page .sports-filter-count {
+    font-size: 12.5px;
+    font-weight: 700;
+    line-height: 1;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .22);
+    color: #fff;
+}
+
+.evd-page .sports-filter button.active .sports-filter-count {
+    background: rgba(1, 98, 209, .12);
+    color: #0162d1;
+}
+
+@media (max-width: 768px) {
+    .evd-page .sports-filter {
+        margin: -18px 0 28px;
+        gap: 8px;
+    }
+    .evd-page .sports-filter button {
+        padding: 8px 16px;
+        font-size: 13.5px;
+    }
+}
+
 .evd-page .star-2 {
     right: 70px;
     top: 40px;
