@@ -310,8 +310,14 @@ public class AdminService {
                 .field("startDate", oldStartDate, saved.getStartDate())
                 .field("endDate", oldEndDate, saved.getEndDate());
         auditLogService.log("EVENT_UPDATED", "EVENT", saved.getId(), saved.getEventName(), diff.oldValue(), diff.newValue());
-        realtimePublisher.pushEventUpdate(saved.getId(), mapToResponse(saved));
-        return mapToResponse(saved);
+
+        // Same fix as changeEventStatus below — mapToResponse() alone never
+        // sets .sports, so saving the Edit form emptied the page's own sports
+        // list (and every other open tab watching this event, via the
+        // realtime push) until the next reload.
+        AdminAllEventResponse response = getEventById(saved.getId());
+        realtimePublisher.pushEventUpdate(saved.getId(), response);
+        return response;
     }
 
     // =====================================================
@@ -436,7 +442,14 @@ public class AdminService {
             cascadeEventTermination(saved.getId());
         }
 
-        realtimePublisher.pushEventStatusChange(saved.getId(), mapToResponse(saved));
+        // mapToResponse() alone never sets .sports — it's built for callers that
+        // populate it themselves afterward (getAllEvents/getEventById below).
+        // Returning it bare here meant the page's own "Publish" click emptied
+        // its own sports list until the next reload, and the realtime push sent
+        // every OTHER open tab watching this event the same sports-less state.
+        AdminAllEventResponse response = getEventById(saved.getId());
+
+        realtimePublisher.pushEventStatusChange(saved.getId(), response);
         dispatchEventStatusNotification(saved, newStatus);
 
         if (newStatus == EventStatus.PUBLISHED) {
@@ -448,7 +461,7 @@ public class AdminService {
             }
         }
 
-        return mapToResponse(saved);
+        return response;
     }
 
     private void dispatchEventStatusNotification(Event event, EventStatus status) {
