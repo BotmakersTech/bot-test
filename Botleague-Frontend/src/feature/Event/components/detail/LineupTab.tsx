@@ -27,6 +27,9 @@ interface LineupTabProps {
   lineupsMap: Record<string, TeamLineUpResponse[]>;
   lineupLoading: boolean;
   lineupError: string | null;
+  /** True while a registration cancel is in flight. */
+  busy: boolean;
+  onCancelRegistration: (regId: string) => void;
   onFetch: (regId: string) => void;
   onAdd: (membershipId: string, role: string) => void;
   onRemove: (lineupId: string) => void;
@@ -44,6 +47,8 @@ export default function LineupTab({
   lineupsMap,
   lineupLoading,
   lineupError,
+  busy,
+  onCancelRegistration,
   onFetch,
   onAdd,
   onRemove,
@@ -162,14 +167,29 @@ export default function LineupTab({
 
       {lineupError && <div className="reg-banner error"><AlertTriangle size={16} /><span>{lineupError}</span></div>}
 
-      <h2 className="lineup-head">
-        {activeReg?.robotName}{" "}
-        {activeReg?.lineupLocked && (
-          <span style={{ fontSize: 16, opacity: 0.7, display: "inline-flex", alignItems: "center", gap: 4 }}>
-            · <Lock size={14} /> Lineup locked
-          </span>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 4 }}>
+        <h2 className="lineup-head">
+          {activeReg?.robotName}{" "}
+          {activeReg?.lineupLocked && (
+            <span style={{ fontSize: 13, opacity: 0.7, display: "inline-flex", alignItems: "center", gap: 4 }}>
+              · <Lock size={13} /> Lineup locked
+            </span>
+          )}
+        </h2>
+        {/* Cancelling a registration lives here rather than on the Register
+            tab: this is the one place a specific registered robot is already
+            the subject of the screen. */}
+        {isCaptain && activeReg && !activeReg.lineupLocked && (
+          <button
+            type="button"
+            className="lineup-remove-btn"
+            disabled={busy}
+            onClick={() => onCancelRegistration(activeRegId)}
+          >
+            Cancel registration
+          </button>
         )}
-      </h2>
+      </div>
 
       {(maxSize !== Infinity || minSize > 0) && (
         <div style={{ marginBottom: 24 }}>

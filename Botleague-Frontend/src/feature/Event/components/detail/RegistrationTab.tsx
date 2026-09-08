@@ -40,8 +40,6 @@ interface RegistrationTabProps {
    *  member picker (one person, one robot per techsport). */
   lineupsMap: Record<string, TeamLineUpResponse[]>;
   onRegister: (botId: string, robotName: string, lineup: { membershipId: string; role: string }[]) => Promise<void>;
-  onCancel: (regId: string) => void;
-  onManageLineup: (registrationId: string) => void;
   onDismissError: () => void;
   onRequireLogin: () => void;
 }
@@ -59,8 +57,6 @@ export default function RegistrationTab({
   teamMembers,
   lineupsMap,
   onRegister,
-  onCancel,
-  onManageLineup,
   onDismissError,
   onRequireLogin,
 }: RegistrationTabProps) {
@@ -298,39 +294,21 @@ export default function RegistrationTab({
           </div>
         )}
 
-        {existingRegs.length > 0 && (
-          <div className="register-section">
-            <h2 className="register-section-head">Your Registered Robots</h2>
-            {existingRegs.map((reg) => {
-              const regId = reg.registrationId ?? reg.id ?? "";
-              return (
-                <div className="build-card" key={regId} style={{ justifyContent: "space-between", paddingRight: 16, marginBottom: 14, height: "auto", minHeight: 56 }}>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                    {reg.robotName}
-                    <span style={{ color: "#FFF", fontWeight: 500 }}>· Lineup: {reg.lineupSize ?? 0}</span>
-                    {reg.lineupLocked && (
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Lock size={12} /> Locked</span>
-                    )}
-                  </span>
-                  <span style={{ display: "flex", gap: 10 }}>
-                    <button type="button" className="lineup-manage-btn" onClick={() => onManageLineup(regId)}>
-                      {isCaptain ? "Manage Lineup →" : "View Lineup →"}
-                    </button>
-                    {isCaptain && !reg.lineupLocked && (
-                      <button type="button" className="lineup-remove-btn" disabled={busyReg} onClick={() => onCancel(regId)}>
-                        Cancel
-                      </button>
-                    )}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
         {canAdd && (
           <div className="register-section">
-            <h2 className="register-section-head">Register Another Robot</h2>
+            <h2 className="register-section-head">Register a Robot</h2>
+            <p className="register-section-sub">
+              {step === 1
+                ? "Step 1 of 2 — choose which robot to enter."
+                : `Step 2 of 2 — assign the lineup for ${selectedRobot?.robotName ?? "this robot"}.`}
+              {existingRegs.length > 0 && (
+                <>
+                  {" "}
+                  {existingRegs.length} robot{existingRegs.length > 1 ? "s are" : " is"} already registered — manage
+                  {existingRegs.length > 1 ? " them" : " it"} in the Lineup tab.
+                </>
+              )}
+            </p>
 
             {step === 1 ? (
               <>
@@ -374,8 +352,6 @@ export default function RegistrationTab({
               </>
             ) : (
               <>
-                <p style={{ marginBottom: 10, fontWeight: 600 }}>Robot: {selectedRobot?.robotName}</p>
-
                 {/* Same requirement the Lineup tab states, worded identically —
                     a robot cannot be registered without a Driver, and the submit
                     button below stays disabled until one is added. Said up front
@@ -428,23 +404,23 @@ export default function RegistrationTab({
                 </div>
 
                 {hiddenForAge > 0 && (
-                  <p style={{ fontSize: 12.5, color: "#6b7280", marginTop: -6, marginBottom: 14 }}>
-                    <Info size={12} style={{ verticalAlign: -2, marginRight: 4 }} />
-                    {hiddenForAge} team member{hiddenForAge > 1 ? "s are" : " is"} hidden — not in the {ageGroupLabel(sport.ageGroup)} age group for this techsport.
+                  <p className="reg-hint">
+                    <Info size={13} />
+                    <span>{hiddenForAge} team member{hiddenForAge > 1 ? "s are" : " is"} hidden — not in the {ageGroupLabel(sport.ageGroup)} age group for this techsport.</span>
                   </p>
                 )}
 
                 {hiddenForOtherRobot > 0 && (
-                  <p style={{ fontSize: 12.5, color: "#6b7280", marginTop: -6, marginBottom: 14 }}>
-                    <Info size={12} style={{ verticalAlign: -2, marginRight: 4 }} />
-                    {hiddenForOtherRobot} team member{hiddenForOtherRobot > 1 ? "s are" : " is"} hidden — already in another robot's lineup for this techsport. A person can be in only one robot here, but is free to join a robot in another weight class.
+                  <p className="reg-hint">
+                    <Info size={13} />
+                    <span>{hiddenForOtherRobot} team member{hiddenForOtherRobot > 1 ? "s are" : " is"} hidden — already in another robot's lineup for this techsport. A person can be in only one robot here, but is free to join a robot in another weight class.</span>
                   </p>
                 )}
 
                 {selectableMembers.length === 0 && (
-                  <p style={{ fontSize: 12.5, color: "#6b7280", marginTop: -6, marginBottom: 14 }}>
-                    <Info size={12} style={{ verticalAlign: -2, marginRight: 4 }} />
-                    No team members are available for this robot's lineup — everyone eligible is already in another robot for this techsport.
+                  <p className="reg-hint">
+                    <Info size={13} />
+                    <span>No team members are available for this robot's lineup — everyone eligible is already in another robot for this techsport.</span>
                   </p>
                 )}
 

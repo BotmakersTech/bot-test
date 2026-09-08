@@ -1352,35 +1352,61 @@
 .evd-page .register-page { background: white; }
 .evd-page .register-wrapper { width: 100%; }
 
-/* Each logical group in the Register tab (the robots already registered,
-   the form to register another) gets its own bordered card — otherwise
+/* Each group in the Register tab gets its own bordered card — otherwise
    heading and content sit flush in one flat column with nothing to show
    where one group ends and the next begins. */
 .evd-page .register-section {
     border: 1.5px solid rgba(13, 124, 255, .16);
     border-radius: 20px;
     background: rgba(13, 124, 255, .025);
-    padding: 26px 28px;
+    padding: 24px 26px;
     margin-bottom: 24px;
 }
-.evd-page .register-section-head {
+
+/* Scoped under .tournament on purpose: `.evd-page .tournament h2` (42px,
+   centred, Orbitron) is sized for the big "ROUND 1" section titles and
+   out-specifies a plain two-class selector, so an unscoped rule here is
+   silently ignored for every <h2> a tab renders. Same reason .lineup-head
+   is scoped below. */
+.evd-page .tournament .register-section-head {
     color: #0D7CFF;
     font-family: "Orbitron", sans-serif;
-    font-size: 24px;
+    font-size: 19px;
     font-weight: 600;
-    margin-bottom: 18px;
+    text-align: left;
+    margin: 0 0 6px;
 }
-.evd-page .register-row { display: grid; grid-template-columns: 2.2fr 1.4fr 1fr; gap: 30px; align-items: center; }
+.evd-page .register-section-sub {
+    font-size: 13.5px;
+    color: #64748b;
+    margin: 0 0 18px;
+    line-height: 1.5;
+}
+
+/* Icon + text hint. Flex rather than an inline <svg> in a <p>: the app's
+   global reset makes svg display:block, so an inline icon drops onto its
+   own line. */
+.evd-page .reg-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #6b7280;
+    margin: 0 0 10px;
+}
+.evd-page .reg-hint > svg { flex-shrink: 0; margin-top: 2px; }
+.evd-page .register-row { display: grid; grid-template-columns: 2.2fr 1.4fr 1fr; gap: 16px; align-items: center; }
 
 .evd-page .gradient-select, .evd-page .white-select { position: relative; }
 
 .evd-page .gradient-select select,
 .evd-page .white-select select {
     width: 100%;
-    height: 72px;
-    border-radius: 18px;
-    padding: 0 60px 0 26px;
-    font-size: 19px;
+    height: 52px;
+    border-radius: 12px;
+    padding: 0 46px 0 16px;
+    font-size: 15px;
     font-weight: 500;
     outline: none;
     cursor: pointer;
@@ -1405,12 +1431,12 @@
 .evd-page .white-select::after {
     content: "";
     position: absolute;
-    right: 26px;
+    right: 18px;
     top: 50%;
-    width: 12px;
-    height: 12px;
-    border-right: 3px solid currentColor;
-    border-bottom: 3px solid currentColor;
+    width: 9px;
+    height: 9px;
+    border-right: 2.5px solid currentColor;
+    border-bottom: 2.5px solid currentColor;
     transform: translateY(-70%) rotate(45deg);
     pointer-events: none;
 }
@@ -1446,19 +1472,21 @@
 
 .evd-page .add-box {
     width: 100%;
-    max-width: 320px;       
-    margin: 22px auto 0;     
-    height: 72px;
-    border-radius: 16px;
-    border: 2px solid #5B39FF;
+    max-width: 260px;
+    /* Left-aligned, not `auto` — these buttons sit under left-aligned form
+       rows, and centring them broke that edge. */
+    margin: 16px 0 0;
+    height: 52px;
+    border-radius: 12px;
+    border: 1.5px solid #5B39FF;
     background: transparent;
     color: #4E6CFF;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 14px;
-    font-size: 22px;
-    font-weight: 500;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 600;
     cursor: pointer;
     transition: .3s;
 }
@@ -1466,14 +1494,14 @@
 .evd-page .add-box:disabled { opacity: .5; cursor: not-allowed; background: transparent; }
 
 .evd-page .plus-circle {
-    width: 30px;
-    height: 30px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
-    border: 3px solid #4E6CFF;
+    border: 2px solid #4E6CFF;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 16px;
     line-height: 1;
     font-weight: 700;
 }
@@ -1484,16 +1512,16 @@
    eligibility/capacity/error states that have no visual language yet */
 .evd-page .reg-banner {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    border-radius: 14px;
-    padding: 16px 20px;
-    font-size: 18px;      
-    font-weight: 600;
-    margin-bottom: 20px;
-    line-height: 1.5;
-    text-align: center;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 9px;
+    border-radius: 12px;
+    padding: 12px 15px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 16px;
+    line-height: 1.55;
+    text-align: left;
 }
 .evd-page .reg-banner > svg { flex-shrink: 0; margin-top: 2px; }
 .evd-page .reg-banner.info    { background: rgba(1, 98, 209, .08);  color: #0162D1; }
@@ -1502,17 +1530,14 @@
 .evd-page .reg-banner.success { background: rgba(34, 197, 94, .1);  color: #15803d; }
 
 @media (max-width: 1200px) {
-    .evd-page .register-row { grid-template-columns: 1fr; gap: 18px; }
-    .evd-page .register-section-head { font-size: 21px; }
-    .evd-page .gradient-select select, .evd-page .white-select select { height: 62px; font-size: 17px; }
-    .evd-page .add-box { height: 62px; font-size: 20px; }
+    .evd-page .register-row { grid-template-columns: 1fr; gap: 14px; }
 }
 @media (max-width: 768px) {
     .evd-page .register-section { padding: 20px 18px; }
-    .evd-page .register-section-head { font-size: 19px; }
-    .evd-page .gradient-select select, .evd-page .white-select select { height: 56px; padding: 0 50px 0 16px; font-size: 15px; }
-    .evd-page .add-box { height: 54px; font-size: 17px; }
-    .evd-page .plus-circle { width: 26px; height: 26px; font-size: 20px; }
+    .evd-page .tournament .register-section-head { font-size: 17px; }
+    .evd-page .gradient-select select, .evd-page .white-select select { height: 48px; padding: 0 44px 0 14px; font-size: 14px; }
+    .evd-page .add-box { height: 48px; font-size: 14px; }
+    .evd-page .plus-circle { width: 22px; height: 22px; font-size: 17px; }
 }
 
 /* LINEUP TAB */
@@ -1522,23 +1547,26 @@
 .evd-page .lineup-table {
     width: 100%;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    column-gap: 40px;
-    row-gap: 24px;
+    /* Third column is sized to the Remove button rather than an equal
+       third — stretched across a full third it read as the row's primary
+       action instead of a secondary one. */
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+    column-gap: 20px;
+    row-gap: 14px;
     align-items: center;
 }
 
-.evd-page .lineup-head { color: #0D7CFF; font-family: "Orbitron", sans-serif; font-size: 28px; font-weight: 600; margin-bottom: 8px; }
+.evd-page .tournament .lineup-head { color: #0D7CFF; font-family: "Orbitron", sans-serif; font-size: 21px; font-weight: 600; text-align: left; margin: 0 0 8px; }
 
 .evd-page .build-card {
-    height: 56px;
-    border-radius: 18px;
+    height: 46px;
+    border-radius: 12px;
     background: linear-gradient(180deg, #117CFF 70%, #7D63FF 100%);
-    border: 2px solid #4D8EFF;
+    border: 1.5px solid #4D8EFF;
     display: flex;
     align-items: center;
-    padding-left: 22px;
-    font-size: 16px;
+    padding-left: 16px;
+    font-size: 14px;
     font-weight: 600;
     color: #fff;
     box-shadow: 0 4px 14px rgba(40, 115, 255, .12);
@@ -1547,12 +1575,12 @@
 .evd-page .lineup-select {
     font-family: "Inter", sans-serif;
     width: 100%;
-    height: 56px;
-    border-radius: 18px;
-    border: 2px solid #4D8EFF;
+    height: 46px;
+    border-radius: 12px;
+    border: 1.5px solid #4D8EFF;
     background: white;
-    padding: 0 20px;
-    font-size: 15px;
+    padding: 0 18px;
+    font-size: 14px;
     color: #0162D1;
     outline: none;
     appearance: none;
@@ -1606,8 +1634,8 @@
 .evd-page .lineup-progress-fill { height: 100%; border-radius: 999px; transition: width .3s ease; }
 
 @media (max-width: 1200px) { .evd-page .lineup-table { grid-template-columns: 1fr; } }
-@media (max-width: 768px) { .evd-page .lineup-head { font-size: 24px; } }
+@media (max-width: 768px) { .evd-page .tournament .lineup-head { font-size: 18px; } }
 @media (max-width: 480px) {
-    .evd-page .lineup-head { font-size: 20px; }
-    .evd-page .build-card, .evd-page .lineup-select { height: 48px; font-size: 14px; }
+    .evd-page .tournament .lineup-head { font-size: 17px; }
+    .evd-page .build-card, .evd-page .lineup-select { height: 44px; font-size: 13.5px; }
 }

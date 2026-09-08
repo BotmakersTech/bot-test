@@ -287,8 +287,6 @@ export default function UserSportDetail() {
                 teamMembers={teamMembers}
                 lineupsMap={lineupsMap}
                 onRegister={handleRegister}
-                onCancel={handleCancel}
-                onManageLineup={(id) => setActiveRegId(id)}
                 onDismissError={() => setRegError(null)}
                 onRequireLogin={requireLogin} />}
               lineup={<LineupTab
@@ -302,6 +300,8 @@ export default function UserSportDetail() {
                 lineupsMap={lineupsMap}
                 lineupLoading={lineupLoading}
                 lineupError={lineupError}
+                busy={busyReg}
+                onCancelRegistration={handleCancel}
                 onFetch={handleFetchLineup}
                 onAdd={handleAddMember}
                 onRemove={handleRemoveMember}
