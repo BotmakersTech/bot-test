@@ -731,7 +731,7 @@
     display: grid;
     grid-template-columns: 520px 1fr;
     gap: 70px;
-    padding: 120px 80px;
+    padding: 120px 40px;
     align-items: center;
     overflow: visible;
 }
@@ -897,7 +897,7 @@
     .evd-page .sport-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); text-align: left; }
 }
 @media (max-width: 640px) {
-    .evd-page .event-details { padding: 50px 20px; gap: 25px; }
+    .evd-page .event-details { padding: 30px 20px; gap: 25px; }
     .evd-page .event-image { padding: 14px; }
     .evd-page .event-image img { height: 280px; }
     .evd-page .event-info h2 { font-size: 38px; }
@@ -1352,15 +1352,24 @@
 .evd-page .register-page { background: white; }
 .evd-page .register-wrapper { width: 100%; }
 
-.evd-page .register-head {
-    display: grid;
-    grid-template-columns: 2.2fr 1.4fr 1fr;
-    gap: 30px;
-    margin-bottom: 50px;
+/* Each logical group in the Register tab (the robots already registered,
+   the form to register another) gets its own bordered card — otherwise
+   heading and content sit flush in one flat column with nothing to show
+   where one group ends and the next begins. */
+.evd-page .register-section {
+    border: 1.5px solid rgba(13, 124, 255, .16);
+    border-radius: 20px;
+    background: rgba(13, 124, 255, .025);
+    padding: 26px 28px;
+    margin-bottom: 24px;
 }
-.evd-page .register-head h2 { color: #0D7CFF; font-family: "Orbitron", sans-serif; font-size: 28px; font-weight: 600; }
-
-.evd-page .register-block { margin-bottom: 30px; }
+.evd-page .register-section-head {
+    color: #0D7CFF;
+    font-family: "Orbitron", sans-serif;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 18px;
+}
 .evd-page .register-row { display: grid; grid-template-columns: 2.2fr 1.4fr 1fr; gap: 30px; align-items: center; }
 
 .evd-page .gradient-select, .evd-page .white-select { position: relative; }
@@ -1493,14 +1502,14 @@
 .evd-page .reg-banner.success { background: rgba(34, 197, 94, .1);  color: #15803d; }
 
 @media (max-width: 1200px) {
-    .evd-page .register-head, .evd-page .register-row { grid-template-columns: 1fr; gap: 18px; }
-    .evd-page .register-head { margin-bottom: 20px; }
-    .evd-page .register-head h2 { font-size: 24px; }
+    .evd-page .register-row { grid-template-columns: 1fr; gap: 18px; }
+    .evd-page .register-section-head { font-size: 21px; }
     .evd-page .gradient-select select, .evd-page .white-select select { height: 62px; font-size: 17px; }
     .evd-page .add-box { height: 62px; font-size: 20px; }
 }
 @media (max-width: 768px) {
-    .evd-page .register-head h2 { font-size: 20px; }
+    .evd-page .register-section { padding: 20px 18px; }
+    .evd-page .register-section-head { font-size: 19px; }
     .evd-page .gradient-select select, .evd-page .white-select select { height: 56px; padding: 0 50px 0 16px; font-size: 15px; }
     .evd-page .add-box { height: 54px; font-size: 17px; }
     .evd-page .plus-circle { width: 26px; height: 26px; font-size: 20px; }

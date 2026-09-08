@@ -299,40 +299,38 @@ export default function RegistrationTab({
         )}
 
         {existingRegs.length > 0 && (
-          <div className="register-head" style={{ marginBottom: 20 }}>
-            <h2>Your Registered Robots</h2>
+          <div className="register-section">
+            <h2 className="register-section-head">Your Registered Robots</h2>
+            {existingRegs.map((reg) => {
+              const regId = reg.registrationId ?? reg.id ?? "";
+              return (
+                <div className="build-card" key={regId} style={{ justifyContent: "space-between", paddingRight: 16, marginBottom: 14, height: "auto", minHeight: 56 }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    {reg.robotName}
+                    <span style={{ color: "#FFF", fontWeight: 500 }}>· Lineup: {reg.lineupSize ?? 0}</span>
+                    {reg.lineupLocked && (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Lock size={12} /> Locked</span>
+                    )}
+                  </span>
+                  <span style={{ display: "flex", gap: 10 }}>
+                    <button type="button" className="lineup-manage-btn" onClick={() => onManageLineup(regId)}>
+                      {isCaptain ? "Manage Lineup →" : "View Lineup →"}
+                    </button>
+                    {isCaptain && !reg.lineupLocked && (
+                      <button type="button" className="lineup-remove-btn" disabled={busyReg} onClick={() => onCancel(regId)}>
+                        Cancel
+                      </button>
+                    )}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         )}
-        {existingRegs.map((reg) => {
-          const regId = reg.registrationId ?? reg.id ?? "";
-          return (
-            <div className="build-card" key={regId} style={{ justifyContent: "space-between", paddingRight: 16, marginBottom: 14, height: "auto", minHeight: 56 }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                {reg.robotName}
-                <span style={{ color: "#FFF", fontWeight: 500 }}>· Lineup: {reg.lineupSize ?? 0}</span>
-                {reg.lineupLocked && (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Lock size={12} /> Locked</span>
-                )}
-              </span>
-              <span style={{ display: "flex", gap: 10 }}>
-                <button type="button" className="lineup-manage-btn" onClick={() => onManageLineup(regId)}>
-                  {isCaptain ? "Manage Lineup →" : "View Lineup →"}
-                </button>
-                {isCaptain && !reg.lineupLocked && (
-                  <button type="button" className="lineup-remove-btn" disabled={busyReg} onClick={() => onCancel(regId)}>
-                    Cancel
-                  </button>
-                )}
-              </span>
-            </div>
-          );
-        })}
 
         {canAdd && (
-          <div className="register-block">
-            <div className="register-head">
-              <h2>Register Another Robot</h2>
-            </div>
+          <div className="register-section">
+            <h2 className="register-section-head">Register Another Robot</h2>
 
             {step === 1 ? (
               <>
