@@ -96,6 +96,17 @@ export default function RankingMatchesPanel({ sportId, onChanged }: RankingMatch
     return [...byRound.entries()].sort((a, b) => a[0] - b[0])
   }, [matches])
 
+  // A match's score feeds a specific slot in a later match (the winner via
+  // nextMatchId, and in double elimination the loser too via
+  // loserNextMatchId) — once THAT match has been decided, changing this
+  // one's score/winner would leave the wrong team recorded as having played
+  // it. Editing locks automatically the moment either downstream match
+  // completes; there's no unlock for this the way scoreLocked has one, since
+  // fixing it properly means correcting the downstream match too.
+  const matchById = useMemo(() => new Map(matches.map(m => [m.matchId, m])), [matches])
+  const isFedIntoCompletedMatch = (m: MatchDTO) =>
+    [m.nextMatchId, m.loserNextMatchId].some(id => id && matchById.get(id)?.status === "COMPLETED")
+
   const closeEditors = () => {
     setEditingScoreId(null)
     setEditingResultId(null)
@@ -181,7 +192,8 @@ export default function RankingMatchesPanel({ sportId, onChanged }: RankingMatch
             {roundMatches.map(m => {
               const teams = teamsOf(m)
               const st = STATUS_STYLE[m.status ?? "SCHEDULED"] ?? STATUS_STYLE.SCHEDULED
-              const canAct = m.status === "LIVE" || m.status === "COMPLETED" || m.status === "PENDING_APPROVAL"
+              const nextDone = isFedIntoCompletedMatch(m)
+              const canAct = (m.status === "LIVE" || m.status === "COMPLETED" || m.status === "PENDING_APPROVAL") && !nextDone
               const scoreEditing = editingScoreId === m.matchId
               const resultEditing = editingResultId === m.matchId
 
@@ -209,6 +221,9 @@ export default function RankingMatchesPanel({ sportId, onChanged }: RankingMatch
                     )}
                     {m.scoreLocked && (
                       <span style={{ fontSize: "0.68rem", color: MUTED }}>Score locked — unlock from the bracket page to edit</span>
+                    )}
+                    {!m.scoreLocked && nextDone && (
+                      <span style={{ fontSize: "0.68rem", color: MUTED }}>Locked — the next round match has already been decided</span>
                     )}
                   </div>
 

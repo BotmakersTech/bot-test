@@ -70,9 +70,19 @@ function EntryStatusBadge({ status }: { status: string }) {
 export interface RaceRoundManagerProps {
   sportId: string
   isRegistrationClosed: boolean
+  /**
+   * Embedded inside the Update Score page instead of standing alone under
+   * Manage Matches — same reduced scope RankingMatchesPanel gives bracket
+   * sports there (edit already-recorded results, not run the tournament):
+   * no page chrome of its own (the parent already has "Update Score" +
+   * back button), no Generate Round 1 / Delete Round / Shortlist / Finalize.
+   * Just the current round's times, editable under the same rule as
+   * everywhere else — only while it's still the open round.
+   */
+  scoresOnly?: boolean
 }
 
-export default function RaceRoundManager({ sportId, isRegistrationClosed }: RaceRoundManagerProps) {
+export default function RaceRoundManager({ sportId, isRegistrationClosed, scoresOnly = false }: RaceRoundManagerProps) {
   const { rounds, loading, actionLoading, error, generateFirstRound, recordTimes, shortlistRound, finalizeRound, deleteRound } = useRaceRounds(sportId)
   const navigate = useNavigate()
   const location = useLocation()
@@ -171,11 +181,11 @@ export default function RaceRoundManager({ sportId, isRegistrationClosed }: Race
   // Same page chrome as its sibling destinations from the sport-detail
   // action row (Update Score, Ranking) — org-page-bg wrapper, "← Back to
   // Sport", and a font-display heading at the same clamp size and blue —
-  // instead of this page's own smaller inline h2 with no way back.
-  return (
+  // instead of this page's own smaller inline h2 with no way back. Skipped
+  // in scoresOnly mode: the Update Score page that embeds it there already
+  // provides both.
+  const Chrome = scoresOnly ? ({ children }: { children: React.ReactNode }) => <>{children}</> : ({ children }: { children: React.ReactNode }) => (
     <div className="org-page-bg p-8" style={{ minHeight: "100vh", color: "#111111" }}>
-      <style>{`@keyframes rrm-spin { to { transform: rotate(360deg); } }`}</style>
-
       <button
         onClick={() => navigate(backPath)}
         className="mb-4 flex items-center gap-1.5 text-sm font-semibold"
@@ -190,6 +200,13 @@ export default function RaceRoundManager({ sportId, isRegistrationClosed }: Race
       <p style={{ color: ORG.muted, fontSize: "0.85rem", marginTop: 0, marginBottom: 20 }}>
         Every bot runs each round and gets a time. Shortlist the fastest to the next round, or finalize to lock final standings.
       </p>
+      {children}
+    </div>
+  )
+
+  return (
+    <Chrome>
+      <style>{`@keyframes rrm-spin { to { transform: rotate(360deg); } }`}</style>
 
       {loading && rounds.length === 0 ? (
         <div style={{ textAlign: "center", padding: "60px 0", color: ORG.muted }}>
@@ -204,7 +221,13 @@ export default function RaceRoundManager({ sportId, isRegistrationClosed }: Race
         </div>
       )}
 
-      {!currentRound && (
+      {!currentRound && scoresOnly && (
+        <div style={{ textAlign: "center", padding: "48px 20px", border: `1.5px dashed ${ORG.borderColor}`, borderRadius: 14, background: "rgba(75,134,232,0.03)", color: ORG.muted, fontSize: "0.85rem" }}>
+          No round is open for scoring yet — generate Round 1 from Manage Matches.
+        </div>
+      )}
+
+      {!currentRound && !scoresOnly && (
         <div style={{ textAlign: "center", padding: "48px 20px", border: `1.5px dashed ${ORG.borderColor}`, borderRadius: 14, background: "rgba(75,134,232,0.03)" }}>
           <Flag size={30} color={ORG.blue} style={{ marginBottom: 10 }} />
           <div style={{ fontWeight: 700, color: ORG.text, marginBottom: 6 }}>No rounds yet</div>
@@ -238,7 +261,7 @@ export default function RaceRoundManager({ sportId, isRegistrationClosed }: Race
               <EntryStatusBadge status={currentRound.status} />
               <span style={{ fontSize: "0.75rem", color: ORG.muted }}>{timedCount}/{totalCount} recorded</span>
             </div>
-            {isEditable && currentRound.status === "OPEN" && (
+            {!scoresOnly && isEditable && currentRound.status === "OPEN" && (
               <button onClick={handleDeleteRound} title="Delete this round" style={{ background: "none", border: "none", color: ORG.danger, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: "0.75rem", fontWeight: 600 }}>
                 <Trash2 size={13} /> Delete round
               </button>
@@ -295,7 +318,13 @@ export default function RaceRoundManager({ sportId, isRegistrationClosed }: Race
               </button>
             )}
 
-            {isDecided && (
+            {isDecided && scoresOnly && (
+              <span style={{ fontSize: "0.8rem", color: ORG.muted }}>
+                Times recorded — shortlist or finalize this round from Manage Matches.
+              </span>
+            )}
+
+            {isDecided && !scoresOnly && (
               <>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <input
@@ -371,6 +400,6 @@ export default function RaceRoundManager({ sportId, isRegistrationClosed }: Race
       )}
       </>
       )}
-    </div>
+    </Chrome>
   )
 }
