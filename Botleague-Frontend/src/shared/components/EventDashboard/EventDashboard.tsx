@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react"
 import { ArrowLeft, Edit2, Plus, Calendar, Trophy, Users, CheckCircle2, Check, Ban, UserCog, Trash2, AlertTriangle, Building2, Award } from "lucide-react"
 import MobileEventDetail from "./MobileEventDetail"
 import "./EventDashboard.css"
@@ -81,6 +82,10 @@ const STATUS_COLORS: Record<string, string> = {
   ARCHIVED: "#64748b",
 }
 
+// Youngest league first, the order used everywhere else on the site.
+const LEAGUE_ORDER = ["JUNIOR_INNOVATORS", "YOUNG_ENGINEERS", "ROBO_MINDS"]
+const ALL_LEAGUES = "ALL"
+
 function formatDate(d?: string | null): string {
   return d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"
 }
@@ -123,6 +128,28 @@ export default function EventDashboard({
 }: EventDashboardProps) {
   const totalRegistrations = sports.reduce((t, s) => t + teamCount(s), 0)
   const statusColor = STATUS_COLORS[event.status?.toUpperCase() ?? "DRAFT"] || STATUS_COLORS.DRAFT
+
+  // Tabs come from the leagues THIS event actually runs, not a fixed list —
+  // an event with only Apex sports shouldn't offer an Ignite tab that leads
+  // to an empty grid. Mirrors the same filter on the public event page
+  // (SportsSection.tsx).
+  const [league, setLeague] = useState<string>(ALL_LEAGUES)
+  const leagueTabs = useMemo(() => {
+    const counts = new Map<string, number>()
+    sports.forEach(s => {
+      const code = s.ageGroup
+      if (code) counts.set(code, (counts.get(code) ?? 0) + 1)
+    })
+    return [...counts.entries()]
+      .sort(([a], [b]) => {
+        const ia = LEAGUE_ORDER.indexOf(a)
+        const ib = LEAGUE_ORDER.indexOf(b)
+        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib)
+      })
+      .map(([code, count]) => ({ code, count, label: ageGroupLabel(code) }))
+  }, [sports])
+  const visibleSports = league === ALL_LEAGUES ? sports : sports.filter(s => s.ageGroup === league)
+  const showLeagueTabs = leagueTabs.length > 1
 
   return (
     <div className="ed-root">
@@ -239,14 +266,45 @@ export default function EventDashboard({
             )}
           </div>
 
+          {showLeagueTabs && (
+            <div className="ed-league-filter" role="tablist" aria-label="Filter techsports by league">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={league === ALL_LEAGUES}
+                className={league === ALL_LEAGUES ? "ed-league-tab active" : "ed-league-tab"}
+                onClick={() => setLeague(ALL_LEAGUES)}
+              >
+                All <span className="ed-league-tab-count">{sports.length}</span>
+              </button>
+              {leagueTabs.map(t => (
+                <button
+                  key={t.code}
+                  type="button"
+                  role="tab"
+                  aria-selected={league === t.code}
+                  className={league === t.code ? "ed-league-tab active" : "ed-league-tab"}
+                  onClick={() => setLeague(t.code)}
+                >
+                  {t.label} <span className="ed-league-tab-count">{t.count}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
           {sports.length === 0 ? (
             <div className="ed-empty-state">
               <Award size={36} style={{ opacity: 0.6 }} />
               <div style={{ fontWeight: 600 }}>No sports added yet</div>
             </div>
+          ) : visibleSports.length === 0 ? (
+            <div className="ed-empty-state">
+              <Award size={36} style={{ opacity: 0.6 }} />
+              <div style={{ fontWeight: 600 }}>No sports in this league</div>
+            </div>
           ) : (
             <div className="ed-sports-grid">
-              {sports.map(sport => {
+              {visibleSports.map(sport => {
                 const canSubmit = onSubmitApproval && sport.status?.toUpperCase() === "DRAFT"
                 const canApproveReject = (onApproveSport || onRejectSport) && sport.status?.toUpperCase() === "PENDING_APPROVAL"
                 const busy = submitApprovalId === sport.id || approveRejectBusyId === sport.id

@@ -335,10 +335,66 @@ button.ed-stat-card {
     gap: 10px;
 }
 
-.ed-sports-grid {
+/* League filter — sits above the grid, inside the same purple-bordered
+   panel, so it reads as "filtering this list" rather than a separate
+   control. Pill style borrows .ed-sport-tag's shape at button size. */
+.ed-league-filter {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.ed-league-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff;
+    border: 1.5px solid var(--ed-border-light);
+    color: var(--ed-ink-soft);
+    border-radius: 999px;
+    font-family: "Poppins", sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.ed-league-tab:hover {
+    border-color: var(--ed-purple);
+    color: var(--ed-purple);
+}
+
+.ed-league-tab.active {
+    background: var(--ed-purple);
+    border-color: var(--ed-purple);
+    color: #fff;
+}
+
+.ed-league-tab-count {
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 999px;
+    font-size: 0.66rem;
+    font-weight: 800;
+    padding: 1px 7px;
+    line-height: 1.5;
+}
+
+.ed-league-tab.active .ed-league-tab-count {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.ed-sports-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 14px;
+}
+
+@media (max-width: 1180px) {
+    .ed-sports-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .ed-sport-item {
