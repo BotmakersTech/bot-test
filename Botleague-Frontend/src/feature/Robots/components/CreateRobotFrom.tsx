@@ -3,7 +3,7 @@ import { UploadCloud } from "lucide-react";
 
 import { createRobot } from "../api/robot.api";
 import { uploadRobotImage } from "../api/uploadRobot.api";
-import { getPublicLeagueSports, type LeagueSport } from "../../../shared/api/catalog.api";
+import { getPublicLeagueSports, toScaleClasses, type LeagueSport } from "../../../shared/api/catalog.api";
 import { useLeagues, formatAgeRange } from "../../../temp/pages/leagues/useLeagues";
 import { constraintsFor } from "../../Event/utils/specPolicy";
 
@@ -82,17 +82,20 @@ function resolveSportBridge(catalogSportName: string, ageGroup: string, weightKg
   }
 }
 
+// Free-choice attributes only — anything the competition actually validates
+// (scale, diameter) is NOT listed here. Those come from the catalog row for the
+// chosen league+sport, because a hardcoded list drifts: this file used to offer
+// scale 1:8 / 1:12 / OTHER while the catalog ran 1:8, 1:10 and 1:12, so a 1:10
+// competition could not be entered by any robot the form was able to produce.
 const EXTRA_FIELDS_BY_CATEGORY: Partial<Record<RobotCategoryKey, { key: string; label: string; options: string[] }[]>> = {
   COMBAT_ROBOT: [
     { key: "weaponType", label: "Weapon Type", options: ["SPINNER", "FLIPPER", "CRUSHER", "WEDGE", "LIFTER", "HAMMER", "OTHER"] },
   ],
   RC_VEHICLE: [
     { key: "vehicleType", label: "Vehicle Type", options: ["ELECTRIC", "NITRO"] },
-    { key: "scaleClass", label: "Scale Class", options: ["1:8", "1:12", "OTHER"] },
   ],
   DRONE: [
     { key: "droneType", label: "Drone Type", options: ["FPV", "STANDARD_RACING", "FREESTYLE", "OTHER"] },
-    { key: "frameSizeCm", label: "Frame Size (cm)", options: ["10", "20", "25", "30", "OTHER"] },
   ],
 };
 
@@ -175,13 +178,17 @@ export default function CreateRobotForm({ onSuccess, onCancel }: Props) {
   // the same policy used for event registration eligibility (specPolicy.ts).
   const specs = selectedLeagueSport && selectedLeague
     ? constraintsFor(selectedLeague.ageGroupValue, selectedLeagueSport.sportName)
-    : { weight: true, dimension: true, scale: true };
+    : { weight: true, dimension: true, scale: true, diameter: false };
 
-  // RC_VEHICLE covers both Robo Race and RC Racing Car, but only the latter
-  // needs the Scale Class field — drop it here rather than forking the whole
-  // category so Vehicle Type still applies to both.
-  const extraFields = (bridge ? EXTRA_FIELDS_BY_CATEGORY[bridge.robotCategory] ?? [] : [])
-    .filter((f) => f.key !== "scaleClass" || specs.scale);
+  const extraFields = bridge ? EXTRA_FIELDS_BY_CATEGORY[bridge.robotCategory] ?? [] : [];
+
+  // The specs the competition will actually check, sourced from the catalog row
+  // for this exact (league, sport) — never hardcoded here. Scale gates RC Racing
+  // Car; diameter gates Drone Soccer (12.5 cm at Ignite, 20 cm above it).
+  const scaleOptions = selectedLeagueSport ? toScaleClasses(selectedLeagueSport) : [];
+  const maxDiameterCm = selectedLeagueSport
+    ? parseFloat(selectedLeagueSport.extraSpecs?.diameterCm ?? "")
+    : NaN;
 
   // Auto-pick the sport's single weight option (nothing to choose); force an
   // explicit pick when there's more than one (e.g. Robo War's weight tiers).
@@ -192,13 +199,20 @@ export default function CreateRobotForm({ onSuccess, onCancel }: Props) {
     setExtraAttrs({});
   }, [selectedSportSlug]);
 
+  // Only the spec(s) this (league, sport) actually gates on — the same policy
+  // registration applies — so a drone is never judged on weight and an RC car
+  // never on dimensions.
+  const enteredDiameter = extraAttrs.diameterCm ? parseFloat(extraAttrs.diameterCm) : null;
   const withinLeagueLimits =
     !selectedLeagueSport ||
-    ((weightCeilingKg == null || weightKg == null || weightKg <= weightCeilingKg) &&
-      (selectedLeagueSport.maxLengthCm == null || lengthCm == null || lengthCm <= selectedLeagueSport.maxLengthCm) &&
-      (selectedLeagueSport.maxWidthCm == null || widthCm == null || widthCm <= selectedLeagueSport.maxWidthCm) &&
-      (selectedLeagueSport.maxHeightCm == null || heightCm == null || heightCm <= selectedLeagueSport.maxHeightCm));
-  const hasEnteredSpecs = weightKg !== null || widthCm !== null || heightCm !== null || lengthCm !== null;
+    ((!specs.weight || weightCeilingKg == null || weightKg == null || weightKg <= weightCeilingKg) &&
+      (!specs.dimension || (
+        (selectedLeagueSport.maxLengthCm == null || lengthCm == null || lengthCm <= selectedLeagueSport.maxLengthCm) &&
+        (selectedLeagueSport.maxWidthCm == null || widthCm == null || widthCm <= selectedLeagueSport.maxWidthCm) &&
+        (selectedLeagueSport.maxHeightCm == null || heightCm == null || heightCm <= selectedLeagueSport.maxHeightCm))) &&
+      (!specs.diameter || Number.isNaN(maxDiameterCm) || enteredDiameter == null || enteredDiameter <= maxDiameterCm));
+  const hasEnteredSpecs =
+    weightKg !== null || widthCm !== null || heightCm !== null || lengthCm !== null || enteredDiameter !== null;
 
   const handlePhotoChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -216,6 +230,22 @@ export default function CreateRobotForm({ onSuccess, onCancel }: Props) {
     }
     if (specs.weight && weightOptions.length > 0 && !selectedWeightOption) {
       setError("Please select a weight class");
+      return;
+    }
+    // The gating spec isn't optional — without it the robot can't be matched
+    // against a competition and would be silently rejected at registration.
+    if (specs.scale && scaleOptions.length > 0 && !extraAttrs.scaleClass) {
+      setError(`Please select a scale — ${selectedLeagueSport.sportName} runs at ${scaleOptions.map(s => s.label).join(", ")}`);
+      return;
+    }
+    if (specs.diameter && !extraAttrs.diameterCm) {
+      setError(Number.isNaN(maxDiameterCm)
+        ? "Please enter the drone's diameter"
+        : `Please enter the drone's diameter — ${selectedLeagueSport.sportName} allows up to ${maxDiameterCm} cm`);
+      return;
+    }
+    if (specs.diameter && !Number.isNaN(maxDiameterCm) && enteredDiameter != null && enteredDiameter > maxDiameterCm) {
+      setError(`Diameter must be ${maxDiameterCm} cm or less for ${selectedLeague?.shortName ?? "this league"}`);
       return;
     }
 
@@ -451,6 +481,36 @@ export default function CreateRobotForm({ onSuccess, onCancel }: Props) {
                 </select>
               </label>
             ))}
+
+            {specs.scale && (
+              <label className="robot-create-field">
+                <span>Scale</span>
+                <select
+                  value={extraAttrs.scaleClass ?? ""}
+                  onChange={(event) => setExtraAttrs(prev => ({ ...prev, scaleClass: event.target.value }))}
+                >
+                  <option value="">Select Scale</option>
+                  {scaleOptions.map((s) => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            {specs.diameter && (
+              <label className="robot-create-field">
+                <span>Diameter (in cm)</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  max={Number.isNaN(maxDiameterCm) ? undefined : maxDiameterCm}
+                  value={extraAttrs.diameterCm ?? ""}
+                  onChange={(event) => setExtraAttrs(prev => ({ ...prev, diameterCm: event.target.value }))}
+                  placeholder={Number.isNaN(maxDiameterCm) ? "Diameter" : `Max ${maxDiameterCm} cm`}
+                />
+              </label>
+            )}
 
             {hasEnteredSpecs && (
               <div className="robot-create-eligibility">

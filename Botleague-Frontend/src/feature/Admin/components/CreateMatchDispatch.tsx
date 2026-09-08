@@ -24,7 +24,9 @@ export default function CreateMatchDispatch() {
   }
 
   if (sport && formatFor(sport.sport) === "ROUND_TIME_TRIAL") {
-    return <RaceRoundManager sportId={sportId!} isRegistrationClosed={sport.status?.toUpperCase() === "REGISTRATION_CLOSED"} />
+    // "Not open" rather than strictly REGISTRATION_CLOSED — matches the condition
+    // brackets use, so an approved-but-never-opened techsport isn't stuck.
+    return <RaceRoundManager sportId={sportId!} isRegistrationClosed={sport.status?.toUpperCase() !== "REGISTRATION_OPEN"} />
   }
 
   return <CreateMatch />

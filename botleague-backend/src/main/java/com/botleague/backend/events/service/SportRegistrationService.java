@@ -78,6 +78,7 @@ public class SportRegistrationService {
     private final SportRegistrationLineupService    lineupService;
     private final com.botleague.backend.matches.repository.MatchRepository matchRepository;
     private final com.botleague.backend.common.security.AuthorizationService authorizationService;
+    private final com.botleague.backend.team.service.RobotEligibilityService robotEligibilityService;
 
     // =====================================================
     // CONSTRUCTOR
@@ -97,7 +98,8 @@ public class SportRegistrationService {
             EventRegistrationLineupRepository    lineupRepository,
             SportRegistrationLineupService       lineupService,
             com.botleague.backend.matches.repository.MatchRepository matchRepository,
-            com.botleague.backend.common.security.AuthorizationService authorizationService
+            com.botleague.backend.common.security.AuthorizationService authorizationService,
+            com.botleague.backend.team.service.RobotEligibilityService robotEligibilityService
     ) {
         this.sportRegistrationRepository = sportRegistrationRepository;
         this.eventSportsRepository       = eventSportsRepository;
@@ -113,6 +115,7 @@ public class SportRegistrationService {
         this.lineupService               = lineupService;
         this.matchRepository             = matchRepository;
         this.authorizationService        = authorizationService;
+        this.robotEligibilityService     = robotEligibilityService;
     }
 
     // =====================================================
@@ -267,21 +270,45 @@ public class SportRegistrationService {
         // =================================================
 
         if (robot.getSport() != null && eventSport.getSport() != null) {
-            Set<String> allowed = ROBOT_SPORT_TO_EVENT_SPORTS.get(
-                    normalizeSport(robot.getSport()));
-            // If the robot sport is in our catalogue but doesn't match → reject.
-            // If it's an unknown/custom sport key, skip the check.
-            // Both sides are normalised: the event sport is stored as its catalog
-            // display name ("Robo War"), the map values are canonical tokens
-            // ("ROBO_WAR"), so a raw compare would reject every robot.
-            String eventSportNorm = normalizeSport(eventSport.getSport());
-            if (allowed != null
-                    && allowed.stream().noneMatch(a -> normalizeSport(a).equals(eventSportNorm))) {
+            // Both sides fold to one canonical bucket (see SportKeys) instead of
+            // being looked up in a hand-maintained name-to-name allowlist. That
+            // map had to know every spelling on both sides and drifted twice —
+            // it silently blocked RC Racing Car, then Drone Soccer, because the
+            // catalog renamed techsports and nobody updated the copy in code.
+            // It also SKIPPED the check for any key it didn't recognise, which
+            // is how 9 existing robots register with no sport check at all.
+            if (!SportKeys.sameSport(robot.getSport(), eventSport.getSport())) {
                 throw new IllegalStateException(
                         "Sport mismatch: robot '" + robot.getRobotName()
-                        + "' is configured for '" + robot.getSport() + "' "
+                        + "' is built for '" + robot.getSport() + "' "
                         + "but this competition is '" + eventSport.getSport() + "'. "
                         + "Only robots built for this specific sport can register.");
+            }
+        }
+
+        // =================================================
+        // 6.55  LEAGUE CHECK
+        //   A robot competes in the league(s) its specs qualify it for. Without
+        //   this the only league gate lived in the browser, so an Apex robot
+        //   could be posted straight into an Ignite competition.
+        // =================================================
+
+        if (eventSport.getAgeGroup() != null) {
+            var eligible = robotEligibilityService.computeEligibleCategories(
+                    robot.getSport(), robot.getWeightKg(),
+                    robot.getLengthCm(), robot.getWidthCm(), robot.getHeightCm(),
+                    attrDouble(robot, "diameterCm"), robot.getAttribute("scaleClass"));
+            // An empty list means the robot's specs match no live catalog pair at
+            // all — informational, not a reason to block an otherwise valid entry.
+            if (!eligible.isEmpty()) {
+                boolean fits = eligible.stream()
+                        .anyMatch(c -> c.name().equalsIgnoreCase(eventSport.getAgeGroup()));
+                if (!fits) {
+                    throw new IllegalStateException(
+                            "League mismatch: robot '" + robot.getRobotName()
+                            + "' qualifies for " + eligible
+                            + " but this competition runs in " + eventSport.getAgeGroup() + ".");
+                }
             }
         }
 
@@ -335,6 +362,28 @@ public class SportRegistrationService {
                             + "' is scale " + robotScale
                             + " but this competition only allows " + allowedScales + ".");
                 }
+            }
+        }
+
+        // =================================================
+        // 6.8  DIAMETER CHECK (Drone Soccer — SpecConstraint.DIAMETER)
+        //   Drone Soccer's only real spec: 12.5 cm at Ignite, 20 cm at Inferno
+        //   and Apex. Like scale it has no dedicated column — the robot's value
+        //   lives at attributes["diameterCm"], the competition's at
+        //   extraRules["diameterCm"], carried there from the catalog row by
+        //   AddSportModal. This used to be filed under DIMENSION, and since
+        //   Drone Soccer rows carry no length/width/height the check was skipped
+        //   entirely: a 100 cm drone registered cleanly into a 12.5 cm event.
+        // =================================================
+
+        if (specConstraints.contains(com.botleague.backend.events.enums.SpecConstraint.DIAMETER)) {
+            Double robotDiameter = attrDouble(robot, "diameterCm");
+            Double maxDiameter   = parseDouble(eventSport.getRule("diameterCm"));
+            if (robotDiameter != null && maxDiameter != null && robotDiameter > maxDiameter) {
+                throw new IllegalStateException(
+                        "Diameter mismatch: robot '" + robot.getRobotName()
+                        + "' is " + robotDiameter + " cm across"
+                        + " but this competition allows at most " + maxDiameter + " cm.");
             }
         }
 
@@ -924,63 +973,30 @@ public class SportRegistrationService {
         return response;
     }
 
-    // =========================================================================
-    // SPORT COMPATIBILITY MAP
-    //   key   = robot.sport value (stored during robot creation)
-    //   value = set of event sport names (EventSports.sport) the robot may enter
-    // =========================================================================
-
-    private static final Map<String, Set<String>> ROBOT_SPORT_TO_EVENT_SPORTS = Map.ofEntries(
-        Map.entry("ROBOWAR_1_5KG",  Set.of("ROBO_WAR", "ROBO_WAR_OPEN")),
-        Map.entry("ROBOWAR_8KG",    Set.of("ROBO_WAR", "ROBO_WAR_OPEN")),
-        Map.entry("ROBOWAR_15KG",   Set.of("ROBO_WAR", "ROBO_WAR_OPEN")),
-        Map.entry("ROBOWAR_30KG",   Set.of("ROBO_WAR", "ROBO_WAR_OPEN")),
-        Map.entry("ROBOWAR_60KG",   Set.of("ROBO_WAR", "ROBO_WAR_OPEN")),
-        Map.entry("ROBO_SOCCER",    Set.of("ROBO_SOCCER", "ROBO_SOCCER_OPEN")),
-        Map.entry("PLUG_N_PLAY_SOCCER", Set.of("PLUG_N_PLAY_RACE_SOCCER")),
-        Map.entry("ROBO_SUMO",          Set.of("ROBO_SUMO")),
-        Map.entry("LINE_FOLLOWER",       Set.of("LINE_FOLLOWER")),
-        Map.entry("LINE_FOLLOWER_AUTO",  Set.of("LINE_FOLLOWER", "LINE_FOLLOWER_AUTO")),
-        Map.entry("MANUAL_TASK",         Set.of("MANUAL_TASK")),
-        Map.entry("THEME_BASED_TASKING", Set.of("THEME_BASED_TASKING", "THEME_BASED_TASKING_OPEN")),
-        // "DRONE_RACING_FPV"/"DRONE_RACING_SOCCER" were the old per-league event
-        // sport names from before the catalog migration; the catalog's actual
-        // sport row is "Drone Soccer" (see V27__catalog_seed_data.sql), which
-        // normalizes to DRONE_SOCCER — without it every Drone Soccer robot
-        // failed this check against a real "Drone Soccer" competition.
-        Map.entry("DRONE_RACING",        Set.of("DRONE_RACING_FPV", "DRONE_RACING_SOCCER", "DRONE_SOCCER")),
-        Map.entry("DRONE_SOCCER",        Set.of("DRONE_RACING_SOCCER", "DRONE_SOCCER")),
-        // "RC_ROBO_RACING"/"RC_RACING_NITRO" are legacy pre-catalog sport
-        // names kept for backward compatibility; the catalog's actual sport
-        // row is "RC Racing Car" (see V27__catalog_seed_data.sql), which
-        // normalizes to RC_RACING_CAR — without it every RC Racing Car robot
-        // failed this check against a real "RC Racing Car" competition.
-        Map.entry("RC_RACING",           Set.of("RC_ROBO_RACING", "RC_RACING_NITRO", "RC_RACING_CAR")),
-        // Distinct from RC_RACING above — see CreateRobotForm.tsx's
-        // resolveSportBridge, which used to (wrongly) tag Robo Race robots
-        // with the RC_RACING key too.
-        Map.entry("ROBO_RACE",           Set.of("ROBO_RACE")),
-        Map.entry("AEROMODELLING",       Set.of("AEROMODELLING")),
-        Map.entry("PROJECT_BASED",       Set.of("PROJECT_BASED"))
-    );
+    // The old ROBOT_SPORT_TO_EVENT_SPORTS allowlist lived here: robot sport key →
+    // the set of event sport names it was allowed to enter. It had to be updated by
+    // hand every time the catalog named a techsport differently, drifted twice
+    // (RC Racing Car, then Drone Soccer — each a live registration outage), and
+    // silently skipped the check for any key it didn't know. Replaced by
+    // SportKeys.sameSport(), which buckets both sides instead of matching names.
 
     /** Normalise weight class strings so "1.5KG" == "1_5KG" == "1_5KG". */
     private static String normalizeWeightClass(String wc) {
         return wc.toUpperCase().replace('.', '_');
     }
 
-    /**
-     * Fold a sport identifier to one shape: UPPER, every run of non-alphanumerics
-     * to a single '_', trimmed. The event sport is stored as its catalog display
-     * name ("Robo War"), a robot as a legacy key ("ROBOWAR_15KG"), and the
-     * ROBOT_SPORT_TO_EVENT_SPORTS values as canonical tokens ("ROBO_WAR"), so
-     * without this a robot could never match its own sport's competition.
-     */
-    private static String normalizeSport(String s) {
-        if (s == null) return "";
-        return s.toUpperCase()
-                .replaceAll("[^A-Z0-9]+", "_")
-                .replaceAll("^_+|_+$", "");
+    /** Robot.attributes / EventSports.extraRules hold scale and diameter as text. */
+    private static Double attrDouble(com.botleague.backend.team.entity.Robot robot, String key) {
+        return parseDouble(robot.getAttributes() == null ? null : robot.getAttributes().get(key));
+    }
+
+    private static Double parseDouble(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try {
+            return Double.parseDouble(raw.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     /**

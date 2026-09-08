@@ -7,30 +7,38 @@
 //   Ignite   Robo Sumo        Weight
 //   Ignite   Robo Race        Weight
 //   Ignite   Robo Soccer      Weight
-//   Ignite   Drone Soccer     Dimension
+//   Ignite   Drone Soccer     Diameter
 //   Ignite   Line Follower    Dimension
 //   Inferno  Robo War         Weight
 //   Inferno  Robo Race        Weight + Dimension
 //   Inferno  Robo Soccer      Weight + Dimension
-//   Inferno  Drone Soccer     Dimension
+//   Inferno  Drone Soccer     Diameter
 //   Inferno  RC Racing Car    Scale
 //   Apex     Robo War         Weight
 //   Apex     Robo Race        Weight + Dimension
 //   Apex     Robo Soccer      Weight + Dimension
-//   Apex     Drone Soccer     Dimension
+//   Apex     Drone Soccer     Diameter
 //   Apex     RC Racing Car    Scale
 
 export interface SpecConstraints {
   weight: boolean;
   dimension: boolean;
   scale: boolean;
+  /** Drone Soccer's real gate — 12.5 cm at Ignite, 20 cm at Inferno/Apex. */
+  diameter: boolean;
 }
 
-const ALL: SpecConstraints = { weight: true, dimension: true, scale: true };
-const WEIGHT: SpecConstraints = { weight: true, dimension: false, scale: false };
-const DIMENSION: SpecConstraints = { weight: false, dimension: true, scale: false };
-const SCALE: SpecConstraints = { weight: false, dimension: false, scale: true };
-const WEIGHT_DIM: SpecConstraints = { weight: true, dimension: true, scale: false };
+// Drone Soccer used to be filed under `dimension`, but its catalog rows carry no
+// length/width/height at all — only extraSpecs.diameterCm — so every check was
+// skipped and any drone could enter. `diameter` is deliberately absent from ALL:
+// it is that one sport's gate, and applying it to an unrecognised sport would
+// reject robots for a spec that sport never asked for.
+const ALL: SpecConstraints        = { weight: true,  dimension: true,  scale: true,  diameter: false };
+const WEIGHT: SpecConstraints     = { weight: true,  dimension: false, scale: false, diameter: false };
+const DIMENSION: SpecConstraints  = { weight: false, dimension: true,  scale: false, diameter: false };
+const SCALE: SpecConstraints      = { weight: false, dimension: false, scale: true,  diameter: false };
+const DIAMETER: SpecConstraints   = { weight: false, dimension: false, scale: false, diameter: true  };
+const WEIGHT_DIM: SpecConstraints = { weight: true,  dimension: true,  scale: false, diameter: false };
 
 const norm = (s?: string | null) => (s ?? "").toUpperCase().replace(/[^A-Z0-9]+/g, "");
 
@@ -60,21 +68,21 @@ const MATRIX: Record<string, Record<string, SpecConstraints>> = {
     ROBOSUMO: WEIGHT,
     ROBORACE: WEIGHT,
     ROBOSOCCER: WEIGHT,
-    DRONESOCCER: DIMENSION,
+    DRONESOCCER: DIAMETER,
     LINEFOLLOWER: DIMENSION,
   },
   YOUNGENGINEERS: {
     ROBOWAR: WEIGHT,
     ROBORACE: WEIGHT_DIM,
     ROBOSOCCER: WEIGHT_DIM,
-    DRONESOCCER: DIMENSION,
+    DRONESOCCER: DIAMETER,
     RCRACINGCAR: SCALE,
   },
   ROBOMINDS: {
     ROBOWAR: WEIGHT,
     ROBORACE: WEIGHT_DIM,
     ROBOSOCCER: WEIGHT_DIM,
-    DRONESOCCER: DIMENSION,
+    DRONESOCCER: DIAMETER,
     RCRACINGCAR: SCALE,
   },
 };

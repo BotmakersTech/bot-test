@@ -121,6 +121,15 @@ export default function RegistrationTab({
             if (!matches) return false;
           }
         }
+        if (specs.diameter) {
+          // Drone Soccer's only real gate. Same shape as scale above: the
+          // robot's value lives in attributes, the competition's in extraRules
+          // (carried there from the catalog row), and neither side having a
+          // value never excludes a robot.
+          const maxDiameter = parseFloat(sport.extraRules?.diameterCm ?? "");
+          const robotDiameter = parseFloat(robot.attributes?.diameterCm ?? "");
+          if (!Number.isNaN(maxDiameter) && !Number.isNaN(robotDiameter) && robotDiameter > maxDiameter) return false;
+        }
         const sportControl = (sport.controlType ?? "").toUpperCase();
         if (sportControl && sportControl !== "ANY" && robot.controlMode) {
           if (robot.controlMode.toUpperCase() !== sportControl) return false;
@@ -306,7 +315,7 @@ export default function RegistrationTab({
                     {robots.length === 0 ? (
                       <><AlertTriangle size={16} /><span>Your team has no robots yet. Add a robot from your team dashboard first.</span></>
                     ) : eligibleRobots.length === 0 ? (
-                      <><AlertTriangle size={16} /><span>None of your robots are eligible for this competition. Robots must be built for "{sport.sport?.replace(/_/g, " ")}" with matching {specs.scale ? "scale" : specs.weight && specs.dimension ? "weight class and dimensions" : specs.weight ? "weight class" : specs.dimension ? "dimensions" : "specs"}.</span></>
+                      <><AlertTriangle size={16} /><span>None of your robots are eligible for this competition. Robots must be built for "{sport.sport?.replace(/_/g, " ")}" with matching {specs.scale ? "scale" : specs.diameter ? "diameter" : specs.weight && specs.dimension ? "weight class and dimensions" : specs.weight ? "weight class" : specs.dimension ? "dimensions" : "specs"}.</span></>
                     ) : (
                       <><CheckCircle2 size={16} /><span>All eligible robots are already registered in this sport.</span></>
                     )}

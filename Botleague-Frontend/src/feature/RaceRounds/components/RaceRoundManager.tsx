@@ -205,7 +205,7 @@ export default function RaceRoundManager({ sportId, isRegistrationClosed }: Race
           <div style={{ color: ORG.muted, fontSize: "0.82rem", marginBottom: 18 }}>
             {isRegistrationClosed
               ? "Generate Round 1 to bring every registered bot into the trial."
-              : "Close registration for this techsport before generating Round 1."}
+              : "Registration is still open. Close it on the techsport page, then generate Round 1."}
           </div>
           <button
             onClick={handleGenerate}

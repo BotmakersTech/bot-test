@@ -22,7 +22,11 @@ export default function OrganizerBracketDispatch() {
   }
 
   if (selectedSport && formatFor(selectedSport.sport) === "ROUND_TIME_TRIAL") {
-    return <RaceRoundManager sportId={sportId!} isRegistrationClosed={selectedSport.status?.toUpperCase() === "REGISTRATION_CLOSED"} />
+    // "Not open" rather than strictly REGISTRATION_CLOSED — the same condition
+    // brackets use to allow match creation. Requiring the exact closed status
+    // left every timed techsport that was approved but never opened sitting
+    // behind a dead "Generate Round 1" button with nothing explaining why.
+    return <RaceRoundManager sportId={sportId!} isRegistrationClosed={selectedSport.status?.toUpperCase() !== "REGISTRATION_OPEN"} />
   }
 
   return <OrganizerBracketPage />

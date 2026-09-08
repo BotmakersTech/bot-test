@@ -115,15 +115,20 @@ public class RobotService {
             robot.setAttributes(request.getAttributes());
         }
 
-        // Compute eligible age categories and store the primary for backward compat
+        // Compute eligible age categories and store the primary for backward compat.
+        // Diameter and scale ride in attributes — they are the ONLY gate for Drone
+        // Soccer and RC Racing Car, which carry no weight or dimension limits.
         AgeCategory primary = eligibilityService.primaryCategory(
                 request.getSport(),
                 request.getWeightKg(),
                 request.getLengthCm(),
                 request.getWidthCm(),
-                request.getHeightCm());
+                request.getHeightCm(),
+                attrDouble(robot, "diameterCm"),
+                robot.getAttribute("scaleClass"));
 
-        // Fall back to JUNIOR_INNOVATORS if no eligibility rule matched (should not happen with valid sport)
+        // Fall back to JUNIOR_INNOVATORS if the robot's specs match no live catalog
+        // pair at all — the column is NOT NULL and there's no better answer.
         robot.setAgeCategory(primary != null ? primary : AgeCategory.JUNIOR_INNOVATORS);
 
         robot.setStatus(RobotStatus.ACTIVE);
@@ -216,7 +221,9 @@ public class RobotService {
                 robot.getWeightKg(),
                 robot.getLengthCm(),
                 robot.getWidthCm(),
-                robot.getHeightCm());
+                robot.getHeightCm(),
+                attrDouble(robot, "diameterCm"),
+                robot.getAttribute("scaleClass"));
         if (primary != null) {
             robot.setAgeCategory(primary);
         }
@@ -381,10 +388,26 @@ public class RobotService {
 
         AgeCategory primary = eligibilityService.primaryCategory(
                 robot.getSport(), robot.getWeightKg(),
-                robot.getLengthCm(), robot.getWidthCm(), robot.getHeightCm());
+                robot.getLengthCm(), robot.getWidthCm(), robot.getHeightCm(),
+                attrDouble(robot, "diameterCm"), robot.getAttribute("scaleClass"));
         if (primary != null) robot.setAgeCategory(primary);
 
         return mapRobotWithTeam(robotRepository.save(robot));
+    }
+
+    /**
+     * Read a numeric spec out of Robot.attributes. Scale and diameter have no
+     * dedicated column — they live in the JSON attribute map (see Robot.attributes),
+     * which is why they need parsing rather than a getter.
+     */
+    private static Double attrDouble(Robot robot, String key) {
+        String raw = robot.getAttribute(key);
+        if (raw == null || raw.isBlank()) return null;
+        try {
+            return Double.parseDouble(raw.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     public void deleteRobotAdmin(UUID robotId) {
@@ -436,7 +459,9 @@ public class RobotService {
                 robot.getWeightKg(),
                 robot.getLengthCm(),
                 robot.getWidthCm(),
-                robot.getHeightCm()));
+                robot.getHeightCm(),
+                attrDouble(robot, "diameterCm"),
+                robot.getAttribute("scaleClass")));
 
         robotMediaRepository
                 .findFirstByRobotIdAndMediaTypeOrderByCreatedAtDesc(robot.getId(), MediaType.IMAGE)

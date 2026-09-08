@@ -37,26 +37,8 @@ public final class MatchFormatPolicy {
         }
     }
 
-    /** UPPER, digits kept, every run of non-alphanumerics dropped. */
-    private static String norm(String s) {
-        return s == null ? "" : s.toUpperCase().replaceAll("[^A-Z0-9]+", "");
-    }
-
-    /**
-     * Fold any sport identifier down to one of the canonical keys used above.
-     * Mirrors SportSpecPolicy.sportKey() exactly — same display names, legacy
-     * keys, and canonical tokens all need to resolve to the same shape here.
-     */
+    /** Shared with SportSpecPolicy and the registration sport check — see SportKeys. */
     private static String sportKey(String sportName) {
-        String n = norm(sportName);
-        if (n.contains("ROBOWAR") || n.contains("ROBOTWAR") || n.contains("COMBAT")) return "ROBOWAR";
-        if (n.contains("ROBOSUMO") || n.contains("SUMO")) return "ROBOSUMO";
-        if (n.contains("LINEFOLLOWER") || n.contains("LINEFOLLOW")) return "LINEFOLLOWER";
-        if (n.contains("DRONESOCCER") || n.contains("DRONE")) return "DRONESOCCER";
-        if (n.contains("RCRACING") || n.contains("RCROBO") || n.contains("RCCAR")) return "RCRACINGCAR";
-        if (n.contains("ROBOSOCCER") || n.contains("SOCCER")) return "ROBOSOCCER";
-        // "Robo Race" / "Robo Racing" — kept last so "RC Racing" is matched first above.
-        if (n.contains("ROBORACE") || n.contains("ROBORACING") || n.contains("RACE")) return "ROBORACE";
-        return n;
+        return SportKeys.of(sportName);
     }
 }
