@@ -61,7 +61,7 @@ export default function LineupTab({
   const [lineupRole, setLineupRole] = useState("DRIVER");
 
   // Fetch the active robot's lineup AND every sibling robot's — the member
-  // picker needs them all to grey out anyone already in another robot's lineup
+  // picker needs them all to hide anyone already in another robot's lineup
   // for this techsport. onFetch de-dupes, so this is cheap after the first pass.
   useEffect(() => {
     if (activeRegId) onFetch(activeRegId);
@@ -109,12 +109,27 @@ export default function LineupTab({
 
   // Members already in ANOTHER robot's lineup for this techsport — a person can
   // be in only one robot per techsport (a different weight class is its own
-  // techsport and is fine). Hard-blocked from being picked here.
+  // techsport and is fine). They are hidden from the picker entirely rather
+  // than shown greyed out: the backend rejects the assignment anyway, so
+  // offering the name only to fail on click is a dead end. A count below says
+  // how many were hidden, so nobody wonders where a teammate went.
   const assignedElsewhere = new Set(
     Object.entries(lineupsMap)
       .filter(([regId]) => regId !== activeRegId)
       .flatMap(([, list]) => list.filter((e) => e.isActive).map(memberKey))
   );
+
+  // Everyone the captain can actually pick right now.
+  const selectableMembers = eligibleMembers.filter(
+    (m) => inCurrentLineup.has(m.membershipId) || !assignedElsewhere.has(m.membershipId)
+  );
+  const hiddenForOtherRobot = eligibleMembers.length - selectableMembers.length;
+
+  // A sibling robot's lineup can finish loading after someone was already
+  // picked here — drop a selection that has just become unavailable rather
+  // than letting Assign submit it and fail server-side.
+  const selectionStillValid =
+    !selectedMember || selectableMembers.some((m) => m.membershipId === selectedMember);
 
   return (
     <div className="lineup-page">
@@ -222,11 +237,10 @@ export default function LineupTab({
           ) : (
             <>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 18 }}>
-                {eligibleMembers.map((m) => {
+                {selectableMembers.map((m) => {
                   const isIn = inCurrentLineup.has(m.membershipId);
-                  const isAssignedElsewhere = !isIn && assignedElsewhere.has(m.membershipId);
                   const isInactive = !isIn && m.status !== "ACTIVE";
-                  const disabled = isIn || isInactive || isAssignedElsewhere;
+                  const disabled = isIn || isInactive;
                   return (
                     <button
                       key={m.membershipId}
@@ -247,7 +261,7 @@ export default function LineupTab({
                       {m.userName}{" "}
                       {isIn ? (
                         <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Check size={12} /> In lineup</span>
-                      ) : isInactive ? "(Inactive)" : isAssignedElsewhere ? "(in another robot's lineup)" : ""}
+                      ) : isInactive ? "(Inactive)" : ""}
                     </button>
                   );
                 })}
@@ -260,7 +274,21 @@ export default function LineupTab({
                 </p>
               )}
 
-              {selectedMember && (
+              {hiddenForOtherRobot > 0 && (
+                <p style={{ fontSize: 12.5, color: "#6b7280", marginTop: -8, marginBottom: 16 }}>
+                  <Info size={12} style={{ verticalAlign: -2, marginRight: 4 }} />
+                  {hiddenForOtherRobot} team member{hiddenForOtherRobot > 1 ? "s are" : " is"} hidden — already in another robot's lineup for this techsport. A person can be in only one robot here, but is free to join a robot in another weight class.
+                </p>
+              )}
+
+              {selectableMembers.length === 0 && (
+                <p style={{ fontSize: 12.5, color: "#6b7280", marginTop: -8, marginBottom: 16 }}>
+                  <Info size={12} style={{ verticalAlign: -2, marginRight: 4 }} />
+                  No team members are available to add to this lineup.
+                </p>
+              )}
+
+              {selectedMember && selectionStillValid && (
                 <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
                   <select className="lineup-select" style={{ maxWidth: 220 }} value={lineupRole} onChange={(e) => setLineupRole(e.target.value)}>
                     {Object.entries(ROLE_LABEL).map(([value, label]) => (
