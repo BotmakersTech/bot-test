@@ -110,11 +110,16 @@ function playerCount(sport: EventDashboardSport): number {
   return sport.registrations?.reduce((n, t) => n + ((t.lineup as unknown[])?.length ?? 0), 0) ?? 0
 }
 
+// Plain read-only display — was a readOnly <input>, which still renders
+// with the same box/border/background as a real editable field, inviting
+// a click that does nothing. This is presentation only, nothing ever reads
+// its value, so a div carries the same information without looking like a
+// form control someone should type into.
 function DetailField({ label, value }: { label: string; value?: string | null }) {
   return (
     <div>
       <label className="ed-field-label">{label}</label>
-      <input className="ed-input" defaultValue={value || "—"} readOnly />
+      <div className="ed-detail-value">{value || "—"}</div>
     </div>
   )
 }
@@ -314,7 +319,12 @@ export default function EventDashboard({
                   <div key={sport.id} className="ed-sport-item" onClick={() => onManageSport(sport.id)}>
                     <div className="ed-sport-item-head">
                       <div>
-                        <div className="ed-sport-name">{toLabel(sport.sport)}</div>
+                        <div className="ed-sport-name-row">
+                          <div className="ed-sport-name">{toLabel(sport.sport)}</div>
+                          <span className={open ? "ed-tag-open" : "ed-tag-closed"}>
+                            {open ? "Registration Open" : toLabel(sport.status)}
+                          </span>
+                        </div>
                         <div className="ed-sport-tags">
                           {sport.ageGroup && <span className="ed-sport-tag">{ageGroupLabel(sport.ageGroup)}</span>}
                           {sport.weightClass && <span className="ed-sport-tag">{formatWeightClass(sport.weightClass)}</span>}
@@ -356,9 +366,6 @@ export default function EventDashboard({
                         <Calendar size={12} />
                         {formatDate(sport.registrationStartDate)} → {formatDate(sport.registrationEndDate)}
                       </div>
-                      <span className={open ? "ed-tag-open" : "ed-tag-closed"}>
-                        {open ? "Registration Open" : toLabel(sport.status)}
-                      </span>
                     </div>
 
                     {canSubmit && (

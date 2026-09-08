@@ -317,6 +317,16 @@ button.ed-stat-card {
     box-sizing: border-box;
 }
 
+/* Techfect Details' own fields — plain text, no border or fill, so a
+   read-only value doesn't read as a field waiting for input. */
+.ed-detail-value {
+    font-weight: 600;
+    color: var(--ed-ink);
+    font-size: 0.85rem;
+    padding: 9px 0;
+    word-break: break-word;
+}
+
 /* sports */
 .ed-sports-card {
     background: var(--ed-panel-tint);
@@ -416,6 +426,14 @@ button.ed-stat-card {
     gap: 10px;
 }
 
+.ed-sport-name-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
 .ed-sport-name {
     font-family: "Poppins", sans-serif;
     font-weight: 700;
@@ -506,21 +524,23 @@ button.ed-stat-card {
 }
 
 .ed-tag-open {
-    border: 1px solid var(--ed-purple-2);
-    color: var(--ed-purple-2);
+    background: rgba(31, 169, 82, 0.1);
+    border: 1px solid var(--ed-success);
+    color: var(--ed-success);
     border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: 0.72rem;
+    font-weight: 700;
     padding: 3px 14px;
     white-space: nowrap;
 }
 
 .ed-tag-closed {
-    border: 1px solid var(--ed-ink-mute);
-    color: var(--ed-ink-mute);
+    background: rgba(224, 75, 75, 0.08);
+    border: 1px solid var(--ed-danger);
+    color: var(--ed-danger);
     border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: 0.72rem;
+    font-weight: 700;
     padding: 3px 14px;
     white-space: nowrap;
 }
