@@ -106,10 +106,6 @@ function teamCount(sport: EventDashboardSport): number {
   return sport.registrations?.length ?? sport.registeredTeamsCount ?? 0
 }
 
-function playerCount(sport: EventDashboardSport): number {
-  return sport.registrations?.reduce((n, t) => n + ((t.lineup as unknown[])?.length ?? 0), 0) ?? 0
-}
-
 // Plain read-only display — was a readOnly <input>, which still renders
 // with the same box/border/background as a real editable field, inviting
 // a click that does nothing. This is presentation only, nothing ever reads
@@ -340,20 +336,9 @@ export default function EventDashboard({
                       <div className="ed-mini-stat">
                         <Trophy size={13} />
                         <div>
-                          <div className="ed-mini-label">TEAMS</div>
+                          <div className="ed-mini-label">REGISTRATIONS</div>
                           <div className="ed-mini-value">{teamCount(sport)}</div>
                         </div>
-                      </div>
-                      <div className="ed-mini-stat">
-                        <Users size={13} />
-                        <div>
-                          <div className="ed-mini-label">PLAYERS</div>
-                          <div className="ed-mini-value">{playerCount(sport)}</div>
-                        </div>
-                      </div>
-                      <div className="ed-mini-stat ed-mini-stat-plain">
-                        <div className="ed-mini-label">ENTRY FEE</div>
-                        <div className="ed-mini-value">{sport.entryFee != null ? `₹${sport.entryFee.toLocaleString("en-IN")}` : "—"}</div>
                       </div>
                       <div className="ed-mini-stat ed-mini-stat-plain">
                         <div className="ed-mini-label">PRIZE POOL</div>

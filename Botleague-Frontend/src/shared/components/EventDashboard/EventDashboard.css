@@ -474,7 +474,7 @@ button.ed-stat-card {
 
 .ed-sport-mini-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
 }
 
@@ -813,10 +813,6 @@ button.ed-stat-card {
 
 @media (max-width: 767px) {
     .ed-stats-row {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .ed-sport-mini-row {
         grid-template-columns: repeat(2, 1fr);
     }
 
