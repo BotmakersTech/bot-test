@@ -454,15 +454,15 @@ public class AdminService {
     private void dispatchEventStatusNotification(Event event, EventStatus status) {
         switch (status) {
             case PUBLISHED -> notificationService.systemNotify(
-                    event.getEventName() + " is now Published!",
-                    "A new event has been published. Check it out and register your team!",
+                    event.getEventName() + " is now live!",
+                    "A new techfect is live on BotLeague. Check it out and register your team!",
                     NotificationType.EVENT_PUBLISHED, NotificationPriority.HIGH,
                     NotificationTargetType.ALL_USERS, null,
                     "/events/" + event.getId()
             );
             case LIVE -> notificationService.systemNotify(
-                    event.getEventName() + " is now LIVE!",
-                    "The competition has started! Check the live leaderboard.",
+                    event.getEventName() + " — competition has started!",
+                    "Matches are underway. Check the live leaderboard.",
                     NotificationType.EVENT_LIVE, NotificationPriority.HIGH,
                     NotificationTargetType.ALL_USERS, null,
                     "/events/" + event.getId()
