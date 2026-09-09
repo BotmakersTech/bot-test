@@ -122,7 +122,11 @@ export const getAvailableSports = async (): Promise<string[]> => {
   return res.data ?? [];
 };
 
-export const getAvailablePools = async (): Promise<{ sport: string; ageGroup: string }[]> => {
+/** weightClass is "" for a pool with no weight-class concept (Drone Soccer,
+ *  RC by scale) — never null, since a filter default needs a concrete
+ *  three-way match against (sport, ageGroup, weightClass) to land on a real
+ *  pool rather than the "every weight class combined" query shape. */
+export const getAvailablePools = async (): Promise<{ sport: string; ageGroup: string; weightClass: string }[]> => {
   const res = await api.get("/rankings/pools");
   return res.data ?? [];
 };

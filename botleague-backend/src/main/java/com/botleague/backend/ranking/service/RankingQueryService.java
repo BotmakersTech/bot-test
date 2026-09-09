@@ -359,20 +359,30 @@ public class RankingQueryService {
     }
 
     /**
-     * All distinct (sport, ageGroup) combinations that have at least one ranking row.
-     * Used by the frontend to show only valid filter combinations and
-     * default to the first pool that has real data.
+     * All distinct (sport, ageGroup, weightClass) combinations that have at
+     * least one ranking row. Used by the frontend to show only valid filter
+     * combinations and to default to a genuinely specific pool that has real
+     * data — weightClass included so that default can never land on "every
+     * weight class combined" (the shape getGlobalRanking treats a missing
+     * weightClass as), which would silently rank a sport's 1.5KG and 60KG
+     * robots against each other. weightClass comes back as "" rather than
+     * null for a sport with no weight-class concept (Drone Soccer, RC by
+     * scale) — Map.of() can't hold a null value, and "" is the same "no
+     * weight class filter" sentinel the frontend already uses everywhere
+     * else on this page.
      */
     public List<Map<String, String>> getAvailablePools() {
         return rankingRepository.findAll().stream()
                 .filter(r -> r.getSport() != null && r.getCategory() != null)
                 .map(r -> Map.of(
-                        "sport",    r.getSport(),
-                        "ageGroup", r.getCategory().name()
+                        "sport",       r.getSport(),
+                        "ageGroup",    r.getCategory().name(),
+                        "weightClass", r.getWeightClass() != null ? r.getWeightClass() : ""
                 ))
                 .distinct()
                 .sorted(Comparator.comparing((Map<String, String> m) -> m.get("sport"))
-                        .thenComparing(m -> m.get("ageGroup")))
+                        .thenComparing(m -> m.get("ageGroup"))
+                        .thenComparing(m -> m.get("weightClass")))
                 .collect(Collectors.toList());
     }
 

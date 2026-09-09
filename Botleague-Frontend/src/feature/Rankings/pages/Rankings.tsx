@@ -107,7 +107,7 @@ export default function GlobalRankingsPage() {
   const [weightClass, setWeightClass] = useState("");
 
   // Data state
-  const [pools, setPools] = useState<{ sport: string; ageGroup: string }[]>([]);
+  const [pools, setPools] = useState<{ sport: string; ageGroup: string; weightClass: string }[]>([]);
   const [leagueSports, setLeagueSports] = useState<LeagueSport[]>([]);
   const [leagueSportsLoading, setLeagueSportsLoading] = useState(false);
   const [page,    setPage]    = useState<GlobalRankingPage | null>(null);
@@ -144,7 +144,7 @@ export default function GlobalRankingsPage() {
     // has a global ranking, instead of an empty "no data for this pool" state.
     Promise.all([
       getDashboard().catch(() => null),
-      getAvailablePools().catch(() => [] as { sport: string; ageGroup: string }[]),
+      getAvailablePools().catch(() => [] as { sport: string; ageGroup: string; weightClass: string }[]),
     ]).then(([data, livePools]) => {
       if (cancelled) return;
 
@@ -169,13 +169,18 @@ export default function GlobalRankingsPage() {
         if (!mostPlayed || entry.count > mostPlayed.count) mostPlayed = entry;
       }
 
-      const poolHasData = (s: string, ag: string) =>
-        livePools.some((p) => p.sport === s && p.ageGroup === ag);
+      // Matched on weightClass too — a robot's own most-played pool must be
+      // a REAL pool with ranking rows, not just a sport/league that happens
+      // to have data at some OTHER weight class. Landing on that would
+      // silently show a different weight class's table under the viewer's
+      // own filter selection.
+      const poolHasData = (s: string, ag: string, wc: string) =>
+        livePools.some((p) => p.sport === s && p.ageGroup === ag && p.weightClass === wc);
 
-      if (mostPlayed && poolHasData(mostPlayed.sport, mostPlayed.ageGroup)) {
+      if (mostPlayed && poolHasData(mostPlayed.sport, mostPlayed.ageGroup, mostPlayed.weightClass)) {
         apply(mostPlayed.sport, mostPlayed.ageGroup, mostPlayed.weightClass);
       } else if (livePools.length > 0) {
-        apply(livePools[0].sport, livePools[0].ageGroup, "");
+        apply(livePools[0].sport, livePools[0].ageGroup, livePools[0].weightClass);
       } else {
         apply(FALLBACK_DEFAULT.sport, FALLBACK_DEFAULT.ageGroup, FALLBACK_DEFAULT.weightClass);
       }
@@ -246,19 +251,28 @@ export default function GlobalRankingsPage() {
     loadRankings();
   }, [loadRankings]);
 
+  // A sport with weight classes is never one pool — 1.5KG and 60KG robots
+  // are not ranked against each other, so a filter can't be "applied" with
+  // the weight class left blank; that's the one selection getGlobalRanking
+  // treats as "every weight class combined" rather than "no preference".
+  // Sports with no weight-class concept (Drone Soccer, RC by scale) have no
+  // options here at all, so they're never blocked by this.
+  const weightRequired = weightOptions.length > 0;
+  const weightMissing = weightRequired && !draftWeightKg;
+
   // Explicit override of whatever the mount-time default effect picked —
   // "pick League -> Sport -> Weight, then Apply Filter" replaces it same as
   // it would replace a manually-applied filter from earlier.
   const handleApplyFilter = () => {
-    if (!draftLeague || !selectedLeagueSport) return;
+    if (!draftLeague || !selectedLeagueSport || weightMissing) return;
     setSport(sportKey(selectedLeagueSport.sportName));
     setAgeGroup(draftLeague.ageGroupValue);
     setWeightClass(draftWeightKg ? toRankingWeightCode(Number(draftWeightKg)) : "");
   };
 
   const entries = page?.entries ?? [];
-  
-  const hasPoolData = pools.some((p) => p.sport === sport && p.ageGroup === ageGroup);
+
+  const hasPoolData = pools.some((p) => p.sport === sport && p.ageGroup === ageGroup && p.weightClass === weightClass);
 
   return (
     <div className="rank-page min-h-screen overflow-auto w-full">
@@ -336,7 +350,7 @@ export default function GlobalRankingsPage() {
             <button
               type="button"
               onClick={handleApplyFilter}
-              disabled={!draftLeagueSlug || !draftSportSlug}
+              disabled={!draftLeagueSlug || !draftSportSlug || weightMissing}
               className="h-[48px] sm:h-[51px] w-full lg:w-[159px] lg:ml-auto shrink-0 rounded-md
                          bg-gradient-to-b from-[#0162D1]/[0.75] to-[#8C6CFF]/[0.75] disabled:opacity-50 disabled:cursor-not-allowed
                          px-6 text-[14px] sm:text-[16px] font-medium text-white
@@ -345,6 +359,14 @@ export default function GlobalRankingsPage() {
               Apply Filter
             </button>
           </div>
+
+          {/* A sport with weight classes is never one ranking — 1.5KG and
+              60KG don't compete against each other — so this is the one
+              thing Apply Filter can be blocked on even with a league and
+              sport already chosen. */}
+          {weightMissing && (
+            <p className="mt-3 text-[13px] text-[#0162D1]/70">Select a weight class — {selectedLeagueSport?.sportName} ranks separately per weight class.</p>
+          )}
         </div>
 
         {/* Global Rankings heading */}
