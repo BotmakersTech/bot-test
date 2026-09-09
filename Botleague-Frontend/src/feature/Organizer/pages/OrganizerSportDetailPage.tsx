@@ -948,7 +948,9 @@ function PendingChangeRequestPanel({
                 : `${req.requestedByName || "Someone"} proposed a change awaiting your approval`}
             </div>
 
-            <ChangeFieldDiff request={req} sport={sport} />
+            {/* The diff is for the reviewer's benefit — the submitter just
+                typed these values in and doesn't need them read back. */}
+            {!isOwn && <ChangeFieldDiff request={req} sport={sport} />}
 
             {actionError && (
               <div style={{ color: DANGER, fontSize: "0.78rem", marginTop: "8px" }}>{actionError}</div>

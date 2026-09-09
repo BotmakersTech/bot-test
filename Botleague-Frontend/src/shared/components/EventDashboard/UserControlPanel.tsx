@@ -451,7 +451,9 @@ function ChangesTab({ eventId, sports, currentUserId, canReviewSportHeadTier, ca
               {isOwn ? "Your edit is awaiting approval" : `${req.requestedByName || "Someone"} proposed a change to ${req.sportName} awaiting your approval`}
             </div>
 
-            {sport && <ChangeFieldDiff request={req} sport={sport} />}
+            {/* The diff is for the reviewer's benefit — the submitter just
+                typed these values in and doesn't need them read back. */}
+            {!isOwn && sport && <ChangeFieldDiff request={req} sport={sport} />}
 
             {canReview && (
               <div style={{ marginTop: "12px" }}>
