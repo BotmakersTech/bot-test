@@ -81,139 +81,141 @@ export default function SportDetailsHeader({ sport, contacts }: SportDetailsHead
       <style>{TAB_CSS}</style>
 
       <div className="event-info" style={{ width: "100%" }}>
-        {/* No title here — the Hero directly above already states the sport name. */}
-        <div className="rw-tab-layout">
-          <div className="rw-tab-nav">
-            {tabs.map((t) => (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => setActiveTab(t.key)}
-                className={`rw-tab-btn ${activeTab === t.key ? "rw-tab-btn-active" : ""}`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+        {/* Left smaller, right bigger. Title sits above the right column only. */}
+        <div className="rw-content-row">
+          <div className="rw-col-blank" aria-hidden="true" />
 
-          <div className="rw-tab-panel">
+          <div className="rw-col-content">
+            {/* Event name — blue, above the right column only, shifted up */}
+            <div className="rw-page-title">{sport.sport?.replace(/_/g, " ") ?? "Techsport"}</div>
 
-            {activeTab === "problem" && (
-              <>
-                <h3 className="rw-tab-heading">{sport.sport?.replace(/_/g, " ") ?? "Techsport"}</h3>
+            {/* Connected segmented tab bar, square corners */}
+            <div className="rw-tab-nav">
+              {tabs.map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => setActiveTab(t.key)}
+                  className={`rw-tab-btn ${activeTab === t.key ? "rw-tab-btn-active" : ""}`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="rw-tab-body">
+              {activeTab === "problem" && (
                 <div className="rw-tab-desc">
                   {sport.sportsDescription || "Details for this competition will be published soon."}
                 </div>
-              </>
-            )}
+              )}
 
-            {activeTab === "spec" && (
-              <>
-                <h3 className="rw-tab-heading">Specification</h3>
-                {specs.length > 0 ? (
-                  <div className="rw-card-grid">
-                    {specs.map((spec) => (
-                      <div className="rw-detail-card" key={spec.label}>
-                        <spec.icon size={22} />
-                        <div>
-                          <div className="rw-detail-card-label">{spec.label}</div>
-                          <div className="rw-detail-card-value">{spec.value}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="rw-tab-desc">Specification details will be published closer to the event.</div>
-                )}
-                <button type="button" className="rw-rulebook-btn" onClick={() => setRulebookOpen(true)}>
-                  <FileText size={18} />
-                  View rulebook
-                </button>
-              </>
-            )}
-
-            {activeTab === "contact" && (
-              <>
-                <h3 className="rw-tab-heading">Contact</h3>
-                {contacts.length === 0 ? (
-                  <div className="rw-tab-desc">Contact details will be published closer to the event.</div>
-                ) : (
-                  contacts.map((contact) => {
-                    const email = (contact as SupportContact & { email?: string }).email;
-                    const fields = [
-                      { icon: User, label: "NAME", value: contact.roleLabel ? `${contact.name || "—"} (${contact.roleLabel})` : (contact.name || "—") },
-                      { icon: Mail, label: "EMAIL", value: email || null },
-                      { icon: Phone, label: "MOBILE", value: contact.phone || null },
-                    ].filter((f) => f.value) as { icon: typeof User; label: string; value: string }[];
-
-                    return (
-                      <div key={contact.id} style={{ marginBottom: "1.5rem" }}>
-                        <div className="rw-card-grid">
-                          {fields.map((f) => (
-                            <div className="rw-detail-card" key={f.label}>
-                              <f.icon size={22} />
-                              <div>
-                                <div className="rw-detail-card-label">{f.label}</div>
-                                <div className="rw-detail-card-value">{f.value}</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        {contact.phone && (
-                          <div className="rw-contact-actions">
-                            <button
-                              type="button"
-                              className="rw-contact-btn"
-                              onClick={() => window.open(`tel:${contact.phone}`, "_self")}
-                            >
-                              <Phone size={14} />
-                              Call
-                            </button>
-                            <button
-                              type="button"
-                              className="rw-contact-btn"
-                              onClick={() => window.open(waLink(contact.phone!), "_blank")}
-                            >
-                              <MessageCircle size={14} />
-                              WhatsApp
-                            </button>
+              {activeTab === "spec" && (
+                <>
+                  {specs.length > 0 ? (
+                    <div className="rw-card-grid">
+                      {specs.map((spec) => (
+                        <div className="rw-detail-card" key={spec.label}>
+                          <spec.icon size={22} />
+                          <div>
+                            <div className="rw-detail-card-label">{spec.label}</div>
+                            <div className="rw-detail-card-value">{spec.value}</div>
                           </div>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </>
-            )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rw-tab-desc">Specification details will be published closer to the event.</div>
+                  )}
+                  <button type="button" className="rw-rulebook-btn" onClick={() => setRulebookOpen(true)}>
+                    <FileText size={18} />
+                    View rulebook
+                  </button>
+                </>
+              )}
 
-            {activeTab === "prize" && (
-              <>
-                <h3 className="rw-tab-heading">Prize</h3>
-                {hasPrizeDistribution && (
-                  <div className="rw-prize-pills">
-                    {sport.prizeDistribution!.map((p, i) => (
-                      <span key={i} className="rw-prize-pill">{formatPrizePosition(p)}</span>
-                    ))}
-                  </div>
-                )}
-                {prizePool ? (
-                  <div className="rw-card-grid rw-card-grid-single">
-                    <div className="rw-detail-card">
-                      <Trophy size={22} />
-                      <div>
-                        <div className="rw-detail-card-label">Prize Pool</div>
-                        <div className="rw-detail-card-value">{prizePool}</div>
+              {activeTab === "contact" && (
+                <>
+                  {contacts.length === 0 ? (
+                    <div className="rw-tab-desc">Contact details will be published closer to the event.</div>
+                  ) : (
+                    contacts.map((contact) => {
+                      const email = (contact as SupportContact & { email?: string }).email;
+                      const fields = [
+                        { icon: User, label: "NAME", value: contact.roleLabel ? `${contact.name || "—"} (${contact.roleLabel})` : (contact.name || "—") },
+                        { icon: Mail, label: "EMAIL", value: email || null },
+                        { icon: Phone, label: "MOBILE", value: contact.phone || null },
+                      ].filter((f) => f.value) as { icon: typeof User; label: string; value: string }[];
+
+                      return (
+                        <div key={contact.id} style={{ marginBottom: "1.5rem" }}>
+                          <div className="rw-card-grid">
+                            {fields.map((f) => (
+                              <div className="rw-detail-card" key={f.label}>
+                                <f.icon size={22} />
+                                <div>
+                                  <div className="rw-detail-card-label">{f.label}</div>
+                                  <div className="rw-detail-card-value">{f.value}</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          {contact.phone && (
+                            <div className="rw-contact-actions">
+                              <button
+                                type="button"
+                                className="rw-contact-btn"
+                                onClick={() => window.open(`tel:${contact.phone}`, "_self")}
+                              >
+                                <Phone size={14} />
+                                Call
+                              </button>
+                              <button
+                                type="button"
+                                className="rw-contact-btn"
+                                onClick={() => window.open(waLink(contact.phone!), "_blank")}
+                              >
+                                <MessageCircle size={14} />
+                                WhatsApp
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </>
+              )}
+
+              {activeTab === "prize" && (
+                <>
+                  {hasPrizeDistribution && (
+                    <div className="rw-prize-list">
+                      {sport.prizeDistribution!.map((p, i) => (
+                        <div className="rw-prize-row" key={i}>
+                          <span className="rw-prize-row-position">{formatPrizePosition(p)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {prizePool ? (
+                    <div className="rw-card-grid rw-card-grid-single">
+                      <div className="rw-detail-card">
+                        <Trophy size={22} />
+                        <div>
+                          <div className="rw-detail-card-label">Total Prize Pool</div>
+                          <div className="rw-detail-card-value">{prizePool}</div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  !hasPrizeDistribution && (
-                    <div className="rw-tab-desc">Prize details will be published closer to the event.</div>
-                  )
-                )}
-              </>
-            )}
-
+                  ) : (
+                    !hasPrizeDistribution && (
+                      <div className="rw-tab-desc">Prize details will be published closer to the event.</div>
+                    )
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -252,81 +254,101 @@ export default function SportDetailsHeader({ sport, contacts }: SportDetailsHead
   );
 }
 
-/* Scoped, self-contained typography for this tab layout — deliberately NOT
-   reusing .event-info h2 / .event-info p or .sport-stat from the site's
-   global evd-page.css. Those rules are sized for a different, larger
-   hero-style layout (72px gradient heading, 28px/52px body text) and were
-   clashing with this component's own card text (12–19px), producing the
-   "one small font, one big font" mismatch. Using h3/div instead of h2/p
-   sidesteps those selectors entirely so every piece of text in this
-   section follows one consistent scale. */
 const TAB_CSS = `
-.rw-tab-layout {
+/* Left small, right big */
+.rw-content-row {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(0, 2.1fr);
-  align-items: stretch;
+  grid-template-columns: 1fr 2.4fr;
   gap: 2rem;
+  align-items: stretch;
   max-width: 1200px;
   margin: 0 auto;
 }
-.rw-tab-nav { display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem; height: 100%; }
-.rw-tab-btn {
-  text-align: left;
-  border: none;
-  background: #F1EEFA;
-  border-radius: 14px;
-  padding: 1rem 1.25rem;
-  color: #3E3A5A;
-  font-family: 'Sarpanch', sans-serif;
-  font-weight: 600;
-  font-size: 1.15rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.rw-tab-btn:hover { background: #E5E0F7; transform: translateX(4px); }
-.rw-tab-btn-active { color: #fff; background: #0162D1; box-shadow: 0 10px 24px rgba(1,98,209,0.25); }
-
-.rw-tab-panel {
+.rw-col-blank,
+.rw-col-content {
   min-width: 0;
-  background: linear-gradient(180deg, rgba(1,98,209,0.05), rgba(140,108,255,0.05));
-  border-radius: 20px;
-  padding: 2.25rem 2rem;
-  height: 100%;
   min-height: 320px;
+  border: none;
+  border-radius: 16px;
+  background: #fff;
   box-sizing: border-box;
 }
-.rw-tab-heading {
+.rw-col-blank {
+  background: transparent;
+}
+.rw-col-content {
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Title above the right column only, shifted up (tighter gap to tab bar) */
+.rw-page-title {
   font-family: 'Sarpanch', sans-serif;
   font-weight: 600;
   color: #0162D1;
-  font-size: clamp(1.3rem, 1.8vw, 1.75rem);
-  margin: 0 0 1.25rem;
-  text-transform: capitalize;
+  text-align: left;
+  font-size: clamp(2.6rem, 3vw, 2.4rem);
+  margin: 0 0 -0.25rem;
 }
+
+/* Connected segmented tab bar — rounded pill container per Figma */
+.rw-tab-nav {
+  display: flex;
+  flex-direction: row;
+  border: 1.5px solid #0162D1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+.rw-tab-btn {
+  flex: 1;
+  text-align: center;
+  border: none;
+  border-right: 1.5px solid #0162D1;
+  background: #fff;
+  padding: 0.85rem 1rem;
+  color: #1f2937;
+  font-family: Inter, sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.rw-tab-btn:last-child { border-right: none; }
+.rw-tab-btn:hover:not(.rw-tab-btn-active) { background: #F1EEFA; }
+.rw-tab-btn-active {
+  color: #fff;
+  background: linear-gradient(90deg, #4A7DFF 0%, #9B6BFF 100%);
+}
+
+.rw-tab-body { flex: 1; }
+
 .rw-tab-desc {
   font-family: 'Sarpanch', sans-serif;
   font-weight: 400;
   color: #222;
   font-size: 1.1rem;
   line-height: 1.8;
-  max-width: 640px;
   margin: 0;
 }
 
 .rw-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.85rem;
   margin: 0.5rem 0 1.5rem;
 }
 .rw-card-grid-single { grid-template-columns: minmax(180px, 280px); }
 .rw-detail-card {
   display: flex;
   align-items: flex-start;
-  gap: 0.85rem;
+  gap: 0.65rem;
   border: 1.5px solid #0162D1;
   border-radius: 14px;
-  padding: 1rem 1.1rem;
+  padding: 0.75rem 0.9rem;
   background: #fff;
   min-width: 0;
 }
@@ -350,17 +372,6 @@ const TAB_CSS = `
   margin-top: 2px;
 }
 
-.rw-contact-line {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-family: Inter, sans-serif;
-  font-size: 0.85rem;
-  color: #444;
-  margin-top: 4px;
-  overflow-wrap: anywhere;
-}
-.rw-contact-line svg { color: #6b7280; }
 .rw-contact-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
 .rw-contact-btn {
   display: inline-flex;
@@ -403,16 +414,28 @@ const TAB_CSS = `
   line-height: 1.7;
 }
 
-.rw-prize-pills { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1.5rem; }
-.rw-prize-pill {
+/* Prize: compact pill badges laid out in a row, per Figma */
+.rw-prize-list {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+.rw-prize-row {
+  display: inline-flex;
+  align-items: center;
   border: 1.5px solid #0162D1;
   border-radius: 999px;
-  padding: 0.45rem 1rem;
+  padding: 0.5rem 1.1rem;
+  background: #EAF1FC;
+}
+.rw-prize-row-position {
   font-family: Inter, sans-serif;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #0162D1;
-  background: #EAF1FC;
+  white-space: nowrap;
 }
 
 .rw-modal-backdrop {
@@ -440,10 +463,12 @@ const TAB_CSS = `
 .rw-modal-body p { font-family: Inter, sans-serif; color: #333; line-height: 1.7; font-size: 0.95rem; margin-bottom: 1rem; }
 
 @media (max-width: 767px) {
-  .rw-tab-layout { grid-template-columns: 1fr; }
-  .rw-tab-nav { height: auto; justify-content: flex-start; }
-  .rw-tab-panel { padding: 1.5rem 1.25rem; height: auto; }
+  .rw-content-row { grid-template-columns: 1fr; }
+  .rw-col-blank { display: none; }
+  .rw-col-content { padding: 1.5rem 1.25rem; }
   .rw-card-grid { grid-template-columns: 1fr; }
   .rw-card-grid-single { grid-template-columns: 1fr; }
+  .rw-tab-nav { flex-wrap: wrap; }
+  .rw-tab-btn { border-right: none; border-bottom: 1.5px solid #0162D1; flex: 1 1 50%; }
 }
 `;

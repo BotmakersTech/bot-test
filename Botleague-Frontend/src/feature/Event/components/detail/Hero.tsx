@@ -13,7 +13,7 @@ interface HeroProps {
   onBack?: () => void;
 }
 
-export default function Hero({ title, imageUrl, videoUrl, backLabel, onBack }: HeroProps) {
+export default function Hero({  imageUrl, videoUrl, backLabel, onBack }: HeroProps) {
   return (
     <section
       className="hero"
@@ -41,9 +41,9 @@ export default function Hero({ title, imageUrl, videoUrl, backLabel, onBack }: H
           {backLabel && <span>{backLabel}</span>}
         </button>
       )}
-      <div className="overlay">
+      {/* <div className="overlay">
         <h1>{title}</h1>
-      </div>
+      </div> */}
     </section>
   );
 }
