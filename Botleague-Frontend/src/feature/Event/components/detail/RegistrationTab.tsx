@@ -1,5 +1,7 @@
-import { useMemo, useState } from "react";
-import { Eye, AlertTriangle, Info, User, Lock, Ban, X, CheckCircle2, Zap, LogIn } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Eye, AlertTriangle, Info, User, Lock, Ban, X, CheckCircle2, Zap, LogIn, Check, ChevronDown, ChevronUp,
+} from "lucide-react";
 import type { EventSportResponse, EventRegistrationResponse, TeamLineUpResponse } from "../../api/event.api";
 import type { TeamMember } from "../../hook/useEvent";
 import useRobots from "../../../Robots/hooks/useRobots";
@@ -13,8 +15,16 @@ import { constraintsFor, sportKey } from "../../utils/specPolicy";
 // Age groups that mean "open to all" — no category restriction
 const OPEN_AGE_GROUPS = new Set(["OPEN", "ALL", "ALL_AGES", "UNRESTRICTED", ""]);
 
-// Same amber the Lineup tab uses for the identical Driver requirement.
+const ACCENT = "#0162D1";
+const ACCENT2 = "#8C6CFF";
+const SUCCESS = "#22c55e";
 const WARNING = "#f59e0b";
+
+const ROLE_LABEL: Record<string, string> = {
+  DRIVER: "Driver",
+  SECONDARY_DRIVER: "Secondary Driver",
+  BUILD_HEAD: "Build Head",
+};
 
 const normWc = (wc?: string | null) => (wc ?? "").toUpperCase().replace(/\./g, "_");
 
@@ -36,12 +46,19 @@ interface RegistrationTabProps {
   eligibility: EligibilityResponse | null;
   teamMembers: TeamMember[];
   /** Lineups of every robot already registered in this techsport, keyed by
-   *  registration id — used to keep people who are already taken out of the
-   *  member picker (one person, one robot per techsport). */
-  lineupsMap: Record<string, TeamLineUpResponse[]>;
+   *  registration id — used both to keep taken people out of the NEW-robot
+   *  member picker, and to render each registered robot's own lineup panel. */
+  lineupsMap?: Record<string, TeamLineUpResponse[]>;
+  lineupLoading?: boolean;
+  lineupError?: string | null;
   onRegister: (botId: string, robotName: string, lineup: { membershipId: string; role: string }[]) => Promise<void>;
   onDismissError: () => void;
   onRequireLogin: () => void;
+  // --- lineup management, now inline under each registered robot ---
+  onFetchLineup?: (regId: string) => void;
+  onAddLineupMember?: (regId: string, membershipId: string, role: string) => void;
+  onRemoveLineupMember?: (regId: string, lineupId: string) => void;
+  onCancelRegistration?: (regId: string) => void;
 }
 
 export default function RegistrationTab({
@@ -50,15 +67,21 @@ export default function RegistrationTab({
   teamCode,
   isCaptain,
   isLoggedIn,
-  existingRegs,
+  existingRegs = [],
   busyReg,
   regError,
   eligibility,
-  teamMembers,
-  lineupsMap,
+  teamMembers = [],
+  lineupsMap = {},
+  lineupLoading = false,
+  lineupError = null,
   onRegister,
   onDismissError,
   onRequireLogin,
+  onFetchLineup,
+  onAddLineupMember,
+  onRemoveLineupMember,
+  onCancelRegistration,
 }: RegistrationTabProps) {
   const { robots, loading: robotsLoading } = useRobots(isLoggedIn ? teamCode : undefined);
 
@@ -68,16 +91,25 @@ export default function RegistrationTab({
   const [regMember, setRegMember] = useState("");
   const [regRole, setRegRole] = useState("DRIVER");
 
+  // Which registered robot's lineup panel is expanded (accordion — one at a time).
+  const [expandedRegId, setExpandedRegId] = useState<string | null>(null);
+  const [lineupSelectedMember, setLineupSelectedMember] = useState("");
+  const [lineupSelectedRole, setLineupSelectedRole] = useState("DRIVER");
+
+  const safeExistingRegs = existingRegs ?? [];
+  const safeTeamMembers = teamMembers ?? [];
+  const safeLineupsMap = lineupsMap ?? {};
+
   const registeredBotIds = useMemo(
-    () => new Set(existingRegs.map((r) => r.robotId ?? r.botId).filter(Boolean) as string[]),
-    [existingRegs]
+    () => new Set(safeExistingRegs.map((r) => r.robotId ?? r.botId).filter(Boolean) as string[]),
+    [safeExistingRegs]
   );
 
   const specs = useMemo(() => constraintsFor(sport.ageGroup, sport.sport), [sport.ageGroup, sport.sport]);
 
   const eligibleRobots = useMemo(
     () =>
-      robots.filter((robot: Robot) => {
+      (robots ?? []).filter((robot: Robot) => {
         if (robot.status !== "ACTIVE") return false;
         // Only the spec(s) this (league, sport) actually enforces — e.g. RoboWar
         // is weight-only, so its dimension limits never gate a robot. Within an
@@ -175,30 +207,43 @@ export default function RegistrationTab({
   // Only members who can actually be in this techsport's age group are
   // selectable — otherwise the pick fails on submit with "age mismatch".
   const eligibleMembers = useMemo(
-    () => teamMembers.filter((m) => fitsAgeGroup(m.dateOfBirth, sport.ageGroup)),
-    [teamMembers, sport.ageGroup]
+    () => safeTeamMembers.filter((m) => fitsAgeGroup(m.dateOfBirth, sport.ageGroup)),
+    [safeTeamMembers, sport.ageGroup]
   );
-  const hiddenForAge = teamMembers.length - eligibleMembers.length;
+  const hiddenForAge = safeTeamMembers.length - eligibleMembers.length;
 
   // A person may be in only one robot's lineup per techsport. The robot being
   // registered here has no lineup of its own yet, so EVERY member already in a
   // registered robot's lineup for this techsport is unavailable — offering them
   // only gets the pick rejected on submit.
-  const assignedElsewhere = useMemo(
+  const assignedElsewhereForNewRobot = useMemo(
     () => new Set(
-      Object.values(lineupsMap)
+      Object.values(safeLineupsMap)
         .flat()
         .filter((e) => e.isActive)
         .map((e) => e.teamMembershipId ?? "")
     ),
-    [lineupsMap]
+    [safeLineupsMap]
   );
 
-  const selectableMembers = useMemo(
-    () => eligibleMembers.filter((m) => !assignedElsewhere.has(m.membershipId)),
-    [eligibleMembers, assignedElsewhere]
+  const selectableMembersForNewRobot = useMemo(
+    () => eligibleMembers.filter((m) => !assignedElsewhereForNewRobot.has(m.membershipId)),
+    [eligibleMembers, assignedElsewhereForNewRobot]
   );
-  const hiddenForOtherRobot = eligibleMembers.length - selectableMembers.length;
+  const hiddenForOtherRobotNewReg = eligibleMembers.length - selectableMembersForNewRobot.length;
+
+  // Fetch every registered robot's lineup up front — the "assigned in another
+  // robot's lineup" check needs all of them regardless of which panel is open.
+  // Guarded: if the parent hasn't wired onFetchLineup yet, skip quietly
+  // instead of crashing — the rest of the tab (registration flow) still works.
+  useEffect(() => {
+    if (!onFetchLineup) return;
+    safeExistingRegs.forEach((r) => {
+      const id = r.registrationId ?? r.id;
+      if (id) onFetchLineup(id);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [safeExistingRegs.length, onFetchLineup]);
 
   const resetForm = () => {
     setSelectedRobotId("");
@@ -224,6 +269,12 @@ export default function RegistrationTab({
     if (!selectedRobot) return;
     await onRegister(selectedRobot.id, selectedRobot.robotName, pendingLineup);
     resetForm();
+  };
+
+  const toggleLineupPanel = (regId: string) => {
+    setLineupSelectedMember("");
+    setLineupSelectedRole("DRIVER");
+    setExpandedRegId((prev) => (prev === regId ? null : regId));
   };
 
   if (!isLoggedIn) {
@@ -294,6 +345,246 @@ export default function RegistrationTab({
           </div>
         )}
 
+        {/* ---- Registered robots, each with its own inline lineup panel ---- */}
+        {safeExistingRegs.length > 0 && (
+          <div className="register-head" style={{ marginBottom: 20 }}>
+            <h2>Your Registered Robots</h2>
+          </div>
+        )}
+
+        {safeExistingRegs.map((reg) => {
+          const regId = reg.registrationId ?? reg.id ?? "";
+          const isExpanded = expandedRegId === regId;
+          const currentLineup = safeLineupsMap[regId] ?? [];
+
+          const memberKey = (e: TeamLineUpResponse) => e.teamMembershipId ?? "";
+          const inCurrentLineup = new Set(currentLineup.map(memberKey));
+
+          const minSize = sport.minTeamSize ?? 0;
+          const maxSize = sport.maxTeamSize ?? Infinity;
+          const atMax = currentLineup.length >= maxSize;
+          const belowMin = minSize > 0 && currentLineup.length < minSize;
+
+          const driverTakenInLineup = currentLineup.some((m) => m.isActive && m.lineupRole === "DRIVER");
+          const lineupRoleDisabled = (v: string) => v === "DRIVER" && driverTakenInLineup;
+
+          // Members already in ANOTHER robot's lineup for this techsport — a
+          // person can be in only one robot per techsport (a different weight
+          // class is its own techsport and is fine). Hidden from the picker
+          // entirely rather than shown greyed out: the backend rejects the
+          // assignment anyway, so offering the name only to fail on click is
+          // a dead end. A count below says how many were hidden.
+          const assignedElsewhere = new Set(
+            Object.entries(safeLineupsMap)
+              .filter(([id]) => id !== regId)
+              .flatMap(([, list]) => (list ?? []).filter((e) => e.isActive).map(memberKey))
+          );
+
+          const selectableMembers = eligibleMembers.filter(
+            (m) => inCurrentLineup.has(m.membershipId) || !assignedElsewhere.has(m.membershipId)
+          );
+          const hiddenForOtherRobot = eligibleMembers.length - selectableMembers.length;
+
+          // A sibling robot's lineup can finish loading after someone was
+          // already picked here — drop a selection that's just become
+          // unavailable rather than letting Assign submit and fail server-side.
+          const selectionStillValid =
+            !isExpanded ||
+            !lineupSelectedMember ||
+            selectableMembers.some((m) => m.membershipId === lineupSelectedMember);
+
+          return (
+            <div key={regId} className="build-card-wrap" style={{ marginBottom: 14 }}>
+              <div className="build-card" style={{ justifyContent: "space-between", paddingRight: 16, height: "auto", minHeight: 56 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  {reg.robotName}
+                  <span style={{ color: "#FFF", fontWeight: 500 }}>· Lineup: {reg.lineupSize ?? 0}</span>
+                  {reg.lineupLocked && (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Lock size={12} /> Locked</span>
+                  )}
+                </span>
+                <button type="button" className="lineup-manage-btn" onClick={() => toggleLineupPanel(regId)}>
+                  {isCaptain ? "Manage Lineup" : "View Lineup"}
+                  {isExpanded ? <ChevronUp size={14} style={{ marginLeft: 4 }} /> : <ChevronDown size={14} style={{ marginLeft: 4 }} />}
+                </button>
+              </div>
+
+              {isExpanded && (
+                <div className="lineup-inline-panel" style={{ border: "1px solid #e5e7eb", borderTop: "none", borderRadius: "0 0 12px 12px", padding: 20, background: "#fafafa" }}>
+                  {lineupError && <div className="reg-banner error"><AlertTriangle size={16} /><span>{lineupError}</span></div>}
+
+                  {/* Cancelling a registration lives right here, next to the
+                      robot whose lineup you're already looking at. */}
+                  {isCaptain && !reg.lineupLocked && (
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+                      <button
+                        type="button"
+                        className="lineup-remove-btn"
+                        disabled={busyReg}
+                        onClick={() => onCancelRegistration?.(regId)}
+                      >
+                        Cancel registration
+                      </button>
+                    </div>
+                  )}
+
+                  {(maxSize !== Infinity || minSize > 0) && (
+                    <div style={{ marginBottom: 24 }}>
+                      <div className="lineup-progress-track">
+                        <div
+                          className="lineup-progress-fill"
+                          style={{
+                            width: `${Math.min((currentLineup.length / (maxSize === Infinity ? currentLineup.length || 1 : maxSize)) * 100, 100)}%`,
+                            background: atMax
+                              ? `linear-gradient(to right, ${SUCCESS}, #22c55e)`
+                              : belowMin
+                                ? `linear-gradient(to right, ${WARNING}, #f59e0b)`
+                                : `linear-gradient(to right, ${ACCENT}, ${ACCENT2})`,
+                          }}
+                        />
+                      </div>
+                      <p style={{ fontSize: 14, fontWeight: 600, color: "#444" }}>
+                        {currentLineup.length} / {maxSize === Infinity ? "∞" : maxSize}
+                        {minSize > 0 ? ` (min ${minSize})` : ""}
+                      </p>
+                      {atMax && (
+                        <p style={{ fontSize: 13, color: SUCCESS, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+                          <CheckCircle2 size={14} /> Lineup complete — maximum players reached.
+                        </p>
+                      )}
+                      {!atMax && belowMin && (
+                        <p style={{ fontSize: 13, color: WARNING, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+                          <AlertTriangle size={14} /> Add at least {minSize - currentLineup.length} more player{minSize - currentLineup.length !== 1 ? "s" : ""} to meet the minimum.
+                        </p>
+                      )}
+                      {!reg.lineupLocked && !driverTakenInLineup && (
+                        <p style={{ fontSize: 13, color: WARNING, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+                          <AlertTriangle size={14} /> A Driver is required. Secondary Driver and Build Head are optional.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {lineupLoading ? (
+                    <p>Loading lineup…</p>
+                  ) : (
+                    <div className="lineup-table">
+                      {currentLineup.map((entry) => (
+                        <div key={entry.lineupId} style={{ display: "contents" }}>
+                          <div className="build-card">{entry.memberName}</div>
+                          <div className="lineup-select" style={{ display: "flex", alignItems: "center" }}>{ROLE_LABEL[entry.lineupRole] ?? entry.lineupRole}</div>
+                          {isCaptain && !reg.lineupLocked ? (
+                            <button
+                              type="button"
+                              className="lineup-remove-btn"
+                              onClick={() => onRemoveLineupMember?.(regId, entry.lineupId)}
+                            >
+                              Remove
+                            </button>
+                          ) : (
+                            <div />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {isCaptain && !reg.lineupLocked && (
+                    <div style={{ marginTop: 30 }}>
+                      <h3 className="lineup-head" style={{ fontSize: 20 }}>Assign Team Member</h3>
+
+                      {atMax ? (
+                        <div className="reg-banner success"><CheckCircle2 size={16} /><span>Lineup is full ({maxSize}/{maxSize} players). Remove a player to make room.</span></div>
+                      ) : (
+                        <>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 18 }}>
+                            {selectableMembers.map((m) => {
+                              const isIn = inCurrentLineup.has(m.membershipId);
+                              const isInactive = !isIn && m.status !== "ACTIVE";
+                              const disabled = isIn || isInactive;
+                              const isSelected = isExpanded && lineupSelectedMember === m.membershipId;
+                              return (
+                                <button
+                                  key={m.membershipId}
+                                  type="button"
+                                  disabled={disabled}
+                                  onClick={() => setLineupSelectedMember(m.membershipId)}
+                                  style={{
+                                    padding: "8px 16px",
+                                    borderRadius: 10,
+                                    border: `1.5px solid ${isSelected ? ACCENT : "#ccc"}`,
+                                    background: isSelected ? "rgba(1,98,209,.08)" : "#fff",
+                                    opacity: disabled ? 0.45 : 1,
+                                    cursor: disabled ? "not-allowed" : "pointer",
+                                    fontSize: 13,
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  {m.userName}{" "}
+                                  {isIn ? (
+                                    <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Check size={12} /> In lineup</span>
+                                  ) : isInactive ? "(Inactive)" : ""}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {hiddenForAge > 0 && (
+                            <p style={{ fontSize: 12.5, color: "#6b7280", marginTop: -8, marginBottom: 16 }}>
+                              <Info size={12} style={{ verticalAlign: -2, marginRight: 4 }} />
+                              {hiddenForAge} team member{hiddenForAge > 1 ? "s are" : " is"} hidden — not in the {ageGroupLabel(sport.ageGroup)} age group for this techsport.
+                            </p>
+                          )}
+
+                          {hiddenForOtherRobot > 0 && (
+                            <p style={{ fontSize: 12.5, color: "#6b7280", marginTop: -8, marginBottom: 16 }}>
+                              <Info size={12} style={{ verticalAlign: -2, marginRight: 4 }} />
+                              {hiddenForOtherRobot} team member{hiddenForOtherRobot > 1 ? "s are" : " is"} hidden — already in another robot's lineup for this techsport. A person can be in only one robot here, but is free to join a robot in another weight class.
+                            </p>
+                          )}
+
+                          {selectableMembers.length === 0 && (
+                            <p style={{ fontSize: 12.5, color: "#6b7280", marginTop: -8, marginBottom: 16 }}>
+                              <Info size={12} style={{ verticalAlign: -2, marginRight: 4 }} />
+                              No team members are available to add to this lineup.
+                            </p>
+                          )}
+
+                          {lineupSelectedMember && selectionStillValid && (
+                            <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                              <select className="lineup-select" style={{ maxWidth: 220 }} value={lineupSelectedRole} onChange={(e) => setLineupSelectedRole(e.target.value)}>
+                                {Object.entries(ROLE_LABEL).map(([value, label]) => (
+                                  <option key={value} value={value} disabled={lineupRoleDisabled(value)}>
+                                    {label}{value === "DRIVER" ? "" : " (optional)"}
+                                  </option>
+                                ))}
+                              </select>
+                              <button
+                                type="button"
+                                className="add-box"
+                                style={{ maxWidth: 160 }}
+                                disabled={lineupRoleDisabled(lineupSelectedRole)}
+                                onClick={() => {
+                                  onAddLineupMember?.(regId, lineupSelectedMember, lineupSelectedRole);
+                                  setLineupSelectedMember("");
+                                }}
+                              >
+                                <span className="plus-circle">+</span>
+                                <span>Assign</span>
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* ---- Register another robot ---- */}
         {canAdd && (
           <div className="register-section">
             <h2 className="register-section-head">Register a Robot</h2>
@@ -301,13 +592,6 @@ export default function RegistrationTab({
               {step === 1
                 ? "Step 1 of 2 — choose which robot to enter."
                 : `Step 2 of 2 — assign the lineup for ${selectedRobot?.robotName ?? "this robot"}.`}
-              {existingRegs.length > 0 && (
-                <>
-                  {" "}
-                  {existingRegs.length} robot{existingRegs.length > 1 ? "s are" : " is"} already registered — manage
-                  {existingRegs.length > 1 ? " them" : " it"} in the Lineup tab.
-                </>
-              )}
             </p>
 
             {step === 1 ? (
@@ -316,7 +600,7 @@ export default function RegistrationTab({
                   <p>Loading your robots…</p>
                 ) : availableRobots.length === 0 ? (
                   <div className="reg-banner info">
-                    {robots.length === 0 ? (
+                    {(robots ?? []).length === 0 ? (
                       <><AlertTriangle size={16} /><span>Your team has no robots yet. Add a robot from your team dashboard first.</span></>
                     ) : eligibleRobots.length === 0 ? (
                       <><AlertTriangle size={16} /><span>None of your robots are eligible for this competition. Robots must be built for "{sport.sport?.replace(/_/g, " ")}" with matching {specs.scale ? "scale" : specs.diameter ? "diameter" : specs.weight && specs.dimension ? "weight class and dimensions" : specs.weight ? "weight class" : specs.dimension ? "dimensions" : "specs"}.</span></>
@@ -352,11 +636,6 @@ export default function RegistrationTab({
               </>
             ) : (
               <>
-                {/* Same requirement the Lineup tab states, worded identically —
-                    a robot cannot be registered without a Driver, and the submit
-                    button below stays disabled until one is added. Said up front
-                    rather than only on the button, so it reads as a rule of the
-                    form instead of an explanation for why nothing happens. */}
                 <p style={{
                   marginBottom: 16,
                   fontSize: 13,
@@ -376,7 +655,7 @@ export default function RegistrationTab({
                   <div className="white-select">
                     <select value={regMember} onChange={(e) => setRegMember(e.target.value)}>
                       <option value="">Select member…</option>
-                      {selectableMembers
+                      {selectableMembersForNewRobot
                         .filter((m) => !assignedMemberIds.has(m.membershipId))
                         .map((m) => {
                           const inactive = m.status !== "ACTIVE";
@@ -410,14 +689,14 @@ export default function RegistrationTab({
                   </p>
                 )}
 
-                {hiddenForOtherRobot > 0 && (
+                {hiddenForOtherRobotNewReg > 0 && (
                   <p className="reg-hint">
                     <Info size={13} />
-                    <span>{hiddenForOtherRobot} team member{hiddenForOtherRobot > 1 ? "s are" : " is"} hidden — already in another robot's lineup for this techsport. A person can be in only one robot here, but is free to join a robot in another weight class.</span>
+                    <span>{hiddenForOtherRobotNewReg} team member{hiddenForOtherRobotNewReg > 1 ? "s are" : " is"} hidden — already in another robot's lineup for this techsport. A person can be in only one robot here, but is free to join a robot in another weight class.</span>
                   </p>
                 )}
 
-                {selectableMembers.length === 0 && (
+                {selectableMembersForNewRobot.length === 0 && (
                   <p className="reg-hint">
                     <Info size={13} />
                     <span>No team members are available for this robot's lineup — everyone eligible is already in another robot for this techsport.</span>
@@ -435,7 +714,7 @@ export default function RegistrationTab({
                       )}
                     </p>
                     {pendingLineup.map((entry) => {
-                      const member = teamMembers.find((m) => m.membershipId === entry.membershipId);
+                      const member = safeTeamMembers.find((m) => m.membershipId === entry.membershipId);
                       const roleLabel = REG_ROLES.find((r) => r.value === entry.role)?.label ?? entry.role;
                       return (
                         <div key={entry.membershipId} className="build-card" style={{ justifyContent: "space-between", paddingRight: 16, marginBottom: 10, height: "auto", minHeight: 48 }}>
