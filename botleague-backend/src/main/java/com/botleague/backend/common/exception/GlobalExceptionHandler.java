@@ -67,6 +67,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, Object>> handleDataIntegrity(org.springframework.dao.DataIntegrityViolationException ex) {
         log.warn("Data integrity violation", ex);
+        // This handler also catches NOT NULL / FK violations, not just unique-
+        // constraint ones — the "duplicate" wording below was actively wrong
+        // for those and made a schema bug (a required column left unset)
+        // read like a user input problem. Distinguish by the root message
+        // rather than assuming every violation here is a duplicate.
+        String rootMessage = org.springframework.core.NestedExceptionUtils.getMostSpecificCause(ex).getMessage();
+        if (rootMessage != null && rootMessage.toLowerCase().contains("null value")) {
+            return build(HttpStatus.CONFLICT, "A required value was missing for this record — this is a server-side data issue, please report it.");
+        }
         return build(HttpStatus.CONFLICT, "That value conflicts with an existing record (e.g. a duplicate email or phone number)");
     }
 
