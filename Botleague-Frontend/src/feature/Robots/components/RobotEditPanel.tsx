@@ -1,8 +1,11 @@
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Robot } from "../types/types";
 import { updateRobot, type UpdateRobotPayload } from "../api/robot.api";
 import { uploadRobotImage } from "../api/uploadRobot.api";
 import { getWeightClassOptions, weightClassLabel } from "../constants/weightClasses";
+import { attributeFieldsFor } from "../constants/robotAttributes";
+import { constraintsForSport, sportKey } from "../../Event/utils/specPolicy";
+import { getPublicLeagues, getPublicLeagueSports, toScaleClasses } from "../../../shared/api/catalog.api";
 import robotFallback from "../../../assets/robot.png";
 import "../../../styles/editTeamMockup.css";
 
@@ -57,8 +60,58 @@ export default function RobotEditPanel({ robot, onCancel, onSaved }: RobotEditPa
     status:      robot.status,
   });
 
+  // Everything in Robot.attributes, edited as one map and sent whole — the
+  // backend replaces the map rather than merging, so a partial send would drop
+  // the keys this form doesn't happen to show.
+  const [attrs, setAttrs] = useState<Record<string, string>>(robot.attributes ?? {});
+
   const set = <K extends keyof UpdateRobotPayload>(k: K, v: UpdateRobotPayload[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
+
+  const setAttr = (key: string, value: string) =>
+    setAttrs((a) => ({ ...a, [key]: value }));
+
+  // The spec(s) this robot's sport is actually judged on, so a drone gets a
+  // Diameter field and no weight/dimensions, an RC Racing Car gets Scale, and
+  // a RoboWar gets weight alone — the same policy registration applies.
+  const specs = useMemo(() => constraintsForSport(robot.sport), [robot.sport]);
+  const extraFields = useMemo(() => attributeFieldsFor(robot.robotType), [robot.robotType]);
+
+  // Scale choices and the diameter ceiling come from the catalog rows for this
+  // sport, never a list hardcoded here (see robotAttributes.ts). Unioned across
+  // the leagues that run it, since the robot isn't tied to one league.
+  const [scaleOptions, setScaleOptions] = useState<{ value: string; label: string }[]>([]);
+  const [maxDiameterCm, setMaxDiameterCm] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!specs.scale && !specs.diameter) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const leagues = await getPublicLeagues();
+        const perLeague = await Promise.all(
+          leagues.map((l) => getPublicLeagueSports(l.slug).catch(() => []))
+        );
+        if (cancelled) return;
+        const rows = perLeague
+          .flat()
+          .filter((ls) => sportKey(ls.sportName) === sportKey(robot.sport));
+
+        const scales = new Map<string, { value: string; label: string }>();
+        let diameter: number | null = null;
+        for (const row of rows) {
+          for (const s of toScaleClasses(row)) scales.set(s.value, s);
+          const d = parseFloat(row.extraSpecs?.diameterCm ?? "");
+          if (!Number.isNaN(d)) diameter = diameter == null ? d : Math.max(diameter, d);
+        }
+        setScaleOptions([...scales.values()]);
+        setMaxDiameterCm(diameter);
+      } catch {
+        if (!cancelled) setScaleOptions([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [robot.sport, specs.scale, specs.diameter]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -71,7 +124,7 @@ export default function RobotEditPanel({ robot, onCancel, onSaved }: RobotEditPa
     setSaving(true);
     setErr(null);
     try {
-      const updated = await updateRobot(robot.id, form);
+      const updated = await updateRobot(robot.id, { ...form, attributes: attrs });
       if (photoFile) {
         await uploadRobotImage(robot.id, photoFile);
       }
@@ -85,6 +138,7 @@ export default function RobotEditPanel({ robot, onCancel, onSaved }: RobotEditPa
 
   const statusColor = STATUS_COLOR[String(form.status)] ?? STATUS_COLOR.INACTIVE;
   const wcOptions = getWeightClassOptions(robot.sport);
+  const sportLabel = (robot.sport ?? "this sport").replace(/_/g, " ");
 
   return (
     <div className="etm-page">
@@ -156,40 +210,148 @@ export default function RobotEditPanel({ robot, onCancel, onSaved }: RobotEditPa
             />
           </div>
 
+          {/* Only the spec(s) this robot's sport is judged on — a drone shows
+              Diameter and no weight/dimensions, an RC Racing Car shows Scale.
+              Everything flows through one grid so any subset stays tidy. */}
+          <p className="etm-font-inter text-[13px] text-gray-500">
+            Showing the fields <span className="font-semibold text-gray-700">{sportLabel}</span> is judged on.
+          </p>
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 w-full">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="weightClass" className="etm-field-label">Weight Class</label>
-              {wcOptions.length === 0 ? (
+            {specs.weight && (
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="weightClass" className="etm-field-label">Weight Class</label>
+                {wcOptions.length === 0 ? (
+                  <input
+                    type="text"
+                    id="weightClass"
+                    className="etm-field-input"
+                    value={form.weightClass ?? ""}
+                    onChange={(e) => set("weightClass", e.target.value)}
+                    placeholder="N/A for this sport"
+                  />
+                ) : (
+                  <select
+                    id="weightClass"
+                    className="etm-field-input"
+                    value={form.weightClass ?? ""}
+                    onChange={(e) => set("weightClass", e.target.value)}
+                  >
+                    <option value="">— Select —</option>
+                    {wcOptions.map((wc) => <option key={wc} value={wc}>{weightClassLabel(wc)}</option>)}
+                  </select>
+                )}
+              </div>
+            )}
+
+            {specs.weight && (
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="weightKg" className="etm-field-label">Weight (kg)</label>
                 <input
-                  type="text"
-                  id="weightClass"
+                  type="number" step="0.1" min="0"
+                  id="weightKg"
                   className="etm-field-input"
-                  value={form.weightClass ?? ""}
-                  onChange={(e) => set("weightClass", e.target.value)}
-                  placeholder="N/A for this sport"
+                  value={form.weightKg ?? ""}
+                  onChange={(e) => set("weightKg", e.target.value ? parseFloat(e.target.value) : undefined)}
                 />
-              ) : (
-                <select
-                  id="weightClass"
+              </div>
+            )}
+
+            {specs.dimension && (
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="lengthCm" className="etm-field-label">Length (cm)</label>
+                <input
+                  type="number" step="0.1" min="0"
+                  id="lengthCm"
                   className="etm-field-input"
-                  value={form.weightClass ?? ""}
-                  onChange={(e) => set("weightClass", e.target.value)}
+                  value={form.lengthCm ?? ""}
+                  onChange={(e) => set("lengthCm", e.target.value ? parseFloat(e.target.value) : undefined)}
+                />
+              </div>
+            )}
+
+            {specs.dimension && (
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="widthCm" className="etm-field-label">Width (cm)</label>
+                <input
+                  type="number" step="0.1" min="0"
+                  id="widthCm"
+                  className="etm-field-input"
+                  value={form.widthCm ?? ""}
+                  onChange={(e) => set("widthCm", e.target.value ? parseFloat(e.target.value) : undefined)}
+                />
+              </div>
+            )}
+
+            {specs.dimension && (
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="heightCm" className="etm-field-label">Height (cm)</label>
+                <input
+                  type="number" step="0.1" min="0"
+                  id="heightCm"
+                  className="etm-field-input"
+                  value={form.heightCm ?? ""}
+                  onChange={(e) => set("heightCm", e.target.value ? parseFloat(e.target.value) : undefined)}
+                />
+              </div>
+            )}
+
+            {specs.diameter && (
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="diameterCm" className="etm-field-label">Diameter (cm)</label>
+                <input
+                  type="number" step="0.1" min="0"
+                  max={maxDiameterCm ?? undefined}
+                  id="diameterCm"
+                  className="etm-field-input"
+                  value={attrs.diameterCm ?? ""}
+                  onChange={(e) => setAttr("diameterCm", e.target.value)}
+                  placeholder={maxDiameterCm != null ? `Max ${maxDiameterCm} cm` : "Diameter"}
+                />
+              </div>
+            )}
+
+            {specs.scale && (
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="scaleClass" className="etm-field-label">Scale</label>
+                {scaleOptions.length === 0 ? (
+                  <input
+                    type="text"
+                    id="scaleClass"
+                    className="etm-field-input"
+                    value={attrs.scaleClass ?? ""}
+                    onChange={(e) => setAttr("scaleClass", e.target.value)}
+                    placeholder="e.g. 1:10"
+                  />
+                ) : (
+                  <select
+                    id="scaleClass"
+                    className="etm-field-input"
+                    value={attrs.scaleClass ?? ""}
+                    onChange={(e) => setAttr("scaleClass", e.target.value)}
+                  >
+                    <option value="">— Select —</option>
+                    {scaleOptions.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                  </select>
+                )}
+              </div>
+            )}
+
+            {extraFields.map((field) => (
+              <div className="flex flex-col gap-1.5" key={field.key}>
+                <label htmlFor={field.key} className="etm-field-label">{field.label}</label>
+                <select
+                  id={field.key}
+                  className="etm-field-input"
+                  value={attrs[field.key] ?? ""}
+                  onChange={(e) => setAttr(field.key, e.target.value)}
                 >
                   <option value="">— Select —</option>
-                  {wcOptions.map((wc) => <option key={wc} value={wc}>{weightClassLabel(wc)}</option>)}
+                  {field.options.map((o) => <option key={o} value={o}>{o.replace(/_/g, " ")}</option>)}
                 </select>
-              )}
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="weightKg" className="etm-field-label">Weight (kg)</label>
-              <input
-                type="number" step="0.1" min="0"
-                id="weightKg"
-                className="etm-field-input"
-                value={form.weightKg ?? ""}
-                onChange={(e) => set("weightKg", e.target.value ? parseFloat(e.target.value) : undefined)}
-              />
-            </div>
+              </div>
+            ))}
+
             <div className="flex flex-col gap-1.5">
               <label htmlFor="controlType" className="etm-field-label">Control Type</label>
               <select
@@ -201,9 +363,7 @@ export default function RobotEditPanel({ robot, onCancel, onSaved }: RobotEditPa
                 {CONTROL_TYPES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 w-full">
             <div className="flex flex-col gap-1.5">
               <label htmlFor="controlMode" className="etm-field-label">Connection</label>
               <select
@@ -215,39 +375,7 @@ export default function RobotEditPanel({ robot, onCancel, onSaved }: RobotEditPa
                 {CONTROL_MODES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="lengthCm" className="etm-field-label">Length (cm)</label>
-              <input
-                type="number" step="0.1" min="0"
-                id="lengthCm"
-                className="etm-field-input"
-                value={form.lengthCm ?? ""}
-                onChange={(e) => set("lengthCm", e.target.value ? parseFloat(e.target.value) : undefined)}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="widthCm" className="etm-field-label">Width (cm)</label>
-              <input
-                type="number" step="0.1" min="0"
-                id="widthCm"
-                className="etm-field-input"
-                value={form.widthCm ?? ""}
-                onChange={(e) => set("widthCm", e.target.value ? parseFloat(e.target.value) : undefined)}
-              />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 w-full">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="heightCm" className="etm-field-label">Height (cm)</label>
-              <input
-                type="number" step="0.1" min="0"
-                id="heightCm"
-                className="etm-field-input"
-                value={form.heightCm ?? ""}
-                onChange={(e) => set("heightCm", e.target.value ? parseFloat(e.target.value) : undefined)}
-              />
-            </div>
             <div className="flex flex-col gap-1.5">
               <label htmlFor="status" className="etm-field-label">Status</label>
               <select

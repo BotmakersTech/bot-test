@@ -6,6 +6,7 @@ import { uploadRobotImage } from "../api/uploadRobot.api";
 import { getPublicLeagueSports, toScaleClasses, type LeagueSport } from "../../../shared/api/catalog.api";
 import { useLeagues, formatAgeRange } from "../../../temp/pages/leagues/useLeagues";
 import { constraintsFor } from "../../Event/utils/specPolicy";
+import { attributeFieldsFor } from "../constants/robotAttributes";
 
 type RobotCategoryKey =
   | "COMBAT_ROBOT" | "SOCCER_ROBOT" | "SUMO_ROBOT" | "LINE_FOLLOWER_ROBOT" | "RC_VEHICLE" | "DRONE";
@@ -81,23 +82,6 @@ function resolveSportBridge(catalogSportName: string, ageGroup: string, weightKg
       };
   }
 }
-
-// Free-choice attributes only — anything the competition actually validates
-// (scale, diameter) is NOT listed here. Those come from the catalog row for the
-// chosen league+sport, because a hardcoded list drifts: this file used to offer
-// scale 1:8 / 1:12 / OTHER while the catalog ran 1:8, 1:10 and 1:12, so a 1:10
-// competition could not be entered by any robot the form was able to produce.
-const EXTRA_FIELDS_BY_CATEGORY: Partial<Record<RobotCategoryKey, { key: string; label: string; options: string[] }[]>> = {
-  COMBAT_ROBOT: [
-    { key: "weaponType", label: "Weapon Type", options: ["SPINNER", "FLIPPER", "CRUSHER", "WEDGE", "LIFTER", "HAMMER", "OTHER"] },
-  ],
-  RC_VEHICLE: [
-    { key: "vehicleType", label: "Vehicle Type", options: ["ELECTRIC", "NITRO"] },
-  ],
-  DRONE: [
-    { key: "droneType", label: "Drone Type", options: ["FPV", "STANDARD_RACING", "FREESTYLE", "OTHER"] },
-  ],
-};
 
 // Same "8kg -> 8KG" / "1.5kg -> 1_5KG" shape the ranking/weight-class system
 // uses elsewhere (see Robots/constants/weightClasses.ts's WEIGHT_CLASS_LABELS).
@@ -180,7 +164,7 @@ export default function CreateRobotForm({ onSuccess, onCancel }: Props) {
     ? constraintsFor(selectedLeague.ageGroupValue, selectedLeagueSport.sportName)
     : { weight: true, dimension: true, scale: true, diameter: false };
 
-  const extraFields = bridge ? EXTRA_FIELDS_BY_CATEGORY[bridge.robotCategory] ?? [] : [];
+  const extraFields = attributeFieldsFor(bridge?.robotCategory);
 
   // The specs the competition will actually check, sourced from the catalog row
   // for this exact (league, sport) — never hardcoded here. Scale gates RC Racing

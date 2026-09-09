@@ -91,3 +91,29 @@ const MATRIX: Record<string, Record<string, SpecConstraints>> = {
 export function constraintsFor(ageGroup?: string | null, sport?: string | null): SpecConstraints {
   return MATRIX[norm(ageGroup)]?.[sportKey(sport)] ?? ALL;
 }
+
+/**
+ * Every spec the sport is gated on in ANY league that runs it — Drone Soccer
+ * is diameter, RC Racing Car is scale, Robo War is weight, Robo Race is
+ * weight + dimension (Ignite gates weight alone, Inferno and Apex add
+ * dimension, so the union covers a robot that could enter either).
+ *
+ * Use this where there is a robot but no chosen competition yet — the robot
+ * build form, for instance, which has to offer every field the robot could be
+ * judged on. Leagues that don't run the sport are skipped rather than falling
+ * back to ALL, which would put weight and dimension fields back on a Robo War
+ * or RC Racing Car robot. A sport no league runs still falls back to ALL.
+ */
+export function constraintsForSport(sport?: string | null): SpecConstraints {
+  const key = sportKey(sport);
+  const rows = Object.values(MATRIX)
+    .map((bySport) => bySport[key])
+    .filter((c): c is SpecConstraints => c != null);
+  if (rows.length === 0) return ALL;
+  return rows.reduce((acc, c) => ({
+    weight: acc.weight || c.weight,
+    dimension: acc.dimension || c.dimension,
+    scale: acc.scale || c.scale,
+    diameter: acc.diameter || c.diameter,
+  }));
+}
