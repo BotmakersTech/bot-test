@@ -72,6 +72,29 @@ export function weightClassToKg(raw?: string | null): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+/**
+ * Fold any weight-class spelling to the one code the ranking pool is keyed
+ * on — mirror of the backend's WeightClassKeys.of(), and the read-side
+ * counterpart to it:
+ *   "60kg" | "60 KG" | "60KG"     -> "60KG"
+ *   "1.5kg" | "1_5KG" | "1,5 kg"  -> "1_5KG"
+ *
+ * EventSports stores the catalog's own label ("60kg") while robots and this
+ * page's filter use the legacy code ("60KG"), so an unfolded comparison
+ * misses the pool entirely — and two spellings of one class rank as two.
+ * A class with no number ("Open") has no code to fold to and comes back
+ * upper-cased, still equal to itself; blank/absent stays as-is, since a
+ * sport with no weight-class concept must remain a single pool.
+ */
+export function canonicalWeightClass(raw?: string | null): string {
+  if (raw == null) return "";
+  const s = String(raw).trim();
+  if (!s) return "";
+  const kg = weightClassToKg(s);
+  if (kg == null) return s.toUpperCase();
+  return `${String(kg).replace(".", "_")}KG`;
+}
+
 export function formatWeightClass(raw?: string | null): string {
   if (raw == null) return "";
   const s = String(raw).trim();

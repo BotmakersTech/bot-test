@@ -7,7 +7,7 @@ import {
 } from "../api/rankings.api";
 import { getPublicLeagueSports, type LeagueSport } from "../../../shared/api/catalog.api";
 import { sportKey } from "../../Event/utils/specPolicy";
-import { formatWeightClass } from "../../Robots/constants/weightClasses";
+import { canonicalWeightClass, formatWeightClass } from "../../Robots/constants/weightClasses";
 import { getDashboard } from "../../UserDashboard/api/userDashboard.api";
 import RankingRow from "../components/RankingRow";
 import { useLeagues, formatAgeRange } from "../../../temp/pages/leagues/useLeagues";
@@ -30,12 +30,6 @@ const FALLBACK_DEFAULT = { sport: "ROBOWAR", ageGroup: "ROBO_MINDS", weightClass
 // (see RankingEngineService.updateGlobalRankings), so querying with it —
 // straight from the catalog sport name, no league lookup needed — is what
 // actually lines up with what got pushed, for any spelling.
-
-// Same "1.5kg -> 1_5KG" shape the old ranking system's weight-class codes use
-// (see Robots/constants/weightClasses.ts's WEIGHT_CLASS_LABELS keys).
-function toRankingWeightCode(weightKg: number): string {
-  return `${String(weightKg).replace(".", "_")}KG`;
-}
 
 // ── Filter select (gradient border + gradient chevron) ────────────────────────
 
@@ -157,7 +151,9 @@ export default function GlobalRankingsPage() {
         const s = ev.sport?.sport ? sportKey(ev.sport.sport) : undefined;
         const ag = ev.sport?.ageGroup;
         if (!s || !ag) continue;
-        const wc = ev.sport?.weightClass ?? "";
+        // Same fold as the sport beside it — this is EventSports.weight_class
+        // as stored ("60kg"), not the pool code the query needs ("60KG").
+        const wc = canonicalWeightClass(ev.sport?.weightClass);
         const key = `${s}::${ag}::${wc}`;
         const existing = tally.get(key);
         if (existing) existing.count += 1;
@@ -267,7 +263,7 @@ export default function GlobalRankingsPage() {
     if (!draftLeague || !selectedLeagueSport || weightMissing) return;
     setSport(sportKey(selectedLeagueSport.sportName));
     setAgeGroup(draftLeague.ageGroupValue);
-    setWeightClass(draftWeightKg ? toRankingWeightCode(Number(draftWeightKg)) : "");
+    setWeightClass(canonicalWeightClass(draftWeightKg));
   };
 
   const entries = page?.entries ?? [];

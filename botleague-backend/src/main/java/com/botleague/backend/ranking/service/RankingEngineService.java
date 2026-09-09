@@ -5,6 +5,7 @@ import com.botleague.backend.events.entity.SportRegistration;
 import com.botleague.backend.events.enums.RegistrationStatus;
 import com.botleague.backend.events.repository.EventSportsRepository;
 import com.botleague.backend.events.service.SportKeys;
+import com.botleague.backend.events.service.WeightClassKeys;
 import com.botleague.backend.events.repository.SportRegistrationRepository;
 import com.botleague.backend.matches.entity.Match;
 import com.botleague.backend.matches.enums.MatchStatus;
@@ -365,7 +366,11 @@ public class RankingEngineService {
         // here is what makes a push actually show up on /rankings.
         String sportName   = SportKeys.of(sport.getSport());
         String ageGroup    = sport.getAgeGroup() != null ? sport.getAgeGroup() : "UNKNOWN";
-        String weightClass = sport.getWeightClass();
+        // Folded for the same reason as the sport above, and it matters just
+        // as much: EventSports.weight_class holds the catalog label ("60kg")
+        // while the rankings page asks in the legacy code shape ("60KG"), and
+        // two spellings of one class otherwise become two separate pools.
+        String weightClass = WeightClassKeys.of(sport.getWeightClass());
 
         for (EventLeaderboardEntry entry : finalEntries) {
             UUID robotId = entry.getRobotId();
