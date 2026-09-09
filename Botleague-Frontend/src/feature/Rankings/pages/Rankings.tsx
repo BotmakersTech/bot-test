@@ -6,6 +6,7 @@ import {
   type GlobalRankingPage,
 } from "../api/rankings.api";
 import { getPublicLeagueSports, type LeagueSport } from "../../../shared/api/catalog.api";
+import { sportKey } from "../../Event/utils/specPolicy";
 import { formatWeightClass } from "../../Robots/constants/weightClasses";
 import { getDashboard } from "../../UserDashboard/api/userDashboard.api";
 import RankingRow from "../components/RankingRow";
@@ -14,36 +15,21 @@ import "../../../styles/rankings.css";
 
 // Landing default when nobody's picked a filter yet and the viewer has no
 // participation history to go on (logged out, or a brand-new account).
-const FALLBACK_DEFAULT = { sport: "ROBO_WAR_OPEN", ageGroup: "ROBO_MINDS", weightClass: "60KG" };
+const FALLBACK_DEFAULT = { sport: "ROBOWAR", ageGroup: "ROBO_MINDS", weightClass: "60KG" };
 
-// ── Catalog sport -> ranking-query sport code ─────────────────────────────────
+// ── Catalog sport -> ranking-query sport key ──────────────────────────────────
 //
-// The ranking table is keyed by the OLD free-text sport codes (EventSports.sport
-// is an organiser-typed string, e.g. "ROBO_WAR_OPEN") — a different system from
-// the new admin-managed League/Sport catalog this page's dropdowns are now
-// sourced from (catalog sports are just "Robo War", one row, with per-league
-// specs). This table is the one place that bridges them: catalog sport name +
-// league age-group -> the ranking code to actually query with. Ages without a
-// known code (e.g. a sport newly offered at a league that never had it under
-// the old system) fall back to a same-shape generated code, which is honest —
-// if there's truly no ranking data under that code yet, the empty state below
-// says so rather than silently mismatching.
-const CATALOG_SPORT_TO_RANKING_CODE: Record<string, Partial<Record<string, string>>> = {
-  "Robo Sumo":      { JUNIOR_INNOVATORS: "ROBO_SUMO" },
-  "Line Follower":  { JUNIOR_INNOVATORS: "LINE_FOLLOWER", YOUNG_ENGINEERS: "LINE_FOLLOWER_AUTO" },
-  "Robo Soccer":    { JUNIOR_INNOVATORS: "ROBO_SOCCER", YOUNG_ENGINEERS: "ROBO_SOCCER", ROBO_MINDS: "ROBO_SOCCER_OPEN" },
-  "Robo War":       { YOUNG_ENGINEERS: "ROBO_WAR", ROBO_MINDS: "ROBO_WAR_OPEN" },
-  "Drone Soccer":   { YOUNG_ENGINEERS: "DRONE_RACING_SOCCER", ROBO_MINDS: "DRONE_RACING_FPV" },
-  "Robo Race":      { JUNIOR_INNOVATORS: "RC_ROBO_RACING", YOUNG_ENGINEERS: "RC_ROBO_RACING", ROBO_MINDS: "RC_ROBO_RACING" },
-  "RC Racing Car":  { YOUNG_ENGINEERS: "RC_RACING_NITRO", ROBO_MINDS: "RC_RACING_NITRO" },
-};
-
-function toRankingSportCode(sportName: string, ageGroup: string): string {
-  return (
-    CATALOG_SPORT_TO_RANKING_CODE[sportName]?.[ageGroup] ??
-    sportName.toUpperCase().replace(/[^A-Z0-9]+/g, "_")
-  );
-}
+// EventSports.sport carries both naming worlds side by side — the catalog
+// display name ("Robo War") for anything created through the current Add
+// Sport flow, and a legacy per-league code ("ROBO_WAR_OPEN") for older ones.
+// This page used to bridge them with a hand-maintained name+league -> code
+// table, which only covered the codes it was written against — a push under
+// any other spelling (or a sport the table had no entry for) wrote a row this
+// page could never filter back into view. sportKey() (imported above) is the
+// same canonical fold the ranking engine now writes every pushed row under
+// (see RankingEngineService.updateGlobalRankings), so querying with it —
+// straight from the catalog sport name, no league lookup needed — is what
+// actually lines up with what got pushed, for any spelling.
 
 // Same "1.5kg -> 1_5KG" shape the old ranking system's weight-class codes use
 // (see Robots/constants/weightClasses.ts's WEIGHT_CLASS_LABELS keys).
@@ -113,9 +99,9 @@ export default function GlobalRankingsPage() {
   const [sortOpen, setSortOpen] = useState(false);
 
   // Applied filter state — what the current results were actually fetched
-  // with. These stay in the ranking table's own OLD sport/ageGroup code
-  // space (see CATALOG_SPORT_TO_RANKING_CODE) — only ever set from a draft
-  // selection via handleApplyFilter, never touched directly by a select.
+  // with. sport stays in the ranking pool's canonical key space (see
+  // sportKey() above) — only ever set from a draft selection via
+  // handleApplyFilter, never touched directly by a select.
   const [sport,       setSport]       = useState("");
   const [ageGroup,    setAgeGroup]    = useState("");
   const [weightClass, setWeightClass] = useState("");
@@ -164,7 +150,11 @@ export default function GlobalRankingsPage() {
 
       const tally = new Map<string, { sport: string; ageGroup: string; weightClass: string; count: number }>();
       for (const ev of data?.events ?? []) {
-        const s = ev.sport?.sport;
+        // The dashboard's own event history carries EventSports.sport as
+        // stored — same two-naming-worlds situation as everywhere else, so
+        // fold it the same way before it's ever compared against livePools
+        // or used as a query param below.
+        const s = ev.sport?.sport ? sportKey(ev.sport.sport) : undefined;
         const ag = ev.sport?.ageGroup;
         if (!s || !ag) continue;
         const wc = ev.sport?.weightClass ?? "";
@@ -261,12 +251,13 @@ export default function GlobalRankingsPage() {
   // it would replace a manually-applied filter from earlier.
   const handleApplyFilter = () => {
     if (!draftLeague || !selectedLeagueSport) return;
-    setSport(toRankingSportCode(selectedLeagueSport.sportName, draftLeague.ageGroupValue));
+    setSport(sportKey(selectedLeagueSport.sportName));
     setAgeGroup(draftLeague.ageGroupValue);
     setWeightClass(draftWeightKg ? toRankingWeightCode(Number(draftWeightKg)) : "");
   };
 
   const entries = page?.entries ?? [];
+  
   const hasPoolData = pools.some((p) => p.sport === sport && p.ageGroup === ageGroup);
 
   return (

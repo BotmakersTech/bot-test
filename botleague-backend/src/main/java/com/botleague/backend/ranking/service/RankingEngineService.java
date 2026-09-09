@@ -4,6 +4,7 @@ import com.botleague.backend.events.entity.EventSports;
 import com.botleague.backend.events.entity.SportRegistration;
 import com.botleague.backend.events.enums.RegistrationStatus;
 import com.botleague.backend.events.repository.EventSportsRepository;
+import com.botleague.backend.events.service.SportKeys;
 import com.botleague.backend.events.repository.SportRegistrationRepository;
 import com.botleague.backend.matches.entity.Match;
 import com.botleague.backend.matches.enums.MatchStatus;
@@ -350,7 +351,19 @@ public class RankingEngineService {
     // =========================================================================
 
     public void updateGlobalRankings(EventSports sport, List<EventLeaderboardEntry> finalEntries) {
-        String sportName   = sport.getSport();
+        // EventSports.sport holds both naming worlds side by side — the catalog
+        // display name ("Robo War") for anything created through the current
+        // Add Sport flow, and a legacy per-league code ("ROBO_WAR_OPEN") for
+        // older ones (see SportKeys' own javadoc). The global ranking pool is
+        // already keyed on (sport, ageGroup, weightClass), so a per-league
+        // sport spelling is redundant on top of that, not a second axis — and
+        // it broke the read side outright: the public rankings page derives
+        // its query sport from the same catalog name via sportKey(), so a row
+        // written under the raw, unfolded name (or the legacy code the page's
+        // hand-maintained bridge table didn't have for this sport) could never
+        // be found by any filter. Folding both to the same canonical bucket
+        // here is what makes a push actually show up on /rankings.
+        String sportName   = SportKeys.of(sport.getSport());
         String ageGroup    = sport.getAgeGroup() != null ? sport.getAgeGroup() : "UNKNOWN";
         String weightClass = sport.getWeightClass();
 
