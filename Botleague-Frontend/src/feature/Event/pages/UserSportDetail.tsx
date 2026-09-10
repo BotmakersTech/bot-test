@@ -110,6 +110,7 @@ export default function UserSportDetail() {
   );
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLineupsMap({});
     setActiveRegId("");
   }, [sportId]);
@@ -132,6 +133,7 @@ export default function UserSportDetail() {
   useEffect(() => {
     existingRegs.forEach((r) => {
       const id = regId(r);
+      // eslint-disable-next-line react-hooks/immutability
       if (id) handleFetchLineup(id);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -262,7 +264,23 @@ export default function UserSportDetail() {
           backLabel={event.eventName}
           onBack={() => navigate(`/events/${eventId}`)}
         />
-        <SportDetailsHeader sport={sport} contacts={contacts} />
+        <SportDetailsHeader
+  sport={sport}
+  contacts={contacts}
+  teamId={teamId}
+  teamCode={teamCode}
+  isCaptain={isCaptain}
+  isLoggedIn={isAuthenticated}
+  existingRegs={existingRegs}
+  busyReg={busyReg}
+  regError={regError}
+  eligibility={eligibility}
+  teamMembers={teamMembers}
+  lineupsMap={lineupsMap}
+  onRegister={handleRegister}
+  onDismissError={() => setRegError(null)}
+  onRequireLogin={requireLogin}
+/>
 
         {(() => {
           const isRoundTimeTrial = matchFormatFor(sport.sport) === "ROUND_TIME_TRIAL";

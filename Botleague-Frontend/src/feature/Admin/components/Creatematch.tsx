@@ -1773,7 +1773,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   // ── Setup ──
-  setupWrap: { maxWidth: 520, margin: "0 auto", paddingTop: 20 },
+  setupWrap: {  margin: "0 auto", paddingTop: 20 },
   setupHeader: { marginBottom: 28 },
   setupSub: { fontSize: "0.85rem", color: T.textSub, marginTop: 8, lineHeight: 1.6 },
 
@@ -1884,7 +1884,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 20, flexWrap: "wrap" as const, gap: 12,
   },
   eyebrow: {
-    fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em",
+    fontSize: "38px", fontWeight: 700, letterSpacing: "0.12em", fontFamily: "'orbitron', sans-serif",
     textTransform: "uppercase" as const, color: T.brand, marginBottom: 4,
   },
   title: { fontSize: "1.5rem", fontWeight: 800, color: T.text, margin: 0, letterSpacing: "-0.02em" },
