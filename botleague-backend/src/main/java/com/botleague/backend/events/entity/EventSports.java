@@ -66,8 +66,10 @@ public class EventSports {
     @Column(name = "competition_type", length = 40)
     private CompetitionType competitionType; // the KIND of sport (drives which rules apply)
 
-    // was "sportsDescripction" / column "SportsInfo" -> fixed spelling + snake_case
-    @Column(name = "sports_info")
+    // was "sportsDescripction" / column "SportsInfo" -> fixed spelling + snake_case.
+    // TEXT, not the default varchar(255): a real sport write-up (rules, prizes,
+    // instructions) runs well past 255 chars — see V53.
+    @Column(name = "sports_info", columnDefinition = "TEXT")
     private String sportsDescription;
 
     @Column(name = "sport_thumbnail_url")

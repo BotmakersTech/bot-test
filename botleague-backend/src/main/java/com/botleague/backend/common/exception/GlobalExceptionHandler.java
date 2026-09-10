@@ -73,8 +73,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         // read like a user input problem. Distinguish by the root message
         // rather than assuming every violation here is a duplicate.
         String rootMessage = org.springframework.core.NestedExceptionUtils.getMostSpecificCause(ex).getMessage();
-        if (rootMessage != null && rootMessage.toLowerCase().contains("null value")) {
+        String lower = rootMessage != null ? rootMessage.toLowerCase() : "";
+        if (lower.contains("null value")) {
             return build(HttpStatus.CONFLICT, "A required value was missing for this record — this is a server-side data issue, please report it.");
+        }
+        // A "value too long for type character varying(N)" is the caller sending
+        // more text than a column allows, not a duplicate — surfacing it as a
+        // conflict about emails/phones sent people hunting the wrong problem.
+        if (lower.contains("value too long")) {
+            return build(HttpStatus.BAD_REQUEST, "One of the values is longer than allowed — shorten it and try again.");
         }
         return build(HttpStatus.CONFLICT, "That value conflicts with an existing record (e.g. a duplicate email or phone number)");
     }
