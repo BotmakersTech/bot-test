@@ -57,7 +57,7 @@ export default function VolunteerDashboard() {
     const cert = certByEventId.get(a.eventId)
     return {
       id: a.id,
-      title: a.eventName || "Techfect",
+      title: a.eventName || "Techfest",
       subtitle: [
         a.dutyStation || null,
         a.eventStartDate ? fmtDate(a.eventStartDate) : null,
@@ -77,11 +77,11 @@ export default function VolunteerDashboard() {
         photoUrl={resolveDashboardAvatarSrc(user?.profilePhotoUrl)}
         idLabel="Volunteer ID"
         idValue={user?.botleagueId || "—"}
-        roleLabel="Techfect Volunteer"
+        roleLabel="Techfest Volunteer"
         stat1Value={approved.length}
         stat1Label="Volunteered"
         stat2Value={nextEvents.length}
-        stat2Label="Next Techfects"
+        stat2Label="Next Techfests"
         stat3Value={Math.round(totalHours)}
         stat3Label="Total Hours"
         stat3Icon={<Clock size={20} />}
@@ -89,10 +89,10 @@ export default function VolunteerDashboard() {
         recentItems={recentItems}
         recentItemsEmptyText="No volunteer assignments yet."
         recentItemsHref="/volunteer/event"
-        achievement1Label="3+ Techfects Volunteered"
+        achievement1Label="3+ Techfests Volunteered"
         achievement1Sublabel="Volunteering"
         achievement1Achieved={approved.length >= 3}
-        achievement2Label="10+ Techfects Volunteered"
+        achievement2Label="10+ Techfests Volunteered"
         achievement2Sublabel="Volunteering"
         achievement2Achieved={approved.length >= 10}
       />
@@ -100,7 +100,7 @@ export default function VolunteerDashboard() {
       {/* Quick links */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
         {[
-          { label: "My Techfect",        href: "/volunteer/event", icon: ClipboardList },
+          { label: "My Techfest",        href: "/volunteer/event", icon: ClipboardList },
           { label: "Certificates",    href: "/certificates",    icon: Award },
         ].map((l: { label: string; href: string; icon: LucideIcon }) => (
           <Link key={l.label} to={l.href}
@@ -118,7 +118,7 @@ export default function VolunteerDashboard() {
             {checkedIn.map(a => (
               <div key={a.id} className="flex items-center justify-between rounded-xl border border-green-500/30 bg-green-500/5 px-4 py-3">
                 <div>
-                  <p className="text-sm font-medium text-[#111]">{a.eventName || "Techfect"}</p>
+                  <p className="text-sm font-medium text-[#111]">{a.eventName || "Techfest"}</p>
                   <p className="text-xs text-[#6b7280]">{a.dutyStation || "No duty station set"}{a.shift ? ` · ${a.shift.replace("_", " ")}` : ""}</p>
                 </div>
                 <span className="text-xs font-bold text-green-600">CHECKED IN</span>
@@ -135,7 +135,7 @@ export default function VolunteerDashboard() {
             {pending.map(a => (
               <div key={a.id} className="flex items-center justify-between rounded-xl border border-[#4b86e8]/20 bg-white px-4 py-3">
                 <div>
-                  <p className="text-sm font-medium text-[#111]">{a.eventName || "Techfect"}</p>
+                  <p className="text-sm font-medium text-[#111]">{a.eventName || "Techfest"}</p>
                   <p className="text-xs text-[#6b7280]">Applied {fmtDate(a.appliedAt)}</p>
                 </div>
                 <span className="text-xs font-semibold text-[#b45309]">PENDING</span>
@@ -148,7 +148,7 @@ export default function VolunteerDashboard() {
       {!loading && assignments.length === 0 && (
         <div className="rounded-2xl border border-dashed border-[#4b86e8]/30 py-16 text-center">
           <p className="text-[#6b7280] text-sm">No volunteer applications yet.</p>
-          <p className="text-[#9ca3af] text-xs mt-1">Visit any techfect page to apply.</p>
+          <p className="text-[#9ca3af] text-xs mt-1">Visit any techfest page to apply.</p>
         </div>
       )}
     </div>

@@ -61,7 +61,7 @@ export const useAdminEvents = (
 
                 const message =
                     err?.response?.data?.message ||
-                    "Failed to fetch techfects"
+                    "Failed to fetch techfests"
 
                 setError(message)
 
@@ -100,7 +100,7 @@ export const useAdminEvents = (
 
                 const message =
                     err?.response?.data?.message ||
-                    "Failed to fetch techfect"
+                    "Failed to fetch techfest"
 
                 setError(message)
 
@@ -192,7 +192,7 @@ export const useAdminEvents = (
 
                 const message =
                     err?.response?.data?.message ||
-                    "Failed to create techfect"
+                    "Failed to create techfest"
 
                 setError(message)
 

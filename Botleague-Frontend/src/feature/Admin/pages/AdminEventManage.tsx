@@ -369,7 +369,7 @@ export default function AdminEventManage() {
   const sport = searchParams.get("sport") || "Unknown Sport";
   const [activeSection, setActiveSection] = useState<ActiveSection>(null);
 
-  const eventName = eventId ? (dummyEventNames[eventId] || "Techfect") : "Techfect";
+  const eventName = eventId ? (dummyEventNames[eventId] || "Techfest") : "Techfest";
 
   const quickActions = [
     {
@@ -409,7 +409,7 @@ export default function AdminEventManage() {
           onMouseEnter={e => (e.currentTarget.style.color = TEXT)}
           onMouseLeave={e => (e.currentTarget.style.color = MUTED)}
         >
-          <ArrowLeft size={15} /> {activeSection ? "Back to Quick Actions" : "Back to Techfect"}
+          <ArrowLeft size={15} /> {activeSection ? "Back to Quick Actions" : "Back to Techfest"}
         </button>
 
         {/* Header — Event name + sport */}

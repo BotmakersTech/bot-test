@@ -10,9 +10,9 @@
 // const MUTED = "#9ca3af";
 
 // const dummyMatches = [
-//   { id: "1", techfect: "RoboWars Grand Final 2025", team1: "Apex Ignitors", team2: "Steel Crushers", round: "Semi Final", score1: "", score2: "", winner: "", status: "PENDING" },
-//   { id: "2", techfect: "RoboWars Grand Final 2025", team1: "Volt Riders",   team2: "Sky Hawks",      round: "Semi Final", score1: "", score2: "", winner: "", status: "PENDING" },
-//   { id: "3", techfect: "Drone Soccer League", team1: "Circuit Breakers", team2: "Wire Wolves", round: "Quarter Final", score1: "3", score2: "1", winner: "Circuit Breakers", status: "COMPLETED" },
+//   { id: "1", techfest: "RoboWars Grand Final 2025", team1: "Apex Ignitors", team2: "Steel Crushers", round: "Semi Final", score1: "", score2: "", winner: "", status: "PENDING" },
+//   { id: "2", techfest: "RoboWars Grand Final 2025", team1: "Volt Riders",   team2: "Sky Hawks",      round: "Semi Final", score1: "", score2: "", winner: "", status: "PENDING" },
+//   { id: "3", techfest: "Drone Soccer League", team1: "Circuit Breakers", team2: "Wire Wolves", round: "Quarter Final", score1: "3", score2: "1", winner: "Circuit Breakers", status: "COMPLETED" },
 // ];
 
 // export default function AdminScores() {
@@ -248,7 +248,7 @@ const [showScores, setShowScores] =
                 fontSize: "1rem",
               }}
             >
-              <option>Select Techfect</option>
+              <option>Select Techfest</option>
 
               <option>
                 RoboWars Grand Final 2025

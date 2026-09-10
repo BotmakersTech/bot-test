@@ -140,7 +140,7 @@ export default function OrganizerCommunicationPage() {
   return (
     <div className="min-h-screen p-8 text-[#111111]">
       <h1 className="font-display mb-2 text-[clamp(20px,4vw,38px)] font-medium text-[#0162d1]">Communication</h1>
-      <p className="mb-6 text-sm text-[#5d5d5d]">Broadcast announcements and manage your techfect chat room.</p>
+      <p className="mb-6 text-sm text-[#5d5d5d]">Broadcast announcements and manage your techfest chat room.</p>
 
       {/* Toast */}
       {toast && (
@@ -151,13 +151,13 @@ export default function OrganizerCommunicationPage() {
 
       {/* Event selector */}
       <div className="mb-6">
-        <label className="mb-1 block text-xs text-[#5d5d5d] font-semibold">Techfect</label>
+        <label className="mb-1 block text-xs text-[#5d5d5d] font-semibold">Techfest</label>
         <select
           value={selectedEventId}
           onChange={e => { setSelectedEventId(e.target.value); setChatRoomId(null); }}
           className="w-full max-w-sm rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none focus:ring-[#8c6cff]"
         >
-          <option value="" disabled>Select techfect…</option>
+          <option value="" disabled>Select techfest…</option>
           {events.map(e => <option key={e.id} value={e.id}>{e.eventName}</option>)}
         </select>
       </div>
@@ -168,7 +168,7 @@ export default function OrganizerCommunicationPage() {
           <h2 className="mb-4 text-lg font-semibold text-[#111111]">Broadcast Announcement</h2>
           <p className="mb-4 text-xs text-[#5d5d5d]">
             Sends a push notification to all teams registered in{" "}
-            <span className="text-[#3567cf] font-medium">{selectedEvent?.eventName ?? "the selected techfect"}</span>.
+            <span className="text-[#3567cf] font-medium">{selectedEvent?.eventName ?? "the selected techfest"}</span>.
           </p>
           <form onSubmit={handleBroadcast} className="space-y-4">
             <div>
@@ -198,7 +198,7 @@ export default function OrganizerCommunicationPage() {
                 rows={2}
                 value={chatMsg}
                 onChange={e => setChatMsg(e.target.value)}
-                placeholder="Also post this in the techfect announcement room…"
+                placeholder="Also post this in the techfest announcement room…"
                 className="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] placeholder-[#9a9a9a] ring-1 ring-[#4b86e8]/30 focus:outline-none focus:ring-[#8c6cff] resize-none"
               />
             </div>
@@ -214,7 +214,7 @@ export default function OrganizerCommunicationPage() {
 
         {/* Chat room panel */}
         <div className="rounded-xl bg-white/90 p-5 ring-1 ring-[#4b86e8]/25 border border-[#4b86e8]/25">
-          <h2 className="mb-4 text-lg font-semibold text-[#111111]">Techfect Announcement Room</h2>
+          <h2 className="mb-4 text-lg font-semibold text-[#111111]">Techfest Announcement Room</h2>
           <p className="mb-4 text-xs text-[#5d5d5d]">
             Creates a shared chat room for this event where you can post updates directly to team members.
           </p>

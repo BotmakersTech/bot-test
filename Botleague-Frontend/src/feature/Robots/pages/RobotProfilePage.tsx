@@ -149,7 +149,7 @@ export default function RobotProfilePage() {
                 winRate={winRate}
                 records={(profile?.records ?? []).map((rec, i) => ({
                   key: `${rec.eventSportId}-${i}`,
-                  tournament: rec.eventName ?? "Unknown Techfect",
+                  tournament: rec.eventName ?? "Unknown Techfest",
                   points: rec.pointsEarned,
                   sport: rec.sport?.replace(/_/g, " ") ?? "-",
                   position: rec.eventRank ? ordinal(rec.eventRank) : "-",
@@ -206,7 +206,7 @@ export default function RobotProfilePage() {
                 <div className="rprofile-stat-ribbon">
                   <span className="rprofile-stat-icon"><Trophy size={35} /></span>
                   <strong>{profile?.eventsPlayed ?? 0}</strong>
-                  <span>Techfects</span>
+                  <span>Techfests</span>
                 </div>
                 <div className="rprofile-stat-ribbon">
                   <span className="rprofile-stat-icon"><Swords size={35} /></span>

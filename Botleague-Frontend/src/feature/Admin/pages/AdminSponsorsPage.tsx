@@ -60,7 +60,7 @@ export default function AdminSponsorsPage() {
         setEvents(evts)
         if (evts.length > 0) setSelectedEventId(evts[0].id)
       })
-      .catch(() => setError("Failed to load techfects"))
+      .catch(() => setError("Failed to load techfests"))
       .finally(() => setLoading(false))
   }, [])
 
@@ -142,7 +142,7 @@ export default function AdminSponsorsPage() {
       <div className="mb-6 flex items-start justify-between flex-wrap gap-3">
         <div>
           <h1 className="font-display text-[clamp(20px,4vw,38px)] font-medium text-[#0162d1] tracking-wide">Sponsors & Partners</h1>
-          <p className="text-gray-400 text-sm mt-1">Manage techfect sponsors and display order</p>
+          <p className="text-gray-400 text-sm mt-1">Manage techfest sponsors and display order</p>
         </div>
         <button
           onClick={() => { setShowForm(true); setEditingId(null); setForm(EMPTY_FORM) }}

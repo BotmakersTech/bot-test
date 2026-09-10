@@ -24,11 +24,11 @@ const FAQ_SECTIONS: FaqSection[] = [
     items: [
       {
         q: "What is BotLeague?",
-        a: "BotLeague is a competitive robotics platform where teams design, build, and battle robots across a variety of techfects — from beginner-friendly challenges to advanced international tournaments.",
+        a: "BotLeague is a competitive robotics platform where teams design, build, and battle robots across a variety of techfests — from beginner-friendly challenges to advanced international tournaments.",
       },
       {
         q: "Who can participate in BotLeague?",
-        a: "Anyone with an interest in robotics can join — students, hobbyists, and professional teams are all welcome. Some techfects have age or category divisions, which are listed on each competition page.",
+        a: "Anyone with an interest in robotics can join — students, hobbyists, and professional teams are all welcome. Some techfests have age or category divisions, which are listed on each competition page.",
       },
       {
         q: "Do I need to be an expert to participate?",
@@ -45,12 +45,12 @@ const FAQ_SECTIONS: FaqSection[] = [
         a: "We host combat robotics, maze-solving, line-following, sumo-bot, and innovation-showcase competitions, with new formats added throughout the season.",
       },
       {
-        q: "Are the rules the same across all BotLeague techfects?",
-        a: "Core safety and fair-play rules are consistent across every techfect, but weight classes, build specs, and scoring can vary by competition — always check the specific techfect rulebook.",
+        q: "Are the rules the same across all BotLeague techfests?",
+        a: "Core safety and fair-play rules are consistent across every techfest, but weight classes, build specs, and scoring can vary by competition — always check the specific techfest rulebook.",
       },
       {
         q: "Can I participate in multiple competitions?",
-        a: "Yes — teams are free to register for as many competitions as they'd like, as long as the schedules don't overlap and each robot meets that techfect's requirements.",
+        a: "Yes — teams are free to register for as many competitions as they'd like, as long as the schedules don't overlap and each robot meets that techfest's requirements.",
       },
     ],
   },
@@ -68,7 +68,7 @@ const FAQ_SECTIONS: FaqSection[] = [
       },
       {
         q: "Can I compete without a team?",
-        a: "Some individual-format techfects allow solo entries, but most BotLeague competitions are designed for teams of two or more to encourage collaboration.",
+        a: "Some individual-format techfests allow solo entries, but most BotLeague competitions are designed for teams of two or more to encourage collaboration.",
       },
     ],
   },
@@ -78,11 +78,11 @@ const FAQ_SECTIONS: FaqSection[] = [
     items: [
       {
         q: "Can BotLeague help me compete internationally?",
-        a: "Yes — top-performing teams from regional and national techfects are invited to represent BotLeague at partner international competitions.",
+        a: "Yes — top-performing teams from regional and national techfests are invited to represent BotLeague at partner international competitions.",
       },
       {
         q: "How can I qualify for international competitions?",
-        a: "Qualification is based on your ranking in national-level techfects. Standings are updated after every competition and posted on the leaderboard.",
+        a: "Qualification is based on your ranking in national-level techfests. Standings are updated after every competition and posted on the leaderboard.",
       },
       {
         q: "What is the Battle of Robots pathway?",

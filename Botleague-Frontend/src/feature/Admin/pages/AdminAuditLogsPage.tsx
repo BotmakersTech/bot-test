@@ -7,7 +7,7 @@ import "../../../styles/adminMobileList.css"
 const ENTITY_TYPES = ["ALL", "USER", "TEAM", "ROBOT", "EVENT", "MATCH", "REGISTRATION", "SPONSOR"]
 const ENTITY_LABELS: Record<string, string> = {
   ALL: "All Types", USER: "User", TEAM: "Team", ROBOT: "Robot",
-  EVENT: "Techfect", MATCH: "Match", REGISTRATION: "Registration", SPONSOR: "Sponsor",
+  EVENT: "Techfest", MATCH: "Match", REGISTRATION: "Registration", SPONSOR: "Sponsor",
 }
 
 function humanize(raw: string): string {

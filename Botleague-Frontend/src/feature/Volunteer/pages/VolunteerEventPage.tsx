@@ -1,7 +1,7 @@
 // ======================================================
 // VolunteerEventPage.tsx
 // Route: /volunteer/event — same browse/search/filter UI as the public
-// "Browse Techfects" page (UserEventPage.tsx), plus a "My Techfects" filter
+// "Browse Techfests" page (UserEventPage.tsx), plus a "My Techfests" filter
 // scoped to the volunteer's own assignments.
 // ======================================================
 
@@ -182,7 +182,7 @@ export default function VolunteerEventPage() {
               onFocus={() => { setSearchFocused(true); setShowDropdown(true); }}
               onBlur={() => setSearchFocused(false)}
               onChange={(e) => { setSearch(e.target.value); setShowDropdown(true); }}
-              placeholder="Search techfects by name, city, or code…"
+              placeholder="Search techfests by name, city, or code…"
               className="flex-1 bg-transparent outline-none text-[14px] evt-font-poppins placeholder:text-gray-400"
             />
             {search && (
@@ -207,7 +207,7 @@ export default function VolunteerEventPage() {
                   </div>
                 ))
               ) : (
-                <div className="px-5 py-4 text-center text-[13px] text-gray-400 evt-font-poppins">No matching techfects</div>
+                <div className="px-5 py-4 text-center text-[13px] text-gray-400 evt-font-poppins">No matching techfests</div>
               )}
             </div>
           )}
@@ -252,7 +252,7 @@ export default function VolunteerEventPage() {
               <label className="evt-font-poppins block text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Scope</label>
               <label className="evt-input w-full h-[42px] px-3 flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={draftMineOnly} onChange={(e) => setDraftMineOnly(e.target.checked)} className="accent-[#4F6EF7]" />
-                <span className="text-[13.5px] evt-font-poppins text-gray-700">My Techfects only</span>
+                <span className="text-[13.5px] evt-font-poppins text-gray-700">My Techfests only</span>
               </label>
             </div>
           </div>
@@ -262,7 +262,7 @@ export default function VolunteerEventPage() {
         {loading && (
           <div className="flex flex-col items-center justify-center gap-4 py-20 text-gray-400">
             <span className="evt-spinner" style={{ width: 34, height: 34 }} />
-            <p className="evt-font-poppins text-[13.5px]">Loading techfects…</p>
+            <p className="evt-font-poppins text-[13.5px]">Loading techfests…</p>
           </div>
         )}
 
@@ -284,9 +284,9 @@ export default function VolunteerEventPage() {
         {!loading && !error && events.length > 0 && filtered.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center gap-2">
             <Search size={38} className="text-gray-300 mb-1" />
-            <h3 className="evt-font-poppins font-bold text-[14px] text-[#1a1a2e]">No techfects found</h3>
+            <h3 className="evt-font-poppins font-bold text-[14px] text-[#1a1a2e]">No techfests found</h3>
             <p className="evt-font-poppins text-[13px] text-gray-400">
-              {mineOnly ? "You're not volunteering for any live techfects right now." : "Try adjusting your filters or search query."}
+              {mineOnly ? "You're not volunteering for any live techfests right now." : "Try adjusting your filters or search query."}
             </p>
           </div>
         )}
@@ -297,7 +297,7 @@ export default function VolunteerEventPage() {
             <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-2" style={{ background: "rgba(79,108,234,0.08)", border: "1px solid rgba(79,108,234,0.18)" }}>
               <Calendar size={26} className="text-[#4F6EF7]" />
             </div>
-            <h3 className="evt-font-poppins font-bold text-[14px] text-[#1a1a2e]">No live techfects right now</h3>
+            <h3 className="evt-font-poppins font-bold text-[14px] text-[#1a1a2e]">No live techfests right now</h3>
             <p className="evt-font-poppins text-[13px] text-gray-400 max-w-[260px]">Check back soon for upcoming competitions.</p>
           </div>
         )}

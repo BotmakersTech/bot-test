@@ -128,7 +128,7 @@ export const useAdminEvents = (
 
                 const message =
                     err?.response?.data?.message ||
-                    "Failed to fetch techfects"
+                    "Failed to fetch techfests"
 
                 setError(message)
 
@@ -167,7 +167,7 @@ export const useAdminEvents = (
 
                 const message =
                     err?.response?.data?.message ||
-                    "Failed to fetch techfect"
+                    "Failed to fetch techfest"
 
                 setError(message)
 
@@ -310,7 +310,7 @@ export const useAdminEvents = (
 
                 const message =
                     err?.response?.data?.message ||
-                    "Failed to create techfect"
+                    "Failed to create techfest"
 
                 setError(message)
 
@@ -475,7 +475,7 @@ const changeSportRegistrationStatus =
             setEvents(prev => prev.map(e => e.id === evtId ? response : e))
             return response
         } catch (err: any) {
-            const message = err?.response?.data?.message || "Failed to update techfect"
+            const message = err?.response?.data?.message || "Failed to update techfest"
             setError(message)
             throw new Error(message, { cause: err })
         } finally {
@@ -516,7 +516,7 @@ const changeSportRegistrationStatus =
             setEvents(prev => prev.filter(e => e.id !== evtId))
             setEvent(null)
         } catch (err: any) {
-            const message = err?.response?.data?.message || "Failed to delete techfect"
+            const message = err?.response?.data?.message || "Failed to delete techfest"
             setError(message)
             throw new Error(message, { cause: err })
         } finally {

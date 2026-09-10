@@ -23,7 +23,7 @@ import "../../../styles/robotProfile.css";
 //   Weight / Scale / ...     Location
 //   Team Name                Team Name          (identical, links to /team/:code)
 //   —                        Member Since
-//   Techfects / Matches / Win Rate   ← same three stats, per person
+//   Techfests / Matches / Win Rate   ← same three stats, per person
 //   Tournament records       tournament history (see the table below)
 
 function OutlineStar({ className = "" }: { className?: string }) {
@@ -182,7 +182,7 @@ export default function UserPublicPage() {
               winRate={winRate}
               records={history.map((rec, i) => ({
                 key: `${rec.tournamentName ?? "event"}-${i}`,
-                tournament: rec.tournamentName ?? "Unknown Techfect",
+                tournament: rec.tournamentName ?? "Unknown Techfest",
                 team: rec.teamName ?? "-",
                 role: toLabel(rec.role),
                 position: rec.position ? ordinal(rec.position) : "-",
@@ -258,7 +258,7 @@ export default function UserPublicPage() {
               <div className="rprofile-stat-ribbon">
                 <span className="rprofile-stat-icon"><Trophy size={35} /></span>
                 <strong>{tournamentsPlayed}</strong>
-                <span>Techfects</span>
+                <span>Techfests</span>
               </div>
               <div className="rprofile-stat-ribbon">
                 <span className="rprofile-stat-icon"><Swords size={35} /></span>

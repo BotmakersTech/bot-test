@@ -108,8 +108,8 @@ export default function OrganizerClosurePage() {
 
   return (
     <div className="min-h-screen p-8 text-[#111111]">
-      <h1 className="font-display mb-2 text-[clamp(20px,4vw,38px)] font-medium text-[#0162d1]">Techfect Closure</h1>
-      <p className="mb-6 text-sm text-[#5d5d5d]">Complete pre-closure checks and submit the techfect summary report.</p>
+      <h1 className="font-display mb-2 text-[clamp(20px,4vw,38px)] font-medium text-[#0162d1]">Techfest Closure</h1>
+      <p className="mb-6 text-sm text-[#5d5d5d]">Complete pre-closure checks and submit the techfest summary report.</p>
 
       {/* Event selector */}
       <div className="mb-6">
@@ -118,7 +118,7 @@ export default function OrganizerClosurePage() {
           onChange={e => { setSelectedEventId(e.target.value); setSubmitted(false); setCloseError(null); }}
           className="rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none focus:ring-[#8c6cff]"
         >
-          <option value="" disabled>Select techfect…</option>
+          <option value="" disabled>Select techfest…</option>
           {events.map(e => <option key={e.id} value={e.id}>{e.eventName}</option>)}
         </select>
       </div>
@@ -135,7 +135,7 @@ export default function OrganizerClosurePage() {
               <Check ok={status.liveCount === 0}     label="No live matches in progress" />
               <Check ok={status.scheduledCount === 0} label="No scheduled matches remaining" />
               <Check ok={status.completedMatches > 0} label={`Completed matches: ${status.completedMatches}`} />
-              <Check ok={!eventCompleted}            label={eventCompleted ? "Techfect already marked COMPLETED" : "Techfect not yet closed"} />
+              <Check ok={!eventCompleted}            label={eventCompleted ? "Techfest already marked COMPLETED" : "Techfest not yet closed"} />
             </div>
 
             {status.allMatchesDone && !eventCompleted ? (
@@ -170,7 +170,7 @@ export default function OrganizerClosurePage() {
                     rows={5}
                     value={notes}
                     onChange={e => setNotes(e.target.value)}
-                    placeholder="Techfect highlights, issues encountered, team performance notes…"
+                    placeholder="Techfest highlights, issues encountered, team performance notes…"
                     className="w-full rounded-lg bg-white px-3 py-2 text-sm text-[#111111] placeholder-[#9a9a9a] ring-1 ring-[#4b86e8]/30 focus:outline-none focus:ring-[#8c6cff] resize-none"
                   />
                 </div>
@@ -184,7 +184,7 @@ export default function OrganizerClosurePage() {
                   disabled={!canClose || closing}
                   className="w-full rounded-lg bg-linear-to-br from-[#4c8ee7] to-[#8c6cff] py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  {closing ? "Closing techfect…" : "Submit Closure Report"}
+                  {closing ? "Closing techfest…" : "Submit Closure Report"}
                 </button>
                 {!canClose && !eventCompleted && (
                   <p className="text-center text-xs text-[#9a9a9a]">
@@ -198,7 +198,7 @@ export default function OrganizerClosurePage() {
       )}
 
       {!loading && !selectedEventId && (
-        <div className="rounded-xl bg-[#4b86e8]/5 p-8 text-center text-[#5d5d5d]">Select a techfect to begin closure process.</div>
+        <div className="rounded-xl bg-[#4b86e8]/5 p-8 text-center text-[#5d5d5d]">Select a techfest to begin closure process.</div>
       )}
     </div>
   );

@@ -173,7 +173,7 @@ function CreateEvent() {
             const message =
                 err?.response?.data?.message ||
                 err?.message ||
-                "Failed to create techfect"
+                "Failed to create techfest"
             setError(message)
         } finally {
             setSubmitting(false)
@@ -222,17 +222,17 @@ function CreateEvent() {
                 <form onSubmit={handleSubmit} className="flex flex-col gap-6">
 
                     {/* ── 1. Event Information ── */}
-                    <SectionBadge n={1} title="Techfect Information" />
+                    <SectionBadge n={1} title="Techfest Information" />
 
-                    <Field label="Techfect Name">
+                    <Field label="Techfest Name">
                         <input type="text" name="eventName" value={formData.eventName} onChange={handleChange} style={inputStyle} required />
                     </Field>
 
-                    <Field label="Techfect Description">
+                    <Field label="Techfest Description">
                         <textarea name="eventDescription" rows={4} value={formData.eventDescription} onChange={handleChange} style={{ ...inputStyle, resize: "vertical" }} />
                     </Field>
 
-                    <Field label="Techfect Logo">
+                    <Field label="Techfest Logo">
                         <label
                             htmlFor="eventLogo"
                             className="relative flex h-[157px] w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-[15px] text-center"
@@ -291,7 +291,7 @@ function CreateEvent() {
                     />
 
                     {/* ── 4. Event Dates ── */}
-                    <SectionBadge n={4} title="Techfect Dates" />
+                    <SectionBadge n={4} title="Techfest Dates" />
 
                     <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-2">
                         <Field label="Start Date">
@@ -345,7 +345,7 @@ function CreateEvent() {
                         style={{ background: "linear-gradient(300deg, #9d7df9 40%, #5385ed 100%)", fontFamily: "'Poppins', sans-serif" }}
                     >
                         {submitting && <Loader2 size={16} className="animate-spin" />}
-                        {uploadingImage ? "Uploading image…" : submitting ? "Creating techfect…" : "Create Techfect"}
+                        {uploadingImage ? "Uploading image…" : submitting ? "Creating techfest…" : "Create Techfest"}
                     </button>
                 </div>
             </div>

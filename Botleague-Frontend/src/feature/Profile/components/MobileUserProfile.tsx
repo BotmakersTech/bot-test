@@ -107,7 +107,7 @@ export default function MobileUserProfile({
           <CalendarDays size={22} className="mrp-stat-icon" />
           <div>
             <p className="mrp-stat-num">{tournamentsPlayed}</p>
-            <p className="mrp-stat-label">Techfects</p>
+            <p className="mrp-stat-label">Techfests</p>
           </div>
         </div>
         <span className="mrp-divider" />

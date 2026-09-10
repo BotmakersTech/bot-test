@@ -3,9 +3,9 @@ import { Flag, Trophy, Medal, Crown, Zap, Handshake, Bot, Target, Award, Star, t
 import { getMyAchievements, type AchievementDTO } from "../api/achievement.api"
 
 const ACHIEVEMENT_META: Record<string, { label: string; desc: string; icon: LucideIcon; color: string }> = {
-  FIRST_REGISTRATION:  { label: "First Registration",  desc: "Registered for your first techfect",       icon: Flag, color: "text-blue-400" },
+  FIRST_REGISTRATION:  { label: "First Registration",  desc: "Registered for your first techfest",       icon: Flag, color: "text-blue-400" },
   FIRST_WIN:           { label: "First Victory",        desc: "Won your very first match",             icon: Trophy, color: "text-yellow-400" },
-  PODIUM_FINISH:       { label: "Podium Finish",        desc: "Placed top 3 in a techfect",             icon: Medal, color: "text-orange-400" },
+  PODIUM_FINISH:       { label: "Podium Finish",        desc: "Placed top 3 in a techfest",             icon: Medal, color: "text-orange-400" },
   CHAMPION:            { label: "Champion",             desc: "Won first place in an event",           icon: Crown, color: "text-yellow-500" },
   UNDEFEATED:          { label: "Undefeated",           desc: "Completed an event without losing",    icon: Zap, color: "text-purple-400" },
   TEAM_PLAYER:         { label: "Team Player",          desc: "Competed as part of a team",           icon: Handshake, color: "text-green-400" },

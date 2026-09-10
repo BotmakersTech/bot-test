@@ -179,7 +179,7 @@ export const getLiveEvents = async (): Promise<EventResponse[]> => {
   return response.data;
 };
 
-// Public — no auth required. COMPLETED/ARCHIVED events for the public "Previous Techfects" listing.
+// Public — no auth required. COMPLETED/ARCHIVED events for the public "Previous Techfests" listing.
 export const getCompletedEvents = async (): Promise<EventResponse[]> => {
   const response = await api.get("/Events/completed");
   return response.data;

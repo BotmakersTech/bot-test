@@ -85,7 +85,7 @@ export default function OrganizerIncidentsPage() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="font-display text-[clamp(20px,4vw,38px)] font-medium text-[#0162d1]">Incident Reporting</h1>
-          <p className="text-sm text-[#5d5d5d] mt-0.5">Safety and operational incidents for this techfect</p>
+          <p className="text-sm text-[#5d5d5d] mt-0.5">Safety and operational incidents for this techfest</p>
         </div>
         <button onClick={openAdd}
           className="rounded-xl bg-linear-to-br from-[#4c8ee7] to-[#8c6cff] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity">

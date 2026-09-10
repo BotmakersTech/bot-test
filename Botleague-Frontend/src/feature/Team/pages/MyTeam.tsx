@@ -393,7 +393,7 @@ export default function MyTeam() {
               </span>
             </div>
             <button type="button" className="teamdash-event-cta" onClick={() => navigate(nextEvent ? `/events/${nextEvent.eventId}` : "/browse-events")}>
-              {nextEvent ? "View Details" : "Browse Techfects"}
+              {nextEvent ? "View Details" : "Browse Techfests"}
             </button>
           </div>
 
@@ -590,7 +590,7 @@ export default function MyTeam() {
         eventDateLabel={
           nextEvent ? formatDateRange(nextEvent.startDate, nextEvent.endDate) : `In league since ${yearFrom(team?.createdAt)}`
         }
-        eventCtaLabel={nextEvent ? "View Details" : "Browse Techfects"}
+        eventCtaLabel={nextEvent ? "View Details" : "Browse Techfests"}
         onViewEvent={() => navigate(nextEvent ? `/events/${nextEvent.eventId}` : "/browse-events")}
         countdown={countdown}
         activeSquadCount={members.filter(isMemberActive).length}

@@ -34,7 +34,7 @@ interface CreateModalProps {
 }
 
 const NEWS_CATEGORIES: { value: NewsCategory; label: string }[] = [
-  { value: "EVENTS_RECAP", label: "Techfects Recap" },
+  { value: "EVENTS_RECAP", label: "Techfests Recap" },
   { value: "GLOBAL", label: "Global" },
   { value: "TEAM_SPOTLIGHT", label: "Team Spotlight" },
   { value: "TECH", label: "Tech" },

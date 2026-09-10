@@ -115,7 +115,7 @@ export default function CertificatesPage() {
           <div className="bl-state-card bl-state-empty">
             <div className="bl-state-icon"><Award size={32} /></div>
             <div className="bl-state-title">No certificates yet</div>
-            <p>Certificates appear here once a techfect organizer generates them after results are finalized.</p>
+            <p>Certificates appear here once a techfest organizer generates them after results are finalized.</p>
           </div>
         ) : view === "grid" ? (
           <div className="bl-grid">

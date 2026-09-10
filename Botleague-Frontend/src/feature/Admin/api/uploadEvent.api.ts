@@ -67,12 +67,12 @@ export const uploadEventImage = async (
 
     } catch (error: unknown) {
 
-        console.error("Techfect image upload error:", error);
+        console.error("Techfest image upload error:", error);
 
         const errorMessage =
             (error as any)?.response?.data?.message ||
             (error as Error)?.message ||
-            "Techfect image upload failed";
+            "Techfest image upload failed";
 
         throw new Error(errorMessage, { cause: error });
     }

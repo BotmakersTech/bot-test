@@ -105,7 +105,7 @@ export default function RankingRow({ entry, onOpen }: RankingRowProps) {
             <span style={{ color: textColor, fontWeight: weight, fontSize: 15 }}>{entry.totalPoints}</span>
           </div>
           <div className="flex flex-col items-center gap-0.5" style={{ borderRight: `1px solid ${dividerColor}` }}>
-            <span style={{ color: textColor, fontSize: 11, opacity: 0.75 }}>Techfects</span>
+            <span style={{ color: textColor, fontSize: 11, opacity: 0.75 }}>Techfests</span>
             <span style={{ color: textColor, fontWeight: weight, fontSize: 15 }}>{entry.eventsPlayed}</span>
           </div>
           <div className="flex flex-col items-center gap-0.5">

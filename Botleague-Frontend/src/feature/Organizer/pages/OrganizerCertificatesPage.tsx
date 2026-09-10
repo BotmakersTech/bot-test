@@ -52,7 +52,7 @@ export default function OrganizerCertificatesPage() {
   const activeTemplates = templates.filter((t) => t.status === "ACTIVE");
   const preselectedSport = preselectedSportId ? sports.find((s) => s.id === preselectedSportId) : undefined;
 
-  const eventName = (eventId: string) => events.find((e) => e.id === eventId)?.eventName ?? "Techfect";
+  const eventName = (eventId: string) => events.find((e) => e.id === eventId)?.eventName ?? "Techfest";
   const groupedSports = useMemo(() => {
     const byEvent = new Map<string, OrganizerSport[]>();
     for (const s of sports) {

@@ -108,8 +108,8 @@ export default function AdminRoleDashboard() {
 
       {/* ── Small cards ── */}
       <div className="grid grid-cols-2 gap-5 sm:grid-cols-2 md:grid-cols-5">
-        <SmallCard title="Total Techfects" value={events.length} href="/admin/user"  linkLabel="All Techfects"     loading={loading} />
-        <SmallCard title="Live Techfects"  value={live}           href="/admin/user"  linkLabel="View Live"      loading={loading} />
+        <SmallCard title="Total Techfests" value={events.length} href="/admin/user"  linkLabel="All Techfests"     loading={loading} />
+        <SmallCard title="Live Techfests"  value={live}           href="/admin/user"  linkLabel="View Live"      loading={loading} />
         <SmallCard title="Upcoming"     value={upcoming}        href="/admin/user"  linkLabel="View Upcoming"  loading={loading} />
         <SmallCard title="Completed"    value={completed}       href="/admin/user"  linkLabel="View Completed" loading={loading} />
         <SmallCard title="Total Sports" value={totalSports}     href="/admin/sports" linkLabel="All Sports"    loading={loading} />

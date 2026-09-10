@@ -468,7 +468,7 @@ public class AdminService {
         switch (status) {
             case PUBLISHED -> notificationService.systemNotify(
                     event.getEventName() + " is now live!",
-                    "A new techfect is live on BotLeague. Check it out and register your team!",
+                    "A new techfest is live on BotLeague. Check it out and register your team!",
                     NotificationType.EVENT_PUBLISHED, NotificationPriority.HIGH,
                     NotificationTargetType.ALL_USERS, null,
                     "/events/" + event.getId()

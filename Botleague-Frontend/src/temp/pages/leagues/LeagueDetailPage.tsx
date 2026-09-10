@@ -446,7 +446,7 @@ export default function LeagueDetailPage() {
               See the sports
             </button>
           </div>
-          <p className="lg-hero-note mb-0">Free to register. Techfect fees set by each techfest.</p>
+          <p className="lg-hero-note mb-0">Free to register. Techfest fees set by each techfest.</p>
         </div>
       </section>
 
@@ -552,7 +552,7 @@ export default function LeagueDetailPage() {
           </div>
           <div className="flex-1">
             <div className="lg-cta-card h-full rounded-2xl p-6 md:p-8">
-              <h4 className="lg-cta-title mb-3">Find a techfect near you.</h4>
+              <h4 className="lg-cta-title mb-3">Find a techfest near you.</h4>
               <p className="text-[#393939] mb-6">
                 Browse all affiliated techfests filtered by city, sport, and date.
               </p>

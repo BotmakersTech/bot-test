@@ -96,7 +96,7 @@ export default function VerifyCertificatePage() {
                   <img src={result.imageUrl} alt="Certificate preview" className="w-full rounded-lg mb-3 border border-white/10" />
                 )}
                 <Row label="Recipient" value={result.recipientName} />
-                <Row label="Techfect" value={result.eventName} />
+                <Row label="Techfest" value={result.eventName} />
                 <Row label="Techsport" value={result.eventSportName} />
                 <Row label="Certificate" value={result.label} />
                 {result.teamName && <Row label="Team" value={result.teamName} />}

@@ -33,9 +33,9 @@ const STEPS: Step[] = [
     ctaPath: "/robots",
   },
   {
-    title: "Find Techfects",
+    title: "Find Techfests",
     desc: "Browse upcoming tournaments here and register your team to compete.",
-    ctaLabel: "Go to Techfects",
+    ctaLabel: "Go to Techfests",
     ctaPath: "/browse-events",
   },
 ];

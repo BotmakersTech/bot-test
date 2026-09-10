@@ -610,7 +610,7 @@ export default function OrganizerSchedulePage() {
             onChange={e => onEventChange(e.target.value)}
             className="rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none focus:ring-[#8c6cff]"
           >
-            <option value="" disabled>Select techfect…</option>
+            <option value="" disabled>Select techfest…</option>
             {events.map(e => <option key={e.id} value={e.id}>{e.eventName}</option>)}
           </select>
 

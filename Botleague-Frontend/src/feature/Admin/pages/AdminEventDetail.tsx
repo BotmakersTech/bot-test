@@ -83,9 +83,9 @@ function Spinner({ size = 16, color = ACCENT }: { size?: number; color?: string 
 
 const STATUS_TRANSITIONS: Record<string, { value: string; label: string; color: string; primary?: boolean }[]> = {
   DRAFT:     [{ value: "PUBLISHED", label: "Publish",        color: ACCENT,  primary: true }],
-  PUBLISHED: [{ value: "LIVE",      label: "Start Techfect",    color: SUCCESS, primary: true },
+  PUBLISHED: [{ value: "LIVE",      label: "Start Techfest",    color: SUCCESS, primary: true },
               { value: "ARCHIVED",  label: "Archive",         color: MUTED   }],
-  LIVE:      [{ value: "COMPLETED", label: "Complete Techfect", color: SUCCESS, primary: true }],
+  LIVE:      [{ value: "COMPLETED", label: "Complete Techfest", color: SUCCESS, primary: true }],
   COMPLETED: [{ value: "ARCHIVED",  label: "Archive",         color: MUTED   }],
 }
 
@@ -123,7 +123,7 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange, limited
   const set = (k: keyof UpdateEventRequest, v: string) => setForm(f => ({ ...f, [k]: v }))
 
   const handleSave = async () => {
-    if (!form.eventName?.trim()) { setError("Techfect name is required."); return }
+    if (!form.eventName?.trim()) { setError("Techfest name is required."); return }
     setError(null)
     try { await onSave(form); onClose() }
     catch (err: any) { setError(err?.message || "Save failed.") }
@@ -154,10 +154,10 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange, limited
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <Edit2 size={16} style={{ color: ORG.violet }} />
-              <span style={{ fontWeight: 700, fontSize: "0.95rem", fontFamily: ORG.fontHeading, letterSpacing: "0.06em", color: ORG.blueHeading }}>EDIT TECHFECT</span>
+              <span style={{ fontWeight: 700, fontSize: "0.95rem", fontFamily: ORG.fontHeading, letterSpacing: "0.06em", color: ORG.blueHeading }}>EDIT TECHFEST</span>
             </div>
             <div style={{ fontSize: "0.72rem", color: ORG.muted, marginTop: "2px", marginLeft: "26px" }}>
-              {limitedEdit ? "Basic info only — techfect is published" : "Update techfect details"}
+              {limitedEdit ? "Basic info only — techfest is published" : "Update techfest details"}
             </div>
           </div>
           <button onClick={onClose} style={{ background: "none", border: "none", color: ORG.muted, cursor: "pointer", padding: "4px" }}><X size={18} /></button>
@@ -170,7 +170,7 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange, limited
             </div>
           )}
           <div style={evGroupStyle}>
-            <label style={evLabelStyle}>Techfect Name <span style={{ color: ORG.violet }}>*</span></label>
+            <label style={evLabelStyle}>Techfest Name <span style={{ color: ORG.violet }}>*</span></label>
             <input style={evInputStyle} value={form.eventName} onChange={e => set("eventName", e.target.value)} />
           </div>
           <div style={evGroupStyle}>
@@ -236,7 +236,7 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange, limited
           <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", background: "#f8f9ff", border: `1px solid ${evBorder}`, borderRadius: "10px", padding: "10px 14px" }}>
             <span>
               <span style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: ORG.text }}>Volunteers needed</span>
-              <span style={{ display: "block", fontSize: "0.72rem", color: ORG.muted, marginTop: "2px" }}>Shows an "Apply for Volunteer" button on the public techfect page</span>
+              <span style={{ display: "block", fontSize: "0.72rem", color: ORG.muted, marginTop: "2px" }}>Shows an "Apply for Volunteer" button on the public techfest page</span>
             </span>
             <input type="checkbox" checked={form.volunteersNeeded ?? false}
               onChange={e => setForm(f => ({ ...f, volunteersNeeded: e.target.checked }))}
@@ -426,7 +426,7 @@ export default function AdminEventPage() {
   if (!event) {
     return (
       <PageWrapper>
-        <div style={{ textAlign: "center", padding: "80px 0", color: MUTED }}>Techfect not found</div>
+        <div style={{ textAlign: "center", padding: "80px 0", color: MUTED }}>Techfest not found</div>
       </PageWrapper>
     )
   }
@@ -455,7 +455,7 @@ export default function AdminEventPage() {
              onClick={e => { if (e.target === e.currentTarget) setShowDeleteConfirm(false) }}>
           <div style={{ background: "#ffffff", border: "1px solid rgba(220,38,38,0.3)", borderRadius: "16px", padding: "28px 28px 24px", width: "100%", maxWidth: "420px", boxShadow: "0 24px 60px rgba(15,23,42,0.25)" }}>
             <Trash2 size={26} color={DANGER} style={{ marginBottom: "12px" }} />
-            <h2 style={{ margin: "0 0 8px", fontFamily: "'Sarpanch', sans-serif", fontSize: "1rem", fontWeight: 700, color: DANGER }}>Delete Techfect?</h2>
+            <h2 style={{ margin: "0 0 8px", fontFamily: "'Sarpanch', sans-serif", fontSize: "1rem", fontWeight: 700, color: DANGER }}>Delete Techfest?</h2>
             <p style={{ margin: "0 0 20px", color: MUTED, fontSize: "0.82rem", lineHeight: 1.6 }}>
               <strong style={{ color: TEXT }}>{event.eventName}</strong> will be permanently removed. This cannot be undone.
             </p>
@@ -502,11 +502,11 @@ export default function AdminEventPage() {
           onOpenUserControl={() => setShowUserControl(true)}
           pendingApprovalCount={pendingChangeCount}
           onBack={() => navigate(-1)}
-          backLabel="Back to Techfects"
+          backLabel="Back to Techfests"
           errorBanner={actionError}
           canDelete={canDelete}
           onDelete={() => setShowDeleteConfirm(true)}
-          eventSponsors={canManageSponsors ? <SponsorManager mode="event" entityId={eventId} title="Techfect Sponsors" /> : undefined}
+          eventSponsors={canManageSponsors ? <SponsorManager mode="event" entityId={eventId} title="Techfest Sponsors" /> : undefined}
           extraSponsorSections={(canEdit || canManageSponsors) ? (
             <>
               {canEdit && (

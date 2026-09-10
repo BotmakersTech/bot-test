@@ -7,7 +7,7 @@ import robot4 from "../../../assets/home/Img/robot4.png";
 const STAGE_ITEMS = [
   { title: "Compete At Any Affiliated Techfest", desc: "One Build. Same Rules. Compete Anywhere In India.", img: robot1 },
   { title: "National Ranking Counts", desc: "Every Match Adds To Your All-India Leaderboard.", img: robot2 },
-  { title: "Verified Certificates", desc: "QR-Verified Wins Recognised At Every Affiliated Techfect.", img: robot3 },
+  { title: "Verified Certificates", desc: "QR-Verified Wins Recognised At Every Affiliated Techfest.", img: robot3 },
   { title: "Gateway To Global", desc: "Top Performers Qualify For Battle Of Robots, Russia.", img: robot4 },
 ];
 

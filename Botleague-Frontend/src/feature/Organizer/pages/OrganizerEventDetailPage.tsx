@@ -72,9 +72,9 @@ const dateInputStyle: React.CSSProperties = { ...inputStyle, colorScheme: "dark"
 
 const STATUS_TRANSITIONS: Record<string, { value: string; label: string; color: string; primary?: boolean }[]> = {
   DRAFT:     [{ value: "PUBLISHED", label: "Publish",        color: ACCENT,  primary: true }],
-  PUBLISHED: [{ value: "LIVE",      label: "Start Techfect",    color: SUCCESS, primary: true },
+  PUBLISHED: [{ value: "LIVE",      label: "Start Techfest",    color: SUCCESS, primary: true },
               { value: "ARCHIVED",  label: "Archive",         color: MUTED   }],
-  LIVE:      [{ value: "COMPLETED", label: "Complete Techfect", color: SUCCESS, primary: true }],
+  LIVE:      [{ value: "COMPLETED", label: "Complete Techfest", color: SUCCESS, primary: true }],
   COMPLETED: [{ value: "ARCHIVED",  label: "Archive",         color: MUTED   }],
 }
 
@@ -110,7 +110,7 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange }: {
   const set = (k: keyof UpdateEventInfoRequest, v: string) => setForm(f => ({ ...f, [k]: v }))
 
   const handleSave = async () => {
-    if (!form.eventName?.trim()) { setError("Techfect name is required."); return }
+    if (!form.eventName?.trim()) { setError("Techfest name is required."); return }
     setError(null)
     try { await onSave(form); onClose() }
     catch (err: any) { setError(err?.response?.data?.message || err?.message || "Save failed.") }
@@ -122,13 +122,13 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange }: {
       <div style={{ background: "#ffffff", border: `1px solid rgba(140,108,255,0.22)`, borderRadius: "18px", width: "100%", maxWidth: "620px", maxHeight: "92vh", overflowY: "auto", boxShadow: "0 24px 60px rgba(0,0,0,0.5)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 22px", borderBottom: `1px solid ${BORDER}`, background: "rgba(140,108,255,0.04)", borderRadius: "18px 18px 0 0" }}>
           <div>
-            <div style={{ fontFamily: "'Sarpanch', 'Inter', sans-serif", fontWeight: 700, fontSize: "1rem", letterSpacing: "0.06em" }}>EDIT TECHFECT</div>
+            <div style={{ fontFamily: "'Sarpanch', 'Inter', sans-serif", fontWeight: 700, fontSize: "1rem", letterSpacing: "0.06em" }}>EDIT TECHFEST</div>
             <div style={{ fontSize: "0.72rem", color: MUTED, marginTop: "2px" }}>Fill in as many details as you have — the rest can be added later</div>
           </div>
           <button type="button" onClick={onClose} style={{ background: "rgba(75,134,232,0.06)", border: `1px solid ${BORDER}`, borderRadius: "8px", color: MUTED, cursor: "pointer", padding: "6px", display: "flex" }}><X size={16} /></button>
         </div>
         <div style={{ padding: "20px 22px", display: "flex", flexDirection: "column", gap: "14px" }}>
-          <FormField label="Techfect Name" required>
+          <FormField label="Techfest Name" required>
             <input style={inputStyle} value={form.eventName} onChange={e => set("eventName", e.target.value)} />
           </FormField>
           <FormField label="Description">
@@ -176,7 +176,7 @@ function EditEventModal({ event, onSave, saving, onClose, onMediaChange }: {
           <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", background: "rgba(75,134,232,0.04)", border: `1px solid ${BORDER}`, borderRadius: "10px", padding: "10px 14px" }}>
             <span>
               <span style={{ display: "block", fontSize: "0.85rem", fontWeight: 600 }}>Volunteers needed</span>
-              <span style={{ display: "block", fontSize: "0.72rem", color: MUTED, marginTop: "2px" }}>Shows an "Apply for Volunteer" button on the public techfect page</span>
+              <span style={{ display: "block", fontSize: "0.72rem", color: MUTED, marginTop: "2px" }}>Shows an "Apply for Volunteer" button on the public techfest page</span>
             </span>
             <input type="checkbox" checked={form.volunteersNeeded ?? false}
               onChange={e => setForm(f => ({ ...f, volunteersNeeded: e.target.checked }))}
@@ -241,7 +241,7 @@ export default function OrganizerEventDetailPage() {
     setError(null)
     getMyEventById(eventId)
       .then(setEvent)
-      .catch((err: any) => setError(err?.response?.data?.message || "Failed to load techfect"))
+      .catch((err: any) => setError(err?.response?.data?.message || "Failed to load techfest"))
       .finally(() => setLoading(false))
   }, [eventId])
 
@@ -275,7 +275,7 @@ export default function OrganizerEventDetailPage() {
   const isCompleted  = eventStatus === "COMPLETED"
   const canEdit      = canManageEvent && !isArchived && !isLive && !isCompleted
   const canAddSport  = canManageEvent && isDraft
-  // Deliberately includes isLive — status transitions (e.g. "Complete Techfect"
+  // Deliberately includes isLive — status transitions (e.g. "Complete Techfest"
   // on a LIVE event) must stay reachable even though info edits don't.
   const canChangeStatus = canManageEvent && !isArchived && !isCompleted
 
@@ -349,7 +349,7 @@ export default function OrganizerEventDetailPage() {
   if (!event || !eventId) {
     return (
       <PageWrapper>
-        <div style={{ textAlign: "center", padding: "80px 0", color: MUTED }}>Techfect not found</div>
+        <div style={{ textAlign: "center", padding: "80px 0", color: MUTED }}>Techfest not found</div>
       </PageWrapper>
     )
   }
@@ -403,9 +403,9 @@ export default function OrganizerEventDetailPage() {
         onOpenUserControl={() => setShowUserControl(true)}
         pendingApprovalCount={pendingChangeCount}
         onBack={() => navigate("/organizer/events")}
-        backLabel="Back to My Techfects"
+        backLabel="Back to My Techfests"
         errorBanner={actionError}
-        eventSponsors={canManageEvent ? <SponsorManager mode="event" entityId={eventId} title="Techfect Sponsors" /> : undefined}
+        eventSponsors={canManageEvent ? <SponsorManager mode="event" entityId={eventId} title="Techfest Sponsors" /> : undefined}
         extraSponsorSections={canManageEvent ? (
           <>
             <SupportContactManager mode="event" eventId={eventId} title="Event Support & Emergency Contacts" />

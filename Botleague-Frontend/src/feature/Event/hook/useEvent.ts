@@ -306,7 +306,7 @@ const memberships = useAppSelector(
       setError(
         err?.response?.data?.error ??
           err?.message ??
-          "Failed to fetch techfects."
+          "Failed to fetch techfests."
       );
     } finally {
       setLoading(false);

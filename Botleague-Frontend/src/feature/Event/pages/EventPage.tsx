@@ -132,7 +132,7 @@ function FlowSteps({
   hasRegistrations,
 }: { hasSelectedEvent: boolean; hasRegistrations: boolean }) {
   const steps = [
-    { n: "1", label: "Browse Techfects", done: hasSelectedEvent,  active: !hasSelectedEvent },
+    { n: "1", label: "Browse Techfests", done: hasSelectedEvent,  active: !hasSelectedEvent },
     { n: "2", label: "Choose Sport",  done: hasRegistrations,  active: hasSelectedEvent && !hasRegistrations },
     { n: "3", label: "Register Team", done: hasRegistrations,  active: hasSelectedEvent },
     { n: "4", label: "Build Lineup",  done: false,             active: hasRegistrations },
@@ -869,7 +869,7 @@ export default function SearchEvents() {
     const load = async () => {
       setEventsError(null);
       try { await fetchLiveEvents(); }
-      catch (err: any) { setEventsError(err?.response?.data?.error ?? err?.message ?? "Failed to load techfects."); }
+      catch (err: any) { setEventsError(err?.response?.data?.error ?? err?.message ?? "Failed to load techfests."); }
     };
     load();
   }, []);
@@ -984,7 +984,7 @@ export default function SearchEvents() {
         <div style={{ marginBottom: "28px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "6px" }}>
             <div style={{ width: "4px", height: "34px", background: `linear-gradient(to bottom, ${ACCENT}, ${ACCENT2})`, borderRadius: "2px", boxShadow: "0 0 10px rgba(250,71,21,0.5)" }} />
-            <h1 style={{ margin: 0, fontSize: "clamp(20px,4vw,38px)", fontFamily: "'Orbitron', sans-serif", fontWeight: 500, letterSpacing: "0.1em", color: TEXT }}>FIND TECHFECTS</h1>
+            <h1 style={{ margin: 0, fontSize: "clamp(20px,4vw,38px)", fontFamily: "'Orbitron', sans-serif", fontWeight: 500, letterSpacing: "0.1em", color: TEXT }}>FIND TECHFESTS</h1>
           </div>
           <div style={{ marginLeft: "16px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
             <p style={{ margin: 0, color: MUTED, fontSize: "0.85rem" }}>Discover, register, and build your competition lineup</p>
@@ -1040,7 +1040,7 @@ export default function SearchEvents() {
               onFocus={() => setSearchFocused(true)}
               onBlur={() => setSearchFocused(false)}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by techfect name, city, or code…"
+              placeholder="Search by techfest name, city, or code…"
               style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: TEXT, fontSize: "0.92rem", padding: "15px 0" }}
             />
             {search && (
@@ -1052,13 +1052,13 @@ export default function SearchEvents() {
         {loading && events.length === 0 && (
           <div style={{ textAlign: "center", padding: "56px 0", color: MUTED, display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
             <Spinner size={40} />
-            <div style={{ fontSize: "0.9rem" }}>Loading techfects…</div>
+            <div style={{ fontSize: "0.9rem" }}>Loading techfests…</div>
           </div>
         )}
 
         {(eventsError || (error && events.length === 0)) && !loading && (
           <div style={{ marginTop: "16px" }}>
-            <ErrorBanner message={eventsError ?? error ?? "Failed to load techfects."} onRetry={() => { setEventsError(null); fetchLiveEvents(); }} />
+            <ErrorBanner message={eventsError ?? error ?? "Failed to load techfests."} onRetry={() => { setEventsError(null); fetchLiveEvents(); }} />
           </div>
         )}
 
@@ -1067,13 +1067,13 @@ export default function SearchEvents() {
             {/* Events column */}
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-                <span style={{ fontSize: "0.67rem", fontWeight: 700, letterSpacing: "0.12em", color: ACCENT, textTransform: "uppercase", fontFamily: "'Sarpanch', sans-serif" }}>Live Techfects</span>
+                <span style={{ fontSize: "0.67rem", fontWeight: 700, letterSpacing: "0.12em", color: ACCENT, textTransform: "uppercase", fontFamily: "'Sarpanch', sans-serif" }}>Live Techfests</span>
                 <span style={{ background: "rgba(250,71,21,0.13)", border: "1px solid rgba(250,71,21,0.25)", color: ACCENT, borderRadius: "999px", fontSize: "0.7rem", padding: "1px 9px", fontWeight: 700 }}>{filteredEvents.length}</span>
               </div>
               {filteredEvents.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "40px 0", color: MUTED }}>
                   <div style={{ fontSize: "2rem", marginBottom: "10px" }}>🔎</div>
-                  <div style={{ fontSize: "0.85rem" }}>No techfects match your search.</div>
+                  <div style={{ fontSize: "0.85rem" }}>No techfests match your search.</div>
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -1122,7 +1122,7 @@ export default function SearchEvents() {
         {!loading && !eventsError && events.length === 0 && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "35vh", textAlign: "center" }}>
             <div style={{ width: "80px", height: "80px", borderRadius: "18px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(250,71,21,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.5rem", marginBottom: "16px" }}>🏟️</div>
-            <h3 style={{ margin: "0 0 8px", fontSize: "0.95rem", fontFamily: "'Sarpanch', sans-serif", color: LABEL, letterSpacing: "0.06em" }}>NO LIVE TECHFECTS</h3>
+            <h3 style={{ margin: "0 0 8px", fontSize: "0.95rem", fontFamily: "'Sarpanch', sans-serif", color: LABEL, letterSpacing: "0.06em" }}>NO LIVE TECHFESTS</h3>
             <p style={{ color: MUTED, fontSize: "0.82rem", maxWidth: "240px" }}>Check back soon for upcoming competitions</p>
           </div>
         )}

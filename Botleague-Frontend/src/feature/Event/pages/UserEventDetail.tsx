@@ -73,7 +73,7 @@ export default function UserEventDetail() {
           title={event.eventName}
           imageUrl={event.eventThumbnailUrl}
           videoUrl={event.teaserVideo1Url}
-          backLabel="Techfects"
+          backLabel="Techfests"
           onBack={() => navigate("/events")}
         />
         <Overview description={event.eventDescription} />

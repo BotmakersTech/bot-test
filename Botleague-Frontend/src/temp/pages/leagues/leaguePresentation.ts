@@ -36,7 +36,7 @@ export const LEAGUE_PRESENTATION: Record<string, LeaguePresentation> = {
     border: "#e05fa8",
     colorPrimary: "#8c6cff",
     colorSecondary: "#e05fa8",
-    desc: "Perfect for beginners. Learn robotics, compete in your first techfects, and build confidence.",
+    desc: "Perfect for beginners. Learn robotics, compete in your first techfests, and build confidence.",
     cta: "Enter Ignite",
     whyHeadline: "Every builder starts somewhere.",
     whyBody:
@@ -54,8 +54,8 @@ export const LEAGUE_PRESENTATION: Record<string, LeaguePresentation> = {
     cta: "Enter Inferno",
     whyHeadline: "You're winning at your college fest. Nobody outside your campus knows.",
     whyBody:
-      "Inferno turns local wins into a national ranking — every affiliated techfect you enter counts toward the same all-India table.",
-    journeyHeadline: "From first techfect to national rank.",
+      "Inferno turns local wins into a national ranking — every affiliated techfest you enter counts toward the same all-India table.",
+    journeyHeadline: "From first techfest to national rank.",
     nextLabel: "Next league",
   },
   ROBO_MINDS: {

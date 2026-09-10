@@ -47,7 +47,7 @@ export const PLACEHOLDER_LABELS: Record<PlaceholderKey, string> = {
   PARTICIPANT_NAME: "Participant Name",
   TEAM_NAME: "Team Name",
   ROBOT_NAME: "Robot Name",
-  EVENT_NAME: "Techfect Name",
+  EVENT_NAME: "Techfest Name",
   EVENT_SPORT: "Techsport",
   COMPETITION_CATEGORY: "Competition Category",
   POSITION: "Position",

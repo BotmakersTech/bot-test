@@ -85,7 +85,7 @@ export default function AdminEventsDashboard() {
     return (
       <div className="adb-center-screen">
         <div className="adb-spinner" />
-        <span style={{ color: "#8A8A8A", fontSize: "0.9rem" }}>Loading techfects…</span>
+        <span style={{ color: "#8A8A8A", fontSize: "0.9rem" }}>Loading techfests…</span>
       </div>
     )
   }
@@ -112,10 +112,10 @@ export default function AdminEventsDashboard() {
         <div className="adb-heading">
           <div>
             <div className="adb-heading-eyebrow">Botleague Admin</div>
-            <h1 className="adb-heading-title">Techfects Dashboard</h1>
+            <h1 className="adb-heading-title">Techfests Dashboard</h1>
           </div>
           <div className="adb-heading-meta">
-            <span className="adb-count-pill">{filteredEvents.length} of {totalEvents} techfects</span>
+            <span className="adb-count-pill">{filteredEvents.length} of {totalEvents} techfests</span>
             <Link to="/admin/events/create" className="adb-create-btn">
               <Plus size={16} strokeWidth={2.5} />
               Create Event
@@ -125,7 +125,7 @@ export default function AdminEventsDashboard() {
 
         {/* ── STATS ── */}
         <section className="adb-stats">
-          <StatCard icon={<CalendarDays size={26} />} value={totalEvents} label="Total Techfects" />
+          <StatCard icon={<CalendarDays size={26} />} value={totalEvents} label="Total Techfests" />
           <StatCard icon={<CheckCircle2 size={26} />} value={completedCount} label="Completed" />
           <StatCard icon={<Trophy size={26} />} value={upcomingCount} label="Upcoming" />
           <StatCard icon={<Radio size={26} />} value={liveCount} label="Live Now" pulse={liveCount > 0} />
@@ -137,7 +137,7 @@ export default function AdminEventsDashboard() {
             <Search size={20} />
             <input
               type="text"
-              placeholder="Search techfects…"
+              placeholder="Search techfests…"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
@@ -163,7 +163,7 @@ export default function AdminEventsDashboard() {
           {filteredEvents.length === 0 ? (
             <div className="adb-empty">
               <CalendarDays size={32} color="#c7c7c7" />
-              <p style={{ marginTop: 12 }}>No techfects match your filters</p>
+              <p style={{ marginTop: 12 }}>No techfests match your filters</p>
             </div>
           ) : (
             filteredEvents.map((event, idx) => (
@@ -177,7 +177,7 @@ export default function AdminEventsDashboard() {
 
     <div className="el-mobile-only">
       <MobileEventList
-        heading="Techfect Dashboard"
+        heading="Techfest Dashboard"
         subheading="Botleague Admin"
         totalCount={totalEvents}
         completedCount={completedCount}

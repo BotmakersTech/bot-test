@@ -5,7 +5,7 @@ import "./navbar.css";
 
 const LINKS = [
   { label: "Home", to: "/" },
-  { label: "Techfects", to: "/browse-events" },
+  { label: "Techfests", to: "/browse-events" },
   { label: "Contact Us", to: "/contact-us" },
   { label: "About Us", to: "/about-us" },
 ];

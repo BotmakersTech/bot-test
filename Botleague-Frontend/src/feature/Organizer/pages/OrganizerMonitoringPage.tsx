@@ -103,7 +103,7 @@ export default function OrganizerMonitoringPage() {
     <div className="min-h-screen p-8 text-[#111111]">
       <div className="mb-6 flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 className="font-display text-[clamp(20px,4vw,38px)] font-medium text-[#0162d1]">Techfect Monitoring</h1>
+          <h1 className="font-display text-[clamp(20px,4vw,38px)] font-medium text-[#0162d1]">Techfest Monitoring</h1>
           <p className="mt-1 text-sm text-[#5d5d5d]">Live match status — auto-refreshes every 15 s</p>
         </div>
         {lastRefresh && (
@@ -118,7 +118,7 @@ export default function OrganizerMonitoringPage() {
           onChange={e => { setSelectedEventId(e.target.value); setSelectedSportId(""); setMatches([]); }}
           className="rounded-lg bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#4b86e8]/30 focus:outline-none focus:ring-[#8c6cff]"
         >
-          <option value="" disabled>Select techfect…</option>
+          <option value="" disabled>Select techfest…</option>
           {events.map(e => <option key={e.id} value={e.id}>{e.eventName}</option>)}
         </select>
 
@@ -161,7 +161,7 @@ export default function OrganizerMonitoringPage() {
       )}
 
       {!selectedSportId ? (
-        <div className="rounded-xl bg-[#4b86e8]/5 p-8 text-center text-[#5d5d5d]">Select a techfect and sport to monitor.</div>
+        <div className="rounded-xl bg-[#4b86e8]/5 p-8 text-center text-[#5d5d5d]">Select a techfest and sport to monitor.</div>
       ) : live.length === 0 && scheduled.length === 0 && done.length === 0 ? (
         <div className="rounded-xl bg-[#4b86e8]/5 p-8 text-center text-[#5d5d5d]">No matches found for this sport.</div>
       ) : (

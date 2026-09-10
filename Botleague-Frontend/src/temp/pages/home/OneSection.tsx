@@ -4,7 +4,7 @@ import oneImg from "../../../assets/home/Img/one.png";
 const FEATURES = [
   { title: "Unified Rulebook", desc: "One rulebook, every arena. No confusion, no disputes, no re-learning the rules at every fest." },
   { title: "National Ranking", desc: "Every fest score adds to your national ranking. Rise with your fest, wherever you compete." },
-  { title: "Verified Certificates", desc: "QR-verified achievements, recognised across every affiliated techfect in the country." },
+  { title: "Verified Certificates", desc: "QR-verified achievements, recognised across every affiliated techfest in the country." },
   { title: "Global Gateway", desc: "Qualify for Battle of Robots and represent India on the world stage." },
 ];
 

@@ -421,7 +421,7 @@ export default function SponsorManager({ mode, entityId, title, sportOptions }: 
     }
   }
 
-  const headingText = title ?? (mode === "event" ? "Techfect Sponsors" : "Techsport Sponsors");
+  const headingText = title ?? (mode === "event" ? "Techfest Sponsors" : "Techsport Sponsors");
   const noSports = usePicker && opts.length === 0;
   const canAdd = !noSports;
 

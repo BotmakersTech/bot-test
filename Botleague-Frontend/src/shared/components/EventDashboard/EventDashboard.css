@@ -317,7 +317,7 @@ button.ed-stat-card {
     box-sizing: border-box;
 }
 
-/* Techfect Details' own fields — plain text, no border or fill, so a
+/* Techfest Details' own fields — plain text, no border or fill, so a
    read-only value doesn't read as a field waiting for input. */
 .ed-detail-value {
     font-weight: 600;

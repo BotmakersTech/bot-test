@@ -840,7 +840,7 @@
 //         </div>
 
 //         <Section label={<><Shield size={10} color={T.accent} /> Bracket Information</>}>
-//           <Row label={<><Shield size={13} color={T.muted} /> Techfect Name</>}>
+//           <Row label={<><Shield size={13} color={T.muted} /> Techfest Name</>}>
 //             <div style={{ ...inputBase, opacity: 0.6 }}>{eventName}</div>
 //           </Row>
 //           {sport && (

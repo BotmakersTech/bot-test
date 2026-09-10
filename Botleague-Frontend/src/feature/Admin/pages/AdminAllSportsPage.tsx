@@ -96,7 +96,7 @@ export default function AdminAllSportsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && setActiveSearch(search)}
-            placeholder="Search by sport name, techfect, age group…"
+            placeholder="Search by sport name, techfest, age group…"
             className="flex-1 min-w-0 px-4 py-2 text-sm text-[#374151] placeholder-gray-400 outline-none"
           />
           <button
@@ -115,7 +115,7 @@ export default function AdminAllSportsPage() {
           className="rounded-xl bg-white border px-4 py-2 text-sm text-[#374151] outline-none"
           style={{ borderColor: "rgba(75,134,232,0.3)" }}
         >
-          <option value="ALL">All Techfects</option>
+          <option value="ALL">All Techfests</option>
           {events.map((ev) => (
             <option key={ev.id} value={ev.id}>
               {ev.eventName}
@@ -139,7 +139,7 @@ export default function AdminAllSportsPage() {
             <thead>
               <tr style={{ background: ORG.gradientPill }}>
                 <th className="px-4 py-3.5 text-left font-semibold text-white">Techsport</th>
-                <th className="px-4 py-3.5 text-left font-semibold text-white">Techfect</th>
+                <th className="px-4 py-3.5 text-left font-semibold text-white">Techfest</th>
                 <th className="px-4 py-3.5 text-left font-semibold text-white hidden md:table-cell">Age Group</th>
                 <th className="px-4 py-3.5 text-left font-semibold text-white hidden lg:table-cell">Weight Class</th>
                 <th className="px-4 py-3.5 text-center font-semibold text-white hidden sm:table-cell">Teams</th>

@@ -181,7 +181,7 @@ export default function MobileSportDetail({
         <h1 className="ssd-m-title">{sportName}</h1>
         <span className={`ssd-m-badge ${isOpen ? "is-open" : "is-closed"}`}>{statusLabel}</span>
       </div>
-      {eventName && <p className="ssd-m-subtitle">Techfect- {eventName}</p>}
+      {eventName && <p className="ssd-m-subtitle">Techfest- {eventName}</p>}
 
       {errorBanner && <div className="ssd-m-banner error"><AlertTriangle size={13} /> {errorBanner}</div>}
       {publishMsg && (

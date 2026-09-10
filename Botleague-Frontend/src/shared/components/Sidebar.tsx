@@ -111,7 +111,7 @@ const mainNavItems: NavItem[] = [
   },
   {
     id: "events",
-    label: "Techfects",
+    label: "Techfests",
     icon: <EventsIcon />,
     link: "/events",
   },

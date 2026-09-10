@@ -133,16 +133,16 @@ export default function OrganizerDashboard() {
     <div className="p-8" style={{ minHeight: "100vh", background: BG, fontFamily: "'Inter',sans-serif" }}>
       <div style={{ marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px", flexWrap: "wrap" }}>
         <div>
-          <h1 style={{ color: "#0162d1", fontFamily: "'Orbitron',sans-serif", fontSize: "clamp(20px,4vw,38px)", fontWeight: 500, margin: 0 }}>Techfects Dashboard</h1>
+          <h1 style={{ color: "#0162d1", fontFamily: "'Orbitron',sans-serif", fontSize: "clamp(20px,4vw,38px)", fontWeight: 500, margin: 0 }}>Techfests Dashboard</h1>
           <p style={{ color: MUTED, fontSize: "0.85rem", margin: "4px 0 0" }}>
-            {loading ? "Loading…" : `${events.length} techfect${events.length !== 1 ? "s" : ""} assigned to you`}
+            {loading ? "Loading…" : `${events.length} techfest${events.length !== 1 ? "s" : ""} assigned to you`}
           </p>
         </div>
         <button
           onClick={() => navigate("/organizer/events/create")}
           style={{ background: `linear-gradient(135deg,${BLUE},${P})`, color: "#fff", border: "none", borderRadius: "10px", padding: "0 18px", height: "42px", fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}
         >
-          <Plus size={15} /> Create Techfect
+          <Plus size={15} /> Create Techfest
         </button>
       </div>
 
@@ -160,7 +160,7 @@ export default function OrganizerDashboard() {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search techfects…"
+            placeholder="Search techfests…"
             style={{ width: "100%", paddingLeft: "36px", paddingRight: "12px", height: "40px", background: SURF, border: `1.5px solid ${BORDER}`, borderRadius: "10px", color: TEXT, fontSize: "0.85rem", outline: "none", boxSizing: "border-box" }}
           />
         </div>
@@ -180,11 +180,11 @@ export default function OrganizerDashboard() {
       </div>
 
       {loading ? (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 0", color: MUTED }}>Loading techfects…</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 0", color: MUTED }}>Loading techfests…</div>
       ) : filtered.length === 0 ? (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 0", color: MUTED, gap: "8px" }}>
           <CalendarDays size={40} style={{ opacity: 0.25 }} />
-          <p style={{ margin: 0 }}>No techfects found</p>
+          <p style={{ margin: 0 }}>No techfests found</p>
         </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: "16px" }}>

@@ -105,7 +105,7 @@ function allRoomsFromList(rooms: ReturnType<typeof selectChatRooms>): ChatRoom[]
 type MessagesTab = "team" | "announcements";
 
 // "Team Chat" = team groups + the group created at event registration + direct messages.
-// "Techfect Announcement" = everything an organiser broadcasts (read-only for the recipient).
+// "Techfest Announcement" = everything an organiser broadcasts (read-only for the recipient).
 function roomsForTab(rooms: ReturnType<typeof selectChatRooms>, tab: MessagesTab): ChatRoom[] {
   if (!rooms) return [];
   return tab === "announcements"

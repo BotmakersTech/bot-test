@@ -101,12 +101,12 @@ export default function EventsLandingPage() {
         if (liveResult.status === "fulfilled") {
           setUpcoming(liveResult.value);
         } else {
-          console.error("Failed to load live/upcoming techfects:", liveResult.reason);
+          console.error("Failed to load live/upcoming techfests:", liveResult.reason);
         }
         if (completedResult.status === "fulfilled") {
           setFeatured(completedResult.value);
         } else {
-          console.error("Failed to load completed techfects:", completedResult.reason);
+          console.error("Failed to load completed techfests:", completedResult.reason);
         }
       })
       .finally(() => { if (!cancelled) setLoading(false); });
@@ -125,7 +125,7 @@ export default function EventsLandingPage() {
         <PublicNavbar showLeagues />
 
         <div className="events-hero-content">
-          <span className="events-hero-eyebrow">Techfects</span>
+          <span className="events-hero-eyebrow">Techfests</span>
           <h1 className="events-hero-title">Innovate. Compete. Elevate.</h1>
           <p className="events-hero-subtitle">
             Join innovators, developers and tech leaders at BotLeague&apos;s flagship event.
@@ -145,14 +145,14 @@ export default function EventsLandingPage() {
         <section className="events-section" ref={upcomingRef}>
           <div className="events-section-header">
             <span className="events-section-eyebrow">Don&apos;t Miss Out</span>
-            <h2 className="events-section-title">Upcoming Techfects</h2>
+            <h2 className="events-section-title">Upcoming Techfests</h2>
           </div>
 
           <div className="events-grid">
             {loading ? (
-              <div className="events-empty">Loading techfects…</div>
+              <div className="events-empty">Loading techfests…</div>
             ) : visibleUpcoming.length === 0 ? (
-              <div className="events-empty">No upcoming techfects right now — check back soon.</div>
+              <div className="events-empty">No upcoming techfests right now — check back soon.</div>
             ) : (
               visibleUpcoming.map((event) => (
                 <EventCard key={event.id} event={event} onClick={() => goToEvent(event.id)} />
@@ -162,7 +162,7 @@ export default function EventsLandingPage() {
 
           {!showAllUpcoming && upcoming.length > INITIAL_UPCOMING && (
             <div className="events-see-more">
-              <button type="button" onClick={() => setShowAllUpcoming(true)}>See More Techfects →</button>
+              <button type="button" onClick={() => setShowAllUpcoming(true)}>See More Techfests →</button>
             </div>
           )}
         </section>
@@ -170,14 +170,14 @@ export default function EventsLandingPage() {
         <section className="events-section">
           <div className="events-section-header">
             <span className="events-section-eyebrow">Look Back</span>
-            <h2 className="events-section-title">Featured Techfects</h2>
+            <h2 className="events-section-title">Featured Techfests</h2>
           </div>
 
           <div className="events-grid">
             {loading ? (
-              <div className="events-empty">Loading techfects…</div>
+              <div className="events-empty">Loading techfests…</div>
             ) : visibleFeatured.length === 0 ? (
-              <div className="events-empty">No past techfects to show yet.</div>
+              <div className="events-empty">No past techfests to show yet.</div>
             ) : (
               visibleFeatured.map((event) => (
                 <EventCard key={event.id} event={event} completed onClick={() => goToEvent(event.id)} />
@@ -194,7 +194,7 @@ export default function EventsLandingPage() {
 
         <section className="events-about">
           <img src={droneDecor} alt="" className="events-about-decor" aria-hidden="true" />
-          <h2 className="events-about-title">About the Techfect</h2>
+          <h2 className="events-about-title">About the Techfest</h2>
           <p className="events-about-text">
             Bot League events bring together bright minds from around the world to build, learn and grow.
             Engage in insightful sessions, exciting competitions, and networking opportunities.

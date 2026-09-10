@@ -87,12 +87,12 @@ export default function OrganizerAnalyticsPage() {
     <div className="p-8" style={{ minHeight: "100vh", background: BG, fontFamily: "'Inter',sans-serif" }}>
       <div style={{ marginBottom: "24px" }}>
         <h1 style={{ color: "#0162d1", fontFamily: "'Orbitron',sans-serif", fontSize: "clamp(20px,4vw,38px)", fontWeight: 500, margin: 0 }}>Analytics</h1>
-        <p style={{ color: MUTED, fontSize: "0.85rem", margin: "4px 0 0" }}>Overview of your techfect portfolio</p>
+        <p style={{ color: MUTED, fontSize: "0.85rem", margin: "4px 0 0" }}>Overview of your techfest portfolio</p>
       </div>
 
       {/* Big stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: "14px", marginBottom: "28px" }}>
-        <BigStat icon={<CalendarDays size={22} />} label="Total Techfects"    value={totalEvents}  color={P}       />
+        <BigStat icon={<CalendarDays size={22} />} label="Total Techfests"    value={totalEvents}  color={P}       />
         <BigStat icon={<Zap size={22} />}           label="Live Now"       value={liveCount}    color="#10b981" />
         <BigStat icon={<Clock size={22} />}          label="Upcoming"      value={pubCount}     color={BLUE}    />
         <BigStat icon={<Trophy size={22} />}         label="Sports"        value={totalSports}  color="#f59e0b" />
@@ -105,7 +105,7 @@ export default function OrganizerAnalyticsPage() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
         {/* Event status breakdown */}
         <div style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: "16px", padding: "22px 26px" }}>
-          <h2 style={{ color: TEXT, fontFamily: "'Sarpanch',sans-serif", fontSize: "1rem", fontWeight: 700, margin: "0 0 18px" }}>Techfect Status Breakdown</h2>
+          <h2 style={{ color: TEXT, fontFamily: "'Sarpanch',sans-serif", fontSize: "1rem", fontWeight: 700, margin: "0 0 18px" }}>Techfest Status Breakdown</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
             <ProgressBar label="Live"      value={liveCount}  total={totalEvents} color="#10b981" />
             <ProgressBar label="Published" value={pubCount}   total={totalEvents} color={P}       />
@@ -134,15 +134,15 @@ export default function OrganizerAnalyticsPage() {
 
       {/* Per-event sports table */}
       <div style={{ background: SURF, border: `1px solid ${BORDER}`, borderRadius: "16px", padding: "22px 26px" }}>
-        <h2 style={{ color: TEXT, fontFamily: "'Sarpanch',sans-serif", fontSize: "1rem", fontWeight: 700, margin: "0 0 16px" }}>Techfects at a Glance</h2>
+        <h2 style={{ color: TEXT, fontFamily: "'Sarpanch',sans-serif", fontSize: "1rem", fontWeight: 700, margin: "0 0 16px" }}>Techfests at a Glance</h2>
         {events.length === 0 ? (
-          <p style={{ color: MUTED, textAlign: "center", padding: "20px 0" }}>No techfects found</p>
+          <p style={{ color: MUTED, textAlign: "center", padding: "20px 0" }}>No techfests found</p>
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
               <thead>
                 <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
-                  {["Techfect", "Status", "Sports", "Teams", "Dates"].map((h, i) => (
+                  {["Techfest", "Status", "Sports", "Teams", "Dates"].map((h, i) => (
                     <th key={i} style={{ textAlign: i >= 2 ? "center" : "left", padding: "10px 12px", color: MUTED, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
                   ))}
                 </tr>
