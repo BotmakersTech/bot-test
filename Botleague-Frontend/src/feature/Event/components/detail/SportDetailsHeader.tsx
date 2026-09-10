@@ -307,10 +307,12 @@ const TAB_CSS = `
   background: transparent;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
-  gap: 1.25rem;
-  padding-bottom: 1.75rem;
+  /* Fixed 40px between the image and the action buttons — not a
+     space-between spread that grows with the column height. */
+  gap: 40px;
+  padding-bottom: 20px;
 }
 /* Fills what was dead space above the actions — the sport's own thumbnail
    when the organiser set one, a neutral robot render otherwise. */
