@@ -40,6 +40,8 @@
     --white: #fff;
     --glass: rgba(255, 255, 255, .10);
     --gradient: linear-gradient(90deg, #0162D1, #8C6CFF);
+    --colorPrimary: #8c6cff;
+    --colorSecondary: #e05fa8;
 }
 
 /* Hero */
@@ -571,6 +573,44 @@
    full-bleed photo, dark bottom-gradient overlay, name pinned over the
    image, description + action pill revealed on hover/focus. */
 
+/* Wrapper so the decorative accent blocks can sit BEHIND the card and peek
+   past its edges — .event-card itself keeps overflow:hidden to clip the
+   photo, so the accents live one level up, themed with the page's own
+   blue/purple gradient instead of the lg- vars.
+   The padding here is what lets the accents actually show: the card sits
+   inset from the wrapper's edges by this amount, so the full-bleed accent
+   shapes peek out around it instead of being fully covered. */
+.evd-page .event-card-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 420px;   /* proper card size, matches the reference proportions */
+    margin: 0 auto;
+    padding: 22px;       /* gives the accent room to frame the card like the screenshot */
+}
+
+.evd-page .event-card-accent {
+    position: absolute;
+    border-radius: 18px; 
+    background: linear-gradient(180deg, var(--colorPrimary) 0%, var(--colorSecondary) 100%);
+    transition: filter .25s ease, transform .25s ease;
+    z-index: 0;
+    pointer-events: none;
+}
+.evd-page .event-card-wrap:hover .event-card-accent {
+    filter: brightness(1.15) saturate(1.1);
+}
+.evd-page .event-card-accent--tl {
+    top: 0; right: 58%; bottom: 42%; left: 0;
+}
+.evd-page .event-card-wrap:hover .event-card-accent--tl {
+    transform: translate(-4px, -4px);
+}
+.evd-page .event-card-accent--br {
+    top: 42%; right: 0; bottom: 0; left: 58%;
+}
+.evd-page .event-card-wrap:hover .event-card-accent--br {
+    transform: translate(4px, 4px);
+}
 .evd-page .cards {
     display: grid;
     position: relative;
@@ -581,9 +621,10 @@
 
 .evd-page .event-card {
     position: relative;
+    z-index: 1;
     display: block;
     width: 100%;
-    aspect-ratio: 526 / 344.647;
+    aspect-ratio: 526 / 560;
     border-radius: 20px;
     overflow: hidden;
     cursor: pointer;
@@ -594,8 +635,16 @@
 .evd-page .event-card:focus-visible { transform: translateY(-4px); }
 .evd-page .event-card:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
 
-.evd-page .image-box { position: absolute; inset: 0; }
-.evd-page .image-box img { width: 100%; height: 100%; object-fit: cover; }
+.evd-page .image-box {
+    position: absolute;
+    inset: 0;
+}
+
+.evd-page .image-box img {
+     width: 100%;
+    height: 100%;
+    object-fit: fill;
+}
 
 .evd-page .image-box-fallback {
     width: 100%;
