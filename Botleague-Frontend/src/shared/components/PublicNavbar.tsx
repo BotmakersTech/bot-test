@@ -8,7 +8,7 @@ import { useLeagues } from "../../temp/pages/leagues/useLeagues";
 
 const LINKS_BEFORE_LEAGUES = [{ label: "Home", to: "/" }];
 const LINKS_AFTER_LEAGUES = [
-  { label: "Techfects", to: "/events" },
+  { label: "Techfest", to: "/events" },
   { label: "Rankings", to: "/rankings" },
   { label: "About Us", to: "/about-us" },
 ];
