@@ -181,7 +181,9 @@
   position: relative;
   display: block;
   width: 100%;
-  aspect-ratio: 526 / 344.647;
+  /* Portrait poster proportions — taller than wide — so the techfest
+     artwork reads like an event poster rather than a wide banner. */
+  aspect-ratio: 3 / 4;
   border-radius: 20px;
   overflow: hidden;
   border: none;
@@ -473,7 +475,9 @@
 
   .events-grid .event-card {
     flex: 0 0 auto;
-    width: min(78vw, 300px);
+    /* Narrower here than the old landscape card — at the 3/4 ratio this
+       keeps the portrait card from running too tall in the scroll strip. */
+    width: min(64vw, 260px);
     scroll-snap-align: start;
   }
 

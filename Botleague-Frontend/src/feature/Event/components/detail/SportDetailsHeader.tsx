@@ -315,11 +315,12 @@ const TAB_CSS = `
   padding-bottom: 20px;
 }
 /* Fills what was dead space above the actions — the sport's own thumbnail
-   when the organiser set one, a neutral robot render otherwise. */
+   when the organiser set one, a neutral robot render otherwise. Portrait
+   proportions (taller than wide) so it reads as a poster, not a banner. */
 .rw-col-blank-img {
   width: 100%;
-  max-width: 300px;
-  aspect-ratio: 4 / 3;
+  max-width: 260px;
+  aspect-ratio: 3 / 4;
   object-fit: cover;
   border-radius: 16px;
   border: 1.5px solid #E3E8F0;
