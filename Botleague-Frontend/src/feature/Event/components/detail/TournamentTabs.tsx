@@ -7,8 +7,7 @@ const DESKTOP_TABS: { id: TournamentTabId; label: string }[] = [
   { id: "matches", label: "Matches" },
   { id: "rankings", label: "Leaderboard" },
   { id: "schedule", label: "Schedule" },
-  { id: "registration", label: "Register" },
-  { id: "lineup", label: "Lineup" },
+ 
 ];
 
 const MOBILE_TABS: { id: TournamentTabId; label: string }[] = [

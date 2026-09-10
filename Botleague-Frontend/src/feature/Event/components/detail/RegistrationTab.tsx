@@ -34,7 +34,7 @@ const REG_ROLES = [
   { value: "BUILD_HEAD", label: "Build Head" },
 ];
 
-interface RegistrationTabProps {
+export interface RegistrationTabProps {
   sport: EventSportResponse;
   teamId: string;
   teamCode: string;
