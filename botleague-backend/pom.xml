@@ -22,7 +22,7 @@
         <java.version>25</java.version>
         <jjwt.version>0.12.5</jjwt.version>
         <bucket4j.version>8.10.1</bucket4j.version>
-        <aws.sdk.version>2.25.60</aws.sdk.version>
+        <aws.sdk.version>2.54.13</aws.sdk.version>
     </properties>
 
     <dependencyManagement>
