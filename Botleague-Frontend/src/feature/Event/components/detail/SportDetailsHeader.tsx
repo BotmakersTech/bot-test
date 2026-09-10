@@ -8,8 +8,10 @@ import star from "../../../../assets/Auth/Star-two.svg";
 import { formatWeightClass } from "../../../Robots/constants/weightClasses";
 import { ageGroupLabel } from "../../../../shared/utils/ageGroup";
 import { constraintsFor } from "../../utils/specPolicy";
+import RegistrationTab from "./RegistrationTab";
+import type { RegistrationTabProps } from "./RegistrationTab";
 
-interface SportDetailsHeaderProps {
+interface SportDetailsHeaderProps extends Omit<RegistrationTabProps, "sport"> {
   sport: EventSportResponse;
   contacts: SupportContact[];
 }
@@ -32,9 +34,10 @@ interface SpecItem {
 
 type TabKey = "problem" | "spec" | "contact" | "prize";
 
-export default function SportDetailsHeader({ sport, contacts }: SportDetailsHeaderProps) {
+export default function SportDetailsHeader({ sport, contacts, ...registrationProps }: SportDetailsHeaderProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("problem");
   const [rulebookOpen, setRulebookOpen] = useState(false);
+  const [registerOpen, setRegisterOpen] = useState(false);
 
   // Only the spec(s) this (league, sport) actually gates get a stat box — a
   // RoboWar shows Weight, RC Racing Car shows Scale (never a leftover
@@ -83,7 +86,11 @@ export default function SportDetailsHeader({ sport, contacts }: SportDetailsHead
       <div className="event-info" style={{ width: "100%" }}>
         {/* Left smaller, right bigger. Title sits above the right column only. */}
         <div className="rw-content-row">
-          <div className="rw-col-blank" aria-hidden="true" />
+          <div className="rw-col-blank">
+            <button type="button" className="rw-register-btn" onClick={() => setRegisterOpen(true)}>
+              Register
+            </button>
+          </div>
 
           <div className="rw-col-content">
             {/* Event name — blue, above the right column only, shifted up */}
@@ -230,7 +237,7 @@ export default function SportDetailsHeader({ sport, contacts }: SportDetailsHead
               </button>
             </div>
             <div className="rw-modal-body">
-              <p>
+              <p className="rw-modal-intro">
                 Rules for {sport.sport?.replace(/_/g, " ") ?? "this event"}:
               </p>
               <ul className="rw-rulebook-list">
@@ -246,6 +253,22 @@ export default function SportDetailsHeader({ sport, contacts }: SportDetailsHead
                   Download full rulebook
                 </a>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {registerOpen && (
+        <div className="rw-modal-backdrop" onClick={() => setRegisterOpen(false)}>
+          <div className="rw-modal rw-modal-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="rw-modal-header">
+              <h4>Register for {sport.sport?.replace(/_/g, " ") ?? "this event"}</h4>
+              <button type="button" className="rw-modal-close" onClick={() => setRegisterOpen(false)} aria-label="Close">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="rw-modal-body">
+              <RegistrationTab sport={sport} {...registrationProps} />
             </div>
           </div>
         </div>
@@ -275,6 +298,11 @@ const TAB_CSS = `
 }
 .rw-col-blank {
   background: transparent;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 1.75rem;
 }
 .rw-col-content {
   padding: 1.75rem;
@@ -282,6 +310,25 @@ const TAB_CSS = `
   flex-direction: column;
   gap: 1rem;
 }
+
+.rw-register-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 240px;
+  border: none;
+  background: linear-gradient(90deg, #4A7DFF 0%, #9B6BFF 100%);
+  color: #fff;
+  font-family: "Orbitron", sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 0.9rem 1.5rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.rw-register-btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
 
 /* Title above the right column only, shifted up (tighter gap to tab bar) */
 .rw-page-title {
@@ -457,14 +504,16 @@ const TAB_CSS = `
   overflow-y: auto;
   padding: 1.75rem;
 }
+.rw-modal-lg { max-width: 720px; }
 .rw-modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
 .rw-modal-header h4 { font-family: "Orbitron", sans-serif; color: #0162D1; margin: 0; font-weight: 600; }
 .rw-modal-close { border: none; background: #F1EEFA; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; color: #3E3A5A; display: flex; align-items: center; justify-content: center; }
-.rw-modal-body p { font-family: Inter, sans-serif; color: #333; line-height: 1.7; font-size: 0.95rem; margin-bottom: 1rem; }
+.rw-modal-intro { font-family: Inter, sans-serif; color: #333; line-height: 1.7; font-size: 0.95rem; margin-bottom: 1rem; }
 
 @media (max-width: 767px) {
   .rw-content-row { grid-template-columns: 1fr; }
-  .rw-col-blank { display: none; }
+  .rw-col-blank { min-height: 0; padding: 0 0 1rem; }
+  .rw-register-btn { max-width: 100%; }
   .rw-col-content { padding: 1.5rem 1.25rem; }
   .rw-card-grid { grid-template-columns: 1fr; }
   .rw-card-grid-single { grid-template-columns: 1fr; }
