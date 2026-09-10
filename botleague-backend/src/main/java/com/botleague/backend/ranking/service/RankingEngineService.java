@@ -268,6 +268,14 @@ public class RankingEngineService {
             leaderboardEntryRepository.findByEventSportIdAndRobotId(eventSportId, e.getKey())
                     .ifPresent(entry -> {
                         entry.setEventRank(e.getValue());
+                        // Time trials have no per-match points to accumulate, so
+                        // award the placement-equivalent directly — this is what
+                        // updateGlobalRankings() adds into the global pool, and
+                        // without it a time-trial push contributed 0 points
+                        // (only medals). Same scale as a bracket finish; see
+                        // RankingMath.timeTrialPlacementPoints().
+                        entry.setPointsEarned(
+                                com.botleague.backend.ranking.util.RankingMath.timeTrialPlacementPoints(e.getValue()));
                         entry.setIsFinalized(true);
                         leaderboardEntryRepository.save(entry);
                     });
