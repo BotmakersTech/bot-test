@@ -5,6 +5,7 @@ import type { ComponentType } from "react";
 import type { EventSportResponse, SupportContact } from "../../api/event.api";
 import plane from "../../../../assets/Auth/plane.svg";
 import star from "../../../../assets/Auth/Star-two.svg";
+import robotFallback from "../../../../assets/robot.png";
 import { formatWeightClass } from "../../../Robots/constants/weightClasses";
 import { ageGroupLabel } from "../../../../shared/utils/ageGroup";
 import { constraintsFor } from "../../utils/specPolicy";
@@ -87,13 +88,21 @@ export default function SportDetailsHeader({ sport, contacts, ...registrationPro
         {/* Left smaller, right bigger. Title sits above the right column only. */}
         <div className="rw-content-row">
           <div className="rw-col-blank">
-            <button type="button" className="rw-register-btn" onClick={() => setRegisterOpen(true)}>
-              Register
-            </button>
-            <button type="button" className="rw-rulebook-side-btn" onClick={() => setRulebookOpen(true)}>
-              <FileText size={16} />
-              Rulebook
-            </button>
+            <img
+              className="rw-col-blank-img"
+              src={sport.sportThumbnailUrl || robotFallback}
+              alt=""
+              aria-hidden="true"
+            />
+            <div className="rw-col-blank-actions">
+              <button type="button" className="rw-register-btn" onClick={() => setRegisterOpen(true)}>
+                Register
+              </button>
+              <button type="button" className="rw-rulebook-side-btn" onClick={() => setRulebookOpen(true)}>
+                <FileText size={16} />
+                Rulebook
+              </button>
+            </div>
           </div>
 
           <div className="rw-col-content">
@@ -298,10 +307,28 @@ const TAB_CSS = `
   background: transparent;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.25rem;
+  padding-bottom: 1.75rem;
+}
+/* Fills what was dead space above the actions — the sport's own thumbnail
+   when the organiser set one, a neutral robot render otherwise. */
+.rw-col-blank-img {
+  width: 100%;
+  max-width: 300px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 16px;
+  border: 1.5px solid #E3E8F0;
+  background: #F4F6FA;
+}
+.rw-col-blank-actions {
+  display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  padding-bottom: 1.75rem;
+  width: 100%;
 }
 .rw-col-content {
   padding: 1.75rem;
