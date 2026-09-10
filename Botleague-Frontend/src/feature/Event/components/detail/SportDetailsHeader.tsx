@@ -90,6 +90,10 @@ export default function SportDetailsHeader({ sport, contacts, ...registrationPro
             <button type="button" className="rw-register-btn" onClick={() => setRegisterOpen(true)}>
               Register
             </button>
+            <button type="button" className="rw-rulebook-side-btn" onClick={() => setRulebookOpen(true)}>
+              <FileText size={16} />
+              Rulebook
+            </button>
           </div>
 
           <div className="rw-col-content">
@@ -118,27 +122,21 @@ export default function SportDetailsHeader({ sport, contacts, ...registrationPro
               )}
 
               {activeTab === "spec" && (
-                <>
-                  {specs.length > 0 ? (
-                    <div className="rw-card-grid">
-                      {specs.map((spec) => (
-                        <div className="rw-detail-card" key={spec.label}>
-                          <spec.icon size={22} />
-                          <div>
-                            <div className="rw-detail-card-label">{spec.label}</div>
-                            <div className="rw-detail-card-value">{spec.value}</div>
-                          </div>
+                specs.length > 0 ? (
+                  <div className="rw-card-grid">
+                    {specs.map((spec) => (
+                      <div className="rw-detail-card" key={spec.label}>
+                        <spec.icon size={22} />
+                        <div>
+                          <div className="rw-detail-card-label">{spec.label}</div>
+                          <div className="rw-detail-card-value">{spec.value}</div>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="rw-tab-desc">Specification details will be published closer to the event.</div>
-                  )}
-                  <button type="button" className="rw-rulebook-btn" onClick={() => setRulebookOpen(true)}>
-                    <FileText size={18} />
-                    View rulebook
-                  </button>
-                </>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rw-tab-desc">Specification details will be published closer to the event.</div>
+                )
               )}
 
               {activeTab === "contact" && (
@@ -302,6 +300,7 @@ const TAB_CSS = `
   flex-direction: column;
   justify-content: flex-end;
   align-items: center;
+  gap: 0.75rem;
   padding-bottom: 1.75rem;
 }
 .rw-col-content {
@@ -329,6 +328,28 @@ const TAB_CSS = `
   transition: all 0.2s ease;
 }
 .rw-register-btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
+
+/* Secondary action sitting under Register — outlined so Register still reads
+   as the primary. The rulebook opens from here now, not from a tab. */
+.rw-rulebook-side-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  max-width: 240px;
+  border: 1.5px solid #0162D1;
+  background: #fff;
+  color: #0162D1;
+  font-family: "Orbitron", sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.rw-rulebook-side-btn:hover { background: #EAF1FC; transform: translateY(-2px); }
 
 /* Title above the right column only, shifted up (tighter gap to tab bar) */
 .rw-page-title {
@@ -374,12 +395,16 @@ const TAB_CSS = `
 .rw-tab-body { flex: 1; }
 
 .rw-tab-desc {
-  font-family: 'Sarpanch', sans-serif;
+  font-family: Inter, sans-serif;
   font-weight: 400;
-  color: #222;
-  font-size: 1.1rem;
-  line-height: 1.8;
+  color: #2b2b2b;
+  font-size: 0.95rem;
+  line-height: 1.65;
   margin: 0;
+  /* Keep the line breaks and blank lines the organiser typed — without this
+     the whole write-up collapses into one run-on paragraph. */
+  white-space: pre-wrap;
+  max-width: 68ch;
 }
 
 .rw-card-grid {
@@ -513,7 +538,8 @@ const TAB_CSS = `
 @media (max-width: 767px) {
   .rw-content-row { grid-template-columns: 1fr; }
   .rw-col-blank { min-height: 0; padding: 0 0 1rem; }
-  .rw-register-btn { max-width: 100%; }
+  .rw-register-btn,
+  .rw-rulebook-side-btn { max-width: 100%; }
   .rw-col-content { padding: 1.5rem 1.25rem; }
   .rw-card-grid { grid-template-columns: 1fr; }
   .rw-card-grid-single { grid-template-columns: 1fr; }

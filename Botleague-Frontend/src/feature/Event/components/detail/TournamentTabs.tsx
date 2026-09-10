@@ -6,14 +6,13 @@ export type TournamentTabId = "matches" | "rankings" | "schedule" | "registratio
 const DESKTOP_TABS: { id: TournamentTabId; label: string }[] = [
   { id: "matches", label: "Matches" },
   { id: "rankings", label: "Leaderboard" },
-  { id: "schedule", label: "Schedule" },
- 
+  { id: "schedule", label: "Bracket" },
 ];
 
 const MOBILE_TABS: { id: TournamentTabId; label: string }[] = [
   { id: "matches", label: "Matches" },
   { id: "rankings", label: "Leaderboard" },
-  { id: "schedule", label: "Schedule" },
+  { id: "schedule", label: "Bracket" },
 ];
 
 interface TournamentTabsProps {
