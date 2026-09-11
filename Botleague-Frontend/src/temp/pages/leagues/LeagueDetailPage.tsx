@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { ArrowRight, Trophy } from "lucide-react";
+import { ArrowRight, Trophy, UserPlus, MapPin, Rocket } from "lucide-react";
 import PublicNavbar from "../../../shared/components/PublicNavbar";
 import { useLeagues, getLeagueBySlug } from "./useLeagues";
 import { GLOBAL_STAGE_GOLD } from "./leaguePresentation";
@@ -257,7 +257,7 @@ const BRAND_STYLES = `
 /* Every row here is a sport's own #1 (see the champions effect), not a
    4th-place-through-1st ranking, so the badge is always the same "this
    is a champion" gold, not gold/silver/bronze. */
-.lg-rank-pos { font-size: 20px; color: #f59e0b; text-align: center; }
+.lg-rank-pos { display: flex; align-items: center; justify-content: center; color: #f59e0b; }
 .lg-rank-sport {
   font-size: 10.5px;
   font-weight: 700;
@@ -291,7 +291,7 @@ const BRAND_STYLES = `
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  color: #fff;
   flex-shrink: 0;
 }
 .lg-jtext strong { display: block; font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 3px; }
@@ -711,11 +711,11 @@ export default function LeagueDetailPage() {
     },
   ];
   const journeySteps = [
-    { icon: "🎯", title: "Register for the league", body: "Free. Takes 2 minutes. Your national profile is created instantly." },
-    { icon: "📍", title: "Find a techfest near you", body: "Browse events by city, college, and sport. Pay the techfest entry fee only." },
-    { icon: "🏆", title: "Compete and earn ranking points", body: "Every finish — win or lose — counts toward your national score." },
+    { icon: UserPlus, title: "Register for the league", body: "Free. Takes 2 minutes. Your national profile is created instantly." },
+    { icon: MapPin, title: "Find a techfest near you", body: "Browse events by city, college, and sport. Pay the techfest entry fee only." },
+    { icon: Trophy, title: "Compete and earn ranking points", body: "Every finish — win or lose — counts toward your national score." },
     {
-      icon: "🚀",
+      icon: Rocket,
       title: `Qualify for ${nextName}${nextLeague ? " League" : ""}`,
       body: nextLeague
         ? `Strong ${league.shortName} performance unlocks the ${nextLeague.startingAge} track.`
@@ -844,7 +844,9 @@ export default function LeagueDetailPage() {
               <div className="lg-rank-list">
                 {champions.map(({ sport, entry }) => (
                   <div className="lg-rank-row" key={sport.sportId}>
-                    <div className="lg-rank-pos" aria-hidden="true">🏆</div>
+                    <div className="lg-rank-pos" aria-hidden="true">
+                      <Trophy size={18} strokeWidth={2} />
+                    </div>
                     <div>
                       <div className="lg-rank-sport">{sport.sportName} &middot; #1</div>
                       <div className="lg-rank-name">{entry.robotName || "Unnamed robot"}</div>
@@ -875,7 +877,9 @@ export default function LeagueDetailPage() {
         <div>
           {journeySteps.map((step) => (
             <Reveal as="div" className="lg-jstep" key={step.title}>
-              <div className="lg-jicon" aria-hidden="true">{step.icon}</div>
+              <div className="lg-jicon" aria-hidden="true">
+                <step.icon size={18} strokeWidth={2} />
+              </div>
               <div className="lg-jtext">
                 <strong>{step.title}</strong>
                 <span>{step.body}</span>
