@@ -421,7 +421,16 @@ const BRAND_STYLES = `
      is optional content inside it too; a fixed floor left a blank gap
      under the header on a league with nothing ranked yet instead of the
      box just hugging whatever's actually in it. */
-  background: color-mix(in srgb, var(--lg-primary) 75%, transparent);
+  /* Blended toward black, not transparent — blending toward transparent
+     mixes in whatever's behind the box (this page's white background),
+     which reads fine for a dark/saturated primary (Ignite's purple,
+     Inferno's red) but for a bright one like Apex's #36A3F0 blue, 75%
+     of it over white lands on a pale sky blue — too light for this
+     box's white text (h3, "View rankings", the champions rows) to read
+     against. Anchoring to black instead keeps the same 75%-primary hue
+     but guarantees it lands dark enough for white text regardless of
+     how light the league's own primary color is. */
+  background: color-mix(in srgb, var(--lg-primary) 75%, #000);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -451,7 +460,13 @@ const BRAND_STYLES = `
 .lg-ranking-banner__top .lg-rank-pts-label { color: rgba(255, 255, 255, 0.55); }
 .lg-ranking-banner__bottom {
   min-height: 162px;
+  /* Deliberately the lighter of the banner's two boxes (only 35% of the
+     secondary color), so it needs its own dark text instead of the
+     white .lg-ranking-banner sets as its default — white was never
+     readable against a tint this pale for any league, Apex (bright
+     cyan secondary) just makes it obvious. */
   background: color-mix(in srgb, var(--lg-secondary) 35%, transparent);
+  color: #1a1a2e;
   display: flex;
   align-items: center;
   padding: clamp(1.25rem, 3vw, 2.75rem);
