@@ -29,6 +29,10 @@ export interface LeaguePresentation {
    *  presentation-only reasoning as the rest of this file: per-league
    *  narrative copy the admin-editable League entity has no field for. */
   whySecondaryBody: string;
+  /** A short closing tagline shown at the end of the "why" card — same
+   *  presentation-only reasoning as the rest of this file. */
+  closerHeadline: string;
+  closerBody: string;
   journeyHeadline: string;
   nextLabel: string;
 }
@@ -42,11 +46,13 @@ export const LEAGUE_PRESENTATION: Record<string, LeaguePresentation> = {
     colorSecondary: "#e05fa8",
     desc: "Perfect for beginners. Learn robotics, compete in your first techfests, and build confidence.",
     cta: "Enter Ignite",
-    whyHeadline: "Every builder starts somewhere.",
+    whyHeadline: "Where young builders start competing.",
     whyBody:
-      "Ignite is where you learn to wire, code, and compete for the first time — alongside other beginners doing exactly the same thing, at your own techfest.",
+      "Ignite is the entry-level technology competition league for young builders. From robotics and RC racing to drones, autonomous challenges, and more, Ignite gives beginners a place to learn, build, compete, and grow alongside others at their level.",
     whySecondaryBody:
-      "No prior experience needed. Every sport in Ignite is designed to teach you a real technical skill while you compete — so you leave with more than just a trophy.",
+      "No prior experience required. Every sport is designed to develop a real technical skill while giving you the excitement of real competition.",
+    closerHeadline: "Start Small. Compete Big.",
+    closerBody: "Your first competition is just the beginning.",
     journeyHeadline: "From your first bot to your first win.",
     nextLabel: "Next league",
   },
@@ -63,6 +69,8 @@ export const LEAGUE_PRESENTATION: Record<string, LeaguePresentation> = {
       "Inferno turns local wins into a national ranking — every affiliated techfest you enter counts toward the same all-India table.",
     whySecondaryBody:
       "The rules get sharper and the arenas get tougher. Every sport in Inferno is judged at a higher standard than Ignite — you're not repeating a beginner event, you're being tested at the next level.",
+    closerHeadline: "Win Local. Rank National.",
+    closerBody: "Every affiliated techfest you enter moves you up the table.",
     journeyHeadline: "From first techfest to national rank.",
     nextLabel: "Next league",
   },
@@ -84,6 +92,8 @@ export const LEAGUE_PRESENTATION: Record<string, LeaguePresentation> = {
     whyBody: "Apex is the open circuit — where national champions get scouted for the international stage, Battle of Robots, Russia.",
     whySecondaryBody:
       "Every sport in Apex is judged at national-championship standard. This isn't about climbing a ranking anymore — it's where builders get scouted.",
+    closerHeadline: "Compete National. Get Scouted Global.",
+    closerBody: "Your next match could be the one that gets you noticed.",
     journeyHeadline: "From national rank to the global stage.",
     nextLabel: "Next league",
   },
@@ -103,6 +113,8 @@ const FALLBACK_GRADIENT: LeaguePresentation = {
   whyHeadline: "A new stage to compete on.",
   whyBody: "Every match here counts toward your ranking.",
   whySecondaryBody: "No prior experience needed — every sport here is designed to teach you a real technical skill while you compete.",
+  closerHeadline: "Compete. Rank. Repeat.",
+  closerBody: "Every match here counts.",
   journeyHeadline: "Your competitive journey.",
   nextLabel: "Next league",
 };

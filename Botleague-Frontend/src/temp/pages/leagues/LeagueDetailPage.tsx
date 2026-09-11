@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { ArrowRight, Trophy, UserPlus, MapPin, Rocket } from "lucide-react";
+import { ArrowRight, Trophy, UserPlus, MapPin, Rocket, Target } from "lucide-react";
 import PublicNavbar from "../../../shared/components/PublicNavbar";
-import { useLeagues, getLeagueBySlug } from "./useLeagues";
+import { useLeagues, getLeagueBySlug, formatAgeRange } from "./useLeagues";
 import { GLOBAL_STAGE_GOLD } from "./leaguePresentation";
 import { getPublicLeagueSports, type LeagueSport } from "../../../shared/api/catalog.api";
 import { getTopRanked, type GlobalRankingEntry } from "../../../feature/Rankings/api/rankings.api";
@@ -115,7 +115,7 @@ const BRAND_STYLES = `
 
 /* Pain callout */
 .lg-pain-title {
-  font-family: 'Sarpanch', sans-serif;
+  font-family: 'Orbitron', sans-serif;
   color: var(--lg-primary);
   font-weight: 600;
   font-size: clamp(1.6rem, 4vw, 3.5rem);
@@ -133,7 +133,7 @@ const BRAND_STYLES = `
   border-left: 6px solid var(--lg-secondary);
 }
 .lg-card-gradient-text {
-  font-family: 'Sarpanch', sans-serif;
+  font-family: 'Orbitron', sans-serif;
   font-weight: 700;
   font-size: clamp(1.5rem, 3vw, 2.6rem);
   background: linear-gradient(180deg, var(--lg-primary), var(--lg-secondary));
@@ -193,6 +193,15 @@ const BRAND_STYLES = `
   margin: 0;
   font-weight: 500;
   line-height: 1.6;
+}
+.lg-about-closer {
+  margin: 1.25rem 0 0;
+  font-size: 0.95rem;
+  color: #333;
+  line-height: 1.6;
+}
+.lg-about-closer strong {
+  color: var(--lg-primary);
 }
 .lg-steps-card {
   background: #fff;
@@ -305,7 +314,7 @@ const BRAND_STYLES = `
 
 /* Section heading */
 .lg-section-heading {
-  font-family: 'Sarpanch', sans-serif;
+  font-family: 'Orbitron', sans-serif;
   font-weight: 500;
   color: var(--lg-primary);
   font-size: clamp(1.8rem, 4vw, 3.5rem);
@@ -363,7 +372,7 @@ const BRAND_STYLES = `
   right: 12px;
   z-index: 1;
   color: #fff;
-  font-family: 'Sarpanch', sans-serif;
+  font-family: 'Orbitron', sans-serif;
   font-weight: 600;
   font-size: 1.1rem;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
@@ -482,7 +491,7 @@ const BRAND_STYLES = `
 .lg-ranking-banner h3 {
   font-family: 'Orbitron', sans-serif;
   font-weight: 700;
-  font-size: clamp(1.5rem, 4vw, 2.9rem);
+  font-size: clamp(1.5rem, 2.5vw, 2.9rem);
   margin: 0 0 0.5rem;
 }
 .lg-ranking-banner p {
@@ -734,14 +743,15 @@ export default function LeagueDetailPage() {
     },
   ];
   const journeySteps = [
-    { icon: UserPlus, title: "Register for the league", body: "Free. Takes 2 minutes. Your national profile is created instantly." },
-    { icon: MapPin, title: "Find a techfest near you", body: "Browse events by city, college, and sport. Pay the techfest entry fee only." },
-    { icon: Trophy, title: "Compete and earn ranking points", body: "Every finish — win or lose — counts toward your national score." },
+    { icon: UserPlus, title: "Join for free", body: "Create your national profile — no upfront cost to join the league." },
+    { icon: Target, title: "Choose your sport", body: "Pick from robotics, RC, drones, and the other technology challenges in " + league.shortName + "." },
+    { icon: MapPin, title: "Build & compete", body: "Take part at affiliated techfests and put your skills to the test." },
+    { icon: Trophy, title: "Earn your rank", body: "Every result adds to your national ranking and leaderboard position." },
     {
       icon: Rocket,
-      title: `Qualify for ${nextName}${nextLeague ? " League" : ""}`,
+      title: `Level up to ${nextName}${nextLeague ? " League" : ""}`,
       body: nextLeague
-        ? `Strong ${league.shortName} performance unlocks the ${nextLeague.startingAge} track.`
+        ? `Perform well in ${league.shortName} and progress toward the ${nextName} League.`
         : "Strong performance here is the path to the international stage.",
     },
   ];
@@ -793,7 +803,10 @@ export default function LeagueDetailPage() {
         <div className="lg-sec-tag">About {league.shortName}</div>
         <h2 className="lg-pain-title mb-2">{league.whyHeadline}</h2>
         <p className="lg-sec-subhead mb-4">
-          The league where learning and competing happen at the same time — alongside peers at your own level.
+          {formatAgeRange(league.minAge, league.maxAge)
+            ? `For young builders aged ${formatAgeRange(league.minAge, league.maxAge)} — `
+            : ""}
+          the league where learning and competing happen at the same time, alongside peers at your own level.
         </p>
         <p className="lg-ticker text-[#666] text-sm uppercase mb-0">
           IIT Bombay Techfest &middot; BITS Pilani &middot; IIT Roorkee &middot; IIT Bombay Techfest &middot; BITS Pilani
@@ -814,6 +827,9 @@ export default function LeagueDetailPage() {
                   {nextLeague ? ` League — ages ${nextLeague.startingAge} with higher stakes and national championships.` : "."}
                 </p>
               </div>
+              <p className="lg-about-closer">
+                <strong>{league.closerHeadline}</strong> {league.closerBody}
+              </p>
             </div>
             <div className="lg-steps-card">
               {steps.map((step, i) => (
@@ -870,7 +886,7 @@ export default function LeagueDetailPage() {
                     <span className="lg-rank-pos" aria-hidden="true">
                       <Trophy size={16} strokeWidth={2} />
                     </span>
-                    <span className="lg-rank-sport">{sport.sportName} &middot; #1</span>
+                    <span className="lg-rank-sport"> #1 &middot; {sport.sportName} </span>
                     <span className="lg-rank-name">{entry.robotName || "Unnamed robot"}</span>
                     <span className="lg-rank-school">{entry.teamName}</span>
                     <span className="lg-rank-pts-wrap">
