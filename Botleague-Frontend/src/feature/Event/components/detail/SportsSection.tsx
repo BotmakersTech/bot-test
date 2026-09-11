@@ -71,8 +71,13 @@ export default function SportsSection({ eventId, eventSports }: SportsSectionPro
 
   return (
     <section className="sports" style={{ "--star": `url(${star})` } as React.CSSProperties}>
-      <img src={star} className="sports-star star-1" alt="" />
-      <img src={star} className="sports-star star-2" alt="" />
+      {/* Plain spans, not <img> — the panel behind them is white now (was
+          the blue/purple gradient), so they're recolored to brand blue via
+          mask-image in CSS instead of the old filter:invert(1)-to-white
+          trick, which needs an element with no bitmap content of its own
+          to recolor cleanly. */}
+      <span className="sports-star star-1" aria-hidden="true" />
+      <span className="sports-star star-2" aria-hidden="true" />
 
       <h2>TECHSPORTS</h2>
 

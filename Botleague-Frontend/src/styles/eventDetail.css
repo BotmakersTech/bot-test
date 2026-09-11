@@ -406,7 +406,10 @@
 .evd-page .sports {
     padding: 120px 80px ;
     position: relative;
-    background: linear-gradient(280deg, rgba(1, 98, 209, .75), rgba(140, 108, 255, .75));
+    /* Was a blue -> purple gradient panel; the page itself is already
+       white (.evd-page above), so this now just blends straight into it —
+       no seam, no separate panel to color. */
+    background: none;
     border-radius: 18px;
     overflow: visible;
     margin: 60px 0 ;
@@ -419,7 +422,9 @@
     font-size: 68px;
     position: relative;
     letter-spacing: 4px;
-    color: white;
+    /* Was white-on-gradient; on the now-white panel it needs to carry its
+       own color, so it takes the brand blue instead. */
+    color: #0162D1;
     z-index: 2;
     margin-bottom: 70px;
 }
@@ -431,12 +436,22 @@
     top: 70px;
     width: 170px;
     height: 180px;
-    background: var(--star) no-repeat center;
-    background-size: contain;
+    /* Was filter: brightness(0) invert(1) — flattens --star to solid white,
+       which disappeared once the panel behind it went white too. Recolored
+       with mask-image instead of a filter chain, so it lands on the exact
+       brand blue rather than an approximated hue-rotate. */
+    background: #0162D1;
+    -webkit-mask-image: var(--star);
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
+    mask-image: var(--star);
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
     opacity: 1;
     transform: rotate(8.57deg);
     pointer-events: none;
-    filter: brightness(0) invert(1);
 }
 
 .evd-page .star-1 {
@@ -445,9 +460,20 @@
     transform: rotate(-28deg);
     position: absolute;
     width: 180px;
+    /* Star-two.svg's own 235/217 box — was an <img>'s natural aspect ratio,
+       now needed explicitly since it's a plain masked <span>. */
+    aspect-ratio: 235 / 217;
     opacity: 1;
     pointer-events: none;
-    filter: brightness(0) invert(1);
+    background: #0162D1;
+    -webkit-mask-image: var(--star);
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
+    mask-image: var(--star);
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
     z-index: 1;
 }
 
@@ -455,15 +481,16 @@
     position: relative;
     z-index: 2;
     text-align: center;
-    color: #fff;
+    color: #0162D1;
     opacity: .85;
 }
 
-/* League filter above the techsport grid. The Tournament tab bar is white
-   pills on a white page; this row sits on the section's blue/purple gradient,
-   so it inverts — translucent white pills, and the selected one goes solid
-   white with the gradient's own blue as its text. The h2 above carries a 70px
-   bottom margin, so the row pulls up into that gap rather than adding to it. */
+/* League filter above the techsport grid. Used to sit on the section's
+   blue/purple gradient and invert (translucent white pills, selected one
+   solid white with the gradient's blue as text); the panel is plain white
+   now, so the pills carry the blue directly instead — outlined blue by
+   default, solid blue once selected. The h2 above carries a 70px bottom
+   margin, so the row pulls up into that gap rather than adding to it. */
 .evd-page .sports-filter {
     position: relative;
     z-index: 2;
@@ -480,9 +507,9 @@
     gap: 8px;
     padding: 10px 22px;
     border-radius: 999px;
-    border: 1.5px solid rgba(255, 255, 255, .55);
-    background: rgba(255, 255, 255, .12);
-    color: #fff;
+    border: 1.5px solid rgba(1, 98, 209, .35);
+    background: rgba(1, 98, 209, .06);
+    color: #0162D1;
     font-family: inherit;
     font-size: 15px;
     font-weight: 600;
@@ -492,18 +519,18 @@
 }
 
 .evd-page .sports-filter button:hover {
-    background: rgba(255, 255, 255, .24);
-    border-color: #fff;
+    background: rgba(1, 98, 209, .12);
+    border-color: #0162D1;
 }
 
 .evd-page .sports-filter button.active {
-    background: #fff;
-    border-color: #fff;
-    color: #0162d1;
+    background: #0162D1;
+    border-color: #0162D1;
+    color: #fff;
 }
 
 .evd-page .sports-filter button:focus-visible {
-    outline: 2px solid #fff;
+    outline: 2px solid #0162D1;
     outline-offset: 3px;
 }
 
@@ -515,13 +542,13 @@
     line-height: 1;
     padding: 3px 7px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, .22);
-    color: #fff;
+    background: rgba(1, 98, 209, .12);
+    color: #0162D1;
 }
 
 .evd-page .sports-filter button.active .sports-filter-count {
-    background: rgba(1, 98, 209, .12);
-    color: #0162d1;
+    background: rgba(255, 255, 255, .25);
+    color: #fff;
 }
 
 @media (max-width: 768px) {
@@ -541,9 +568,18 @@
     transform: rotate(18deg);
     position: absolute;
     width: 180px;
+    aspect-ratio: 235 / 217;
     opacity: 1;
     pointer-events: none;
-    filter: brightness(0) invert(1);
+    background: #0162D1;
+    -webkit-mask-image: var(--star);
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
+    mask-image: var(--star);
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
     z-index: 1;
 }
 
