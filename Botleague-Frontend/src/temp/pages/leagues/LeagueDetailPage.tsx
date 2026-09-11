@@ -419,12 +419,32 @@ const BRAND_STYLES = `
   min-height: 268px;
   background: color-mix(in srgb, var(--lg-primary) 75%, transparent);
   display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: clamp(1.25rem, 3vw, 2.75rem);
+}
+.lg-rank-header {
+  display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  padding: clamp(1.25rem, 3vw, 2.75rem);
 }
+/* The rank rows themselves live inside the banner's colored top box now
+   (not on the page's white background), so they get the same
+   translucent-on-color treatment the rest of this box's own text/CTA
+   already use instead of the light-card styling from .lg-rank-list's
+   other, page-background use. */
+.lg-ranking-banner__top .lg-rank-list { margin-top: 0; gap: 0.5rem; }
+.lg-ranking-banner__top .lg-rank-row {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.lg-ranking-banner__top .lg-rank-sport { color: rgba(255, 255, 255, 0.75); }
+.lg-ranking-banner__top .lg-rank-name { color: #fff; }
+.lg-ranking-banner__top .lg-rank-school { color: rgba(255, 255, 255, 0.65); }
+.lg-ranking-banner__top .lg-rank-pts { color: #fff; }
+.lg-ranking-banner__top .lg-rank-pts-label { color: rgba(255, 255, 255, 0.55); }
 .lg-ranking-banner__bottom {
   min-height: 162px;
   background: color-mix(in srgb, var(--lg-secondary) 35%, transparent);
@@ -774,10 +794,35 @@ export default function LeagueDetailPage() {
         <h2 className="lg-section-heading mb-6">Compete. Rank. Prove it.</h2>
         <div className="lg-ranking-banner">
           <Reveal as="div" className="lg-ranking-banner__top">
-            <h3>National leaderboard &middot; {league.shortName} {new Date().getFullYear()}</h3>
-            <button className="lg-ranking-banner__cta" onClick={() => navigate("/rankings")}>
-              View rankings
-            </button>
+            <div className="lg-rank-header">
+              <h3>National leaderboard &middot; {league.shortName} {new Date().getFullYear()}</h3>
+              <button className="lg-ranking-banner__cta" onClick={() => navigate("/rankings")}>
+                View rankings
+              </button>
+            </div>
+            {/* One #1 robot per sport in this league — see the champions
+               effect's own comment above for why it's per-sport instead
+               of a single top-4 across the whole league. Nothing renders
+               here until at least one sport actually has a finalized
+               ranking. */}
+            {champions.length > 0 && (
+              <div className="lg-rank-list">
+                {champions.map(({ sport, entry }) => (
+                  <div className="lg-rank-row" key={sport.sportId}>
+                    <div className="lg-rank-pos" aria-hidden="true">🏆</div>
+                    <div>
+                      <div className="lg-rank-sport">{sport.sportName} &middot; #1</div>
+                      <div className="lg-rank-name">{entry.robotName || "Unnamed robot"}</div>
+                      <div className="lg-rank-school">{entry.teamName}</div>
+                    </div>
+                    <div>
+                      <div className="lg-rank-pts">{entry.totalPoints.toLocaleString()}</div>
+                      <div className="lg-rank-pts-label">points</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </Reveal>
           <Reveal as="div" className="lg-ranking-banner__bottom" delay={150}>
             <p>
@@ -786,28 +831,6 @@ export default function LeagueDetailPage() {
             </p>
           </Reveal>
         </div>
-        {/* One #1 robot per sport in this league — see the champions
-           effect's own comment above for why it's per-sport instead of a
-           single top-4 across the whole league. Nothing renders here
-           until at least one sport actually has a finalized ranking. */}
-        {champions.length > 0 && (
-          <div className="lg-rank-list">
-            {champions.map(({ sport, entry }) => (
-              <div className="lg-rank-row" key={sport.sportId}>
-                <div className="lg-rank-pos" aria-hidden="true">🏆</div>
-                <div>
-                  <div className="lg-rank-sport">{sport.sportName} &middot; #1</div>
-                  <div className="lg-rank-name">{entry.robotName || "Unnamed robot"}</div>
-                  <div className="lg-rank-school">{entry.teamName}</div>
-                </div>
-                <div>
-                  <div className="lg-rank-pts">{entry.totalPoints.toLocaleString()}</div>
-                  <div className="lg-rank-pts-label">points</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </section>
 
       {/* ===== From first event to national rank ===== */}
