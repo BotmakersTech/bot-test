@@ -115,6 +115,7 @@ export default function SportsSection({ eventId, eventSports }: SportsSectionPro
             title={sport.sport?.replace(/_/g, " ") ?? "Sport"}
             category={weightLabel(sport)}
             eligibleLeague={ageGroupLabel(sport.ageGroup)}
+            leagueCode={sport.ageGroup}
             description={sport.sportsDescription}
             onExplore={() => navigate(`/events/${eventId}/sports/${sport.id}`)}
           />

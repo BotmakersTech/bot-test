@@ -1,5 +1,16 @@
 import { ArrowRight, Trophy } from "lucide-react";
 
+// Accent-gradient class per league, keyed on the stable ageGroup code —
+// not the display label ageGroupLabel() returns, which comes from the
+// backend catalog and can be renamed out from under a hardcoded string.
+// Any league without an entry here just keeps the default purple/pink
+// gradient (see .event-card-accent in eventDetail.css).
+const LEAGUE_ACCENT_CLASS: Record<string, string> = {
+  JUNIOR_INNOVATORS: "event-card-wrap--ignite",
+  YOUNG_ENGINEERS: "event-card-wrap--inferno",
+  ROBO_MINDS: "event-card-wrap--apex",
+};
+
 interface EventCardProps {
   image?: string | null;
   title: string;
@@ -11,12 +22,17 @@ interface EventCardProps {
    * so competitors can tell at a glance which league/division a card is
    * for before tapping through. */
   eligibleLeague?: string | null;
+  /** Raw ageGroup code ("JUNIOR_INNOVATORS", …) — same value eligibleLeague
+   * is derived from, kept separate because this one drives the accent
+   * gradient color and needs the stable code, not the display label. */
+  leagueCode?: string | null;
   description?: string | null;
   disabled?: boolean;
   onExplore: () => void;
 }
 
-export default function EventCard({ image, title, category, eligibleLeague, description, disabled, onExplore }: EventCardProps) {
+export default function EventCard({ image, title, category, eligibleLeague, leagueCode, description, disabled, onExplore }: EventCardProps) {
+  const accentClass = (leagueCode && LEAGUE_ACCENT_CLASS[leagueCode]) || "";
   const handleCardClick = () => {
     if (!disabled) onExplore();
   };
@@ -35,7 +51,7 @@ export default function EventCard({ image, title, category, eligibleLeague, desc
   };
 
   return (
-    <div className="event-card-wrap">
+    <div className={accentClass ? `event-card-wrap ${accentClass}` : "event-card-wrap"}>
       {/* Decorative accent blocks — sit behind the card, themed with the
          page's own blue/purple gradient. Purely visual, so hidden from
          assistive tech. */}

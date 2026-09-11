@@ -404,7 +404,7 @@
 /* SPORTS */
 
 .evd-page .sports {
-    padding: 120px 80px ;
+    padding: 60px 40px ;
     position: relative;
     /* Was a blue -> purple gradient panel; the page itself is already
        white (.evd-page above), so this now just blends straight into it —
@@ -429,53 +429,8 @@
     margin-bottom: 70px;
 }
 
-.evd-page .sports::before {
-    content: "";
-    position: absolute;
-    left: 2px;
-    top: 70px;
-    width: 170px;
-    height: 180px;
-    /* Was filter: brightness(0) invert(1) — flattens --star to solid white,
-       which disappeared once the panel behind it went white too. Recolored
-       with mask-image instead of a filter chain, so it lands on the exact
-       brand blue rather than an approximated hue-rotate. */
-    background: #0162D1;
-    -webkit-mask-image: var(--star);
-    -webkit-mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    -webkit-mask-size: contain;
-    mask-image: var(--star);
-    mask-repeat: no-repeat;
-    mask-position: center;
-    mask-size: contain;
-    opacity: 1;
-    transform: rotate(8.57deg);
-    pointer-events: none;
-}
 
-.evd-page .star-1 {
-    left: -55px;
-    bottom: -40px;
-    transform: rotate(-28deg);
-    position: absolute;
-    width: 180px;
-    /* Star-two.svg's own 235/217 box — was an <img>'s natural aspect ratio,
-       now needed explicitly since it's a plain masked <span>. */
-    aspect-ratio: 235 / 217;
-    opacity: 1;
-    pointer-events: none;
-    background: #0162D1;
-    -webkit-mask-image: var(--star);
-    -webkit-mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    -webkit-mask-size: contain;
-    mask-image: var(--star);
-    mask-repeat: no-repeat;
-    mask-position: center;
-    mask-size: contain;
-    z-index: 1;
-}
+
 
 .evd-page .sports-empty {
     position: relative;
@@ -562,26 +517,6 @@
     }
 }
 
-.evd-page .star-2 {
-    right: 70px;
-    top: 40px;
-    transform: rotate(18deg);
-    position: absolute;
-    width: 180px;
-    aspect-ratio: 235 / 217;
-    opacity: 1;
-    pointer-events: none;
-    background: #0162D1;
-    -webkit-mask-image: var(--star);
-    -webkit-mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    -webkit-mask-size: contain;
-    mask-image: var(--star);
-    mask-repeat: no-repeat;
-    mask-position: center;
-    mask-size: contain;
-    z-index: 1;
-}
 
 /* Mobile/tablet: the mockup drops the blue/purple gradient panel entirely
    for "Find Your Challenge" — plain white background, no decorative stars,
@@ -626,7 +561,12 @@
 
 .evd-page .event-card-accent {
     position: absolute;
-    border-radius: 18px; 
+    border-radius: 18px;
+    /* top-to-bottom (180deg) is already vertical — --colorPrimary/
+       --colorSecondary are the default purple/pink fallback (declared on
+       .evd-page above); event-card-wrap--ignite/--inferno/--apex below
+       override the pair per-league, per card, since a single event page
+       can list techsports from several leagues at once. */
     background: linear-gradient(180deg, var(--colorPrimary) 0%, var(--colorSecondary) 100%);
     transition: filter .25s ease, transform .25s ease;
     z-index: 0;
@@ -646,6 +586,23 @@
 }
 .evd-page .event-card-wrap:hover .event-card-accent--br {
     transform: translate(4px, 4px);
+}
+
+/* Per-league accent palette — set by EventCard.tsx off the sport's
+   ageGroup code (JUNIOR_INNOVATORS/YOUNG_ENGINEERS/ROBO_MINDS), one card
+   at a time, so a mixed-league grid shows each techsport under its own
+   league's colors rather than one gradient for the whole page. */
+.evd-page .event-card-wrap--ignite {
+    --colorPrimary: #FF4C4C;
+    --colorSecondary: #8C6CFF;
+}
+.evd-page .event-card-wrap--inferno {
+    --colorPrimary: #FF4C4C;
+    --colorSecondary: #FFDD55;
+}
+.evd-page .event-card-wrap--apex {
+    --colorPrimary: #36A3F0;
+    --colorSecondary: #54E4EC;
 }
 .evd-page .cards {
   display: flex;
@@ -702,7 +659,7 @@
   z-index: 1;
   display: block;
   width: 260px;
-  height: 320px;
+  height: 420px;
   border-radius: 18px;
   overflow: hidden;
   cursor: pointer;
