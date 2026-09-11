@@ -1,30 +1,33 @@
-import sport1 from "../../../assets/home/Img/sports-img/sport1.png";
-import sport2 from "../../../assets/home/Img/sports-img/sport2.png";
-import sport3 from "../../../assets/home/Img/sports-img/sport3.png";
-import sport4 from "../../../assets/home/Img/sports-img/sport4.png";
+import { Disc3, Flag, CircleDot, Drone, Route, Swords, Car, type LucideIcon } from "lucide-react";
 
-const SPORTS = [
-  { src: sport1, alt: "LED combat performance" },
-  { src: sport2, alt: "Battle of Robots presenter" },
-  { src: sport3, alt: "Team entrance celebration" },
-  { src: sport4, alt: "Combat robot build" },
+const SPORTS: { icon: LucideIcon; name: string }[] = [
+  { icon: Disc3, name: "Robo Sumo" },
+  { icon: Flag, name: "Robo Race" },
+  { icon: CircleDot, name: "Robo Soccer" },
+  { icon: Drone, name: "Drone Soccer" },
+  { icon: Route, name: "Line Follower" },
+  { icon: Swords, name: "RoboWar" },
+  { icon: Car, name: "RC Racing" },
 ];
 
 export default function SportsSection() {
   return (
     <section className="py-16 md:py-[70px]">
-      <div className="max-w-[1180px] mx-auto px-6">
-        <h2 className="text-center text-[#7b3ff2] font-display text-3xl md:text-5xl mb-9">12+ tech sports. Not just RoboWar.</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
-          {SPORTS.map((sport) => (
-            <div key={sport.alt} className="h-[550px] rounded-2xl overflow-hidden">
-              <img className="w-full h-full object-cover" src={sport.src} alt={sport.alt} />
+      <div className="max-w-[1180px] mx-auto px-6 text-center">
+        <h2 className="text-[#7b3ff2] font-display text-3xl md:text-5xl mb-3">7 tech sports. One standardized rulebook.</h2>
+        <p className="text-sm md:text-base text-[#333] mb-10 md:mb-12">Same rules, same fairness, every city across India.</p>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 md:gap-5">
+          {SPORTS.map(({ icon: Icon, name }) => (
+            <div
+              key={name}
+              className="flex flex-col items-center gap-3 bg-white rounded-2xl border border-[#e4defc] px-4 py-7 shadow-[0_10px_26px_rgba(60,40,140,.08)] transition hover:shadow-[0_14px_32px_rgba(60,40,140,.16)] hover:-translate-y-1"
+            >
+              <div className="w-16 h-16 rounded-full bg-linear-to-br from-[#0162D1]/10 to-[#8C6CFF]/15 flex items-center justify-center">
+                <Icon size={30} className="text-[#5b4fa8]" strokeWidth={1.75} />
+              </div>
+              <span className="font-display text-sm md:text-[15px] text-[#222]">{name}</span>
             </div>
-          ))}
-        </div>
-        <div className="flex gap-2.5 justify-center mt-9">
-          {[0, 1, 2].map((i) => (
-            <span key={i} className="w-[11px] h-[11px] rounded-full border-2 border-[#2f3ef0]" style={{ backgroundColor: i === 0 ? "#2f3ef0" : "transparent" }} />
           ))}
         </div>
       </div>

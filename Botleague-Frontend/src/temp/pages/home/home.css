@@ -8,8 +8,7 @@
    content clear of the floating nav pills, which stay sticky at top:0 for
    the entire page, not just the hero. Without the height rule here too, a
    pinned section's sticky child has no explicit height at all and just
-   shrinks to fit its content instead of filling the screen — which is what
-   let RobotStage's title render underneath the nav instead of below it. */
+   shrinks to fit its content instead of filling the screen. */
 :root { --home-header-h: 96px; }
 .home-pinned-sticky {
   top: var(--home-header-h);
@@ -56,85 +55,3 @@
 .home-league-desc-wrap { max-height: 300px; opacity: 1; overflow: hidden; transition: max-height .5s ease, opacity .35s ease; }
 .home-league-card-wrap[data-state="collapsed"] .home-league-desc-wrap,
 .home-league-card-wrap[data-state="hidden"] .home-league-desc-wrap { max-height: 0; opacity: 0; }
-
-/* ---- pinned "1" section row slide ---- */
-.home-one-row { transition: transform .7s cubic-bezier(.4, 0, .2, 1); will-change: transform; }
-
-/* Responsive "1" image height — clamp(MIN, Ndvh, MAX) instead of a flat px
-   value per breakpoint, so it also shrinks on short screens (a laptop
-   window resized down, landscape phones) instead of overflowing the pinned
-   section and getting clipped. MAX at each width tier matches the old flat
-   values exactly, so normal/tall screens render unchanged. */
-.home-one-img { height: clamp(160px, 40dvh, 340px); }
-@media (min-width: 640px)  { .home-one-img { height: clamp(180px, 42dvh, 380px); } }
-@media (min-width: 900px)  { .home-one-img { height: clamp(200px, 45dvh, 420px); } }
-@media (min-width: 1300px) { .home-one-img { height: clamp(220px, 48dvh, 520px); } }
-
-/* feature copy width — fixed per breakpoint so the shift offset computed in
-   OneSection.tsx doesn't jump around as the box's own content changes */
-.home-feature-box { width: 190px; }
-@media (min-width: 480px)  { .home-feature-box { width: 230px; } }
-@media (min-width: 640px)  { .home-feature-box { width: 300px; } }
-@media (min-width: 900px)  { .home-feature-box { width: 380px; } }
-@media (min-width: 1300px) { .home-feature-box { width: 460px; } }
-
-.home-doodle { position: absolute; pointer-events: none; opacity: .45; color: #c9c4e6; }
-
-/* feature text: rises from below, holds, then rises up and fades out */
-.home-feature-box {
-  transition: transform .6s cubic-bezier(.22, 1, .36, 1), opacity .45s ease;
-  will-change: transform, opacity;
-}
-.home-feature-box[data-anim="below"] { transform: translateY(48px); opacity: 0; }
-.home-feature-box[data-anim="in"]    { transform: translateY(0);    opacity: 1; }
-.home-feature-box[data-anim="above"] { transform: translateY(-48px); opacity: 0; }
-
-/* ---- robot + progress bar — joined pillar ----
-   Height is clamp(MIN, Ndvh, MAX) driven by the data-active attribute
-   instead of a flat inline px style, so the active bar's 420px MAX (and
-   the inactive 80px MAX) only apply on screens tall enough to fit them —
-   short viewports shrink both proportionally instead of overflowing the
-   pinned section. */
-.home-robot-bar {
-  position: relative;
-  background: linear-gradient(180deg, #6d7cf9 0%, #8a7bf5 60%, #7b6cf0 100%);
-  box-shadow:
-    inset 0 10px 16px rgba(255, 255, 255, .40),
-    inset 0 -8px 20px rgba(60, 40, 150, .35),
-    0 18px 30px rgba(80, 70, 200, .30);
-  border-radius: 999px 999px 8px 8px / 60px 60px 8px 8px;
-  transition: height 1.5s cubic-bezier(.34, 1.2, .4, 1), width .45s ease;
-  will-change: height;
-  height: clamp(40px, 9dvh, 80px);
-}
-.home-robot-bar[data-active="true"] { height: clamp(160px, 42dvh, 420px); }
-.home-robot-bar::before {
-  content: "";
-  position: absolute; left: 50%; top: 0; transform: translateX(-50%);
-  width: 78%; height: 26px;
-  background: radial-gradient(ellipse at 50% 0, rgba(255, 255, 255, .55), transparent 70%);
-  border-radius: 50%;
-}
-.home-robot-bar::after {
-  content: "";
-  position: absolute; left: 50%; top: -14px; transform: translateX(-50%);
-  width: 60%; height: 22px;
-  background: radial-gradient(ellipse at 50% 60%, rgba(40, 20, 90, .35), transparent 72%);
-  border-radius: 50%;
-  filter: blur(2px);
-  pointer-events: none;
-}
-.home-robot-figure {
-  position: relative;
-  z-index: 2;
-  display: block;
-  object-fit: contain;
-  object-position: center bottom;
-  margin-bottom: -14px;
-  transform: translateX(5px);
-  filter: drop-shadow(0 12px 10px rgba(40, 20, 90, .35));
-  transition: transform .3s ease;
-}
-.home-robot-col:hover .home-robot-figure { transform: translateX(5px) translateY(-4px); }
-
-.home-robot-message { transition: left .5s cubic-bezier(.4, 0, .2, 1), top .5s cubic-bezier(.4, 0, .2, 1), opacity .3s ease; }

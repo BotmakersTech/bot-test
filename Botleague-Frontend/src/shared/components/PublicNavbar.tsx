@@ -41,9 +41,9 @@ export default function PublicNavbar({ overlapHero = false, showLeagues = false 
       if (overlapHero) {
         headerRef.current.style.marginBottom = `-${h}px`;
       }
-      // Home's pinned-scroll sections (OneSection/LeaguesSection/RobotStage)
-      // read this to keep their sticky content clear of this nav, which
-      // otherwise stays stuck at top:0 for the whole page, not just the hero.
+      // Home's pinned-scroll sections (LeaguesSection) read this to keep
+      // their sticky content clear of this nav, which otherwise stays stuck
+      // at top:0 for the whole page, not just the hero.
       document.documentElement.style.setProperty("--home-header-h", `${h}px`);
     };
     syncOverlap();
