@@ -559,7 +559,12 @@
        buys ~25% more CSS-pixel width for that same math to fit inside.
        min-width:0 removes the floor so the track actually gets to 1fr. */
     min-width: 0;
-    max-width: 420px;   /* proper card size, matches the reference proportions */
+    /* 324 = the card's own 280px cap + its 22px padding on each side, same
+       relationship as before at the smaller size — event-card-accent--tl/
+       --br are positioned by percentage of this box, so shrinking the wrap
+       is what actually shrinks their visible width; they don't need their
+       own edit. */
+    max-width: 324px;
     margin: 0 auto;
     padding: 22px;       /* gives the accent room to frame the card like the screenshot */
 }
@@ -684,13 +689,18 @@
     z-index: 1;
     display: block;
     width: 100%;
-    /* 376x420 — matches .event-card-wrap's own 420px cap minus its 22px
-       padding on each side (420 - 2*22 = 376), so at rest (wrap at its
+    /* 280x360 — matches .event-card-wrap's own 324px cap minus its 22px
+       padding on each side (324 - 2*22 = 280), so at rest (wrap at its
        cap) the card lands on that exact size; width:100% + max-width lets
-       it still shrink on a track narrower than 420px instead of
-       overflowing it. */
-    max-width: 376px;
-    aspect-ratio: 376 / 420;
+       it still shrink on a track narrower than 324px instead of
+       overflowing it. height is the fixed 360 rather than an aspect-ratio
+       derived one — a definite height always wins over aspect-ratio, so
+       280/320 would be dead weight here; keeping the ratio at 280/360
+       instead so it's not misleading and still does something for any
+       future spot that sets width without height. */
+    max-width: 280px;
+    height: 360px;
+    aspect-ratio: 280 / 360;
     border-radius: 20px;
     overflow: hidden;
     cursor: pointer;
