@@ -1,9 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Trophy } from "lucide-react";
 import robotFallback from "../../../assets/robot.png";
 import { getPublicRobotProfile } from "../../Robots/api/robotPublic.api";
-import LaurelWreath from "./LaurelWreath";
-import { RANK_STYLES } from "./RankingRow";
 import type { GlobalRankingEntry } from "../api/rankings.api";
 
 interface RankingsPodiumProps {
@@ -14,6 +12,56 @@ interface RankingsPodiumProps {
   entries: GlobalRankingEntry[];
   onOpen: (entry: GlobalRankingEntry) => void;
 }
+
+// Pixel-perfect port of the supplied podium-final-correct.html — same
+// 1728x768 fixed canvas, same absolute coordinates for every element, same
+// clip-path panel shape (chamfered top corners, no border-radius), same
+// star/badge/name/rank styling and colors. Scaled to fit the real
+// container width via ResizeObserver + CSS transform (the reference's own
+// `scale(100vw / 1728)` assumes the podium spans the raw viewport, which
+// isn't true once it's embedded inside this page's padded, non-full-width
+// container) instead of reflowing the layout responsively.
+const CANVAS_W = 1728;
+const CANVAS_H = 768;
+
+const STARS = [
+  { left: -155, top: -155, size: 270 },
+  { left: 1510, top: 190, size: 270 },
+  { left: 175, top: 535, size: 115 },
+  { left: 720, top: -65, size: 65 },
+];
+
+interface SlotSpec {
+  panel: { left: number; top: number; width: number; height: number };
+  avatar: { left: number; top: number; size: number };
+  name: { left: number; top: number };
+  badge: { left: number; top: number; size: number; gradient: string };
+  rank: { left: number; top: number; fontSize: number };
+}
+
+const SLOTS: Record<1 | 2 | 3, SlotSpec> = {
+  1: {
+    panel: { left: 698, top: 399, width: 332, height: 395 },
+    avatar: { left: 774, top: 200, size: 180 },
+    name: { left: 736, top: 445 },
+    badge: { left: 805, top: 513, size: 118, gradient: "linear-gradient(#ffd365eb, #997f3d)" },
+    rank: { left: 844, top: 640, fontSize: 96 },
+  },
+  2: {
+    panel: { left: 338, top: 320, width: 277, height: 330 },
+    avatar: { left: 411, top: 174, size: 131 },
+    name: { left: 361, top: 368 },
+    badge: { left: 429, top: 432, size: 96, gradient: "linear-gradient(#ccccebea, #868173)" },
+    rank: { left: 448, top: 530, fontSize: 86 },
+  },
+  3: {
+    panel: { left: 1113, top: 320, width: 277, height: 330 },
+    avatar: { left: 1186, top: 174, size: 131 },
+    name: { left: 1142, top: 368 },
+    badge: { left: 1204, top: 432, size: 96, gradient: "linear-gradient(#b28181eb, #82450cb3)" },
+    rank: { left: 1222, top: 530, fontSize: 86 },
+  },
+};
 
 /**
  * Robot photos aren't on GlobalRankingEntry (the ranking pool row has no
@@ -50,59 +98,96 @@ function usePodiumImages(entries: GlobalRankingEntry[]) {
   return images;
 }
 
+/** Measures the wrapper's real rendered width and returns width / 1728 —
+ *  the exact scale factor to shrink the fixed-size canvas down to fit. */
+function useFitScale() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => setScale(el.getBoundingClientRect().width / CANVAS_W);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, scale };
+}
+
 export default function RankingsPodium({ entries, onOpen }: RankingsPodiumProps) {
   const top3 = entries.slice(0, 3);
   const images = usePodiumImages(top3);
+  const { ref, scale } = useFitScale();
 
   if (top3.length === 0) return null;
 
   return (
-    <section className="rank-podium" aria-label="Top ranked robots">
-      <span className="rank-podium-star rank-podium-star-a" aria-hidden="true" />
-      <span className="rank-podium-star rank-podium-star-b" aria-hidden="true" />
-      <h2 className="rank-podium-title">Top Robots</h2>
+    <div ref={ref} className="rank-podium-viewport" style={{ height: CANVAS_H * scale }}>
+      <div className="rank-podium" style={{ transform: `scale(${scale})` }}>
+        {STARS.map((s, i) => (
+          <span
+            key={i}
+            className="rank-podium-star"
+            style={{ left: s.left, top: s.top, width: s.size, height: s.size }}
+            aria-hidden="true"
+          />
+        ))}
 
-      <div className="rank-podium-row">
         {top3.map((entry) => {
-          const medal = RANK_STYLES[entry.rank];
+          const slot = SLOTS[entry.rank as 1 | 2 | 3];
+          if (!slot) return null;
           const displayName = entry.robotName || entry.teamName;
           const imageUrl = entry.robotId ? images[entry.robotId] : null;
 
           return (
-            <button
-              type="button"
-              key={entry.robotId ?? entry.teamId}
-              className={`rank-podium-slot rank-podium-slot-${entry.rank}`}
-              onClick={() => onOpen(entry)}
-            >
-              <div className="rank-podium-avatar-wrap">
+            <div key={entry.robotId ?? entry.teamId}>
+              <div
+                className="rank-podium-panel"
+                style={{ left: slot.panel.left, top: slot.panel.top, width: slot.panel.width, height: slot.panel.height }}
+              />
+              <div
+                className="rank-podium-avatar"
+                style={{ left: slot.avatar.left, top: slot.avatar.top, width: slot.avatar.size, height: slot.avatar.size }}
+              >
                 <img
-                  className="rank-podium-avatar"
                   src={imageUrl || robotFallback}
                   alt={displayName}
                   onError={(e) => {
                     e.currentTarget.src = robotFallback;
                   }}
                 />
-                <span className="rank-podium-badge">
-                  <LaurelWreath color={medal?.wreath ?? "#8C6CFF"} size={56} />
-                  <Trophy size={16} className="rank-podium-badge-icon" style={{ color: medal?.border ?? "#8C6CFF" }} />
-                </span>
               </div>
-
-              <p className="rank-podium-name">{displayName}</p>
-              {entry.robotName && entry.teamName && entry.robotName !== entry.teamName && (
-                <p className="rank-podium-team">{entry.teamName}</p>
-              )}
-
-              <div className="rank-podium-riser">
-                <span className="rank-podium-rank-n">{entry.rank}</span>
-                <span className="rank-podium-pts">{entry.totalPoints.toLocaleString()} pts</span>
+              <p className="rank-podium-name" style={{ left: slot.name.left, top: slot.name.top }}>
+                {displayName}
+              </p>
+              <div
+                className="rank-podium-badge"
+                style={{ left: slot.badge.left, top: slot.badge.top, width: slot.badge.size, height: slot.badge.size, background: slot.badge.gradient }}
+              >
+                <Trophy size={slot.badge.size * 0.62} strokeWidth={1.75} color="#fff" />
               </div>
-            </button>
+              <p className="rank-podium-rank" style={{ left: slot.rank.left, top: slot.rank.top, fontSize: slot.rank.fontSize }}>
+                {entry.rank}
+              </p>
+
+              {/* Invisible click target over this rank's whole column —
+                  the reference has no interactive affordance of its own,
+                  this just makes "open this robot" reachable without
+                  altering anything visually. */}
+              <button
+                type="button"
+                className="rank-podium-hit"
+                style={{ left: slot.panel.left, width: slot.panel.width }}
+                onClick={() => onOpen(entry)}
+                aria-label={displayName}
+              />
+            </div>
           );
         })}
       </div>
-    </section>
+    </div>
   );
 }

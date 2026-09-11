@@ -96,176 +96,91 @@
 @media (min-width: 1280px) { .rank-col-rank { padding-left: 36px; } }
 
 /* ── Top-3 podium hero (public/logged-out view only — see RankingsPodium
-   & RankingsRoute's showPodium prop) ─────────────────────────────────── */
+   & RankingsRoute's showPodium prop) ─────────────────────────────────────
+   Pixel-perfect port of the supplied podium-final-correct.html: a fixed
+   1728x768 canvas with every element absolutely positioned exactly as
+   given, scaled as a whole (via RankingsPodium's ResizeObserver + inline
+   transform: scale()) to fit whatever width the page actually has —
+   nothing here reflows or restyles per breakpoint the way a normal
+   responsive component would. */
+.rank-podium-viewport {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  margin-bottom: 28px;
+}
 .rank-podium {
   position: relative;
+  width: 1728px;
+  height: 768px;
+  transform-origin: top left;
   overflow: hidden;
-  border-radius: 24px;
-  padding: 44px 20px 28px;
-  margin-bottom: 28px;
-  text-align: center;
-  background: linear-gradient(165deg, #3557d6 0%, #0162D1 38%, #8C6CFF 100%);
+  background: linear-gradient(180deg, rgba(106, 106, 244, 0.92) 43.269%, rgba(244, 244, 244, 0.1) 100%);
 }
 
-/* Decorative stars — same clip-path-star technique as .rank-outline-star,
-   just a soft filled shape (not an outline ring) since it sits on a solid
-   color band rather than the page's own background. */
 .rank-podium-star {
   position: absolute;
+  border: 5px solid #aaaafa;
+  opacity: 0.55;
+  transform: rotate(45deg);
   pointer-events: none;
 }
-.rank-podium-star::before {
-  content: "";
+
+/* Chamfered top corners via clip-path, not border-radius — matches the
+   reference's own .p panel shape exactly. */
+.rank-podium-panel {
   position: absolute;
-  inset: 0;
-  clip-path: polygon(50% 0, 61% 34%, 98% 35%, 68% 56%, 79% 91%, 50% 70%, 21% 91%, 32% 56%, 2% 35%, 39% 34%);
-  background: rgba(255, 255, 255, 0.16);
+  background: linear-gradient(180deg, rgba(255, 253, 253, 0.87) 0%, #fff 0%, rgba(255, 255, 255, 0.4) 37%, rgba(255, 255, 255, 0) 82%);
+  clip-path: polygon(0 25px, 25% 0, 75% 0, 100% 25px, 100% 100%, 0 100%);
 }
-.rank-podium-star-a { top: -34px; left: -30px; width: 160px; height: 160px; }
-.rank-podium-star-b { top: 30%; right: -24px; width: 110px; height: 110px; }
-
-.rank-podium-title {
-  position: relative;
-  font-family: 'Orbitron', sans-serif;
-  font-weight: 600;
-  font-size: clamp(22px, 3vw, 30px);
-  color: #fff;
-  margin: 0 0 32px;
-}
-
-.rank-podium-row {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 28px;
-}
-@media (min-width: 640px) {
-  .rank-podium-row {
-    flex-direction: row;
-    justify-content: center;
-    align-items: flex-end;
-    gap: clamp(16px, 4vw, 48px);
-  }
-  /* Classic podium arrangement — gold in the middle, silver left, bronze
-     right — only once there's room for 3 columns side by side. */
-  .rank-podium-slot-2 { order: 0; }
-  .rank-podium-slot-1 { order: 1; }
-  .rank-podium-slot-3 { order: 2; }
-}
-
-.rank-podium-slot {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 200px;
-  max-width: 80vw;
-  border: none;
-  background: none;
-  padding: 0;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-.rank-podium-slot:hover { transform: translateY(-4px); }
-
-.rank-podium-avatar-wrap {
-  position: relative;
-  width: 104px;
-  height: 104px;
-  margin-bottom: 12px;
-}
-.rank-podium-slot-1 .rank-podium-avatar-wrap { width: 136px; height: 136px; }
 
 .rank-podium-avatar {
+  position: absolute;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.rank-podium-avatar img {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
   object-fit: cover;
-  background: #fff;
-  border: 3px solid rgba(255, 255, 255, 0.85);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.rank-podium-name {
+  position: absolute;
+  margin: 0;
+  font-family: 'Sarpanch', sans-serif;
+  font-weight: 800;
+  font-size: 40px;
+  color: #2865d9;
+  white-space: nowrap;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .rank-podium-badge {
   position: absolute;
-  right: -6px;
-  bottom: -6px;
-  width: 40px;
-  height: 40px;
-}
-.rank-podium-slot-1 .rank-podium-badge { width: 52px; height: 52px; }
-.rank-podium-badge svg:first-child {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-.rank-podium-badge-icon {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: #fff;
-  border-radius: 50%;
-  padding: 4px;
-  box-sizing: content-box;
-}
-
-.rank-podium-name {
-  margin: 0;
-  max-width: 100%;
-  font-weight: 700;
-  font-size: 16px;
-  color: #fff;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.rank-podium-slot-1 .rank-podium-name { font-size: 19px; }
-.rank-podium-team {
-  margin: 2px 0 0;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* The pedestal riser — height differs per rank like a real podium; the
-   rank number and points sit on its face. */
-.rank-podium-riser {
+  border-radius: 8px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  width: 100%;
-  margin-top: 14px;
-  border-radius: 12px 12px 0 0;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-bottom: none;
 }
-.rank-podium-slot-1 .rank-podium-riser { height: 84px; background: rgba(255, 255, 255, 0.22); }
-.rank-podium-slot-2 .rank-podium-riser { height: 60px; }
-.rank-podium-slot-3 .rank-podium-riser { height: 48px; }
 
-.rank-podium-rank-n {
+.rank-podium-rank {
+  position: absolute;
+  margin: 0;
   font-family: 'Sarpanch', sans-serif;
   font-weight: 800;
-  font-size: 30px;
-  color: rgba(255, 255, 255, 0.92);
+  color: #807e7e;
   line-height: 1;
 }
-.rank-podium-slot-1 .rank-podium-rank-n { font-size: 40px; }
-.rank-podium-pts {
-  font-size: 12px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
-}
 
-@media (prefers-reduced-motion: reduce) {
-  .rank-podium-slot { transition: none; }
+.rank-podium-hit {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
 }

@@ -3,7 +3,7 @@ import TeamLogo from "../../../shared/components/TeamLogo";
 import LaurelWreath from "./LaurelWreath";
 import type { GlobalRankingEntry } from "../api/rankings.api";
 
-export const RANK_STYLES: Partial<Record<number, { border: string; wreath: string }>> = {
+const RANK_STYLES: Partial<Record<number, { border: string; wreath: string }>> = {
   1: { border: "#FFDE04", wreath: "#FFDD00" },
   2: { border: "#A7A7A7", wreath: "#A7A7A7" },
   3: { border: "#7E5353", wreath: "#7A3030" },
