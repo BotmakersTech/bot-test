@@ -419,14 +419,14 @@
 .evd-page .sports h2 {
     text-align: center;
     font-family: "Orbitron", sans-serif;
-    font-size: 68px;
+    font-size: 48px;
     position: relative;
     letter-spacing: 4px;
     /* Was white-on-gradient; on the now-white panel it needs to carry its
        own color, so it takes the brand blue instead. */
     color: #0162D1;
     z-index: 2;
-    margin-bottom: 70px;
+    margin-bottom: 32px;
 }
 
 .evd-page .sports-empty {
@@ -450,20 +450,20 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: 10px;
-    margin: -42px 0 44px;
+    margin: -24px 0 44px;
 }
 
 .evd-page .sports-filter button {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 22px;
+    gap: 6px;
+    padding: 7px 16px;
     border-radius: 999px;
     border: 1.5px solid rgba(1, 98, 209, .35);
     background: rgba(1, 98, 209, .06);
     color: #0162D1;
     font-family: inherit;
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 600;
     letter-spacing: .3px;
     cursor: pointer;
@@ -489,10 +489,10 @@
 /* Count rides inside the pill so an empty-looking league is obvious before
    the click, not after. */
 .evd-page .sports-filter-count {
-    font-size: 12.5px;
+    font-size: 11px;
     font-weight: 700;
     line-height: 1;
-    padding: 3px 7px;
+    padding: 2px 6px;
     border-radius: 999px;
     background: rgba(1, 98, 209, .12);
     color: #0162D1;
@@ -509,8 +509,8 @@
         gap: 8px;
     }
     .evd-page .sports-filter button {
-        padding: 8px 16px;
-        font-size: 13.5px;
+        padding: 6px 14px;
+        font-size: 12.5px;
     }
 }
 

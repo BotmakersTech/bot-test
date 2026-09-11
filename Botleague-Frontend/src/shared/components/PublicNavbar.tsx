@@ -71,19 +71,19 @@ export default function PublicNavbar({ overlapHero = false, showLeagues = false 
     navigate(`/leagues/${slug}`);
   };
 
-  const linkClass = "font-sans text-[12px] font-semibold tracking-widest uppercase text-white rounded-full px-6 py-3 transition hover:bg-white/10";
+  const linkClass = "font-sans text-[12px] font-semibold tracking-widest uppercase text-white rounded-full px-6 py-2.5 transition hover:bg-white/10";
 
   return (
     <header
       ref={headerRef}
-      className="sticky top-0 z-50 px-6 md:px-10 pt-6 pb-4 bg-[#0a0a14]/45 backdrop-blur-xl backdrop-saturate-150 border-b border-white/10 shadow-[0_1px_0_rgba(255,255,255,0.06)_inset]"
+      className="sticky top-0 z-50 px-6 md:px-10 pt-3 pb-3 bg-[#0a0a14]/45 backdrop-blur-xl backdrop-saturate-150 border-b border-white/10 shadow-[0_1px_0_rgba(255,255,255,0.06)_inset]"
     >
       <div className="max-w-[1300px] mx-auto flex items-center justify-between gap-6">
         <button onClick={() => navigate("/")} aria-label="BotLeague home" className="shrink-0">
-          <img src={logo} alt="BotLeague" className="h-5 sm:h-8 md:h-9 object-contain" />
+          <img src={logo} alt="BotLeague" className="h-5 sm:h-7 md:h-8 object-contain" />
         </button>
 
-        <nav className="hidden md:flex items-center gap-1 border-2 border-white rounded-full px-1.5 py-1.5 backdrop-blur-[15px]">
+        <nav className="hidden md:flex items-center gap-1 border-2 border-white rounded-full px-1.5 py-1 backdrop-blur-[15px]">
           {LINKS_BEFORE_LEAGUES.map((link) => (
             <button key={link.label} onClick={() => navigate(link.to)} className={linkClass}>
               {link.label}
@@ -126,14 +126,14 @@ export default function PublicNavbar({ overlapHero = false, showLeagues = false 
           <button
             onClick={() => navigate("/contact-us")}
             aria-label="Contact us"
-            className="hidden sm:flex w-11 h-11 items-center justify-center rounded-full border-2 border-white text-white transition hover:bg-white/10"
+            className="hidden sm:flex w-10 h-10 items-center justify-center rounded-full border-2 border-white text-white transition hover:bg-white/10"
           >
-            <Phone size={17} strokeWidth={2.25} />
+            <Phone size={16} strokeWidth={2.25} />
           </button>
 
           <button
             onClick={() => navigate(isAuthenticated ? "/profile" : "/login")}
-            className="font-sans bg-[#0D5FE0] hover:brightness-110 active:scale-95 text-white text-[10px] sm:text-[13px] font-bold tracking-wide sm:tracking-widest uppercase px-3.5 sm:px-8 md:px-9 py-2.5 sm:py-3.5 rounded-full transition"
+            className="font-sans bg-[#0D5FE0] hover:brightness-110 active:scale-95 text-white text-[10px] sm:text-[13px] font-bold tracking-wide sm:tracking-widest uppercase px-3.5 sm:px-8 md:px-9 py-2 sm:py-3 rounded-full transition"
           >
             {isAuthenticated ? "Dashboard" : "Login"}
           </button>
@@ -141,7 +141,7 @@ export default function PublicNavbar({ overlapHero = false, showLeagues = false 
           <button
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Toggle menu"
-            className="md:hidden w-9 h-9 sm:w-10 sm:h-10 flex flex-col items-center justify-center gap-1.5 border-2 border-white rounded-full"
+            className="md:hidden w-8 h-8 sm:w-9 sm:h-9 flex flex-col items-center justify-center gap-1.5 border-2 border-white rounded-full"
           >
             <span className="w-4 h-0.5 bg-white" />
             <span className="w-4 h-0.5 bg-white" />
