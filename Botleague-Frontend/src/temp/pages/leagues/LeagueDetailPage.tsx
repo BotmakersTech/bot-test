@@ -775,43 +775,43 @@ export default function LeagueDetailPage() {
     {
       icon: UserPlus,
       title: "Create your profile",
-      body: "Set up your national profile — your teams, results, and rankings, all in one place.",
+      body: "Your teams, results, and rankings — all in one place.",
     },
     {
       icon: Users,
       title: "Create or join a team",
-      body: "Build your own crew or join friends who are already signed up, then pick your roles.",
+      body: "Build your own crew, or join friends already signed up.",
     },
     {
       icon: Target,
       title: "Choose your sport",
-      body: sportNames ? `Pick what excites you — ${sportNames} — and build a strategy around it.` : "Pick what excites you and build a strategy around it.",
+      body: sportNames ? `Pick what excites you — ${sportNames}.` : "Pick what excites you.",
     },
     {
       icon: Wrench,
       title: "Build your machine",
-      body: "Design, code, test, and tune your machine until it's arena-ready.",
+      body: "Design, code, and tune it until it's arena-ready.",
     },
     {
       icon: MapPin,
       title: "Register for an event",
-      body: "Find an affiliated IIT, BITS, or other techfest near you and lock in your spot.",
+      body: "Find a techfest near you and lock in your spot.",
     },
     {
       icon: Trophy,
       title: "Enter the arena",
-      body: "Race. Battle. Solve. Score. Go head-to-head with other teams and fight for the win.",
+      body: "Race. Battle. Score. Fight for the win.",
     },
     {
       icon: TrendingUp,
       title: "Earn your rank",
-      body: "Every result adds to your national ranking — win more, climb higher.",
+      body: "Every result climbs your national ranking.",
     },
     {
       icon: Rocket,
       title: `Level up to ${nextName}${nextLeague ? " League" : ""}`,
       body: nextLeague
-        ? `Strong ${league.shortName} results unlock your path to the ${nextName} League.`
+        ? `Strong ${league.shortName} results unlock your path to ${nextName}.`
         : "Strong results here are the path to the international stage.",
     },
   ];
@@ -970,7 +970,7 @@ export default function LeagueDetailPage() {
       {/* ===== From first event to national rank ===== */}
       <section className="mx-auto max-w-[1180px] px-4 py-12 text-center">
         <h2 className="lg-section-heading mb-2">{league.journeyHeadline}</h2>
-        <p className="lg-sec-subhead mb-4">{league.shortName} is where your journey begins — from your first profile to your first win.</p>
+        <p className="lg-sec-subhead mb-4">{league.shortName} is where your journey begins.</p>
         <div>
           {journeySteps.map((step) => (
             <Reveal as="div" className="lg-jstep" key={step.title}>
