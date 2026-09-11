@@ -1,37 +1,9 @@
-import { useCallback, useEffect, useRef, useState, Fragment, type RefObject } from "react";
+import { useEffect, useRef, useState } from "react";
 import PublicNavbar from "../../shared/components/PublicNavbar";
 import "../../styles/aboutUs.css";
 import mohitImg from "../../assets/Avatar-model/Mohit.png";
 import akshayImg from "../../assets/Avatar-model/Akshay.png";
 import rahulImg from "../../assets/Avatar-model/Rahul.png";
-
-interface StoryStep {
-  n: string;
-  year: string;
-  title: string;
-  text: string;
-}
-
-const STORY_STEPS: StoryStep[] = [
-  {
-    n: "01",
-    year: "2014",
-    title: "The First Arena",
-    text: "A handful of engineering students at IIT Bombay build a plywood arena in a hostel courtyard. No sponsors, no rulebook — just a stopwatch and a dream to see robots fight fair.",
-  },
-  {
-    n: "02",
-    year: "2018",
-    title: "The Rulebook Gets Real",
-    text: "After four seasons of Techfest, BITS Pilani and IIT Roorkee, the crew starts writing down every judging call. What began as house rules becomes the standard other campuses start borrowing.",
-  },
-  {
-    n: "03",
-    year: "2024",
-    title: "BotLeague Goes National",
-    text: "Ten years of arena scars later, the rulebook, the scoring stack and the people behind it become BotLeague — built by the competitors who never left the pit.",
-  },
-];
 
 interface Principle {
   n: string;
@@ -119,44 +91,6 @@ const TEAM: TeamMember[] = [
 
 const SLOT_CLASS = ["cc-slot-left", "cc-slot-center", "cc-slot-right"];
 
-/**
- * 0..1 through a tall "pinned" wrapper — 0 right as its sticky child locks
- * to the top of the viewport, 1 once the wrapper's extra scroll room is
- * fully used up and the page is about to move past it. Same pin-and-reveal
- * mechanism LeaguesSection.tsx already uses to stack its league cards one
- * at a time on the home page, reused here so Our Story's 3 cards reveal
- * while the section stays pinned instead of scrolling past mid-reveal.
- */
-function usePinnedProgress(ref: RefObject<HTMLElement | null>) {
-  const [progress, setProgress] = useState(0);
-
-  const handle = useCallback(() => {
-    const el = ref.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const vh = window.innerHeight || document.documentElement.clientHeight;
-    const total = rect.height - vh;
-    if (total <= 0) {
-      setProgress(1);
-      return;
-    }
-    const scrolled = Math.min(Math.max(-rect.top, 0), total);
-    setProgress(scrolled / total);
-  }, [ref]);
-
-  useEffect(() => {
-    handle();
-    window.addEventListener("scroll", handle, { passive: true });
-    window.addEventListener("resize", handle);
-    return () => {
-      window.removeEventListener("scroll", handle);
-      window.removeEventListener("resize", handle);
-    };
-  }, [handle]);
-
-  return progress;
-}
-
 function Hero() {
   return (
     <header className="bl-hero text-center px-4">
@@ -174,63 +108,20 @@ function Hero() {
 }
 
 function OurStory() {
-  // A tall wrapper with a sticky child, not just a plain section — the
-  // page can't scroll past Our Story until all 3 cards have revealed,
-  // instead of the cards racing by mid-reveal as the section scrolls
-  // through in the old scroll-position-based version. See
-  // usePinnedProgress's own comment for the mechanism.
-  const wrapRef = useRef<HTMLElement>(null);
-  const progress = usePinnedProgress(wrapRef);
-  const n = STORY_STEPS.length;
-  const pos = progress * (n - 1);
-
   return (
-    <section ref={wrapRef} className="bl-story-wrap relative">
-      <div className="bl-story-pinned sticky flex flex-col justify-center overflow-hidden">
-        <div className="mx-auto max-w-[1180px] px-4 w-full">
-          <h2 className="bl-section-title text-center mb-10">Our Story</h2>
-
-          <div className="bl-story-track">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 justify-center">
-              {STORY_STEPS.map((step, i) => {
-                const visible = pos >= i - 0.001;
-                return (
-                  <div
-                    key={step.n}
-                    className={`bl-story-card ${visible ? "bl-story-card-visible" : ""}`}
-                    style={{ transitionDelay: `${i * 80}ms` }}
-                  >
-                    <div className="bl-story-n">{step.n}</div>
-                    <div className="bl-story-year">{step.year}</div>
-                    <h3 className="bl-story-card-title">{step.title}</h3>
-                    <p className="bl-story-card-text">{step.text}</p>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="bl-story-connector hidden md:block">
-              {STORY_STEPS.map((step, i) => {
-                const nodeReached = pos >= i - 0.001;
-                const leftPct = ((2 * i + 1) / (n * 2)) * 100;
-                const segFill = i < n - 1 ? Math.max(0, Math.min(1, pos - i)) * 100 : 0;
-                return (
-                  <Fragment key={step.n}>
-                    <span
-                      className={`bl-story-node ${nodeReached ? "bl-story-node-active" : ""}`}
-                      style={{ left: `${leftPct}%` }}
-                    />
-                    {i < n - 1 && (
-                      <span className="bl-story-segment" style={{ left: `${leftPct}%`, width: `${100 / n}%` }}>
-                        <span className="bl-story-segment-fill" style={{ width: `${segFill}%` }} />
-                      </span>
-                    )}
-                  </Fragment>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+    <section className="bl-story-wrap">
+      <div className="mx-auto max-w-[860px] px-4 w-full text-center">
+        <h2 className="bl-section-title mb-6">From the podium to the platform.</h2>
+        <p className="bl-story-text">
+          It started with three engineering students already winning podiums across
+          India&rsquo;s biggest college techfests — IIT Bombay Techfest, BITS Pilani, IIT
+          Roorkee, and more. They decided the scene deserved more than scattered rules and
+          one-off arenas built for a single weekend. So the same three took their bots
+          international, competing on the world stage and representing India — and came back
+          knowing exactly what a real competitive ecosystem needed to look like. Five years on,
+          the rulebook, the scoring stack, and the ecosystem they built have become BotLeague —
+          with one clear goal ahead: get more Indian roboteers competing internationally.
+        </p>
       </div>
     </section>
   );

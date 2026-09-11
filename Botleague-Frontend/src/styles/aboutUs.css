@@ -11,12 +11,6 @@
   --bl-purple: #8C6CFF;
   --bl-navy: #191233;
   font-family: 'Inter', sans-serif;
-  /* clip, not hidden — overflow-x:hidden with overflow-y left unset forces
-     overflow-y to auto per spec, which makes this the nearest "scrolling
-     ancestor" for every position:sticky descendant (Our Story's pinned
-     wrapper included) instead of the real viewport, and sticky simply
-     doesn't stick against that. clip suppresses the same horizontal
-     overflow without establishing a scroll container. */
   overflow-x: clip;
   background: #ffffff;
 }
@@ -50,95 +44,11 @@
 }
 
 /* ---------- Our Story ---------- */
-/* Pin-and-reveal wrapper — same mechanism as the homepage's league-card
-   stack (home.css's .home-pinned-sticky): a tall outer section gives the
-   sticky inner box room to stay locked to the top of the viewport while
-   the page scrolls through it, so the 3 story cards finish revealing
-   before the page is allowed to move on to Principles. Height is 3 reveal
-   steps' worth of extra scroll (not this section's own 340vh — that one's
-   sized for a slower collapse/expand animation this reveal doesn't need)
-   plus the pinned box's own viewport-filling height. */
-.bl-story-wrap { height: 240vh; }
-.bl-story-pinned {
-  top: var(--home-header-h, 96px);
-  height: calc(100dvh - var(--home-header-h, 96px));
-  min-height: 480px;
-}
-
-.bl-story-track { padding-top: 1rem; position: relative; }
-
-.bl-story-card {
-  position: relative;
-  z-index: 1;
-  aspect-ratio: 1 / 1;
-  background: #fff;
-  border: 1px solid #E4E1F2;
-  border-radius: 16px;
-  padding: 1.75rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  overflow: hidden;
-  opacity: 0;
-  transform: translateY(28px) scale(0.97);
-  transition: opacity 0.5s ease, transform 0.5s ease, box-shadow 0.25s ease;
-}
-.bl-story-card-visible { opacity: 1; transform: translateY(0) scale(1); }
-.bl-story-card:hover {
-  box-shadow: 0 16px 32px rgba(1,98,209,0.12);
-  transform: translateY(-4px);
-  border-color: var(--bl-blue);
-}
-.bl-story-n {
-  font-family: 'Orbitron', sans-serif;
-  font-style: italic;
-  font-size: 2rem;
-  color: rgba(140,108,255,0.35);
-  font-weight: 700;
-  line-height: 1;
-}
-.bl-story-year { color: var(--bl-purple); font-weight: 600; font-size: 0.85rem; letter-spacing: 2px; margin: 0.35rem 0; }
-.bl-story-card-title { font-family: 'Orbitron', sans-serif; font-weight: 500; color: var(--bl-blue); font-size: 1.2rem; margin-bottom: 0.5rem; line-height: 1.2; }
-.bl-story-card-text { color: #333; font-size: 0.85rem; line-height: 1.55; margin: 0; overflow: hidden; }
-
-.bl-story-connector {
-  position: relative;
-  height: 24px;
-  margin-top: 1.5rem;
-}
-.bl-story-node {
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #fff;
-  border: 3px solid #D9D4EF;
-  z-index: 2;
-  transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
-}
-.bl-story-node-active {
-  border-color: var(--bl-blue);
-  background: linear-gradient(180deg, var(--bl-blue), var(--bl-purple));
-  box-shadow: 0 0 0 4px rgba(1,98,209,0.15);
-}
-.bl-story-segment {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  height: 4px;
-  border-radius: 4px;
-  background: #E9E7F5;
-  overflow: hidden;
-  z-index: 1;
-}
-.bl-story-segment-fill {
-  display: block;
-  height: 100%;
-  background: linear-gradient(90deg, var(--bl-blue), var(--bl-purple));
-  border-radius: 4px;
-  transition: width 0.15s linear;
+.bl-story-wrap { padding: 5rem 0; }
+.bl-story-text {
+  color: #333;
+  font-size: 1.05rem;
+  line-height: 1.9;
 }
 
 /* ---------- Principles ---------- */
@@ -447,10 +357,6 @@
 }
 .bl-newsletter-btn:hover { filter: brightness(1.1); }
 
-@media (max-width: 991px) {
-  .bl-story-card { aspect-ratio: auto; padding: 1.75rem 1.5rem 1.5rem; }
-}
-
 @media (max-width: 575px) {
   .cc-stage { height: 380px; }
   .cc-bubble { position: static; width: 100%; margin-top: 1.5rem; opacity: 1; transform: none; }
@@ -460,7 +366,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bl-story-card, .cc-stage, .cc-character, .cc-bubble, .bl-link, .bl-icon-btn {
+  .cc-stage, .cc-character, .cc-bubble, .bl-link, .bl-icon-btn {
     transition: none !important;
   }
 }
