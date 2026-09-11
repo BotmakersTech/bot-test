@@ -5,6 +5,9 @@ import PublicNavbar from "../../../shared/components/PublicNavbar";
 import { useLeagues, getLeagueBySlug } from "./useLeagues";
 import { GLOBAL_STAGE_GOLD } from "./leaguePresentation";
 import { getPublicLeagueSports, type LeagueSport } from "../../../shared/api/catalog.api";
+import { getTopRanked, type GlobalRankingEntry } from "../../../feature/Rankings/api/rankings.api";
+import { sportKey } from "../../../feature/Event/utils/specPolicy";
+import { canonicalWeightClass } from "../../../feature/Robots/constants/weightClasses";
 
 const BRAND_STYLES = `
 .lg-page {
@@ -243,25 +246,29 @@ const BRAND_STYLES = `
 }
 .lg-rank-row {
   display: grid;
-  grid-template-columns: 32px 1fr auto;
+  grid-template-columns: 36px 1fr auto;
   align-items: center;
   gap: 1rem;
-  padding: 0.7rem 1rem;
+  padding: 0.85rem 1.1rem;
   border-radius: 10px;
   border: 1px solid color-mix(in srgb, var(--lg-primary) 10%, #f5f0ff);
   background: #fdfcff;
 }
-.lg-rank-pos {
-  font-weight: 800;
-  font-size: 14px;
-  color: #bbb;
+/* Every row here is a sport's own #1 (see the champions effect), not a
+   4th-place-through-1st ranking, so the badge is always the same "this
+   is a champion" gold, not gold/silver/bronze. */
+.lg-rank-pos { font-size: 20px; color: #f59e0b; text-align: center; }
+.lg-rank-sport {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--lg-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
 }
-.lg-rank-pos.gold { color: #f59e0b; }
-.lg-rank-pos.silver { color: #94a3b8; }
-.lg-rank-pos.bronze { color: #b87333; }
-.lg-rank-name { font-size: 14px; font-weight: 600; color: #1a1a2e; }
-.lg-rank-school { font-size: 11px; color: #999; margin-top: 2px; }
-.lg-rank-pts { font-weight: 800; font-size: 16px; color: var(--lg-primary); text-align: right; }
+.lg-rank-name { font-size: 18px; font-weight: 700; color: #1a1a2e; line-height: 1.3; }
+.lg-rank-school { font-size: 12px; color: #999; margin-top: 2px; }
+.lg-rank-pts { font-weight: 800; font-size: 17px; color: var(--lg-primary); text-align: right; }
 .lg-rank-pts-label { font-size: 10px; color: #bbb; text-align: right; }
 
 /* Journey steps — replaces what used to be an empty placeholder box */
@@ -545,6 +552,17 @@ function Reveal({ as: Tag = "div", className = "", delay = 0, children, ...rest 
   );
 }
 
+/** Ranking pools are keyed on the canonical weight-class code, not the
+ *  catalog's own label/kg number — see WeightClassKeys.of() on the backend
+ *  and canonicalWeightClass() here, which mirrors it. A sport with several
+ *  classes (Apex-style) has one pool per class; this picks the first as
+ *  the one whose #1 this section shows, rather than trying to merge them. */
+function primaryWeightClass(s: LeagueSport): string | undefined {
+  if (s.weightLimitKg != null) return canonicalWeightClass(`${s.weightLimitKg}kg`);
+  if (s.weightClasses.length > 0) return canonicalWeightClass(s.weightClasses[0].label);
+  return undefined;
+}
+
 function SportCard({ title }: { title: string }) {
   return (
     <div className="lg-sport-card">
@@ -578,6 +596,33 @@ export default function LeagueDetailPage() {
       .catch(() => setSports([]))
       .finally(() => setSportsLoading(false));
   }, [slug]);
+
+  // One #1 per sport, not a top-4 across the whole league — every (sport,
+  // league, weight class) is its own ranking pool (RankingEngineService),
+  // so there's no real single "league leaderboard" to rank 1st through
+  // 4th across; showing each sport's own champion is the honest version
+  // of that instead of merging incomparable pools into one fake order.
+  const [champions, setChampions] = useState<{ sport: LeagueSport; entry: GlobalRankingEntry }[]>([]);
+
+  useEffect(() => {
+    if (!league || sports.length === 0) {
+      setChampions([]);
+      return;
+    }
+    let cancelled = false;
+    Promise.all(
+      sports.map((s) =>
+        getTopRanked({ sport: sportKey(s.sportName), ageGroup: league.ageGroupValue, weightClass: primaryWeightClass(s), n: 1 })
+          .then((entries) => (entries[0] ? { sport: s, entry: entries[0] } : null))
+          .catch(() => null)
+      )
+    ).then((results) => {
+      if (!cancelled) setChampions(results.filter((r): r is { sport: LeagueSport; entry: GlobalRankingEntry } => r != null));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [league, sports]);
 
   if (!loading && !league) return <Navigate to="/" replace />;
   if (!league) return null;
@@ -622,20 +667,6 @@ export default function LeagueDetailPage() {
         : "Strong performance here is the path to the international stage.",
     },
   ];
-
-  // Sample leaderboard — this app deliberately keeps every (sport, league,
-  // weight class) as its own ranking pool (see RankingEngineService), so
-  // there's no real single cross-sport "league leaderboard" to pull rows
-  // from without merging incomparable pools. Placeholder until/unless a
-  // real cross-pool aggregate exists; /rankings has the real per-pool
-  // tables, which "View rankings" below links to.
-  const sampleLeaderboard = [
-    { rank: 1, name: "Arjun Mehta", school: "IIT Bombay Techfest", points: 2840 },
-    { rank: 2, name: "Priya Iyer", school: "BITS Pilani", points: 2610 },
-    { rank: 3, name: "Kabir Nair", school: "IIT Roorkee", points: 2390 },
-    { rank: 4, name: "Ananya Rao", school: "BITS Goa", points: 2180 },
-  ];
-  const rankClass = (r: number) => (r === 1 ? "gold" : r === 2 ? "silver" : r === 3 ? "bronze" : "");
 
   const scrollToSports = () => {
     document.getElementById("sports")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -755,25 +786,28 @@ export default function LeagueDetailPage() {
             </p>
           </Reveal>
         </div>
-        {/* Sample standings — see sampleLeaderboard's own comment above:
-           there's no real single cross-sport ranking to pull these from
-           yet, "View rankings" above is where the real per-sport tables
-           live. */}
-        <div className="lg-rank-list">
-          {sampleLeaderboard.map((row) => (
-            <div className="lg-rank-row" key={row.rank}>
-              <div className={`lg-rank-pos ${rankClass(row.rank)}`}>#{row.rank}</div>
-              <div>
-                <div className="lg-rank-name">{row.name}</div>
-                <div className="lg-rank-school">{row.school}</div>
+        {/* One #1 robot per sport in this league — see the champions
+           effect's own comment above for why it's per-sport instead of a
+           single top-4 across the whole league. Nothing renders here
+           until at least one sport actually has a finalized ranking. */}
+        {champions.length > 0 && (
+          <div className="lg-rank-list">
+            {champions.map(({ sport, entry }) => (
+              <div className="lg-rank-row" key={sport.sportId}>
+                <div className="lg-rank-pos" aria-hidden="true">🏆</div>
+                <div>
+                  <div className="lg-rank-sport">{sport.sportName} &middot; #1</div>
+                  <div className="lg-rank-name">{entry.robotName || "Unnamed robot"}</div>
+                  <div className="lg-rank-school">{entry.teamName}</div>
+                </div>
+                <div>
+                  <div className="lg-rank-pts">{entry.totalPoints.toLocaleString()}</div>
+                  <div className="lg-rank-pts-label">points</div>
+                </div>
               </div>
-              <div>
-                <div className="lg-rank-pts">{row.points.toLocaleString()}</div>
-                <div className="lg-rank-pts-label">points</div>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ===== From first event to national rank ===== */}
