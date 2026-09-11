@@ -11,7 +11,13 @@
   --bl-purple: #8C6CFF;
   --bl-navy: #191233;
   font-family: 'Inter', sans-serif;
-  overflow-x: hidden;
+  /* clip, not hidden — overflow-x:hidden with overflow-y left unset forces
+     overflow-y to auto per spec, which makes this the nearest "scrolling
+     ancestor" for every position:sticky descendant (Our Story's pinned
+     wrapper included) instead of the real viewport, and sticky simply
+     doesn't stick against that. clip suppresses the same horizontal
+     overflow without establishing a scroll container. */
+  overflow-x: clip;
   background: #ffffff;
 }
 
@@ -44,6 +50,21 @@
 }
 
 /* ---------- Our Story ---------- */
+/* Pin-and-reveal wrapper — same mechanism as the homepage's league-card
+   stack (home.css's .home-pinned-sticky): a tall outer section gives the
+   sticky inner box room to stay locked to the top of the viewport while
+   the page scrolls through it, so the 3 story cards finish revealing
+   before the page is allowed to move on to Principles. Height is 3 reveal
+   steps' worth of extra scroll (not this section's own 340vh — that one's
+   sized for a slower collapse/expand animation this reveal doesn't need)
+   plus the pinned box's own viewport-filling height. */
+.bl-story-wrap { height: 240vh; }
+.bl-story-pinned {
+  top: var(--home-header-h, 96px);
+  height: calc(100dvh - var(--home-header-h, 96px));
+  min-height: 480px;
+}
+
 .bl-story-track { padding-top: 1rem; position: relative; }
 
 .bl-story-card {

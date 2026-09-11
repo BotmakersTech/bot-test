@@ -112,7 +112,15 @@ const TEAM: TeamMember[] = [
 
 const SLOT_CLASS = ["cc-slot-left", "cc-slot-center", "cc-slot-right"];
 
-function useScrollProgress(ref: RefObject<HTMLElement | null>) {
+/**
+ * 0..1 through a tall "pinned" wrapper — 0 right as its sticky child locks
+ * to the top of the viewport, 1 once the wrapper's extra scroll room is
+ * fully used up and the page is about to move past it. Same pin-and-reveal
+ * mechanism LeaguesSection.tsx already uses to stack its league cards one
+ * at a time on the home page, reused here so Our Story's 3 cards reveal
+ * while the section stays pinned instead of scrolling past mid-reveal.
+ */
+function usePinnedProgress(ref: RefObject<HTMLElement | null>) {
   const [progress, setProgress] = useState(0);
 
   const handle = useCallback(() => {
@@ -120,11 +128,13 @@ function useScrollProgress(ref: RefObject<HTMLElement | null>) {
     if (!el) return;
     const rect = el.getBoundingClientRect();
     const vh = window.innerHeight || document.documentElement.clientHeight;
-    const total = rect.height + vh * 0.6;
-    const covered = vh * 0.85 - rect.top;
-    let p = covered / total;
-    p = Math.max(0, Math.min(1, p));
-    setProgress(p);
+    const total = rect.height - vh;
+    if (total <= 0) {
+      setProgress(1);
+      return;
+    }
+    const scrolled = Math.min(Math.max(-rect.top, 0), total);
+    setProgress(scrolled / total);
   }, [ref]);
 
   useEffect(() => {
@@ -144,11 +154,7 @@ function Hero() {
   return (
     <header className="bl-hero text-center px-4">
       <div className="mx-auto max-w-[900px] py-16 md:py-20">
-        <h1 className="bl-hero-title">
-          Built by competitors.
-          <br />
-          For competitors.
-        </h1>
+        <h1 className="bl-hero-title">Built by Roboteers, for Roboteers.</h1>
         <p className="bl-hero-sub mx-auto">
           BotLeague was built by the people who spent more than 10 years running robotics
           competitions at IIT Bombay Techfest, BITS Pilani, IIT Roorkee, and more. Every rule,
@@ -161,55 +167,61 @@ function Hero() {
 }
 
 function OurStory() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const progress = useScrollProgress(sectionRef);
+  // A tall wrapper with a sticky child, not just a plain section — the
+  // page can't scroll past Our Story until all 3 cards have revealed,
+  // instead of the cards racing by mid-reveal as the section scrolls
+  // through in the old scroll-position-based version. See
+  // usePinnedProgress's own comment for the mechanism.
+  const wrapRef = useRef<HTMLElement>(null);
+  const progress = usePinnedProgress(wrapRef);
   const n = STORY_STEPS.length;
-  const pos = Math.max(0, Math.min(n - 1, progress * (n - 1) * 1.15));
-  const clampedActive = Math.max(1, Math.min(n, Math.floor(pos + 0.001) + 1));
+  const pos = progress * (n - 1);
 
   return (
-    <section ref={sectionRef} className="py-16 md:py-20">
-      <div className="mx-auto max-w-[1180px] px-4">
-        <h2 className="bl-section-title text-center mb-10">Our Story</h2>
+    <section ref={wrapRef} className="bl-story-wrap relative">
+      <div className="bl-story-pinned sticky flex flex-col justify-center overflow-hidden">
+        <div className="mx-auto max-w-[1180px] px-4 w-full">
+          <h2 className="bl-section-title text-center mb-10">Our Story</h2>
 
-        <div className="bl-story-track">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 justify-center">
-            {STORY_STEPS.map((step, i) => {
-              const visible = i < clampedActive;
-              return (
-                <div
-                  key={step.n}
-                  className={`bl-story-card ${visible ? "bl-story-card-visible" : ""}`}
-                  style={{ transitionDelay: `${i * 80}ms` }}
-                >
-                  <div className="bl-story-n">{step.n}</div>
-                  <div className="bl-story-year">{step.year}</div>
-                  <h3 className="bl-story-card-title">{step.title}</h3>
-                  <p className="bl-story-card-text">{step.text}</p>
-                </div>
-              );
-            })}
-          </div>
+          <div className="bl-story-track">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 justify-center">
+              {STORY_STEPS.map((step, i) => {
+                const visible = pos >= i - 0.001;
+                return (
+                  <div
+                    key={step.n}
+                    className={`bl-story-card ${visible ? "bl-story-card-visible" : ""}`}
+                    style={{ transitionDelay: `${i * 80}ms` }}
+                  >
+                    <div className="bl-story-n">{step.n}</div>
+                    <div className="bl-story-year">{step.year}</div>
+                    <h3 className="bl-story-card-title">{step.title}</h3>
+                    <p className="bl-story-card-text">{step.text}</p>
+                  </div>
+                );
+              })}
+            </div>
 
-          <div className="bl-story-connector hidden md:block">
-            {STORY_STEPS.map((step, i) => {
-              const nodeReached = pos >= i - 0.001;
-              const leftPct = ((2 * i + 1) / (n * 2)) * 100;
-              const segFill = i < n - 1 ? Math.max(0, Math.min(1, pos - i)) * 100 : 0;
-              return (
-                <Fragment key={step.n}>
-                  <span
-                    className={`bl-story-node ${nodeReached ? "bl-story-node-active" : ""}`}
-                    style={{ left: `${leftPct}%` }}
-                  />
-                  {i < n - 1 && (
-                    <span className="bl-story-segment" style={{ left: `${leftPct}%`, width: `${100 / n}%` }}>
-                      <span className="bl-story-segment-fill" style={{ width: `${segFill}%` }} />
-                    </span>
-                  )}
-                </Fragment>
-              );
-            })}
+            <div className="bl-story-connector hidden md:block">
+              {STORY_STEPS.map((step, i) => {
+                const nodeReached = pos >= i - 0.001;
+                const leftPct = ((2 * i + 1) / (n * 2)) * 100;
+                const segFill = i < n - 1 ? Math.max(0, Math.min(1, pos - i)) * 100 : 0;
+                return (
+                  <Fragment key={step.n}>
+                    <span
+                      className={`bl-story-node ${nodeReached ? "bl-story-node-active" : ""}`}
+                      style={{ left: `${leftPct}%` }}
+                    />
+                    {i < n - 1 && (
+                      <span className="bl-story-segment" style={{ left: `${leftPct}%`, width: `${100 / n}%` }}>
+                        <span className="bl-story-segment-fill" style={{ width: `${segFill}%` }} />
+                      </span>
+                    )}
+                  </Fragment>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
