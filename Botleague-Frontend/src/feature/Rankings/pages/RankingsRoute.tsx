@@ -34,7 +34,7 @@ export default function RankingsRoute() {
   return (
     <>
       <PublicNavbar showLeagues />
-      <Rankings />
+      <Rankings showPodium />
       <AppFooter />
       <PublicBottomNav />
     </>

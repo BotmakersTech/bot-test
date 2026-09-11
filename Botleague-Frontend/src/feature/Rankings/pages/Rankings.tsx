@@ -10,6 +10,7 @@ import { sportKey } from "../../Event/utils/specPolicy";
 import { canonicalWeightClass, formatWeightClass } from "../../Robots/constants/weightClasses";
 import { getDashboard } from "../../UserDashboard/api/userDashboard.api";
 import RankingRow from "../components/RankingRow";
+import RankingsPodium from "../components/RankingsPodium";
 import { useLeagues, formatAgeRange } from "../../../temp/pages/leagues/useLeagues";
 import "../../../styles/rankings.css";
 
@@ -72,7 +73,15 @@ function FilterSelect({
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
-export default function GlobalRankingsPage() {
+interface GlobalRankingsPageProps {
+  /** Shows the top-3 podium hero above the filter card — only the public
+   *  (logged-out, no-sidebar) rendering of this page opts in, see
+   *  RankingsRoute. Defaults to false so the authenticated Layout view
+   *  is unchanged. */
+  showPodium?: boolean;
+}
+
+export default function GlobalRankingsPage({ showPodium = false }: GlobalRankingsPageProps) {
   const navigate = useNavigate();
   const { leagues } = useLeagues();
 
@@ -298,6 +307,17 @@ export default function GlobalRankingsPage() {
             <ChevronDown size={16} className={`transition-transform ${sortOpen ? "rotate-180" : ""}`} />
           </button>
         </div>
+
+        {/* Top-3 podium — public view only, reuses the exact same `entries`
+            the table below renders (same filter, same pool), so switching
+            League/Sport/Weight Class updates both together instead of the
+            podium being a separate, disconnected snapshot. */}
+        {showPodium && !loading && entries.length > 0 && (
+          <RankingsPodium
+            entries={entries}
+            onOpen={(entry) => navigate(entry.robotId ? `/robot/${entry.robotId}` : `/team/${entry.teamId}`)}
+          />
+        )}
 
         {/* ── Sort / filter card ─────────────────────────────────────── */}
         <div className={`rank-filter-card mt-1 mb-8 sm:mb-10 w-full bg-white pt-4 pb-5 px-4 sm:px-6 lg:px-9 shadow-[0_4px_4px_1px_rgba(0,0,0,0.25)] ${sortOpen ? "" : "max-[950px]:hidden"}`}>

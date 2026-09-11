@@ -1,5 +1,19 @@
 import api from "../../../shared/api/Base";
 
+// The public robot endpoints return imageUrl as the raw R2 object key
+// (e.g. "robots/<teamId>/<robotId>/images/<file>.png"), not a full URL —
+// the authenticated robot endpoints prefix this same media host
+// server-side (RobotService.mapRobot), but that step is missing here.
+// Normalizing client-side, in one place, fixes every consumer of these
+// two functions instead of each caller re-guessing the media host.
+const MEDIA_BASE_URL = "https://media.botleague.in";
+
+function resolveImageUrl(raw: string | null): string | null {
+  if (!raw) return null;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  return `${MEDIA_BASE_URL}/${raw.replace(/^\/+/, "")}`;
+}
+
 export interface RobotTournamentRecord {
   eventId:      string;
   eventName:    string | null;
@@ -51,11 +65,11 @@ export interface PublicRobotProfile {
 // Look up by UUID
 export const getPublicRobotProfile = async (robotId: string): Promise<PublicRobotProfile> => {
   const res = await api.get<PublicRobotProfile>(`/robots/public/${robotId}`);
-  return res.data;
+  return { ...res.data, imageUrl: resolveImageUrl(res.data.imageUrl) };
 };
 
 // Look up by robot code e.g. BLR0000001 (share links)
 export const getPublicRobotProfileByCode = async (robotCode: string): Promise<PublicRobotProfile> => {
   const res = await api.get<PublicRobotProfile>(`/robots/public/code/${robotCode}`);
-  return res.data;
+  return { ...res.data, imageUrl: resolveImageUrl(res.data.imageUrl) };
 };

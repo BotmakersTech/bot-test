@@ -3,12 +3,14 @@ const WREATH_PATH =
 
 interface LaurelWreathProps {
   color: string;
+  /** Rendered pixel size (square) — the viewBox stays 44x44 either way, so the path scales cleanly. Defaults to 44 (the table row badge's own size). */
+  size?: number;
 }
 
 /** The gold/silver/bronze wreath framing a top-3 rank number — mirrored left/right halves of the same path. */
-export default function LaurelWreath({ color }: LaurelWreathProps) {
+export default function LaurelWreath({ color, size = 44 }: LaurelWreathProps) {
   return (
-    <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <svg width={size} height={size} viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <g transform="translate(-1, 3)">
         <path d={WREATH_PATH} stroke={color} strokeLinejoin="round" fill="none" />
       </g>
