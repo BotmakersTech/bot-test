@@ -684,7 +684,13 @@
     z-index: 1;
     display: block;
     width: 100%;
-    aspect-ratio: 526 / 560;
+    /* 376x420 — matches .event-card-wrap's own 420px cap minus its 22px
+       padding on each side (420 - 2*22 = 376), so at rest (wrap at its
+       cap) the card lands on that exact size; width:100% + max-width lets
+       it still shrink on a track narrower than 420px instead of
+       overflowing it. */
+    max-width: 376px;
+    aspect-ratio: 376 / 420;
     border-radius: 20px;
     overflow: hidden;
     cursor: pointer;
