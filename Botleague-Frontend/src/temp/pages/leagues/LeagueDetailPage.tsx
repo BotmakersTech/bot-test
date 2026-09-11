@@ -151,60 +151,48 @@ const BRAND_STYLES = `
   font-size: clamp(1.8rem, 4vw, 3.5rem);
 }
 
-/* Sports cards */
+/* Sports cards — same dimensions and accent-frame treatment as the
+   /events/:id techsport card (.event-card-wrap / .event-card-accent /
+   .event-card in eventDetail.css), copied here as-is: 324px wrap with
+   22px padding around a 280x360 frame, accent split at the same 58/42
+   line. No hover lift/zoom/brightness though, and no box-shadow
+   transition — this card only ever shows a title, there's no
+   description reveal to animate toward, so it just sits at rest. */
 .lg-sport-card {
   position: relative;
   width: 100%;
-  max-width: 361px;
-  aspect-ratio: 361 / 446;
+  max-width: 324px;
   margin-inline: auto;
-  transition: transform 0.25s ease;
-}
-.lg-sport-card:hover {
-  transform: translateY(-8px);
+  padding: 22px;
 }
 .lg-sport-card__accent {
   position: absolute;
-  border-radius: 13px;
+  border-radius: 18px;
   background: linear-gradient(180deg, var(--lg-primary) 0%, var(--lg-secondary) 100%);
-  transition: filter 0.25s ease, transform 0.25s ease;
-}
-.lg-sport-card:hover .lg-sport-card__accent {
-  filter: brightness(1.15) saturate(1.1);
 }
 .lg-sport-card__accent--tl {
-  top: 4.48%; right: 60.11%; bottom: 45.07%; left: -5.82%;
-}
-.lg-sport-card:hover .lg-sport-card__accent--tl {
-  transform: translate(-4px, -4px);
+  top: 0; right: 58%; bottom: 42%; left: 0;
 }
 .lg-sport-card__accent--br {
-  top: 46.19%; right: -6.09%; bottom: 3.36%; left: 60.39%;
-}
-.lg-sport-card:hover .lg-sport-card__accent--br {
-  transform: translate(4px, 4px);
+  top: 42%; right: 0; bottom: 0; left: 58%;
 }
 .lg-sport-card__frame {
-  position: absolute;
-  top: 8.52%; right: 0; bottom: 7.85%; left: 0;
-  border-radius: 13px;
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  height: 360px;
+  aspect-ratio: 280 / 360;
+  border-radius: 20px;
   overflow: hidden;
   background: #000;
-  box-shadow: 0 10px 0 rgba(0, 0, 0, 0);
-  transition: box-shadow 0.25s ease;
-}
-.lg-sport-card:hover .lg-sport-card__frame {
-  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.35);
 }
 .lg-sport-card__img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.4s ease;
-}
-.lg-sport-card:hover .lg-sport-card__img {
-  transform: scale(1.06);
 }
 .lg-sport-card__label {
   position: absolute;
