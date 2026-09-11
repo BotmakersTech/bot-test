@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { ArrowRight, Trophy, UserPlus, MapPin, Rocket, Target } from "lucide-react";
+import { ArrowRight, Trophy, UserPlus, MapPin, Rocket, Target, Users, Wrench, TrendingUp } from "lucide-react";
 import PublicNavbar from "../../../shared/components/PublicNavbar";
 import { useLeagues, getLeagueBySlug, formatAgeRange } from "./useLeagues";
 import { GLOBAL_STAGE_GOLD } from "./leaguePresentation";
@@ -742,17 +742,49 @@ export default function LeagueDetailPage() {
       body: nextLeague ? "Qualify by performance — no applications" : "Compete for a spot on the international stage",
     },
   ];
+  const sportNames = sports.map((s) => s.sportName).join(", ");
   const journeySteps = [
-    { icon: UserPlus, title: "Join for free", body: "Create your national profile — no upfront cost to join the league." },
-    { icon: Target, title: "Choose your sport", body: "Pick from robotics, RC, drones, and the other technology challenges in " + league.shortName + "." },
-    { icon: MapPin, title: "Build & compete", body: "Take part at affiliated techfests and put your skills to the test." },
-    { icon: Trophy, title: "Earn your rank", body: "Every result adds to your national ranking and leaderboard position." },
+    {
+      icon: UserPlus,
+      title: "Create your profile",
+      body: "Set up your national profile — your teams, results, and rankings, all in one place.",
+    },
+    {
+      icon: Users,
+      title: "Create or join a team",
+      body: "Build your own crew or join friends who are already signed up, then pick your roles.",
+    },
+    {
+      icon: Target,
+      title: "Choose your sport",
+      body: sportNames ? `Pick what excites you — ${sportNames} — and build a strategy around it.` : "Pick what excites you and build a strategy around it.",
+    },
+    {
+      icon: Wrench,
+      title: "Build your machine",
+      body: "Design, code, test, and tune your machine until it's arena-ready.",
+    },
+    {
+      icon: MapPin,
+      title: "Register for an event",
+      body: "Find an affiliated IIT, BITS, or other techfest near you and lock in your spot.",
+    },
+    {
+      icon: Trophy,
+      title: "Enter the arena",
+      body: "Race. Battle. Solve. Score. Go head-to-head with other teams and fight for the win.",
+    },
+    {
+      icon: TrendingUp,
+      title: "Earn your rank",
+      body: "Every result adds to your national ranking — win more, climb higher.",
+    },
     {
       icon: Rocket,
       title: `Level up to ${nextName}${nextLeague ? " League" : ""}`,
       body: nextLeague
-        ? `Perform well in ${league.shortName} and progress toward the ${nextName} League.`
-        : "Strong performance here is the path to the international stage.",
+        ? `Strong ${league.shortName} results unlock your path to the ${nextName} League.`
+        : "Strong results here are the path to the international stage.",
     },
   ];
 
@@ -910,7 +942,7 @@ export default function LeagueDetailPage() {
       {/* ===== From first event to national rank ===== */}
       <section className="mx-auto max-w-[1180px] px-4 py-12 text-center">
         <h2 className="lg-section-heading mb-2">{league.journeyHeadline}</h2>
-        <p className="lg-sec-subhead mb-4">{league.shortName} is the beginning. Here&rsquo;s how the journey unfolds.</p>
+        <p className="lg-sec-subhead mb-4">{league.shortName} is where your journey begins — from your first profile to your first win.</p>
         <div>
           {journeySteps.map((step) => (
             <Reveal as="div" className="lg-jstep" key={step.title}>

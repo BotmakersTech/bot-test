@@ -53,7 +53,7 @@ export const LEAGUE_PRESENTATION: Record<string, LeaguePresentation> = {
       "No prior experience required. Every sport is designed to develop a real technical skill while giving you the excitement of real competition.",
     closerHeadline: "Start Small. Compete Big.",
     closerBody: "Your first competition is just the beginning.",
-    journeyHeadline: "From your first bot to your first win.",
+    journeyHeadline: "From Your First Build to Your First Win.",
     nextLabel: "Next league",
   },
   YOUNG_ENGINEERS: {
