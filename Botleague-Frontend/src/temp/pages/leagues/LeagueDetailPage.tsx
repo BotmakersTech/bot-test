@@ -764,7 +764,7 @@ export default function LeagueDetailPage() {
               See the sports
             </button>
           </div>
-          <p className="lg-hero-note mb-0">Free to register. Techfest fees set by each techfest.</p>
+          <p className="lg-hero-note mb-0">Free to register. Botleague Platform</p>
         </div>
       </section>
 

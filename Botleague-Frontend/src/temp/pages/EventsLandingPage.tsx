@@ -128,7 +128,7 @@ export default function EventsLandingPage() {
           <span className="events-hero-eyebrow">Techfests</span>
           <h1 className="events-hero-title">Innovate. Compete. Elevate.</h1>
           <p className="events-hero-subtitle">
-            Join innovators, developers and tech leaders at BotLeague&apos;s flagship event.
+            Join innovators, developers and tech leaders at BotLeague&apos;s  event.
           </p>
           <button
             type="button"
