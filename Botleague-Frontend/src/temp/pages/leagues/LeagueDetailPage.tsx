@@ -8,6 +8,14 @@ import { getPublicLeagueSports, type LeagueSport } from "../../../shared/api/cat
 import { getTopRanked, type GlobalRankingEntry } from "../../../feature/Rankings/api/rankings.api";
 import { sportKey } from "../../../feature/Event/utils/specPolicy";
 import { canonicalWeightClass } from "../../../feature/Robots/constants/weightClasses";
+import roboSumoImg from "../../../assets/ignite/robo_sumo.png";
+
+/** Real per-sport artwork, keyed by the sport's catalog name (lowercased).
+ *  Sports with no entry here fall back to the gradient + trophy-icon
+ *  placeholder — most sports have no artwork yet. */
+const SPORT_IMAGES: Record<string, string> = {
+  "robo sumo": roboSumoImg,
+};
 
 const BRAND_STYLES = `
 .lg-page {
@@ -365,6 +373,18 @@ const BRAND_STYLES = `
   background: linear-gradient(135deg, var(--lg-primary), var(--lg-secondary));
   color: rgba(255, 255, 255, 0.85);
 }
+.lg-sport-card__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.lg-sport-card__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, 0.65) 100%);
+}
 .lg-sport-card__label {
   position: absolute;
   left: 12px;
@@ -620,12 +640,20 @@ function primaryWeightClass(s: LeagueSport): string | undefined {
 }
 
 function SportCard({ title }: { title: string }) {
+  const image = SPORT_IMAGES[title.toLowerCase()];
   return (
     <div className="lg-sport-card">
       <span className="lg-sport-card__accent lg-sport-card__accent--tl" aria-hidden="true" />
       <span className="lg-sport-card__accent lg-sport-card__accent--br" aria-hidden="true" />
       <div className="lg-sport-card__frame">
-        <Trophy size={40} strokeWidth={1.5} aria-hidden="true" />
+        {image ? (
+          <>
+            <img src={image} alt="" className="lg-sport-card__img" aria-hidden="true" />
+            <span className="lg-sport-card__scrim" aria-hidden="true" />
+          </>
+        ) : (
+          <Trophy size={40} strokeWidth={1.5} aria-hidden="true" />
+        )}
         <span className="lg-sport-card__label">{title}</span>
       </div>
     </div>
