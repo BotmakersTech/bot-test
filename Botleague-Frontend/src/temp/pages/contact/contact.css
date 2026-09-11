@@ -4,9 +4,6 @@
   padding: 0 24px;
 }
 
-/* Present in the source stylesheet but not currently rendered by any
-   component here — kept for parity in case a "got a question" banner
-   variant gets wired in later. */
 .cu-question-banner {
   background: linear-gradient(180deg, #0162D1, #8C6CFF);
   padding: 90px 0;
@@ -49,16 +46,18 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 24px;
   margin-top: 24px;
+  align-items: stretch;
 }
 
 .cu-contact-card {
   width: 100%;
   max-width: 483px;
-  height: 300px;
+  min-height: 300px;
+  height: 100%;
   margin: auto;
   background: #949494;
   border-radius: 20px;
-  padding: 35px;
+  padding: 32px 28px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -74,35 +73,37 @@
 }
 
 .cu-icon-circle {
-  width: 77px;
-  height: 77px;
+  width: 64px;
+  height: 64px;
   background: #585858;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 28px;
+  font-size: 24px;
   color: white;
-  margin-bottom: 28px;
+  margin-bottom: 22px;
+  flex-shrink: 0;
 }
 
 .cu-contact-card h3 {
   font-family: 'Sarpanch';
-  font-size: 30px;
+  font-size: 22px;
   font-weight: 600;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   text-transform: uppercase;
   color: white;
-  line-height: 45px;
-  margin-bottom: 20px;
+  line-height: 30px;
+  margin-bottom: 14px;
 }
 
 .cu-contact-card p {
   font-family: 'Inter', sans-serif;
-  font-size: 18px;
-  line-height: 29px;
+  font-size: 15px;
+  line-height: 24px;
   color: white;
-  letter-spacing: 1px;
+  letter-spacing: 0.3px;
+  margin: 0;
 }
 
 @media (max-width: 992px) {
@@ -121,6 +122,8 @@
 
   .cu-contact-card {
     margin-bottom: 30px;
+    min-height: 0;
+    height: auto;
   }
 }
 
@@ -136,15 +139,16 @@
   }
 
   .cu-contact-card {
-    padding: 25px;
+    padding: 22px 20px;
   }
 
   .cu-contact-card h3 {
-    font-size: 24px;
-    line-height: 34px;
+    font-size: 19px;
+    line-height: 26px;
   }
 
   .cu-contact-card p {
-    font-size: 16px;
+    font-size: 14px;
+    line-height: 22px;
   }
 }
