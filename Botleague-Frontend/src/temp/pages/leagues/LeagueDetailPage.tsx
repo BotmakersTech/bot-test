@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Trophy } from "lucide-react";
 import PublicNavbar from "../../../shared/components/PublicNavbar";
 import { useLeagues, getLeagueBySlug } from "./useLeagues";
 import { GLOBAL_STAGE_GOLD } from "./leaguePresentation";
@@ -179,20 +179,22 @@ const BRAND_STYLES = `
 .lg-sport-card__frame {
   position: relative;
   z-index: 1;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   max-width: 280px;
   height: 360px;
   aspect-ratio: 280 / 360;
   border-radius: 20px;
   overflow: hidden;
-  background: #000;
-}
-.lg-sport-card__img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+  /* No real per-sport artwork exists yet (LeagueSport carries no image —
+     Sport.iconUrl is the closest field and every sport has it unset), so
+     this is an honest placeholder rather than a stand-in stock photo:
+     unrelated travel/landscape pictures under a sport's name read as
+     wrong, not just generic. */
+  background: linear-gradient(135deg, var(--lg-primary), var(--lg-secondary));
+  color: rgba(255, 255, 255, 0.85);
 }
 .lg-sport-card__label {
   position: absolute;
@@ -205,6 +207,40 @@ const BRAND_STYLES = `
   font-weight: 600;
   font-size: 1.1rem;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+.lg-sports-empty {
+  color: #8a8a8a;
+  font-size: 0.95rem;
+}
+
+/* Sports grid — desktop is 3 columns across 6 tracks (each card spans 2)
+   so a last row with 1 or 2 leftover cards can be shifted into the
+   middle instead of sitting pinned to the left with empty columns
+   beside it; same trick at the 2-column tablet tier. Mobile stays a
+   single column, where "leftover" isn't a thing. */
+.lg-sports-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+@media (min-width: 640px) {
+  .lg-sports-grid { grid-template-columns: repeat(4, 1fr); }
+  .lg-sports-grid > .lg-sport-card { grid-column: span 2; }
+  .lg-sports-grid > .lg-sport-card:nth-child(2n+1):nth-last-child(1) {
+    grid-column: 2 / span 2;
+  }
+}
+@media (min-width: 1024px) {
+  .lg-sports-grid { grid-template-columns: repeat(6, 1fr); }
+  .lg-sports-grid > .lg-sport-card:nth-child(3n+1):nth-last-child(1) {
+    grid-column: 3 / span 2;
+  }
+  .lg-sports-grid > .lg-sport-card:nth-child(3n+1):nth-last-child(2) {
+    grid-column: 2 / span 2;
+  }
+  .lg-sports-grid > .lg-sport-card:nth-child(3n+2):nth-last-child(1) {
+    grid-column: 4 / span 2;
+  }
 }
 .lg-see-more {
   background: linear-gradient(180deg, var(--lg-primary), var(--lg-secondary));
@@ -362,18 +398,16 @@ function Reveal({ as: Tag = "div", className = "", delay = 0, children, ...rest 
   );
 }
 
-function SportCard({ title, image, delay }: { title: string; image: string; delay: number }) {
+function SportCard({ title }: { title: string }) {
   return (
-    <Reveal as="div" delay={delay}>
-      <div className="lg-sport-card">
-        <span className="lg-sport-card__accent lg-sport-card__accent--tl" aria-hidden="true" />
-        <span className="lg-sport-card__accent lg-sport-card__accent--br" aria-hidden="true" />
-        <div className="lg-sport-card__frame">
-          <img src={image} alt={title} className="lg-sport-card__img" loading="lazy" />
-          <span className="lg-sport-card__label">{title}</span>
-        </div>
+    <div className="lg-sport-card">
+      <span className="lg-sport-card__accent lg-sport-card__accent--tl" aria-hidden="true" />
+      <span className="lg-sport-card__accent lg-sport-card__accent--br" aria-hidden="true" />
+      <div className="lg-sport-card__frame">
+        <Trophy size={40} strokeWidth={1.5} aria-hidden="true" />
+        <span className="lg-sport-card__label">{title}</span>
       </div>
-    </Reveal>
+    </div>
   );
 }
 
@@ -383,12 +417,19 @@ export default function LeagueDetailPage() {
   const { leagues, loading } = useLeagues();
   const league = getLeagueBySlug(leagues, slug);
   const [sports, setSports] = useState<LeagueSport[]>([]);
+  // Distinguishes "still loading" from "genuinely no sports yet" — sports
+  // starts empty either way, so without this the empty-state message
+  // would flash on screen for a moment on every load, before the real
+  // list comes in.
+  const [sportsLoading, setSportsLoading] = useState(true);
 
   useEffect(() => {
     if (!slug) return;
+    setSportsLoading(true);
     getPublicLeagueSports(slug)
       .then(setSports)
-      .catch(() => setSports([]));
+      .catch(() => setSports([]))
+      .finally(() => setSportsLoading(false));
   }, [slug]);
 
   if (!loading && !league) return <Navigate to="/" replace />;
@@ -472,11 +513,15 @@ export default function LeagueDetailPage() {
         <p className="text-[#515151] mb-10">
           Every event builds real technical depth. Here&rsquo;s what you&rsquo;ll actually learn — and what you&rsquo;ll be building with.
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {sports.map((s, i) => (
-            <SportCard key={s.sportId} title={s.sportName} image={`https://picsum.photos/seed/${s.sportSlug}/361/446`} delay={i * 90} />
-          ))}
-        </div>
+        {!sportsLoading && sports.length === 0 ? (
+          <p className="lg-sports-empty">Sports for this league haven&rsquo;t been published yet — check back soon.</p>
+        ) : (
+          <div className="lg-sports-grid">
+            {sports.map((s) => (
+              <SportCard key={s.sportId} title={s.sportName} />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ===== Compete. Rank. Prove it. ===== */}
@@ -544,7 +589,7 @@ export default function LeagueDetailPage() {
               <p className="text-[#393939] mb-6">
                 Browse all affiliated techfests filtered by city, sport, and date.
               </p>
-              <button className="btn lg-btn-gradient w-40" onClick={() => navigate("/events")}>
+              <button className="lg-btn-gradient w-full md:w-auto px-8 py-3" onClick={() => navigate("/events")}>
                 Browse events
               </button>
             </div>
