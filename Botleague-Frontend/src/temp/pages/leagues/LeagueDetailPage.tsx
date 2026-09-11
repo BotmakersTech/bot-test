@@ -416,7 +416,11 @@ const BRAND_STYLES = `
   text-align: left;
 }
 .lg-ranking-banner__top {
-  min-height: 268px;
+  /* No fixed min-height — this box used to always be exactly the header's
+     height (268px was sized for that alone), but now the champions list
+     is optional content inside it too; a fixed floor left a blank gap
+     under the header on a league with nothing ranked yet instead of the
+     box just hugging whatever's actually in it. */
   background: color-mix(in srgb, var(--lg-primary) 75%, transparent);
   display: flex;
   flex-direction: column;
