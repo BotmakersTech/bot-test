@@ -171,24 +171,32 @@
   font-size: clamp(24px, 4vw, 40px);
 }
 
+/* minmax(0, 324px) columns + justify-content: center, not 1fr — 1fr
+   stretched each column to a full third of the ~1300px content width
+   (~420px) while the card wrap caps at 324px, so ~100px of dead space
+   sat on either side of every card before the grid gap even started:
+   capping the columns to the wrap's own width and centering the row
+   is what actually closes that gap uniformly. */
 .events-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  grid-template-columns: repeat(3, minmax(0, 324px));
+  justify-content: center;
+  gap: 16px;
 }
 
-/* Wrapper — exact same 324px cap + 22px padding as the techsport card's
-   own .event-card-wrap (eventDetail.css), just without that one's
-   .event-card-accent--tl/--br corner decoration: no accent spans in the
-   markup here, so the padding is just breathing room around the card
-   instead of a frame reveal. */
+/* Wrapper — started as the exact 324px cap + 22px padding of the
+   techsport card's own .event-card-wrap (eventDetail.css), sized for
+   that card's .event-card-accent--tl/--br corner decoration. This card
+   has no accent spans, so that much padding was just dead space —
+   stacked on top of the grid gap it made the columns read as huge gaps
+   instead of a tight, evenly spaced row. Trimmed to breathing room only. */
 .events-grid .event-card-wrap {
   position: relative;
   width: 100%;
   min-width: 0;
   max-width: 324px;
   margin: 0 auto;
-  padding: 22px;
+  padding: 8px;
 }
 
 .events-grid .event-card {
@@ -441,7 +449,7 @@
 
 @media (max-width: 1024px) {
   .events-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 324px));
   }
 }
 
