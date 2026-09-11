@@ -244,12 +244,16 @@ const BRAND_STYLES = `
   gap: 0.6rem;
   text-align: left;
 }
+/* One line — icon, sport, robot name, team name, then points pushed to
+   the far right by the auto margin on .lg-rank-pts-wrap. flex-wrap so a
+   narrow phone width wraps instead of squeezing everything unreadable,
+   rather than trying to hold 5 pieces of info on one line no matter what. */
 .lg-rank-row {
-  display: grid;
-  grid-template-columns: 36px 1fr auto;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.85rem 1.1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem 0.7rem;
+  padding: 0.75rem 1.1rem;
   border-radius: 10px;
   border: 1px solid color-mix(in srgb, var(--lg-primary) 10%, #f5f0ff);
   background: #fdfcff;
@@ -257,19 +261,21 @@ const BRAND_STYLES = `
 /* Every row here is a sport's own #1 (see the champions effect), not a
    4th-place-through-1st ranking, so the badge is always the same "this
    is a champion" gold, not gold/silver/bronze. */
-.lg-rank-pos { display: flex; align-items: center; justify-content: center; color: #f59e0b; }
+.lg-rank-pos { display: flex; align-items: center; justify-content: center; align-self: center; color: #f59e0b; flex-shrink: 0; }
 .lg-rank-sport {
   font-size: 10.5px;
   font-weight: 700;
   color: var(--lg-primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 2px;
+  flex-shrink: 0;
 }
-.lg-rank-name { font-size: 18px; font-weight: 700; color: #1a1a2e; line-height: 1.3; }
-.lg-rank-school { font-size: 12px; color: #999; margin-top: 2px; }
-.lg-rank-pts { font-weight: 800; font-size: 17px; color: var(--lg-primary); text-align: right; }
-.lg-rank-pts-label { font-size: 10px; color: #bbb; text-align: right; }
+.lg-rank-name { font-size: 15px; font-weight: 700; color: #1a1a2e; }
+.lg-rank-school { font-size: 12px; color: #999; }
+.lg-rank-school::before { content: "—"; margin-right: 0.5rem; color: #ccc; }
+.lg-rank-pts-wrap { display: flex; align-items: baseline; gap: 0.3rem; margin-left: auto; flex-shrink: 0; }
+.lg-rank-pts { font-weight: 800; font-size: 15px; color: var(--lg-primary); }
+.lg-rank-pts-label { font-size: 10px; color: #bbb; }
 
 /* Journey steps — replaces what used to be an empty placeholder box */
 .lg-jstep {
@@ -375,7 +381,9 @@ const BRAND_STYLES = `
 .lg-sports-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.5rem;
+  /* row-gap column-gap — more breathing room between rows than between
+     cards in the same row. */
+  gap: 3rem 1.5rem;
 }
 @media (min-width: 640px) {
   .lg-sports-grid { grid-template-columns: repeat(4, 1fr); }
@@ -472,7 +480,7 @@ const BRAND_STYLES = `
   padding: clamp(1.25rem, 3vw, 2.75rem);
 }
 .lg-ranking-banner h3 {
-  font-family: 'Sarpanch', sans-serif;
+  font-family: 'Orbitron', sans-serif;
   font-weight: 700;
   font-size: clamp(1.5rem, 4vw, 2.9rem);
   margin: 0 0 0.5rem;
@@ -519,7 +527,7 @@ const BRAND_STYLES = `
   font-size: 1.1rem;
 }
 .lg-next-name {
-  font-family: 'Sarpanch', sans-serif;
+  font-family: 'Orbitron', sans-serif;
   font-weight: 800;
   color: var(--lg-next);
   font-size: 1.5rem;
@@ -543,7 +551,7 @@ const BRAND_STYLES = `
   box-shadow: 0 14px 26px rgba(0, 0, 0, 0.1);
 }
 .lg-cta-title {
-  font-family: 'Sarpanch', sans-serif;
+  font-family: 'Orbitron', sans-serif;
   font-weight: 600;
 }
 `;
@@ -859,18 +867,16 @@ export default function LeagueDetailPage() {
               <div className="lg-rank-list">
                 {champions.map(({ sport, entry }) => (
                   <div className="lg-rank-row" key={sport.sportId}>
-                    <div className="lg-rank-pos" aria-hidden="true">
-                      <Trophy size={18} strokeWidth={2} />
-                    </div>
-                    <div>
-                      <div className="lg-rank-sport">{sport.sportName} &middot; #1</div>
-                      <div className="lg-rank-name">{entry.robotName || "Unnamed robot"}</div>
-                      <div className="lg-rank-school">{entry.teamName}</div>
-                    </div>
-                    <div>
-                      <div className="lg-rank-pts">{entry.totalPoints.toLocaleString()}</div>
-                      <div className="lg-rank-pts-label">points</div>
-                    </div>
+                    <span className="lg-rank-pos" aria-hidden="true">
+                      <Trophy size={16} strokeWidth={2} />
+                    </span>
+                    <span className="lg-rank-sport">{sport.sportName} &middot; #1</span>
+                    <span className="lg-rank-name">{entry.robotName || "Unnamed robot"}</span>
+                    <span className="lg-rank-school">{entry.teamName}</span>
+                    <span className="lg-rank-pts-wrap">
+                      <span className="lg-rank-pts">{entry.totalPoints.toLocaleString()}</span>
+                      <span className="lg-rank-pts-label">points</span>
+                    </span>
                   </div>
                 ))}
               </div>
