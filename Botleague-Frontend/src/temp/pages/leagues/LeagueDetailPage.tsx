@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { ArrowRight, Trophy, UserPlus, MapPin, Rocket, Target, Users, Wrench, TrendingUp } from "lucide-react";
+import { ArrowRight, Trophy } from "lucide-react";
 import PublicNavbar from "../../../shared/components/PublicNavbar";
 import { useLeagues, getLeagueBySlug, formatAgeRange } from "./useLeagues";
 import { GLOBAL_STAGE_GOLD } from "./leaguePresentation";
@@ -293,32 +293,6 @@ const BRAND_STYLES = `
 .lg-rank-pts-wrap { display: flex; align-items: baseline; gap: 0.3rem; margin-left: auto; flex-shrink: 0; }
 .lg-rank-pts { font-weight: 800; font-size: 15px; color: var(--lg-primary); }
 .lg-rank-pts-label { font-size: 10px; color: #bbb; }
-
-/* Journey steps — replaces what used to be an empty placeholder box */
-.lg-jstep {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 1.1rem 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--lg-primary) 10%, #f5f0ff);
-  text-align: left;
-  max-width: 640px;
-  margin-inline: auto;
-}
-.lg-jstep:last-child { border-bottom: none; }
-.lg-jicon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--lg-primary), var(--lg-secondary));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  flex-shrink: 0;
-}
-.lg-jtext strong { display: block; font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 3px; }
-.lg-jtext span { font-size: 13px; color: #666; line-height: 1.5; }
 
 /* Section heading */
 .lg-section-heading {
@@ -770,52 +744,6 @@ export default function LeagueDetailPage() {
       body: nextLeague ? "Qualify by performance — no applications" : "Compete for a spot on the international stage",
     },
   ];
-  const sportNames = sports.map((s) => s.sportName).join(", ");
-  const journeySteps = [
-    {
-      icon: UserPlus,
-      title: "Create your profile",
-      body: "Your teams, results, and rankings — all in one place.",
-    },
-    {
-      icon: Users,
-      title: "Create or join a team",
-      body: "Build your own crew, or join friends already signed up.",
-    },
-    {
-      icon: Target,
-      title: "Choose your sport",
-      body: sportNames ? `Pick what excites you — ${sportNames}.` : "Pick what excites you.",
-    },
-    {
-      icon: Wrench,
-      title: "Build your machine",
-      body: "Design, code, and tune it until it's arena-ready.",
-    },
-    {
-      icon: MapPin,
-      title: "Register for an event",
-      body: "Find a techfest near you and lock in your spot.",
-    },
-    {
-      icon: Trophy,
-      title: "Enter the arena",
-      body: "Race. Battle. Score. Fight for the win.",
-    },
-    {
-      icon: TrendingUp,
-      title: "Earn your rank",
-      body: "Every result climbs your national ranking.",
-    },
-    {
-      icon: Rocket,
-      title: `Level up to ${nextName}${nextLeague ? " League" : ""}`,
-      body: nextLeague
-        ? `Strong ${league.shortName} results unlock your path to ${nextName}.`
-        : "Strong results here are the path to the international stage.",
-    },
-  ];
-
   const scrollToSports = () => {
     document.getElementById("sports")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -964,25 +892,6 @@ export default function LeagueDetailPage() {
               {" "}{league.rankingScope}. Public, permanent, verifiable.
             </p>
           </Reveal>
-        </div>
-      </section>
-
-      {/* ===== From first event to national rank ===== */}
-      <section className="mx-auto max-w-[1180px] px-4 py-12 text-center">
-        <h2 className="lg-section-heading mb-2">{league.journeyHeadline}</h2>
-        <p className="lg-sec-subhead mb-4">{league.shortName} is where your journey begins.</p>
-        <div>
-          {journeySteps.map((step) => (
-            <Reveal as="div" className="lg-jstep" key={step.title}>
-              <div className="lg-jicon" aria-hidden="true">
-                <step.icon size={18} strokeWidth={2} />
-              </div>
-              <div className="lg-jtext">
-                <strong>{step.title}</strong>
-                <span>{step.body}</span>
-              </div>
-            </Reveal>
-          ))}
         </div>
       </section>
 
