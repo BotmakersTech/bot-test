@@ -630,14 +630,45 @@ export default function LeagueDetailPage() {
       return;
     }
     let cancelled = false;
-    Promise.all(
-      sports.map((s) =>
-        getTopRanked({ sport: sportKey(s.sportName), ageGroup: league.ageGroupValue, weightClass: primaryWeightClass(s), n: 1 })
-          .then((entries) => (entries[0] ? { sport: s, entry: entries[0] } : null))
-          .catch(() => null)
-      )
-    ).then((results) => {
-      if (!cancelled) setChampions(results.filter((r): r is { sport: LeagueSport; entry: GlobalRankingEntry } => r != null));
+
+    // Tries the sport's own weight class first (the correct pool for a
+    // league where one sport has several — e.g. Apex RoboWar's 8/15/30/60kg
+    // rows). If that comes back empty, retries with no weight class at
+    // all: the ranking pool query treats an omitted weightClass as "any"
+    // (see RankingRepository.findPoolOrderedByPoints's own "IS NULL OR"),
+    // so this still finds a real #1 pushed under a weight-class spelling
+    // that didn't fold to exactly what this page computed, instead of
+    // reporting "no ranking" for a sport that actually has one.
+    const fetchChampion = async (s: LeagueSport) => {
+      const sport = sportKey(s.sportName);
+      const ageGroup = league.ageGroupValue;
+      const weightClass = primaryWeightClass(s);
+      try {
+        if (weightClass) {
+          const exact = await getTopRanked({ sport, ageGroup, weightClass, n: 1 });
+          if (exact[0]) return { sport: s, entry: exact[0] };
+        }
+        const any = await getTopRanked({ sport, ageGroup, n: 1 });
+        return any[0] ? { sport: s, entry: any[0] } : null;
+      } catch {
+        return null;
+      }
+    };
+
+    Promise.all(sports.map(fetchChampion)).then((results) => {
+      if (cancelled) return;
+      const found = results.filter((r): r is { sport: LeagueSport; entry: GlobalRankingEntry } => r != null);
+      // The no-weight-class fallback above can hand back the same robot
+      // for more than one of a sport's weight-class rows (e.g. Apex
+      // RoboWar's 8/15/30/60kg) when the exact match keeps missing — one
+      // row per distinct champion robot, not per LeagueSport row.
+      const seen = new Set<string>();
+      setChampions(found.filter(({ entry }) => {
+        const key = entry.robotId ?? `${entry.teamId}:${entry.sport}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      }));
     });
     return () => {
       cancelled = true;
