@@ -601,8 +601,13 @@
     --colorSecondary: #54E4EC;
 }
 .evd-page .cards {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  /* 3 columns on desktop — the 1200/900px media queries just below already
+     step this down to 2 (and the 900px one further compacts the card
+     itself); they were written for a grid .cards and had nothing to act
+     on while this stayed flex, which is what left the page showing 2 per
+     row well past the width 3 should fit at. */
+  grid-template-columns: repeat(3, 1fr);
   gap: 36px 28px;           /* extra row-gap for the top-offset frame */
   position: relative;
   z-index: 2;
