@@ -14,6 +14,24 @@
  * just without bespoke copy until someone adds an entry here.
  */
 
+import { UserPlus, Users, Target, Wrench, MapPin, Trophy, TrendingUp, Rocket, type LucideIcon } from "lucide-react";
+
+/** Values a journey step's title/body can reference — computed per-render
+ *  in the component (real sport names, the actual next league), not data
+ *  this static file can know on its own. */
+export interface JourneyCtx {
+  shortName: string;
+  nextName: string;
+  hasNext: boolean;
+  sportNames: string;
+}
+
+export interface JourneyStep {
+  icon: LucideIcon;
+  title: string | ((ctx: JourneyCtx) => string);
+  body: string | ((ctx: JourneyCtx) => string);
+}
+
 export interface LeaguePresentation {
   imgGradient: string;
   textGradient: string;
@@ -24,16 +42,30 @@ export interface LeaguePresentation {
   desc: string;
   cta: string;
   whyHeadline: string;
+  /** The pain-point subhead, parameterized by the already-formatted age
+   *  range (e.g. "8–11") so each league can phrase its own lead-in — "For
+   *  young builders aged X — ..." vs "For builders aged X who are ready
+   *  to..." — while the age computation itself stays in the component. */
+  subhead: (ageRange: string) => string;
   whyBody: string;
   /** A second "why" paragraph, shown right under whyBody — same
    *  presentation-only reasoning as the rest of this file: per-league
    *  narrative copy the admin-editable League entity has no field for. */
   whySecondaryBody: string;
+  /** An optional third block ("The Competition Gets Real.") — only some
+   *  leagues have this extra beat yet, so it's optional rather than
+   *  forcing every league to have filler text here. */
+  competitionHeadline?: string;
+  competitionBody?: string;
   /** A short closing tagline shown at the end of the "why" card — same
    *  presentation-only reasoning as the rest of this file. */
   closerHeadline: string;
   closerBody: string;
   journeyHeadline: string;
+  /** Optional per-league journey steps — optional because not every
+   *  league has bespoke step copy yet; leagues without it simply don't
+   *  render a journey section rather than showing generic filler. */
+  journeySteps?: JourneyStep[];
   nextLabel: string;
 }
 
@@ -47,6 +79,9 @@ export const LEAGUE_PRESENTATION: Record<string, LeaguePresentation> = {
     desc: "Perfect for beginners. Learn robotics, compete in your first techfests, and build confidence.",
     cta: "Enter Ignite",
     whyHeadline: "Where young builders start competing.",
+    subhead: (age) =>
+      (age ? `For young builders aged ${age} — ` : "") +
+      "the league where learning and competing happen at the same time, alongside peers at your own level.",
     whyBody:
       "Ignite is the entry-level technology competition league for young builders. From robotics and RC racing to drones, autonomous challenges, and more, Ignite gives beginners a place to learn, build, compete, and grow alongside others at their level.",
     whySecondaryBody:
@@ -54,6 +89,27 @@ export const LEAGUE_PRESENTATION: Record<string, LeaguePresentation> = {
     closerHeadline: "Start Small. Compete Big.",
     closerBody: "Your first competition is just the beginning.",
     journeyHeadline: "From Your First Build to Your First Win.",
+    journeySteps: [
+      { icon: UserPlus, title: "Create your profile", body: "Your teams, results, and rankings — all in one place." },
+      { icon: Users, title: "Create or join a team", body: "Build your own crew, or join friends already signed up." },
+      {
+        icon: Target,
+        title: "Choose your sport",
+        body: (ctx) => (ctx.sportNames ? `Pick what excites you — ${ctx.sportNames}.` : "Pick what excites you."),
+      },
+      { icon: Wrench, title: "Build your machine", body: "Design, code, and tune it until it's arena-ready." },
+      { icon: MapPin, title: "Register for an event", body: "Find a techfest near you and lock in your spot." },
+      { icon: Trophy, title: "Enter the arena", body: "Race. Battle. Score. Fight for the win." },
+      { icon: TrendingUp, title: "Earn your rank", body: "Every result climbs your national ranking." },
+      {
+        icon: Rocket,
+        title: (ctx) => `Level up to ${ctx.nextName}${ctx.hasNext ? " League" : ""}`,
+        body: (ctx) =>
+          ctx.hasNext
+            ? `Strong ${ctx.shortName} results unlock your path to ${ctx.nextName}.`
+            : "Strong results here are the path to the international stage.",
+      },
+    ],
     nextLabel: "Next league",
   },
   YOUNG_ENGINEERS: {
@@ -64,14 +120,54 @@ export const LEAGUE_PRESENTATION: Record<string, LeaguePresentation> = {
     colorSecondary: "#ffdd55",
     desc: "For rising builders. Sharper rules, tougher arenas, and matches that count toward your national ranking.",
     cta: "Enter Inferno",
-    whyHeadline: "You're winning at your college fest. Nobody outside your campus knows.",
+    whyHeadline: "Your Techfest Win Shouldn't End at Your Techfest.",
+    subhead: (age) => (age ? `For builders aged ${age} ` : "") + "who are ready to compete at the next level.",
     whyBody:
-      "Inferno turns local wins into a national ranking — every affiliated techfest you enter counts toward the same all-India table.",
+      "You've built it. You've competed. Maybe you've even won — but how do you know where you stand beyond your campus? Inferno turns your local results into a national ranking.",
     whySecondaryBody:
-      "The rules get sharper and the arenas get tougher. Every sport in Inferno is judged at a higher standard than Ignite — you're not repeating a beginner event, you're being tested at the next level.",
+      "Compete at affiliated IIT, BITS, and other techfests across India and build your position on one national leaderboard — alongside the best competitors in your age group.",
+    competitionHeadline: "The Competition Gets Real.",
+    competitionBody:
+      "Inferno moves you beyond beginner-level challenges — tighter rules, tougher arenas, and sports tested against deeper technical skill, smarter strategy, and performance under pressure. You're not just participating. You're proving where you stand.",
     closerHeadline: "Win Local. Rank National.",
-    closerBody: "Every affiliated techfest you enter moves you up the table.",
-    journeyHeadline: "From first techfest to national rank.",
+    closerBody: "Compete, earn points, climb the leaderboard, get noticed. Trophies stay at the event — your ranking follows you everywhere.",
+    journeyHeadline: "From First Techfest to National Rank.",
+    journeySteps: [
+      {
+        icon: UserPlus,
+        title: "Create your profile",
+        body: "Your teams, competitions, results, and rankings — all in one place.",
+      },
+      {
+        icon: Users,
+        title: "Create or join a team",
+        body: "Build your squad — bring together the builders, coders, and strategists you need.",
+      },
+      {
+        icon: Target,
+        title: "Choose your sport",
+        body: (ctx) => (ctx.sportNames ? `Pick your arena — ${ctx.sportNames}.` : "Pick your arena."),
+      },
+      {
+        icon: MapPin,
+        title: "Register for a techfest",
+        body: "Find an affiliated techfest and take your team to the arena.",
+      },
+      { icon: Trophy, title: "Compete & win", body: "Race. Battle. Build. Solve. Score. Fight for the top spot." },
+      {
+        icon: TrendingUp,
+        title: "Earn your rank",
+        body: "Every result adds to your national ranking — win more, rank higher.",
+      },
+      {
+        icon: Rocket,
+        title: (ctx) => `Level up to ${ctx.nextName}${ctx.hasNext ? " League" : ""}`,
+        body: (ctx) =>
+          ctx.hasNext
+            ? `Finish strong in ${ctx.shortName} and earn your path to ${ctx.nextName}.`
+            : "Finish strong here and you're on the path to the international stage.",
+      },
+    ],
     nextLabel: "Next league",
   },
   ROBO_MINDS: {
@@ -89,6 +185,9 @@ export const LEAGUE_PRESENTATION: Record<string, LeaguePresentation> = {
     desc: "The top tier. Elite arenas, national spotlight, and a straight line to Battle of Robots, Russia.",
     cta: "Enter Apex",
     whyHeadline: "You've outgrown your college fest.",
+    subhead: (age) =>
+      (age ? `For young builders aged ${age} — ` : "") +
+      "the league where learning and competing happen at the same time, alongside peers at your own level.",
     whyBody: "Apex is the open circuit — where national champions get scouted for the international stage, Battle of Robots, Russia.",
     whySecondaryBody:
       "Every sport in Apex is judged at national-championship standard. This isn't about climbing a ranking anymore — it's where builders get scouted.",
@@ -111,6 +210,9 @@ const FALLBACK_GRADIENT: LeaguePresentation = {
   desc: "Compete, rank, and prove it.",
   cta: "Enter league",
   whyHeadline: "A new stage to compete on.",
+  subhead: (age) =>
+    (age ? `For young builders aged ${age} — ` : "") +
+    "the league where learning and competing happen at the same time, alongside peers at your own level.",
   whyBody: "Every match here counts toward your ranking.",
   whySecondaryBody: "No prior experience needed — every sport here is designed to teach you a real technical skill while you compete.",
   closerHeadline: "Compete. Rank. Repeat.",

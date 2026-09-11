@@ -3,7 +3,7 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { ArrowRight, Trophy } from "lucide-react";
 import PublicNavbar from "../../../shared/components/PublicNavbar";
 import { useLeagues, getLeagueBySlug, formatAgeRange } from "./useLeagues";
-import { GLOBAL_STAGE_GOLD } from "./leaguePresentation";
+import { GLOBAL_STAGE_GOLD, type JourneyCtx } from "./leaguePresentation";
 import { getPublicLeagueSports, type LeagueSport } from "../../../shared/api/catalog.api";
 import { getTopRanked, type GlobalRankingEntry } from "../../../feature/Rankings/api/rankings.api";
 import { sportKey } from "../../../feature/Event/utils/specPolicy";
@@ -294,6 +294,32 @@ const BRAND_STYLES = `
 .lg-rank-pts { font-weight: 800; font-size: 15px; color: var(--lg-primary); }
 .lg-rank-pts-label { font-size: 10px; color: #bbb; }
 
+/* Journey steps */
+.lg-jstep {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.1rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--lg-primary) 10%, #f5f0ff);
+  text-align: left;
+  max-width: 640px;
+  margin-inline: auto;
+}
+.lg-jstep:last-child { border-bottom: none; }
+.lg-jicon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--lg-primary), var(--lg-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+.lg-jtext strong { display: block; font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 3px; }
+.lg-jtext span { font-size: 13px; color: #666; line-height: 1.5; }
+
 /* Section heading */
 .lg-section-heading {
   font-family: 'Orbitron', sans-serif;
@@ -543,6 +569,45 @@ const BRAND_STYLES = `
   padding: 0.75rem 1.5rem;
 }
 
+/* League ladder — the current league's own step is highlighted, the
+   other two stay neutral so the row still reads as one shared ladder
+   rather than 3 competing accents. */
+.lg-ladder {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.lg-ladder-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.lg-ladder-step {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+  color: #b3b3b3;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: 1.5px solid #e5e5e5;
+}
+.lg-ladder-step--active {
+  color: var(--lg-primary);
+  border-color: var(--lg-primary);
+  background: color-mix(in srgb, var(--lg-primary) 10%, transparent);
+}
+.lg-ladder-arrow { color: #c9c9c9; display: flex; }
+.lg-ladder-tagline {
+  margin-top: 1.25rem;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--lg-primary);
+}
+
 /* CTA cards */
 .lg-cta-card {
   background: #fff;
@@ -744,6 +809,13 @@ export default function LeagueDetailPage() {
       body: nextLeague ? "Qualify by performance — no applications" : "Compete for a spot on the international stage",
     },
   ];
+  const sportNames = sports.map((s) => s.sportName).join(", ");
+  const journeyCtx: JourneyCtx = { shortName: league.shortName, nextName, hasNext: !!nextLeague, sportNames };
+  const resolve = (v: string | ((ctx: JourneyCtx) => string)) => (typeof v === "function" ? v(journeyCtx) : v);
+  // Sorted by age rather than trusting catalog return order — the ladder
+  // needs Ignite -> Inferno -> Apex regardless of how the API orders them.
+  const ladderLeagues = [...leagues].sort((a, b) => (a.minAge ?? 0) - (b.minAge ?? 0));
+
   const scrollToSports = () => {
     document.getElementById("sports")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -790,12 +862,7 @@ export default function LeagueDetailPage() {
       <section className="mx-auto max-w-[1180px] px-4 py-8 text-center">
         <div className="lg-sec-tag">About {league.shortName}</div>
         <h2 className="lg-pain-title mb-2">{league.whyHeadline}</h2>
-        <p className="lg-sec-subhead mb-4">
-          {formatAgeRange(league.minAge, league.maxAge)
-            ? `For young builders aged ${formatAgeRange(league.minAge, league.maxAge)} — `
-            : ""}
-          the league where learning and competing happen at the same time, alongside peers at your own level.
-        </p>
+        <p className="lg-sec-subhead mb-4">{league.subhead(formatAgeRange(league.minAge, league.maxAge))}</p>
         <p className="lg-ticker text-[#666] text-sm uppercase mb-0">
           IIT Bombay Techfest &middot; BITS Pilani &middot; IIT Roorkee &middot; IIT Bombay Techfest &middot; BITS Pilani
         </p>
@@ -808,6 +875,11 @@ export default function LeagueDetailPage() {
             <div>
               <p className="lg-card-body">{league.whyBody}</p>
               <p className="lg-card-body">{league.whySecondaryBody}</p>
+              {league.competitionHeadline && league.competitionBody && (
+                <p className="lg-about-closer">
+                  <strong>{league.competitionHeadline}</strong> {league.competitionBody}
+                </p>
+              )}
               <div className="lg-about-callout">
                 <p>
                   Competing in {league.shortName} earns you a national ranking. Finish strong and you&rsquo;re on the
@@ -895,6 +967,27 @@ export default function LeagueDetailPage() {
         </div>
       </section>
 
+      {/* ===== Journey steps — only leagues with real per-league step
+           copy render this; there's no generic filler fallback. ===== */}
+      {league.journeySteps && league.journeySteps.length > 0 && (
+        <section className="mx-auto max-w-[1180px] px-4 py-12 text-center">
+          <h2 className="lg-section-heading mb-2">{league.journeyHeadline}</h2>
+          <div>
+            {league.journeySteps.map((step) => (
+              <Reveal as="div" className="lg-jstep" key={resolve(step.title)}>
+                <div className="lg-jicon" aria-hidden="true">
+                  <step.icon size={18} strokeWidth={2} />
+                </div>
+                <div className="lg-jtext">
+                  <strong>{resolve(step.title)}</strong>
+                  <span>{resolve(step.body)}</span>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* ===== Next league banner ===== */}
       <section className="mx-auto max-w-[1180px] px-4 py-4">
         <div
@@ -913,6 +1006,27 @@ export default function LeagueDetailPage() {
             <span className="lg-next-link inline-block">Battle of Robots, Russia</span>
           )}
         </div>
+      </section>
+
+      {/* ===== League ladder ===== */}
+      <section className="mx-auto max-w-[1180px] px-4 py-10 text-center">
+        <div className="lg-sec-tag">From Campus to Country</div>
+        <p className="lg-sec-subhead mb-4">Your next win could change your national rank.</p>
+        <div className="lg-ladder">
+          {ladderLeagues.map((l, i) => (
+            <span className="lg-ladder-item" key={l.id}>
+              <span className={l.id === league.id ? "lg-ladder-step lg-ladder-step--active" : "lg-ladder-step"}>
+                {l.shortName.toUpperCase()}
+              </span>
+              {i < ladderLeagues.length - 1 && (
+                <span className="lg-ladder-arrow" aria-hidden="true">
+                  <ArrowRight size={16} />
+                </span>
+              )}
+            </span>
+          ))}
+        </div>
+        <p className="lg-ladder-tagline">Start. Compete. Prove. Rise.</p>
       </section>
 
       {/* ===== CTA cards ===== */}
