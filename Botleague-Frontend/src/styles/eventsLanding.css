@@ -177,18 +177,34 @@
   gap: 24px;
 }
 
+/* Wrapper — exact same 324px cap + 22px padding as the techsport card's
+   own .event-card-wrap (eventDetail.css), just without that one's
+   .event-card-accent--tl/--br corner decoration: no accent spans in the
+   markup here, so the padding is just breathing room around the card
+   instead of a frame reveal. */
+.events-grid .event-card-wrap {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  max-width: 324px;
+  margin: 0 auto;
+  padding: 22px;
+}
+
 .events-grid .event-card {
   position: relative;
   display: block;
   width: 100%;
-  /* Portrait poster proportions — taller than wide — so the techfest
-     artwork reads like an event poster rather than a wide banner. */
-  aspect-ratio: 3 / 4;
+  /* 280x360 — same exact size as the techsport card (eventDetail.css's
+     .evd-page .event-card), not the portrait-poster 3/4 this used to be. */
+  max-width: 280px;
+  height: 360px;
+  aspect-ratio: 280 / 360;
   border-radius: 20px;
   overflow: hidden;
   border: none;
   padding: 0;
-  margin: 0;
+  margin: 0 auto;
   cursor: pointer;
   background: rgba(125, 155, 238, 0.41);
   text-align: left;
@@ -473,12 +489,15 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  .events-grid .event-card {
+  /* .event-card-wrap, not .event-card — the wrap is .events-grid's direct
+     child now (event-card sits inside it), so it's the one that needs to
+     be the flex item here; .event-card still shrinks to fit underneath
+     it automatically via its own width:100%/max-width:280px. */
+  .events-grid .event-card-wrap {
     flex: 0 0 auto;
-    /* Narrower here than the old landscape card — at the 3/4 ratio this
-       keeps the portrait card from running too tall in the scroll strip. */
     width: min(64vw, 260px);
     scroll-snap-align: start;
+    padding: 12px;
   }
 
   .events-empty {

@@ -43,34 +43,36 @@ function EventCard({ event, completed, onClick }: { event: EventResponse; comple
   };
 
   return (
-    <div className="event-card" role="button" tabIndex={0} onClick={onClick} onKeyDown={handleKeyDown}>
-      <div className="event-card-image">
-        {event.eventThumbnailUrl || event.eventLogoUrl ? (
-          <img src={event.eventThumbnailUrl ?? event.eventLogoUrl} alt={event.eventName} />
-        ) : (
-          <EventThumbnailFallback />
-        )}
-        <span className={completed ? "event-card-badge completed" : "event-card-badge"}>
-          {completed ? "Completed" : event.status === "LIVE" ? "Live" : "Upcoming"}
-        </span>
-      </div>
-      <div className="event-card-body">
-        <h3 className="event-card-name">{event.eventName}</h3>
-        <div className="event-card-meta">
-          <div className="event-card-meta-row">
-            <Calendar size={13} />
-            <span>{formatDateRange(event.startDate, event.endDate)}</span>
-          </div>
-          {locationLabel(event) && (
-            <div className="event-card-meta-row">
-              <MapPin size={13} />
-              <span>{locationLabel(event)}</span>
-            </div>
+    <div className="event-card-wrap">
+      <div className="event-card" role="button" tabIndex={0} onClick={onClick} onKeyDown={handleKeyDown}>
+        <div className="event-card-image">
+          {event.eventThumbnailUrl || event.eventLogoUrl ? (
+            <img src={event.eventThumbnailUrl ?? event.eventLogoUrl} alt={event.eventName} />
+          ) : (
+            <EventThumbnailFallback />
           )}
+          <span className={completed ? "event-card-badge completed" : "event-card-badge"}>
+            {completed ? "Completed" : event.status === "LIVE" ? "Live" : "Upcoming"}
+          </span>
         </div>
-        <span className="event-card-view-details">
-          View Details <ArrowRight size={13} />
-        </span>
+        <div className="event-card-body">
+          <h3 className="event-card-name">{event.eventName}</h3>
+          <div className="event-card-meta">
+            <div className="event-card-meta-row">
+              <Calendar size={13} />
+              <span>{formatDateRange(event.startDate, event.endDate)}</span>
+            </div>
+            {locationLabel(event) && (
+              <div className="event-card-meta-row">
+                <MapPin size={13} />
+                <span>{locationLabel(event)}</span>
+              </div>
+            )}
+          </div>
+          <span className="event-card-view-details">
+            View Details <ArrowRight size={13} />
+          </span>
+        </div>
       </div>
     </div>
   );
