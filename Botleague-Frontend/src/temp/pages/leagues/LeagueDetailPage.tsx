@@ -142,6 +142,153 @@ const BRAND_STYLES = `
   color: #3c3c3c;
   font-size: 1.1rem;
 }
+.lg-card-body + .lg-card-body {
+  margin-top: 0.75rem;
+}
+
+/* "About {league}" tag above the pain-point headline, and the subhead
+   line under it. */
+.lg-sec-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--lg-primary);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.lg-sec-subhead {
+  font-size: 1rem;
+  color: #555;
+  max-width: 560px;
+  margin: 0.5rem auto 0;
+  line-height: 1.6;
+}
+
+/* Win-locally card's own two-column layout: whyBody/whySecondaryBody +
+   the callout on the left, the onboarding steps on the right. */
+.lg-about-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: start;
+  text-align: left;
+  margin-top: 1.5rem;
+}
+@media (min-width: 900px) {
+  .lg-about-grid { grid-template-columns: 1fr 1fr; }
+}
+.lg-about-callout {
+  background: color-mix(in srgb, var(--lg-primary) 8%, #fff);
+  border-left: 4px solid var(--lg-primary);
+  border-radius: 0 10px 10px 0;
+  padding: 1.1rem 1.35rem;
+  margin-top: 1.25rem;
+}
+.lg-about-callout p {
+  font-size: 0.9rem;
+  color: #3c2a63;
+  margin: 0;
+  font-weight: 500;
+  line-height: 1.6;
+}
+.lg-steps-card {
+  background: #fff;
+  border: 1px solid color-mix(in srgb, var(--lg-primary) 18%, #ede9fe);
+  border-radius: 16px;
+  padding: 0.5rem 1.5rem;
+}
+.lg-step-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--lg-primary) 10%, #f5f0ff);
+}
+.lg-step-row:last-child { border-bottom: none; }
+.lg-step-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--lg-primary) 10%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--lg-primary) 30%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--lg-primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.lg-step-info strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 3px;
+}
+.lg-step-info span {
+  font-size: 12px;
+  color: #888;
+  line-height: 1.5;
+}
+
+/* Ranking leaderboard rows */
+.lg-rank-list {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  text-align: left;
+}
+.lg-rank-row {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 1rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--lg-primary) 10%, #f5f0ff);
+  background: #fdfcff;
+}
+.lg-rank-pos {
+  font-weight: 800;
+  font-size: 14px;
+  color: #bbb;
+}
+.lg-rank-pos.gold { color: #f59e0b; }
+.lg-rank-pos.silver { color: #94a3b8; }
+.lg-rank-pos.bronze { color: #b87333; }
+.lg-rank-name { font-size: 14px; font-weight: 600; color: #1a1a2e; }
+.lg-rank-school { font-size: 11px; color: #999; margin-top: 2px; }
+.lg-rank-pts { font-weight: 800; font-size: 16px; color: var(--lg-primary); text-align: right; }
+.lg-rank-pts-label { font-size: 10px; color: #bbb; text-align: right; }
+
+/* Journey steps — replaces what used to be an empty placeholder box */
+.lg-jstep {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.1rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--lg-primary) 10%, #f5f0ff);
+  text-align: left;
+  max-width: 640px;
+  margin-inline: auto;
+}
+.lg-jstep:last-child { border-bottom: none; }
+.lg-jicon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--lg-primary), var(--lg-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.lg-jtext strong { display: block; font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 3px; }
+.lg-jtext span { font-size: 13px; color: #666; line-height: 1.5; }
 
 /* Section heading */
 .lg-section-heading {
@@ -449,6 +596,47 @@ export default function LeagueDetailPage() {
     { value: "→", label: nextLeague ? `Path to ${nextLeague.name}` : "Path to the global stage" },
   ];
 
+  const nextName = nextLeague ? nextLeague.shortName : "the global stage";
+
+  // Universal onboarding flow — true for any league, so the 4th step is
+  // the only per-league part and it's real data (nextLeague), not a
+  // hardcoded league name.
+  const steps = [
+    { title: "Register for free", body: "No upfront cost to join the league" },
+    { title: "Find a techfest near you", body: "Compete at affiliated IIT / BITS events" },
+    { title: "Build, compete, rank", body: "Your results feed a national leaderboard" },
+    {
+      title: `Level up to ${nextName}`,
+      body: nextLeague ? "Qualify by performance — no applications" : "Compete for a spot on the international stage",
+    },
+  ];
+  const journeySteps = [
+    { icon: "🎯", title: "Register for the league", body: "Free. Takes 2 minutes. Your national profile is created instantly." },
+    { icon: "📍", title: "Find a techfest near you", body: "Browse events by city, college, and sport. Pay the techfest entry fee only." },
+    { icon: "🏆", title: "Compete and earn ranking points", body: "Every finish — win or lose — counts toward your national score." },
+    {
+      icon: "🚀",
+      title: `Qualify for ${nextName}${nextLeague ? " League" : ""}`,
+      body: nextLeague
+        ? `Strong ${league.shortName} performance unlocks the ${nextLeague.startingAge} track.`
+        : "Strong performance here is the path to the international stage.",
+    },
+  ];
+
+  // Sample leaderboard — this app deliberately keeps every (sport, league,
+  // weight class) as its own ranking pool (see RankingEngineService), so
+  // there's no real single cross-sport "league leaderboard" to pull rows
+  // from without merging incomparable pools. Placeholder until/unless a
+  // real cross-pool aggregate exists; /rankings has the real per-pool
+  // tables, which "View rankings" below links to.
+  const sampleLeaderboard = [
+    { rank: 1, name: "Arjun Mehta", school: "IIT Bombay Techfest", points: 2840 },
+    { rank: 2, name: "Priya Iyer", school: "BITS Pilani", points: 2610 },
+    { rank: 3, name: "Kabir Nair", school: "IIT Roorkee", points: 2390 },
+    { rank: 4, name: "Ananya Rao", school: "BITS Goa", points: 2180 },
+  ];
+  const rankClass = (r: number) => (r === 1 ? "gold" : r === 2 ? "silver" : r === 3 ? "bronze" : "");
+
   const scrollToSports = () => {
     document.getElementById("sports")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -493,7 +681,11 @@ export default function LeagueDetailPage() {
 
       {/* ===== Pain point callout ===== */}
       <section className="mx-auto max-w-[1180px] px-4 py-8 text-center">
-        <h2 className="lg-pain-title mb-4">{league.whyHeadline}</h2>
+        <div className="lg-sec-tag">About {league.shortName}</div>
+        <h2 className="lg-pain-title mb-2">{league.whyHeadline}</h2>
+        <p className="lg-sec-subhead mb-4">
+          The league where learning and competing happen at the same time — alongside peers at your own level.
+        </p>
         <p className="lg-ticker text-[#666] text-sm uppercase mb-0">
           IIT Bombay Techfest &middot; BITS Pilani &middot; IIT Roorkee &middot; IIT Bombay Techfest &middot; BITS Pilani
         </p>
@@ -502,8 +694,30 @@ export default function LeagueDetailPage() {
       {/* ===== Win locally card ===== */}
       <section className="mx-auto max-w-[1180px] px-4 py-8">
         <div className="lg-card-accent p-6 md:p-10 rounded-2xl relative">
-          <h3 className="lg-card-gradient-text mb-3">{league.whatYouGet[0] ?? league.whyHeadline}</h3>
-          <p className="lg-card-body mb-0">{league.whyBody}</p>
+          <div className="lg-about-grid">
+            <div>
+              <p className="lg-card-body">{league.whyBody}</p>
+              <p className="lg-card-body">{league.whySecondaryBody}</p>
+              <div className="lg-about-callout">
+                <p>
+                  Competing in {league.shortName} earns you a national ranking. Finish strong and you&rsquo;re on the
+                  path to {nextName}
+                  {nextLeague ? ` League — ages ${nextLeague.startingAge} with higher stakes and national championships.` : "."}
+                </p>
+              </div>
+            </div>
+            <div className="lg-steps-card">
+              {steps.map((step, i) => (
+                <div className="lg-step-row" key={step.title}>
+                  <div className="lg-step-badge">{i + 1}</div>
+                  <div className="lg-step-info">
+                    <strong>{step.title}</strong>
+                    <span>{step.body}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -529,7 +743,7 @@ export default function LeagueDetailPage() {
         <h2 className="lg-section-heading mb-6">Compete. Rank. Prove it.</h2>
         <div className="lg-ranking-banner">
           <Reveal as="div" className="lg-ranking-banner__top">
-            <h3>National ranking</h3>
+            <h3>National leaderboard &middot; {league.shortName} {new Date().getFullYear()}</h3>
             <button className="lg-ranking-banner__cta" onClick={() => navigate("/rankings")}>
               View rankings
             </button>
@@ -541,12 +755,42 @@ export default function LeagueDetailPage() {
             </p>
           </Reveal>
         </div>
+        {/* Sample standings — see sampleLeaderboard's own comment above:
+           there's no real single cross-sport ranking to pull these from
+           yet, "View rankings" above is where the real per-sport tables
+           live. */}
+        <div className="lg-rank-list">
+          {sampleLeaderboard.map((row) => (
+            <div className="lg-rank-row" key={row.rank}>
+              <div className={`lg-rank-pos ${rankClass(row.rank)}`}>#{row.rank}</div>
+              <div>
+                <div className="lg-rank-name">{row.name}</div>
+                <div className="lg-rank-school">{row.school}</div>
+              </div>
+              <div>
+                <div className="lg-rank-pts">{row.points.toLocaleString()}</div>
+                <div className="lg-rank-pts-label">points</div>
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* ===== From first event to national rank ===== */}
       <section className="mx-auto max-w-[1180px] px-4 py-12 text-center">
-        <h2 className="lg-section-heading mb-6">{league.journeyHeadline}</h2>
-        <Reveal as="div" className="lg-timeline-box rounded-2xl mx-auto" />
+        <h2 className="lg-section-heading mb-2">{league.journeyHeadline}</h2>
+        <p className="lg-sec-subhead mb-4">{league.shortName} is the beginning. Here&rsquo;s how the journey unfolds.</p>
+        <div>
+          {journeySteps.map((step) => (
+            <Reveal as="div" className="lg-jstep" key={step.title}>
+              <div className="lg-jicon" aria-hidden="true">{step.icon}</div>
+              <div className="lg-jtext">
+                <strong>{step.title}</strong>
+                <span>{step.body}</span>
+              </div>
+            </Reveal>
+          ))}
+        </div>
       </section>
 
       {/* ===== Next league banner ===== */}

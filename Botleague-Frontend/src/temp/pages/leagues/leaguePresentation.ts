@@ -25,6 +25,10 @@ export interface LeaguePresentation {
   cta: string;
   whyHeadline: string;
   whyBody: string;
+  /** A second "why" paragraph, shown right under whyBody — same
+   *  presentation-only reasoning as the rest of this file: per-league
+   *  narrative copy the admin-editable League entity has no field for. */
+  whySecondaryBody: string;
   journeyHeadline: string;
   nextLabel: string;
 }
@@ -41,6 +45,8 @@ export const LEAGUE_PRESENTATION: Record<string, LeaguePresentation> = {
     whyHeadline: "Every builder starts somewhere.",
     whyBody:
       "Ignite is where you learn to wire, code, and compete for the first time — alongside other beginners doing exactly the same thing, at your own techfest.",
+    whySecondaryBody:
+      "No prior experience needed. Every sport in Ignite is designed to teach you a real technical skill while you compete — so you leave with more than just a trophy.",
     journeyHeadline: "From your first bot to your first win.",
     nextLabel: "Next league",
   },
@@ -55,6 +61,8 @@ export const LEAGUE_PRESENTATION: Record<string, LeaguePresentation> = {
     whyHeadline: "You're winning at your college fest. Nobody outside your campus knows.",
     whyBody:
       "Inferno turns local wins into a national ranking — every affiliated techfest you enter counts toward the same all-India table.",
+    whySecondaryBody:
+      "The rules get sharper and the arenas get tougher. Every sport in Inferno is judged at a higher standard than Ignite — you're not repeating a beginner event, you're being tested at the next level.",
     journeyHeadline: "From first techfest to national rank.",
     nextLabel: "Next league",
   },
@@ -68,6 +76,8 @@ export const LEAGUE_PRESENTATION: Record<string, LeaguePresentation> = {
     cta: "Enter Apex",
     whyHeadline: "You've outgrown your college fest.",
     whyBody: "Apex is the open circuit — where national champions get scouted for the international stage, Battle of Robots, Russia.",
+    whySecondaryBody:
+      "Every sport in Apex is judged at national-championship standard. This isn't about climbing a ranking anymore — it's where builders get scouted.",
     journeyHeadline: "From national rank to the global stage.",
     nextLabel: "Next league",
   },
@@ -86,6 +96,7 @@ const FALLBACK_GRADIENT: LeaguePresentation = {
   cta: "Enter league",
   whyHeadline: "A new stage to compete on.",
   whyBody: "Every match here counts toward your ranking.",
+  whySecondaryBody: "No prior experience needed — every sport here is designed to teach you a real technical skill while you compete.",
   journeyHeadline: "Your competitive journey.",
   nextLabel: "Next league",
 };
