@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState, Fragment, type RefObject } from "react";
 import PublicNavbar from "../../shared/components/PublicNavbar";
 import "../../styles/aboutUs.css";
+import mohitImg from "../../assets/Avatar-model/Mohit.png";
+import akshayImg from "../../assets/Avatar-model/Akshay.png";
+import rahulImg from "../../assets/Avatar-model/Rahul.png";
 
 interface StoryStep {
   n: string;
@@ -64,17 +67,18 @@ const PRINCIPLES: Principle[] = [
   },
 ];
 
-const RESULTS = [
-  { value: "120+", label: "Techfests Hosted" },
-  { value: "48K+", label: "Competitors" },
-  { value: "9", label: "Countries" },
-  { value: "1,300+", label: "Bots Battled" },
-  { value: "99.2%", label: "Disputes Resolved" },
-  { value: "10 yrs", label: "Running Since" },
-  { value: "72", label: "Campus Chapters" },
-  { value: "4.8/5", label: "Competitor Rating" },
-  { value: "0", label: "Rules Bent" },
-];
+// Only Results (commented out below) reads this — kept alongside it.
+// const RESULTS = [
+//   { value: "120+", label: "Techfests Hosted" },
+//   { value: "48K+", label: "Competitors" },
+//   { value: "9", label: "Countries" },
+//   { value: "1,300+", label: "Bots Battled" },
+//   { value: "99.2%", label: "Disputes Resolved" },
+//   { value: "10 yrs", label: "Running Since" },
+//   { value: "72", label: "Campus Chapters" },
+//   { value: "4.8/5", label: "Competitor Rating" },
+//   { value: "0", label: "Rules Bent" },
+// ];
 
 interface TeamMember {
   name: string;
@@ -84,29 +88,32 @@ interface TeamMember {
   img: string | null;
 }
 
-// No portrait assets exist for the team yet — everyone renders through the
-// initials-placeholder card until real photos are added.
 const TEAM: TeamMember[] = [
   {
     name: "Mohit Chaudhari",
     role: "CFO",
     initials: "MC",
     quote: "Every rupee we spend traces back to a better arena for you.",
-    img: null,
+    img: mohitImg,
   },
   {
     name: "Akshay Joshi",
+    // NOTE: akshayImg's own nameplate reads "COO", not "CEO" — flagging
+    // rather than silently picking one, since it conflicts with the role
+    // already recorded here (and with rahulImg's nameplate, which is also
+    // "COO"). Kept the existing "CEO" until that's confirmed one way or
+    // the other; the model image itself can't be edited from here.
     role: "CEO",
     initials: "AJ",
     quote: "Hello, I am Akshay — I've judged more matches than I can count, and I still show up early.",
-    img: null,
+    img: akshayImg,
   },
   {
     name: "Rahul Ishi",
     role: "COO",
     initials: "RI",
     quote: "I make sure the schedule survives contact with reality on techfest day.",
-    img: null,
+    img: rahulImg,
   },
 ];
 
@@ -274,23 +281,27 @@ function Principles() {
   );
 }
 
-function Results() {
-  return (
-    <section className="bl-results py-16 md:py-20">
-      <div className="mx-auto max-w-[1180px] px-4">
-        <h2 className="bl-section-title text-center mb-10">Built On Results.</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {RESULTS.map((r) => (
-            <div className="bl-result-card" key={r.label}>
-              <div className="bl-result-value">{r.value}</div>
-              <div className="bl-result-label">{r.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
+// Not currently rendered (see the commented-out <Results /> in AboutUs
+// below) — commented out along with its call site instead of deleted,
+// since TS flags an unused, unexported function declaration as an error
+// and this one's kept around for whenever the section comes back.
+// function Results() {
+//   return (
+//     <section className="bl-results py-16 md:py-20">
+//       <div className="mx-auto max-w-[1180px] px-4">
+//         <h2 className="bl-section-title text-center mb-10">Built On Results.</h2>
+//         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+//           {RESULTS.map((r) => (
+//             <div className="bl-result-card" key={r.label}>
+//               <div className="bl-result-value">{r.value}</div>
+//               <div className="bl-result-label">{r.label}</div>
+//             </div>
+//           ))}
+//         </div>
+//       </div>
+//     </section>
+//   );
+// }
 
 // ---- "Built By The Competitors" — image-based sliding carousel ----
 function Competitors() {
@@ -440,29 +451,7 @@ function Competitors() {
   );
 }
 
-function Newsletter() {
-  const [email, setEmail] = useState("");
-  return (
-    <section className="bl-newsletter">
-      <div className="mx-auto max-w-[1180px] px-4 flex flex-col md:flex-row items-center justify-between gap-3 py-8">
-        <span className="bl-newsletter-title">Let&apos;s find harmony together.</span>
-        <form className="bl-newsletter-form flex" onSubmit={(e) => e.preventDefault()}>
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter email id"
-            className="bl-newsletter-input"
-          />
-          <button type="submit" className="bl-newsletter-btn">
-            Submit
-          </button>
-        </form>
-      </div>
-    </section>
-  );
-}
+
 
 export default function AboutUs() {
   return (
@@ -471,9 +460,9 @@ export default function AboutUs() {
       <Hero />
       <OurStory />
       <Principles />
-      <Results />
+      {/* <Results /> */}
       <Competitors />
-      <Newsletter />
+      
     </div>
   );
 }

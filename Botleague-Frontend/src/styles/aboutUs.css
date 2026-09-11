@@ -241,6 +241,11 @@
   opacity: 0;
   transform: translateY(24px);
   transition: opacity 0.6s ease, transform 0.6s ease;
+  /* Perspective turns the left/right members' rotateY+translateZ below
+     into an actual 3D ring instead of a flat side-by-side scale — the
+     center card reads as the front of the ring, the other two as its
+     back-left/back-right, receding and turning away in real depth. */
+  perspective: 1400px;
 }
 .cc-stage-in { opacity: 1; transform: translateY(0); }
 .cc-character {
@@ -248,7 +253,8 @@
   bottom: 6%;
   left: 50%;
   height: 92%;
-  transform: translate(-50%, 0) scale(1);
+  transform: translate(-50%, 0) translateZ(0) rotateY(0deg) scale(1);
+  transform-style: preserve-3d;
   transition: left 0.9s cubic-bezier(.65,0,.35,1),
               transform 0.9s cubic-bezier(.65,0,.35,1),
               opacity 0.9s cubic-bezier(.65,0,.35,1),
@@ -296,15 +302,29 @@
   pointer-events: none;
 }
 .cc-slot-left, .cc-slot-right {
-  opacity: .5;
+  opacity: .55;
   z-index: 2;
-  filter: grayscale(.15) brightness(.92);
+  filter: grayscale(.15) brightness(.85);
 }
-.cc-slot-left { left: 16%; transform: translate(-50%,0) scale(.55); }
-.cc-slot-right { left: 84%; transform: translate(-50%,0) scale(.55); }
+/* Two positions on the back half of the ring — pulled behind the center
+   card (negative translateZ) and turned inward (rotateY) so each one's
+   near edge (the side toward center) reads closer to the viewer than its
+   far edge, the way an object actually orbiting around the Y axis would
+   look from outside the ring.
+
+   Both anchored at the same left:50% as center, not a separate left/right
+   %, and left/right positioning comes entirely from perspective's own
+   projection of the rotateY+translateZ pair — confirmed empirically
+   (measured rendered widths) that a left:50% pair mirrored only in
+   rotateY's sign renders genuinely symmetric, while adding a *second*,
+   independent horizontal offset on top of that (an explicit left:20%/80%)
+   fights the projection's own horizontal pull and was what made one side
+   render almost edge-on. */
+.cc-slot-left { left: 50%; transform: translate(-50%,0) rotateY(32deg) translateZ(-240px) scale(.68); }
+.cc-slot-right { left: 50%; transform: translate(-50%,0) rotateY(-32deg) translateZ(-240px) scale(.68); }
 .cc-slot-center {
   left: 50%;
-  transform: translate(-50%,0) scale(1);
+  transform: translate(-50%,0) translateZ(80px) rotateY(0deg) scale(1);
   opacity: 1;
   z-index: 5;
   filter: none;
