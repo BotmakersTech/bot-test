@@ -67,11 +67,17 @@ export const LEAGUE_PRESENTATION: Record<string, LeaguePresentation> = {
     nextLabel: "Next league",
   },
   ROBO_MINDS: {
-    imgGradient: "from-[#07230f] via-[#0f5c33] to-[#22c55e]",
-    textGradient: "from-[#22c55e] to-[#16a34a]",
-    border: "#22c55e",
-    colorPrimary: "#00d31c",
-    colorSecondary: "#22c55e",
+    // Apex's brand blue — matches the accent already used for Apex
+    // elsewhere (event-detail techsport cards, eventDetail.css). Was
+    // green (#00d31c); every field below that carried that green
+    // (imgGradient/textGradient/border, not just colorPrimary/Secondary)
+    // is updated together so the league reads consistently everywhere
+    // it shows up, not just on its own detail page.
+    imgGradient: "from-[#041b2e] via-[#0d5c8c] to-[#36A3F0]",
+    textGradient: "from-[#36A3F0] to-[#54E4EC]",
+    border: "#54E4EC",
+    colorPrimary: "#36A3F0",
+    colorSecondary: "#54E4EC",
     desc: "The top tier. Elite arenas, national spotlight, and a straight line to Battle of Robots, Russia.",
     cta: "Enter Apex",
     whyHeadline: "You've outgrown your college fest.",
