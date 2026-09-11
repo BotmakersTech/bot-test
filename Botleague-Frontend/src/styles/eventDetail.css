@@ -157,13 +157,13 @@
     position: relative;
     background: white;
     overflow: visible;
-    padding: 120px 80px;
+    padding: 80px 40px;
     text-align: center;
 }
 
 .evd-page .overview h2 {
     font-family: "Orbitron", sans-serif;
-    font-size: 68px;
+    font-size: 48px;
     color: #0D7CFF;
     margin-bottom: 30px;
     position: relative;
@@ -174,7 +174,7 @@
     max-width: 950px;
     margin: auto;
     color: black;
-    font-size: 24px;
+    font-size: 20px;
     line-height: 42px;
     position: relative;
     z-index: 2;
@@ -232,7 +232,7 @@
 /* VOLUNTEER CTA */
 
 .evd-page .volunteer-cta {
-    margin: 0 80px 60px;
+    margin: 0 80px 10px;
     padding: 36px 48px;
     border-radius: 18px;
     background: linear-gradient(100deg, rgba(1, 98, 209, .06), rgba(140, 108, 255, .1));
@@ -412,7 +412,7 @@
     background: none;
     border-radius: 18px;
     overflow: visible;
-    margin: 60px 0 ;
+    margin: 24px 0 ;
     position: relative;
 }
 
@@ -567,6 +567,33 @@
     max-width: 324px;
     margin: 0 auto;
     padding: 22px;       /* gives the accent room to frame the card like the screenshot */
+    /* 2 of .cards' 6 tracks per card == 3 even columns, same layout as a
+       plain repeat(3, 1fr) — the extra track resolution only matters for
+       the leftover-row rules right below. */
+    grid-column: span 2;
+}
+
+/* Center whatever's left in an incomplete last row — 1 or 2 cards — instead
+   of leaving them pinned to the left with empty columns beside them.
+   nth-child(3n+1/+2) is "this card starts a row" (3-up); combined with
+   nth-last-child it only ever matches when that row is also the final,
+   short one — a full row never does, so normal rows are untouched.
+   1 leftover: shift into the middle 2 of 6 tracks (columns 3-4).
+   2 leftover: the pair splits the middle 4 tracks (2-3 and 4-5), leaving
+   half a card's width empty on each side instead of only the right.
+   Scoped to the 3-per-row (desktop) tier only — the 1200px/900px tiers
+   below redefine .cards to fewer, wider tracks for 2-per-row, and center
+   their own leftover card the same way at that width instead. */
+@media (min-width: 1201px) {
+    .evd-page .cards > .event-card-wrap:nth-child(3n+1):nth-last-child(1) {
+        grid-column: 3 / span 2;
+    }
+    .evd-page .cards > .event-card-wrap:nth-child(3n+1):nth-last-child(2) {
+        grid-column: 2 / span 2;
+    }
+    .evd-page .cards > .event-card-wrap:nth-child(3n+2):nth-last-child(1) {
+        grid-column: 4 / span 2;
+    }
 }
 
 .evd-page .event-card-accent {
@@ -620,8 +647,12 @@
      step this down to 2 (and the 900px one further compacts the card
      itself); they were written for a grid .cards and had nothing to act
      on while this stayed flex, which is what left the page showing 2 per
-     row well past the width 3 should fit at. */
-  grid-template-columns: repeat(3, 1fr);
+     row well past the width 3 should fit at.
+     6 tracks, not 3 — each card spans 2 of them (== 3 even columns, same
+     as before) so a leftover last row can be re-centered by giving just
+     that row's card(s) a half-track shift instead of the full column they
+     defaulted to; see event-card-wrap's grid-column rules below. */
+  grid-template-columns: repeat(6, 1fr);
   gap: 36px 28px;           /* extra row-gap for the top-offset frame */
   position: relative;
   z-index: 2;
@@ -915,7 +946,15 @@
     letter-spacing: .02em;
 }
 
-@media (max-width: 1200px) and (min-width: 901px) { .evd-page .cards { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 1200px) and (min-width: 901px) {
+    /* 4 tracks, not 2 — same doubled-track trick as the desktop tier, so a
+       single leftover card (odd total) can be centered by shifting it a
+       half-card into the middle instead of sitting left-aligned. */
+    .evd-page .cards { grid-template-columns: repeat(4, 1fr); }
+    .evd-page .cards > .event-card-wrap:nth-child(2n+1):nth-last-child(1) {
+        grid-column: 2 / span 2;
+    }
+}
 
 /* Mobile/tablet: 2-per-row (not 3) so each card has room to carry its full
    identity — title + weight class (two entries of the same sport, e.g. two
@@ -925,8 +964,13 @@
    anyway, and the whole card is already a tap target (EventCard's onClick). */
 @media (max-width: 900px) {
     .evd-page .cards {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         gap: clamp(14px, 3.4vw, 28px);
+    }
+    /* Same leftover-centering trick as the tier above, at this one's own
+       4-track grid. */
+    .evd-page .cards > .event-card-wrap:nth-child(2n+1):nth-last-child(1) {
+        grid-column: 2 / span 2;
     }
     .evd-page .event-card {
         aspect-ratio: 4 / 5;
