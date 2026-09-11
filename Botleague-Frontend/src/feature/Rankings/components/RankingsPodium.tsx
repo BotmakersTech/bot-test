@@ -43,21 +43,26 @@ const SLOTS: Record<1 | 2 | 3, SlotSpec> = {
   1: {
     panel: { left: 698, top: 399, width: 332, height: 395 },
     avatar: { left: 774, top: 200, size: 180 },
-    name: { left: 736, top: 445 },
+    // Centered under the avatar (avatar.left + avatar.size / 2), not the
+    // reference's own fixed left offset — that was tuned for its specific
+    // short test string ("master_nds") and reads off-center for anything
+    // else. .rank-podium-name centers itself around this x via
+    // transform: translateX(-50%).
+    name: { left: 864, top: 445 },
     badge: { left: 805, top: 513, size: 118, gradient: "linear-gradient(#ffd365eb, #997f3d)" },
     rank: { left: 844, top: 640, fontSize: 96 },
   },
   2: {
     panel: { left: 338, top: 320, width: 277, height: 330 },
     avatar: { left: 411, top: 174, size: 131 },
-    name: { left: 361, top: 368 },
+    name: { left: 476.5, top: 368 },
     badge: { left: 429, top: 432, size: 96, gradient: "linear-gradient(#ccccebea, #868173)" },
     rank: { left: 448, top: 530, fontSize: 86 },
   },
   3: {
     panel: { left: 1113, top: 320, width: 277, height: 330 },
     avatar: { left: 1186, top: 174, size: 131 },
-    name: { left: 1142, top: 368 },
+    name: { left: 1251.5, top: 368 },
     badge: { left: 1204, top: 432, size: 96, gradient: "linear-gradient(#b28181eb, #82450cb3)" },
     rank: { left: 1222, top: 530, fontSize: 86 },
   },

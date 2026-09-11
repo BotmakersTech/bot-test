@@ -145,17 +145,22 @@
   object-fit: cover;
 }
 
+/* Centered on its slot's avatar-center x (see SLOTS in RankingsPodium.tsx)
+   via translateX(-50%) — a real robot name is any length, unlike the
+   reference's own fixed left offset tuned for one short test string, so
+   centering (not a fixed left edge) is what keeps it under the avatar.
+   No max-width/ellipsis: a long name is allowed to run past its column
+   rather than getting cut off with "…". */
 .rank-podium-name {
   position: absolute;
+  transform: translateX(-50%);
   margin: 0;
   font-family: 'Sarpanch', sans-serif;
   font-weight: 800;
-  font-size: 40px;
+  font-size: 37px;
   color: #2865d9;
+  text-align: center;
   white-space: nowrap;
-  max-width: 260px;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .rank-podium-badge {

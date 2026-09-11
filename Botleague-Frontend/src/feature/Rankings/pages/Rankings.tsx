@@ -289,6 +289,21 @@ export default function GlobalRankingsPage({ showPodium = false }: GlobalRanking
           aria-hidden="true"
         />
 
+        {/* Top-3 podium — public view only, reuses the exact same `entries`
+            the table below renders (same filter, same pool), so switching
+            League/Sport/Weight Class updates both together instead of the
+            podium being a separate, disconnected snapshot. Renders first,
+            immediately under the navbar, the same "hero opens the page"
+            pattern every other public page uses (EventsLandingPage,
+            LeagueDetailPage, ...) — not a plain text heading followed by
+            the hero further down. */}
+        {showPodium && !loading && entries.length > 0 && (
+          <RankingsPodium
+            entries={entries}
+            onOpen={(entry) => navigate(entry.robotId ? `/robot/${entry.robotId}` : `/team/${entry.teamId}`)}
+          />
+        )}
+
         {/* Page title — the mobile/tablet "Sort" trigger sits in this same
             row, right-aligned; desktop never sees that button and always
             shows the filter card below instead (see its className below). */}
@@ -307,17 +322,6 @@ export default function GlobalRankingsPage({ showPodium = false }: GlobalRanking
             <ChevronDown size={16} className={`transition-transform ${sortOpen ? "rotate-180" : ""}`} />
           </button>
         </div>
-
-        {/* Top-3 podium — public view only, reuses the exact same `entries`
-            the table below renders (same filter, same pool), so switching
-            League/Sport/Weight Class updates both together instead of the
-            podium being a separate, disconnected snapshot. */}
-        {showPodium && !loading && entries.length > 0 && (
-          <RankingsPodium
-            entries={entries}
-            onOpen={(entry) => navigate(entry.robotId ? `/robot/${entry.robotId}` : `/team/${entry.teamId}`)}
-          />
-        )}
 
         {/* ── Sort / filter card ─────────────────────────────────────── */}
         <div className={`rank-filter-card mt-1 mb-8 sm:mb-10 w-full bg-white pt-4 pb-5 px-4 sm:px-6 lg:px-9 shadow-[0_4px_4px_1px_rgba(0,0,0,0.25)] ${sortOpen ? "" : "max-[950px]:hidden"}`}>
@@ -384,11 +388,6 @@ export default function GlobalRankingsPage({ showPodium = false }: GlobalRanking
             <p className="mt-3 text-[13px] text-[#0162D1]/70">Select a weight class — {selectedLeagueSport?.sportName} ranks separately per weight class.</p>
           )}
         </div>
-
-        {/* Global Rankings heading */}
-        <h2 className="mb-3 sm:mb-4 text-[20px] sm:text-[24px] lg:text-[28px] font-medium text-[#0162D1]" style={{ fontFamily: "Poppins, sans-serif" }}>
-          Global Rankings
-        </h2>
 
         {/* ── States ─────────────────────────────────────────────────── */}
         {(!sport || !ageGroup) && !loading && (
