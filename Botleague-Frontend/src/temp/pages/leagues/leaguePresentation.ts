@@ -83,7 +83,7 @@ export const LEAGUE_PRESENTATION: Record<string, LeaguePresentation> = {
       (age ? `For young builders aged ${age} — ` : "") +
       "the league where learning and competing happen at the same time, alongside peers at your own level.",
     whyBody:
-      "Ignite is the entry-level technology competition league for young builders. From robotics and RC racing to drones, autonomous challenges, and more, Ignite gives beginners a place to learn, build, compete, and grow alongside others at their level.",
+      "Ignite is the entry level technology competition league for young builders. From robotics and RC racing to drones, autonomous challenges, and more, Ignite gives beginners a place to learn, build, compete, and grow alongside others at their level.",
     whySecondaryBody:
       "No prior experience required. Every sport is designed to develop a real technical skill while giving you the excitement of real competition.",
     closerHeadline: "Start Small. Compete Big.",

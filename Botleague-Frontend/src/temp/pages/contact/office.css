@@ -1,5 +1,5 @@
 .cu-office-section {
-  padding: 70px 0 90px;
+  padding: 50px 0 50px;
   background: #fff;
 }
 
@@ -23,7 +23,7 @@
 }
 
 .cu-office-left h2 {
-  font-family: 'Sarpanch';
+  font-family: 'Orbitron', sans-serif;
   font-size: 32px;
   font-weight: 600;
   margin-bottom: 24px;
@@ -54,7 +54,7 @@
   position: relative;
   z-index: 1;
   max-width: 1140px;
-  margin: -60px auto 0;
+  margin: 60px auto 0;
   background: #1E64DB;
   border-radius: 20px;
   padding: 100px 48px 44px;  /* was 44px 48px — top bumped to clear the overlap */
