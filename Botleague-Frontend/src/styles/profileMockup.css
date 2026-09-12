@@ -28,13 +28,25 @@
   color: #4b5563;
   font-family: "Poppins", sans-serif;
 }
-.pfm-form input:focus,
-.pfm-form select:focus,
-.pfm-form textarea:focus {
+
+/* View mode (not editing yet): clicking/focusing must stay grey+shadow */
+.pfm-form:not(.pfm-form--editing) input:focus,
+.pfm-form:not(.pfm-form--editing) select:focus,
+.pfm-form:not(.pfm-form--editing) textarea:focus {
   outline: none;
-  background-color: #ffffff;
+  background-color: #f0f0f0 !important;
+  box-shadow: inset 4px 4px 4px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Edit mode: only now does focus turn the field white */
+.pfm-form--editing input:focus,
+.pfm-form--editing select:focus,
+.pfm-form--editing textarea:focus {
+  outline: none;
+  background-color: #ffffff !important;
   box-shadow: none !important;
 }
+
 .pfm-form select {
   cursor: pointer;
 }
@@ -63,4 +75,31 @@
   color: #4f46e5;
   font-size: 0.75rem;
   margin-top: 4px;
+}
+
+/* =========================================================
+   KILL CHROME AUTOFILL WHITE BACKGROUND
+   Chrome forces a white bg via -webkit-autofill the moment
+   you focus/click a field it thinks it can autofill. This
+   overrides that with our own grey (view mode) / white
+   (edit mode) background using the -webkit-box-shadow trick.
+   ========================================================= */
+
+.pfm-form input:-webkit-autofill,
+.pfm-form input:-webkit-autofill:hover,
+.pfm-form input:-webkit-autofill:focus,
+.pfm-form input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #f0f0f0 inset !important;
+  -webkit-text-fill-color: #4b5563 !important;
+  caret-color: #4b5563;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+.pfm-form--editing input:-webkit-autofill,
+.pfm-form--editing input:-webkit-autofill:hover,
+.pfm-form--editing input:-webkit-autofill:focus,
+.pfm-form--editing input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #4b5563 !important;
+  caret-color: #4b5563;
 }
