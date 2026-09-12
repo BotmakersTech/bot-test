@@ -236,7 +236,7 @@ body {
 }
 
 .botleague-label {
-  font-size: 0.7rem;
+  font-size: 30px;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: #374151;
@@ -245,7 +245,7 @@ body {
 }
 
 .botleague-id {
-  font-size: 1.5rem;
+  font-size: 10px;
   font-weight: 700;
   color: var(--bl-blue);
   margin: 0;

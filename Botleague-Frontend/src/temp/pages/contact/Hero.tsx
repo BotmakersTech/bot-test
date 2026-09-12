@@ -1,11 +1,6 @@
 import { FaArrowRight } from "react-icons/fa";
-import Navbar from "./Navbar";
-import "./hero.css";
-
-// Served from /public — Vite serves public/ assets at the site root, so this
-// is a URL string, not a build-time import (importing a path under public/
-// as an ES module doesn't work the way it does for files under src/assets/).
-const bg = "/home-img/contact.png";
+// import Navbar from "./Navbar";
+import "../../../styles/aboutUs.css";
 
 function Hero() {
   const scrollToContent = () => {
@@ -13,25 +8,24 @@ function Hero() {
   };
 
   return (
-    <section
-      className="cu-hero-section"
-      style={{ background: `url(${bg}) center/cover no-repeat` }}
-    >
-      <Navbar />
+    <div className="bl-about">
+      <header className="bl-hero text-center px-4">
+        <div className="mx-auto max-w-[900px] py-16 md:py-20">
+          <h1 className="bl-hero-title">Contact Us</h1>
+          <p className="bl-hero-sub mx-auto">
+            Got a question about rules, arena specs, or partnering with BotLeague for your
+            next competition? Reach out — we're happy to help you get it off the ground.
+          </p>
 
-      <div className="cu-overlay">
-        <div className="cu-hero-content">
-          <h1>Contact Us</h1>
-
-          <button type="button" className="cu-explore-btn" onClick={scrollToContent}>
+          <button type="button" className="cu-explore-btn mt-8" onClick={scrollToContent}>
             <div className="cu-circle">
               <FaArrowRight />
             </div>
             <span>EXPLORE</span>
           </button>
         </div>
-      </div>
-    </section>
+      </header>
+    </div>
   );
 }
 
