@@ -56,11 +56,12 @@ export default function useRegister() {
 
   // ⏱ OTP resend timer
   useEffect(() => {
+    if (otpVerified) return; // 🔧 stop the countdown once OTP is verified
     if (resendTimer > 0) {
       const timer = setTimeout(() => setResendTimer((v) => v - 1), 1000);
       return () => clearTimeout(timer);
     }
-  }, [resendTimer]);
+  }, [resendTimer, otpVerified]);
 
   // 📲 SEND OTP
   const handleSendOtp = async () => {
@@ -99,6 +100,7 @@ export default function useRegister() {
   }
 
   setOtpVerified(true);
+  setResendTimer(0); // 🔧 stop countdown immediately on verify
 };
 
 const handleResendOtp = async () => {
@@ -261,5 +263,3 @@ navigate("/profile", { replace: true });
     handleRegister,
   };
 }
-
-
