@@ -334,10 +334,20 @@ export default function GlobalRankingsPage() {
   }, [draftLeagueSlug]);
 
   // ── Sport -> Weight Classes ────────────────────────────────────────────────
+  // A sport with exactly one weight class (or a single weightLimitKg, same
+  // shape) has nothing to actually choose between — auto-fill it instead of
+  // making the viewer click a dropdown that only ever has one option.
+  // Sports with 2+ classes (or none at all) still reset to blank as before.
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDraftWeightKg("");
+    setDraftWeightKg(weightOptions.length === 1 ? String(weightOptions[0].weightKg) : "");
+    // weightOptions intentionally omitted — it's derived from draftSportSlug
+    // plus the already-loaded leagueSports, so it's already covered by this
+    // same dependency; adding it would just re-run this effect a second
+    // time (once for the slug, once for weightOptions catching up) for the
+    // same underlying change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draftSportSlug]);
 
   // ── Load rankings ──────────────────────────────────────────────────────────
@@ -376,8 +386,10 @@ export default function GlobalRankingsPage() {
   }, [loadRankings]);
 
   // ── Filter validation ──────────────────────────────────────────────────────
-
-  const weightRequired = weightOptions.length > 0;
+  // Only a genuine choice (2+ weight classes) blocks Apply Filter — a sport
+  // with exactly one class already has it auto-filled above, and a sport
+  // with none has nothing to pick regardless.
+  const weightRequired = weightOptions.length > 1;
   const weightMissing = weightRequired && !draftWeightKg;
 
   // ── Apply filter ───────────────────────────────────────────────────────────
@@ -527,25 +539,28 @@ export default function GlobalRankingsPage() {
                 )}
               />
 
-              {/* Weight Class */}
-              <FilterSelect
-                widthClass="lg:max-w-[303px]"
-                placeholder="Select Weight Class"
-                value={draftWeightKg}
-                onChange={setDraftWeightKg}
-                disabled={
-                  !draftSportSlug ||
-                  weightOptions.length === 0
-                }
-                options={weightOptions.map(
-                  (w) => ({
+              {/* Weight Class — a dropdown only when there's an actual
+                  choice (2+ classes). Exactly one class is auto-filled
+                  (see the Sport -> Weight Classes effect above) and shown
+                  as a plain read-only value instead of a select the
+                  viewer would click with nothing to change. */}
+              {weightOptions.length > 1 ? (
+                <FilterSelect
+                  widthClass="lg:max-w-[303px]"
+                  placeholder="Select Weight Class"
+                  value={draftWeightKg}
+                  onChange={setDraftWeightKg}
+                  disabled={!draftSportSlug}
+                  options={weightOptions.map((w) => ({
                     value: String(w.weightKg),
-                    label: formatWeightClass(
-                      w.label,
-                    ),
-                  }),
-                )}
-              />
+                    label: formatWeightClass(w.label),
+                  }))}
+                />
+              ) : weightOptions.length === 1 ? (
+                <div className="rank-filter-input h-[48px] sm:h-[51px] w-full lg:flex-1 lg:min-w-[220px] lg:max-w-[303px] flex items-center px-4 text-[14px] sm:text-[16px] font-medium text-black/70">
+                  {formatWeightClass(weightOptions[0].label)}
+                </div>
+              ) : null}
 
               {/* Apply */}
               <button
