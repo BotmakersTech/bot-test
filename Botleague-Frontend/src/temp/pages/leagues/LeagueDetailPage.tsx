@@ -495,13 +495,20 @@ const BRAND_STYLES = `
 .lg-ranking-banner__top .lg-rank-school { color: rgba(255, 255, 255, 0.65); }
 .lg-ranking-banner__top .lg-rank-pts { color: #fff; }
 .lg-ranking-banner__top .lg-rank-pts-label { color: rgba(255, 255, 255, 0.55); }
+/* Same transparent/expanded-row treatment as __top, but tuned for the
+   __bottom box's light background + dark text instead of white text. */
+.lg-ranking-banner__bottom .lg-rank-list { margin-top: 0; gap: 0.5rem; width: 100%; }
+.lg-ranking-banner__bottom .lg-rank-row {
+  background: rgba(255, 255, 255, 0.35);
+  border-color: rgba(26, 26, 46, 0.12);
+}
+.lg-ranking-banner__bottom .lg-rank-sport { color: rgba(26, 26, 46, 0.65); }
+.lg-ranking-banner__bottom .lg-rank-name { color: #1a1a2e; }
+.lg-ranking-banner__bottom .lg-rank-school { color: rgba(26, 26, 46, 0.55); }
+.lg-ranking-banner__bottom .lg-rank-pts { color: #1a1a2e; }
+.lg-ranking-banner__bottom .lg-rank-pts-label { color: rgba(26, 26, 46, 0.45); }
 .lg-ranking-banner__bottom {
   min-height: 162px;
-  /* Deliberately the lighter of the banner's two boxes (only 35% of the
-     secondary color), so it needs its own dark text instead of the
-     white .lg-ranking-banner sets as its default — white was never
-     readable against a tint this pale for any league, Apex (bright
-     cyan secondary) just makes it obvious. */
   background: color-mix(in srgb, var(--lg-secondary) 35%, transparent);
   color: #1a1a2e;
   display: flex;
@@ -548,8 +555,8 @@ const BRAND_STYLES = `
 
 /* Next league banner */
 .lg-next {
-  background: linear-gradient(100deg, color-mix(in srgb, var(--lg-next) 15%, transparent) 0%, rgba(0, 0, 0, 0.08) 100%);
-  border: 1px solid color-mix(in srgb, var(--lg-next) 40%, transparent);
+  background: white;
+  border: 2px solid color-mix(in srgb, var(--lg-primary) 80%, transparent);
 }
 .lg-next-label {
   color: #000;
@@ -558,13 +565,13 @@ const BRAND_STYLES = `
 .lg-next-name {
   font-family: 'Orbitron', sans-serif;
   font-weight: 800;
-  color: var(--lg-next);
+  color: var(--lg-primary);
   font-size: 1.5rem;
 }
 .lg-next-link {
-  border: 2px solid var(--lg-next);
+  border: 1px solid var(--lg-primary);
   border-radius: 15px;
-  color: var(--lg-next);
+  color: var(--lg-primary);
   font-weight: 500;
   padding: 0.75rem 1.5rem;
 }
@@ -808,6 +815,7 @@ export default function LeagueDetailPage() {
       title: `Level up to ${nextName}`,
       body: nextLeague ? "Qualify by performance — no applications" : "Compete for a spot on the international stage",
     },
+    { title: "Join the global stage", body: "Connect with the best competitors from around the world" }
   ];
   const sportNames = sports.map((s) => s.sportName).join(", ");
   const journeyCtx: JourneyCtx = { shortName: league.shortName, nextName, hasNext: !!nextLeague, sportNames };
@@ -830,13 +838,13 @@ export default function LeagueDetailPage() {
         <div className="lg-hero-overlay" />
         <div className="lg-hero-content">
           <span className="lg-pill inline-block mb-3">
-            {ageRangeLabel || league.startingAge} &nbsp;·&nbsp; Free to register
+            {ageRangeLabel || league.startingAge} &nbsp;·&nbsp; Age Category 
           </span>
           <h1 className="lg-hero-title mb-3">{league.name}</h1>
           <p className="lg-hero-subtitle mx-auto mb-4">{league.tagline}</p>
           <div className="flex flex-wrap justify-center gap-3 mb-3">
             <button className="lg-btn-gradient px-8 py-4 text-lg" onClick={() => navigate("/register")}>
-              Start competing
+              Register
             </button>
             <button className="lg-btn-outline px-8 py-4 text-lg" onClick={scrollToSports}>
               See the sports
@@ -864,7 +872,7 @@ export default function LeagueDetailPage() {
         <h2 className="lg-pain-title mb-2">{league.whyHeadline}</h2>
         <p className="lg-sec-subhead mb-4">{league.subhead(formatAgeRange(league.minAge, league.maxAge))}</p>
         <p className="lg-ticker text-[#666] text-sm uppercase mb-0">
-          IIT Bombay Techfest &middot; BITS Pilani &middot; IIT Roorkee &middot; IIT Bombay Techfest &middot; BITS Pilani
+          IIT Bombay  &middot; BITS Pilani &middot; REC Chennai &middot; IIT Bombay Techfest &middot; BITS Pilani
         </p>
       </section>
 
@@ -934,6 +942,9 @@ export default function LeagueDetailPage() {
                 View rankings
               </button>
             </div>
+            
+          </Reveal>
+          <Reveal as="div" className="lg-ranking-banner__bottom" delay={150}>
             {/* One #1 robot per sport in this league — see the champions
                effect's own comment above for why it's per-sport instead
                of a single top-4 across the whole league. Nothing renders
@@ -958,18 +969,12 @@ export default function LeagueDetailPage() {
               </div>
             )}
           </Reveal>
-          <Reveal as="div" className="lg-ranking-banner__bottom" delay={150}>
-            <p>
-              Points from every affiliated fest — 1st=100, 2nd=70, 3rd=50, participation=20.
-              {" "}{league.rankingScope}. Public, permanent, verifiable.
-            </p>
-          </Reveal>
         </div>
       </section>
 
       {/* ===== Journey steps — only leagues with real per-league step
            copy render this; there's no generic filler fallback. ===== */}
-      {league.journeySteps && league.journeySteps.length > 0 && (
+      {/* {league.journeySteps && league.journeySteps.length > 0 && (
         <section className="mx-auto max-w-[1180px] px-4 py-12 text-center">
           <h2 className="lg-section-heading mb-2">{league.journeyHeadline}</h2>
           <div>
@@ -986,50 +991,9 @@ export default function LeagueDetailPage() {
             ))}
           </div>
         </section>
-      )}
+      )} */}
 
-      {/* ===== Next league banner ===== */}
-      <section className="mx-auto max-w-[1180px] px-4 py-4">
-        <div
-          className="lg-next flex flex-col md:flex-row items-center justify-between rounded-2xl p-6 gap-4"
-          style={{ "--lg-next": nextColor } as React.CSSProperties}
-        >
-          <div>
-            <div className="lg-next-label">{league.nextLabel}</div>
-            <div className="lg-next-name">{nextBody}</div>
-          </div>
-          {nextLeague ? (
-            <button onClick={() => navigate(`/leagues/${nextLeague.slug}`)} className="lg-next-link flex items-center gap-2">
-              Explore {nextLeague.name.split(" ")[0]} <ArrowRight size={16} />
-            </button>
-          ) : (
-            <span className="lg-next-link inline-block">Battle of Robots, Russia</span>
-          )}
-        </div>
-      </section>
-
-      {/* ===== League ladder ===== */}
-      <section className="mx-auto max-w-[1180px] px-4 py-10 text-center">
-        <div className="lg-sec-tag">From Campus to Country</div>
-        <p className="lg-sec-subhead mb-4">Your next win could change your national rank.</p>
-        <div className="lg-ladder">
-          {ladderLeagues.map((l, i) => (
-            <span className="lg-ladder-item" key={l.id}>
-              <span className={l.id === league.id ? "lg-ladder-step lg-ladder-step--active" : "lg-ladder-step"}>
-                {l.shortName.toUpperCase()}
-              </span>
-              {i < ladderLeagues.length - 1 && (
-                <span className="lg-ladder-arrow" aria-hidden="true">
-                  <ArrowRight size={16} />
-                </span>
-              )}
-            </span>
-          ))}
-        </div>
-        <p className="lg-ladder-tagline">Start. Compete. Prove. Rise.</p>
-      </section>
-
-      {/* ===== CTA cards ===== */}
+        {/* ===== CTA cards ===== */}
       <section className="mx-auto max-w-[1180px] px-4 py-12">
         <div className="flex flex-col md:flex-row gap-6">
           <div className="flex-1">
@@ -1056,6 +1020,49 @@ export default function LeagueDetailPage() {
           </div>
         </div>
       </section>
+
+      {/* ===== League ladder ===== */}
+      <section className="mx-auto max-w-[1180px] px-4 py-10 text-center">
+        <div className="lg-sec-tag">From Campus to Country</div>
+        <p className="lg-sec-subhead mb-4">Your next win could change your national rank.</p>
+        <div className="lg-ladder">
+          {ladderLeagues.map((l, i) => (
+            <span className="lg-ladder-item" key={l.id}>
+              <span className={l.id === league.id ? "lg-ladder-step lg-ladder-step--active" : "lg-ladder-step"}>
+                {l.shortName.toUpperCase()}
+              </span>
+              {i < ladderLeagues.length - 1 && (
+                <span className="lg-ladder-arrow" aria-hidden="true">
+                  <ArrowRight size={16} />
+                </span>
+              )}
+            </span>
+          ))}
+        </div>
+        <p className="lg-ladder-tagline">Start. Compete. Prove. Rise.</p>
+      </section>
+
+      {/* ===== Next league banner ===== */}
+      <section className="mx-auto max-w-[1180px] px-4 py-4">
+        <div
+          className="lg-next flex flex-col md:flex-row items-center justify-between rounded-2xl p-6 gap-4"
+          style={{ "--lg-next": nextColor } as React.CSSProperties}
+        >
+          <div>
+            <div className="lg-next-label">{league.nextLabel}</div>
+            <div className="lg-next-name">{nextBody}</div>
+          </div>
+          {nextLeague ? (
+            <button onClick={() => navigate(`/leagues/${nextLeague.slug}`)} className="lg-next-link flex items-center gap-2">
+              Explore {nextLeague.name.split(" ")[0]} <ArrowRight size={16} />
+            </button>
+          ) : (
+            <span className="lg-next-link inline-block">Battle of Robots, Russia</span>
+          )}
+        </div>
+      </section>
+
+    
     </div>
   );
 }

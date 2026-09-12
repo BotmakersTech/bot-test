@@ -137,12 +137,13 @@
 .rank-podium-avatar {
   position: absolute;
   border-radius: 10px;
-  overflow: hidden;
+  overflow: visible; 
 }
 .rank-podium-avatar img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;     
+  object-position: bottom;
 }
 
 /* Centered on its slot's avatar-center x (see SLOTS in RankingsPodium.tsx)

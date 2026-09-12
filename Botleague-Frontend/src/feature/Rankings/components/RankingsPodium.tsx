@@ -41,30 +41,25 @@ interface SlotSpec {
 
 const SLOTS: Record<1 | 2 | 3, SlotSpec> = {
   1: {
-    panel: { left: 698, top: 399, width: 332, height: 395 },
-    avatar: { left: 774, top: 200, size: 180 },
-    // Centered under the avatar (avatar.left + avatar.size / 2), not the
-    // reference's own fixed left offset — that was tuned for its specific
-    // short test string ("master_nds") and reads off-center for anything
-    // else. .rank-podium-name centers itself around this x via
-    // transform: translateX(-50%).
-    name: { left: 864, top: 445 },
-    badge: { left: 805, top: 513, size: 118, gradient: "linear-gradient(#ffd365eb, #997f3d)" },
-    rank: { left: 844, top: 640, fontSize: 96 },
+    panel: { left: 698, top: 355, width: 332, height: 395 },   // top: 399→355 (shares bottom=750 with 2/3)
+    avatar: { left: 774, top: 156, size: 180 },                 // top: 200→156
+    name: { left: 864, top: 401 },                              // top: 445→401
+    badge: { left: 805, top: 469, size: 118, gradient: "linear-gradient(#ffd365eb, #997f3d)" }, // top: 513→469
+    rank: { left: 844, top: 596, fontSize: 96 },                // top: 640→596
   },
   2: {
-    panel: { left: 338, top: 320, width: 277, height: 330 },
-    avatar: { left: 411, top: 174, size: 131 },
-    name: { left: 476.5, top: 368 },
-    badge: { left: 429, top: 432, size: 96, gradient: "linear-gradient(#ccccebea, #868173)" },
-    rank: { left: 448, top: 530, fontSize: 86 },
+    panel: { left: 338, top: 420, width: 277, height: 330 },    // top: 320→420 (bottom=750, matches slot 1)
+    avatar: { left: 411, top: 274, size: 131 },                 // top: 174→274
+    name: { left: 476.5, top: 468 },                            // top: 368→468
+    badge: { left: 429, top: 532, size: 96, gradient: "linear-gradient(#ccccebea, #868173)" }, // top: 432→532
+    rank: { left: 448, top: 630, fontSize: 86 },                // top: 530→630
   },
   3: {
-    panel: { left: 1113, top: 320, width: 277, height: 330 },
-    avatar: { left: 1186, top: 174, size: 131 },
-    name: { left: 1251.5, top: 368 },
-    badge: { left: 1204, top: 432, size: 96, gradient: "linear-gradient(#b28181eb, #82450cb3)" },
-    rank: { left: 1222, top: 530, fontSize: 86 },
+    panel: { left: 1113, top: 420, width: 277, height: 330 },   // top: 320→420
+    avatar: { left: 1186, top: 274, size: 131 },                // top: 174→274
+    name: { left: 1251.5, top: 468 },                           // top: 368→468
+    badge: { left: 1204, top: 532, size: 96, gradient: "linear-gradient(#b28181eb, #82450cb3)" }, // top: 432→532
+    rank: { left: 1222, top: 630, fontSize: 86 },                // top: 530→630
   },
 };
 
