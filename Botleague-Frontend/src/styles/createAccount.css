@@ -179,7 +179,8 @@
 }
 
 .cba-role-badge {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     vertical-align: middle;
     margin-left: 10px;
     font-family: "Inter", sans-serif;
@@ -192,6 +193,27 @@
     border: 1px solid rgba(140, 108, 255, 0.35);
     border-radius: 999px;
     padding: 3px 9px;
+    cursor: default;
+}
+
+.cba-role-badge-icon {
+    display: block;
+    flex-shrink: 0;
+}
+
+.cba-role-badge-text {
+    display: inline-block;
+    max-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    opacity: 0;
+    transition: max-width 0.25s ease, opacity 0.2s ease, margin-left 0.25s ease;
+}
+
+.cba-role-badge:hover .cba-role-badge-text {
+    max-width: 160px;
+    opacity: 1;
+    margin-left: 6px;
 }
 
 .cba-role-card--active .cba-role-badge {

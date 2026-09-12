@@ -102,7 +102,21 @@ export default function CreateAccountPage() {
                     <span className="cba-role-title">
                       {role.title}
                       {APPROVAL_REQUIRED_ROLES.has(role.key) && (
-                        <span className="cba-role-badge">Needs admin approval</span>
+                        <span className="cba-role-badge">
+                          <svg
+                            className="cba-role-badge-icon"
+                            viewBox="0 0 24 24"
+                            width="12"
+                            height="12"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" />
+                            <circle cx="12" cy="12" r="3" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          <span className="cba-role-badge-text">Needs admin approval</span>
+                        </span>
                       )}
                     </span>
                     <span className="cba-role-desc">{role.desc}</span>
@@ -131,116 +145,116 @@ export default function CreateAccountPage() {
                     </button>
                   </div>
                 ) : (
-                <>
-                <h2 className="cba-form-title">Create New Account</h2>
-                <p className="cba-form-subtitle">Start your journey</p>
+                  <>
+                    <h2 className="cba-form-title">Create New Account</h2>
+                    <p className="cba-form-subtitle">Start your journey</p>
 
-                <form onSubmit={(e) => e.preventDefault()}>
-                  <div className="cba-field-row">
-                    <input
-                      type="tel"
-                      className="cba-input"
-                      placeholder="Mobile Number"
-                      value={register.mobile}
-                      maxLength={10}
-                      onChange={(e) => register.setMobile(e.target.value.replace(/\D/g, ""))}
-                    />
-                    <button
-                      type="button"
-                      className="cba-btn-gradient cba-btn-otp"
-                      onClick={register.handleSendOtp}
-                      disabled={register.isLoading}
-                    >
-                      {register.otpSent ? "Sent" : "Get OTP"}
-                    </button>
-                  </div>
-
-                  <div className="cba-field-row cba-otp-row">
-                    {register.otp.map((val, i) => (
-                      <input
-                        key={i}
-                        ref={(el) => { otpRefs.current[i] = el; }}
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={1}
-                        className="cba-otp-box"
-                        value={val}
-                        disabled={!register.otpSent}
-                        onChange={(e) => handleOtpChange(i, e.target.value)}
-                      />
-                    ))}
-                    <button
-                      type="button"
-                      className="cba-btn-gradient cba-btn-verify"
-                      onClick={register.handleVerifyOtp}
-                      disabled={!register.otpSent || register.otpVerified}
-                    >
-                      {register.otpVerified ? "Verified" : "Verify"}
-                    </button>
-                  </div>
-
-                  <p className="cba-resend">
-                    {register.otpSent && (
-                      register.resendTimer > 0 ? (
-                        resendLabel
-                      ) : (
-                        <button type="button" onClick={register.handleResendOtp} className="underline">
-                          {resendLabel}
+                    <form onSubmit={(e) => e.preventDefault()}>
+                      <div className="cba-field-row">
+                        <input
+                          type="tel"
+                          className="cba-input"
+                          placeholder="Mobile Number"
+                          value={register.mobile}
+                          maxLength={10}
+                          onChange={(e) => register.setMobile(e.target.value.replace(/\D/g, ""))}
+                        />
+                        <button
+                          type="button"
+                          className="cba-btn-gradient cba-btn-otp"
+                          onClick={register.handleSendOtp}
+                          disabled={register.isLoading}
+                        >
+                          {register.otpSent ? "Sent" : "Get OTP"}
                         </button>
-                      )
-                    )}
-                  </p>
+                      </div>
 
-                  <input
-                    type="password"
-                    className="cba-input-full"
-                    placeholder="Password"
-                    value={register.password}
-                    disabled={!register.otpVerified}
-                    onChange={(e) => register.setPassword(e.target.value)}
-                  />
-                  <input
-                    type="password"
-                    className="cba-input-full"
-                    placeholder="Confirm Password"
-                    value={register.confirmPassword}
-                    disabled={!register.otpVerified}
-                    onChange={(e) => register.setConfirmPassword(e.target.value)}
-                  />
+                      <div className="cba-field-row cba-otp-row">
+                        {register.otp.map((val, i) => (
+                          <input
+                            key={i}
+                            ref={(el) => { otpRefs.current[i] = el; }}
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={1}
+                            className="cba-otp-box"
+                            value={val}
+                            disabled={!register.otpSent}
+                            onChange={(e) => handleOtpChange(i, e.target.value)}
+                          />
+                        ))}
+                        <button
+                          type="button"
+                          className="cba-btn-gradient cba-btn-verify"
+                          onClick={register.handleVerifyOtp}
+                          disabled={!register.otpSent || register.otpVerified}
+                        >
+                          {register.otpVerified ? "Verified" : "Verify"}
+                        </button>
+                      </div>
 
-                  <div className="cba-terms">
-                    <input
-                      type="checkbox"
-                      id="cba-terms-check"
-                      className="form-check-input"
-                      checked={register.agreed}
-                      onChange={(e) => register.setAgreed(e.target.checked)}
-                    />
-                    <label htmlFor="cba-terms-check">
-                      By deploying your profile, you agree to the{" "}
-                      <a href="#terms">Terms of Engagement</a> and{" "}
-                      <a href="#privacy">Privacy Protocol</a>
-                    </label>
-                  </div>
+                      <p className="cba-resend">
+                        {register.otpSent && (
+                          register.resendTimer > 0 ? (
+                            resendLabel
+                          ) : (
+                            <button type="button" onClick={register.handleResendOtp} className="underline">
+                              {resendLabel}
+                            </button>
+                          )
+                        )}
+                      </p>
 
-                  {register.error && <p className="cba-field-error">{register.error}</p>}
+                      <input
+                        type="password"
+                        className="cba-input-full"
+                        placeholder="Password"
+                        value={register.password}
+                        disabled={!register.otpVerified}
+                        onChange={(e) => register.setPassword(e.target.value)}
+                      />
+                      <input
+                        type="password"
+                        className="cba-input-full"
+                        placeholder="Confirm Password"
+                        value={register.confirmPassword}
+                        disabled={!register.otpVerified}
+                        onChange={(e) => register.setConfirmPassword(e.target.value)}
+                      />
 
-                  <button
-                    type="submit"
-                    onClick={register.handleRegister}
-                    disabled={register.isLoading}
-                    className="cba-btn-gradient cba-submit-btn w-full"
-                  >
-                    {register.isLoading ? "Loading..." : "Create account"}
-                  </button>
+                      <div className="cba-terms">
+                        <input
+                          type="checkbox"
+                          id="cba-terms-check"
+                          className="form-check-input"
+                          checked={register.agreed}
+                          onChange={(e) => register.setAgreed(e.target.checked)}
+                        />
+                        <label htmlFor="cba-terms-check">
+                          By deploying your profile, you agree to the{" "}
+                          <a href="#terms">Terms of Engagement</a> and{" "}
+                          <a href="#privacy">Privacy Protocol</a>
+                        </label>
+                      </div>
 
-                  <p className="cba-or">OR</p>
+                      {register.error && <p className="cba-field-error">{register.error}</p>}
 
-                  <button type="button" onClick={() => navigate("/login")} className="cba-login-btn w-full">
-                    Login
-                  </button>
-                </form>
-                </>
+                      <button
+                        type="submit"
+                        onClick={register.handleRegister}
+                        disabled={register.isLoading}
+                        className="cba-btn-gradient cba-submit-btn w-full"
+                      >
+                        {register.isLoading ? "Loading..." : "Create account"}
+                      </button>
+
+                      <p className="cba-or">OR</p>
+
+                      <button type="button" onClick={() => navigate("/login")} className="cba-login-btn w-full">
+                        Login
+                      </button>
+                    </form>
+                  </>
                 )}
               </div>
             </div>

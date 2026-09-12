@@ -266,8 +266,10 @@ export default function ProfilePage() {
               <p className="pfm-error">{p.errors.username}</p>
             )}
 
-            <p className="text-base font-semibold text-black tracking-wide">BOTLEAGUE ID</p>
-            <p className="text-indigo-600 font-bold text-2xl leading-tight px-4">{p.botleagueId || "BL-PENDING"}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-base font-bold text-2xl text-black tracking-wide ">BOTLEAGUE ID</p>
+              <p className="text-indigo-600 font-semibold text-1xl leading-tight">{p.botleagueId || "BL-PENDING"}</p>
+            </div>
           </div>
         </div>
 

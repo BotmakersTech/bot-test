@@ -26,7 +26,7 @@
 
 .cu-hero-content h1 {
   font-family: "Orbitron", sans-serif;
-  font-size: clamp(20px, 4vw, 38px);
+  font-size: clamp(2rem, 5vw, 3.25rem);
   font-weight: 500;
   line-height: 1;
   letter-spacing: 3px;
@@ -35,6 +35,13 @@
   color: #ffffff;
   text-transform: uppercase;
   margin: 0 0 60px;
+}
+.cu-hero-sub {
+  max-width: 600px;
+  margin: 12px auto 24px;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: #f0f0f0; /* adjust to match your overlay text color */
 }
 
 .cu-explore-btn {
