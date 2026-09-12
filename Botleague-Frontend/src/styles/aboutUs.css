@@ -211,37 +211,16 @@
   transition: opacity .6s ease;
   pointer-events: none;
 }
-.cc-slot-left, .cc-slot-right {
-  opacity: .55;
-  z-index: 2;
-  filter: grayscale(.15) brightness(.85);
-}
-/* Two positions on the back half of the ring — pulled behind the center
-   card (negative translateZ) and turned inward (rotateY) so each one's
-   near edge (the side toward center) reads closer to the viewer than its
-   far edge, the way an object actually orbiting around the Y axis would
-   look from outside the ring.
-
-   Both anchored at the same left:50% as center, not a separate left/right
-   %, and left/right positioning comes entirely from perspective's own
-   projection of the rotateY+translateZ pair — confirmed empirically
-   (measured rendered widths) that a left:50% pair mirrored only in
-   rotateY's sign renders genuinely symmetric, while adding a *second*,
-   independent horizontal offset on top of that (an explicit left:20%/80%)
-   fights the projection's own horizontal pull and was what made one side
-   render almost edge-on. */
-.cc-slot-left { left: 50%; transform: translate(-50%,0) rotateY(32deg) translateZ(-240px) scale(.68); }
-.cc-slot-right { left: 50%; transform: translate(-50%,0) rotateY(-32deg) translateZ(-240px) scale(.68); }
-.cc-slot-center {
-  left: 50%;
-  transform: translate(-50%,0) translateZ(80px) rotateY(0deg) scale(1);
-  opacity: 1;
-  z-index: 5;
-  filter: none;
-  cursor: default;
-}
-.cc-slot-center .cc-glow { opacity: 1; }
-.cc-slot-center img, .cc-slot-center .cc-placeholder {
+/* Ring position (angle, depth, scale, opacity, filter, z-index) is
+   computed per-member in ringStyle() (AboutUs.tsx) and applied as an
+   inline style, not a fixed class — every member sits at a real point on
+   a circle (rotateY + translateZ), so the same left:50% anchor works for
+   all of them and perspective alone produces the correct horizontal
+   projection (see ringStyle's own comment for why this replaced the old
+   fixed left/center/right classes). Only the "is this the front-most
+   member" float animation stays a discrete class, since an animation
+   isn't something to fade in/out continuously frame-by-frame. */
+.cc-character-front img, .cc-character-front .cc-placeholder {
   animation: cc-float 3.6s ease-in-out infinite;
 }
 @keyframes cc-float {

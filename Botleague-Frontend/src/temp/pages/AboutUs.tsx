@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import PublicNavbar from "../../shared/components/PublicNavbar";
 import "../../styles/aboutUs.css";
 import mohitImg from "../../assets/Avatar-model/Mohit.png";
@@ -88,8 +88,6 @@ const TEAM: TeamMember[] = [
     img: rahulImg,
   },
 ];
-
-const SLOT_CLASS = ["cc-slot-left", "cc-slot-center", "cc-slot-right"];
 
 function Hero() {
   return (
@@ -194,10 +192,64 @@ function Principles() {
 //   );
 // }
 
-// ---- "Built By The Competitors" — image-based sliding carousel ----
+// ---- "Built By The Competitors" — 3D ring carousel ----
+//
+// Each member sits at one of 3 fixed angular slots on a circle — rotateY
+// + translateZ is the standard way to place items around a Y-axis ring so
+// perspective alone produces the correct horizontal projection and depth
+// (no separate translateX ever needed). The angle stays shallow (well
+// under 90deg) deliberately: these are flat photo cards, and rotating a
+// flat plane much past 90deg starts showing its *back* — since a plain
+// <img> has no back texture, the browser just renders a mirrored version
+// of the front (confirmed live: a 120deg-per-slot version, tried first,
+// rendered team members' nameplates backwards).
+//
+// The real, confirmed bug in the old version wasn't the angle — it was
+// that members were rendered by mapping over an `order` array, so
+// clicking next/prev actually REORDERED the keyed DOM elements (moved
+// them to different positions in the child list) in the same commit that
+// changed their slot className. Reordering a keyed list item and changing
+// its transform at the same time is exactly the case where a CSS
+// transition can get silently skipped instead of interpolating — verified
+// live by tracking each named member's computed transform frame-by-frame:
+// the member that got moved in the DOM jumped straight to its resting
+// transform within one frame while the untouched-position members
+// animated normally, which is what read as "just replacing images."
+//
+// Fixed by rendering every member in the SAME fixed DOM position always
+// (TEAM.map in its own unchanging order) and deriving each one's slot
+// purely from state — nothing ever reorders, so the transition always has
+// a stable element to animate.
+const SIDE_ANGLE_DEG = 42;
+const SIDE_DEPTH_PX = -260;
+const SIDE_SCALE = 0.64;
+const CENTER_DEPTH_PX = 90;
+
+function ringStyle(pos: number) {
+  // 0 = front/center, 1 = one step in the "next" direction (right), 2 =
+  // one step in the "prev" direction (left) — matches rotateNext/
+  // rotatePrev's sign below. Reduced from the raw, unbounded per-member
+  // step count, which still only ever moves by exactly +-1 per click (see
+  // rotateBy) — that's what keeps every click's motion consistent and
+  // avoids two members ever appearing to trade places.
+  const normalized = ((Math.round(pos) % 3) + 3) % 3;
+  const front = normalized === 0;
+  const angle = normalized === 1 ? -SIDE_ANGLE_DEG : normalized === 2 ? SIDE_ANGLE_DEG : 0;
+  const style: CSSProperties = {
+    transform: `translate(-50%, 0) rotateY(${angle}deg) translateZ(${front ? CENTER_DEPTH_PX : SIDE_DEPTH_PX}px) scale(${front ? 1 : SIDE_SCALE})`,
+    opacity: front ? 1 : 0.55,
+    filter: front ? "none" : "grayscale(.15) brightness(.85)",
+    zIndex: front ? 5 : 2,
+    cursor: front ? "default" : "pointer",
+  };
+  return { style, front, normalized };
+}
+
 function Competitors() {
   const sectionRef = useRef<HTMLElement>(null);
-  const [order, setOrder] = useState([0, 1, 2]); // indices into TEAM
+  // One ring-step count per TEAM member (by index) — starts at [-1, 0, 1]
+  // so Mohit(0) opens on the left, Akshay(1) front-center, Rahul(2) right.
+  const [positions, setPositions] = useState([-1, 0, 1]);
   const [bubbleOn, setBubbleOn] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const transitioning = useRef(false);
@@ -225,6 +277,8 @@ function Competitors() {
     return () => io.disconnect();
   }, []);
 
+  const centerIndex = positions.findIndex((p) => ((Math.round(p) % 3) + 3) % 3 === 0);
+
   useEffect(() => {
     setBubbleOn(false);
     if (bubbleTimer.current) clearTimeout(bubbleTimer.current);
@@ -232,21 +286,19 @@ function Competitors() {
     return () => {
       if (bubbleTimer.current) clearTimeout(bubbleTimer.current);
     };
-  }, [order]);
+  }, [centerIndex]);
 
-  const rotateNext = () => {
+  // Every member steps together by the same delta — the ring turns as one
+  // piece, it never singles a member out for a different-length hop.
+  const rotateBy = (delta: number) => {
     if (transitioning.current) return;
     transitioning.current = true;
-    setOrder((o) => [o[1], o[2], o[0]]);
+    setPositions((prev) => prev.map((p) => p + delta));
     setTimeout(() => (transitioning.current = false), 1000);
   };
 
-  const rotatePrev = () => {
-    if (transitioning.current) return;
-    transitioning.current = true;
-    setOrder((o) => [o[2], o[0], o[1]]);
-    setTimeout(() => (transitioning.current = false), 1000);
-  };
+  const rotateNext = () => rotateBy(-1);
+  const rotatePrev = () => rotateBy(1);
 
   const startAutoplay = () => {
     stopAutoplay();
@@ -262,7 +314,7 @@ function Competitors() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const centerMember = TEAM[order[1]];
+  const centerMember = TEAM[centerIndex] ?? TEAM[0];
 
   return (
     <section ref={sectionRef} className="bl-team py-16 md:py-20">
@@ -297,18 +349,19 @@ function Competitors() {
             &#10095;
           </div>
 
-          {order.map((memberIdx, slot) => {
-            const member = TEAM[memberIdx];
+          {TEAM.map((member, i) => {
+            const { style, front, normalized } = ringStyle(positions[i]);
             return (
               <div
                 key={member.name}
-                className={`cc-character ${SLOT_CLASS[slot]}`}
+                className={`cc-character ${front ? "cc-character-front" : ""}`}
+                style={style}
                 onClick={() => {
-                  if (slot === 0) rotatePrev();
-                  if (slot === 2) rotateNext();
+                  if (normalized === 2) rotatePrev();
+                  if (normalized === 1) rotateNext();
                 }}
               >
-                <div className="cc-glow" />
+                <div className="cc-glow" style={{ opacity: front ? 1 : 0 }} />
                 {member.img ? (
                   <img src={member.img} alt={member.name} />
                 ) : (
@@ -330,8 +383,12 @@ function Competitors() {
               <button
                 type="button"
                 key={m.name}
-                className={`cc-dot ${order[1] === i ? "cc-dot-active" : ""}`}
-                onClick={() => setOrder([(i + 2) % 3, i, (i + 1) % 3])}
+                className={`cc-dot ${centerIndex === i ? "cc-dot-active" : ""}`}
+                onClick={() => {
+                  const normalized = ((Math.round(positions[i]) % 3) + 3) % 3;
+                  const delta = normalized === 1 ? -1 : normalized === 2 ? 1 : 0;
+                  if (delta !== 0) rotateBy(delta);
+                }}
                 aria-label={`Show ${m.name}`}
               />
             ))}
