@@ -105,7 +105,15 @@ function FilterSelect({
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
-export default function GlobalRankingsPage() {
+interface GlobalRankingsPageProps {
+  /** Shows the top-3 podium hero above the filter card — only the public
+   *  (logged-out or public-navbar) rendering of this page opts in.
+   *  Defaults to false so the authenticated Layout+Sidebar view stays
+   *  podium-free, see RankingsRoute. */
+  showPodium?: boolean;
+}
+
+export default function GlobalRankingsPage({ showPodium = false }: GlobalRankingsPageProps) {
   const navigate = useNavigate();
   const { leagues } = useLeagues();
 
@@ -437,7 +445,7 @@ export default function GlobalRankingsPage() {
             PODIUM
             This section intentionally stays OUTSIDE the p-8 wrapper.
             ──────────────────────────────────────────────────────────────── */}
-        {!loading && entries.length > 0 && (
+        {showPodium && !loading && entries.length > 0 && (
           <RankingsPodium
             entries={entries}
             onOpen={(entry) =>
@@ -547,7 +555,7 @@ export default function GlobalRankingsPage() {
               {weightOptions.length > 1 ? (
                 <FilterSelect
                   widthClass="lg:max-w-[303px]"
-                  placeholder="Select Weight Class"
+                  placeholder="Select Class"
                   value={draftWeightKg}
                   onChange={setDraftWeightKg}
                   disabled={!draftSportSlug}
