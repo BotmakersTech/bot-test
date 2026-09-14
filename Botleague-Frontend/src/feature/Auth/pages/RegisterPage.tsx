@@ -106,14 +106,15 @@ export default function CreateAccountPage() {
                           <svg
                             className="cba-role-badge-icon"
                             viewBox="0 0 24 24"
-                            width="12"
-                            height="12"
+                            width="20"
+                            height="20"
                             fill="none"
                             stroke="currentColor"
                             strokeWidth="2"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" />
-                            <circle cx="12" cy="12" r="3" strokeLinecap="round" strokeLinejoin="round" />
+                            <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M12 11v5" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M12 7.5h.01" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                           <span className="cba-role-badge-text">Needs admin approval</span>
                         </span>

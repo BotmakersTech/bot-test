@@ -14,7 +14,7 @@
 }
 
 .cu-banner-title {
-  font-family: 'Sarpanch';
+  font-family: 'Orbitron', sans-serif;
   font-size: 48px;
   font-weight: 700;
   letter-spacing: 3px;
@@ -26,12 +26,12 @@
 }
 
 .cu-contact-section {
-  padding: 120px 0 90px;
+  padding: 50px 0 50px;
   background: white;
 }
 
 .cu-contact-heading {
-  font-family: 'Sarpanch';
+  font-family: 'Orbitron', sans-serif;
   font-size: 64px;
   font-weight: 600;
   letter-spacing: 3px;
@@ -55,7 +55,7 @@
   min-height: 300px;
   height: 100%;
   margin: auto;
-  background: #949494;
+  background:linear-gradient(180deg, #0162D1 0%, #8C6CFF 100%);
   border-radius: 20px;
   padding: 32px 28px;
   display: flex;
@@ -68,7 +68,7 @@
 
 .cu-contact-card:hover {
   transform: translateY(-10px);
-  background: #7f7f7f;
+  background:linear-gradient(180deg, #0162D1 0%, #8C6CFF 100%);
   box-shadow: 0 15px 40px rgba(0, 0, 0, .25);
 }
 
@@ -87,7 +87,7 @@
 }
 
 .cu-contact-card h3 {
-  font-family: 'Sarpanch';
+  font-family: 'Orbitron', sans-serif;
   font-size: 22px;
   font-weight: 600;
   letter-spacing: 1px;

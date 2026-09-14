@@ -42,6 +42,7 @@ function ReadOnlyField({ value, placeholder = "Not set" }: { value: string; plac
       type="text"
       value={value}
       readOnly
+      autoComplete="off"
       placeholder={placeholder}
       className="w-full rounded-lg text-gray-500 placeholder-gray-400 cursor-default"
     />
@@ -280,7 +281,7 @@ export default function ProfilePage() {
           <div className="lg:col-span-2 bg-white border border-indigo-100 rounded-2xl shadow-sm p-6">
             <h2 className="font-bold text-gray-800 mb-5">Personal Information</h2>
 
-            <div className="pfm-form grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+            <div className={`pfm-form grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4${isEditMode ? " pfm-form--editing" : ""}`}>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 tracking-wide mb-1">FIRST NAME</label>
                 {isEditMode ? (
@@ -289,6 +290,7 @@ export default function ProfilePage() {
                     placeholder="Enter your first name"
                     value={p.firstName}
                     onChange={(e) => p.setFirstName(e.target.value)}
+                    autoComplete="off"
                     className="w-full rounded-lg text-gray-500 placeholder-gray-400"
                   />
                 ) : (
@@ -304,6 +306,7 @@ export default function ProfilePage() {
                     placeholder="Enter your last name"
                     value={p.lastName}
                     onChange={(e) => p.setLastName(e.target.value)}
+                    autoComplete="off"
                     className="w-full rounded-lg text-gray-500 placeholder-gray-400"
                   />
                 ) : (
@@ -341,6 +344,7 @@ export default function ProfilePage() {
                         placeholder="10-digit mobile number"
                         value={p.phone}
                         onChange={(e) => p.setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                        autoComplete="off"
                         className="flex-1 min-w-0 rounded-lg text-gray-500 placeholder-gray-400"
                       />
                       {phoneChanged && !phoneOtpSent && (
@@ -405,6 +409,7 @@ export default function ProfilePage() {
                       placeholder="e.g. botmakers12@gmail.com"
                       value={p.pendingEmailInput}
                       onChange={(e) => p.setPendingEmailInput(e.target.value)}
+                      autoComplete="off"
                       className="flex-1 min-w-0 rounded-lg text-gray-500 placeholder-gray-400"
                     />
                     <button
