@@ -3,7 +3,7 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { ArrowRight, Trophy } from "lucide-react";
 import PublicNavbar from "../../../shared/components/PublicNavbar";
 import { useLeagues, getLeagueBySlug, formatAgeRange } from "./useLeagues";
-import { GLOBAL_STAGE_GOLD, type JourneyCtx } from "./leaguePresentation";
+import { GLOBAL_STAGE_GOLD } from "./leaguePresentation";
 import { getPublicLeagueSports, type LeagueSport } from "../../../shared/api/catalog.api";
 import { getTopRanked, type GlobalRankingEntry } from "../../../feature/Rankings/api/rankings.api";
 import { sportKey } from "../../../feature/Event/utils/specPolicy";
@@ -817,9 +817,6 @@ export default function LeagueDetailPage() {
     },
     { title: "Join the global stage", body: "Connect with the best competitors from around the world" }
   ];
-  const sportNames = sports.map((s) => s.sportName).join(", ");
-  const journeyCtx: JourneyCtx = { shortName: league.shortName, nextName, hasNext: !!nextLeague, sportNames };
-  const resolve = (v: string | ((ctx: JourneyCtx) => string)) => (typeof v === "function" ? v(journeyCtx) : v);
   // Sorted by age rather than trusting catalog return order — the ladder
   // needs Ignite -> Inferno -> Apex regardless of how the API orders them.
   const ladderLeagues = [...leagues].sort((a, b) => (a.minAge ?? 0) - (b.minAge ?? 0));
