@@ -15,7 +15,7 @@ export default function RussiaSection() {
             <img src={battleOfRobotsRussia} alt="Battle of Robots Russia" className="h-full w-full object-contain" />
           </div>
           <div>
-            <h3 className="font-display text-[#b9aefc] tracking-widest text-base mb-2">BATTLE OF ROBOTS — RUSSIA</h3>
+            <h3 className="font-display text-[#7762ff] tracking-widest text-XL font-bold mb-2">BATTLE OF ROBOTS — RUSSIA</h3>
             <p className="text-sm leading-loose text-[#222] font-bold">India Qualifier — 2027<br />Hosted in India by BotLeague.</p>
             <p className="text-sm leading-loose text-[#222] mt-2">Top performers earn the right to represent India at the international championship.</p>
           </div>
@@ -24,7 +24,7 @@ export default function RussiaSection() {
           <div className="font-sans text-[#6d4ff0] font-bold text-xs tracking-widest mb-2">MORE COMING</div>
           <h4 className="text-base font-display font-semibold text-[#7b3ff2] mb-1.5">International collaborations</h4>
           <p className="text-sm text-[#333] leading-relaxed">
-            Additional international partnerships are being confirmed — V7RC Taiwan is already active, and BotLeague&rsquo;s global reach is expanding. Further collaborations are in progress.
+            Additional international partnerships are being confirmed  V7RC  is already active, and BotLeague&rsquo;s global reach is expanding. Further collaborations are in progress.
           </p>
         </div>
       </div>
