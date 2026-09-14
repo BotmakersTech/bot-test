@@ -139,15 +139,16 @@ const mainNavItems: NavItem[] = [
     icon: <RankingsIcon />,
     link: "/rankings",
   },
-];
-
-const bottomNavItems: NavItem[] = [
   {
     id: "Profile",
     label: "Profile",
     icon: <ProfileIcon />,
     link: "/profile",
   },
+];
+
+const bottomNavItems: NavItem[] = [
+  
   {
     id: "settings",
     label: "Settings",
@@ -323,6 +324,7 @@ export default function Sidebar() {
           padding: "12px 16px 8px",
         }}
       >
+
 
         <button
           onClick={handleLogout}

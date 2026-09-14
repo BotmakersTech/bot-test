@@ -83,7 +83,7 @@ export const LEAGUE_PRESENTATION: Record<string, LeaguePresentation> = {
       (age ? `For young builders aged ${age} — ` : "") +
       "the league where learning and competing happen at the same time, alongside peers at your own level.",
     whyBody:
-      "Ignite is the entry-level technology competition league for young builders. From robotics and RC racing to drones, autonomous challenges, and more, Ignite gives beginners a place to learn, build, compete, and grow alongside others at their level.",
+      "Ignite is the entry level technology competition league for young builders. From robotics and RC racing to drones, autonomous challenges, and more, Ignite gives beginners a place to learn, build, compete, and grow alongside others at their level.",
     whySecondaryBody:
       "No prior experience required. Every sport is designed to develop a real technical skill while giving you the excitement of real competition.",
     closerHeadline: "Start Small. Compete Big.",
@@ -97,7 +97,7 @@ export const LEAGUE_PRESENTATION: Record<string, LeaguePresentation> = {
         title: "Choose your sport",
         body: (ctx) => (ctx.sportNames ? `Pick what excites you — ${ctx.sportNames}.` : "Pick what excites you."),
       },
-      { icon: Wrench, title: "Build your machine", body: "Design, code, and tune it until it's arena-ready." },
+      { icon: Wrench, title: "Build your machine", body: "Design, code, and tune it until it's arena ready." },
       { icon: MapPin, title: "Register for an event", body: "Find a techfest near you and lock in your spot." },
       { icon: Trophy, title: "Enter the arena", body: "Race. Battle. Score. Fight for the win." },
       { icon: TrendingUp, title: "Earn your rank", body: "Every result climbs your national ranking." },
@@ -128,7 +128,7 @@ export const LEAGUE_PRESENTATION: Record<string, LeaguePresentation> = {
       "Compete at affiliated IIT, BITS, and other techfests across India and build your position on one national leaderboard — alongside the best competitors in your age group.",
     competitionHeadline: "The Competition Gets Real.",
     competitionBody:
-      "Inferno moves you beyond beginner-level challenges — tighter rules, tougher arenas, and sports tested against deeper technical skill, smarter strategy, and performance under pressure. You're not just participating. You're proving where you stand.",
+      "Inferno moves you beyond beginner level challenges — tighter rules, tougher arenas, and sports tested against deeper technical skill, smarter strategy, and performance under pressure. You're not just participating. You're proving where you stand.",
     closerHeadline: "Win Local. Rank National.",
     closerBody: "Compete, earn points, climb the leaderboard, get noticed. Trophies stay at the event — your ranking follows you everywhere.",
     journeyHeadline: "From First Techfest to National Rank.",
@@ -190,7 +190,7 @@ export const LEAGUE_PRESENTATION: Record<string, LeaguePresentation> = {
       "the league where learning and competing happen at the same time, alongside peers at your own level.",
     whyBody: "Apex is the open circuit — where national champions get scouted for the international stage, Battle of Robots, Russia.",
     whySecondaryBody:
-      "Every sport in Apex is judged at national-championship standard. This isn't about climbing a ranking anymore — it's where builders get scouted.",
+      "Every sport in Apex is judged at national championship standard. This isn't about climbing a ranking anymore — it's where builders get scouted.",
     closerHeadline: "Compete National. Get Scouted Global.",
     closerBody: "Your next match could be the one that gets you noticed.",
     journeyHeadline: "From national rank to the global stage.",

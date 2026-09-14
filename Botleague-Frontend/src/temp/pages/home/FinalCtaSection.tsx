@@ -5,9 +5,9 @@ export default function FinalCtaSection() {
   const navigate = useNavigate();
 
   return (
-    <section className="py-16 md:py-20 px-6">
-      <div className="max-w-[1024px] mx-auto rounded-[28px] bg-linear-to-br from-[#0d0630] via-[#241155] to-[#3d1f8f] px-6 py-14 md:py-16 text-center relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 opacity-60 [background:repeating-linear-gradient(115deg,transparent_0_120px,rgba(200,170,255,.08)_120px_122px)]" />
+    <section className="py-8 md:py-20 px-6">
+      <div className="max-w-[1024px] mx-auto rounded-[28px] bg-linear-to-br from-[#4B2FD1] via-[#6C3CE9] to-[#8A4FFF] px-6 py-14 md:py-16 text-center relative overflow-hidden">
+       
 
         <h2 className="relative font-display font-extrabold text-white text-3xl md:text-5xl mb-4">
           Ready To Enter The League?

@@ -13,7 +13,7 @@
 .home-pinned-sticky {
   top: var(--home-header-h);
   height: calc(100dvh - var(--home-header-h));
-  min-height: 400px;
+  min-height: 750px;
 }
 
 .home-bg-video { clip-path: polygon(100% 1%, 100% 93%, 93% 100%, 0 100%, 0 0); }
@@ -43,7 +43,7 @@
   transition: max-height .7s cubic-bezier(.4, 0, .2, 1), opacity .5s ease, margin-bottom .7s ease;
 }
 .home-league-card-wrap[data-state="hidden"] { max-height: 0; opacity: 0; margin-bottom: 0; }
-.home-league-card-wrap[data-state="collapsed"] { max-height: 96px; opacity: 1; }
+.home-league-card-wrap[data-state="collapsed"] { max-height: 110px; opacity: 1; }
 /* clamp so an expanded card can't ask for more height than a short pinned
    viewport actually has — MAX matches the original flat 380px. */
 .home-league-card-wrap[data-state="expanded"] { max-height: clamp(220px, 48dvh, 380px); opacity: 1; }
